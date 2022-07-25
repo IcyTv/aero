@@ -9,5 +9,5 @@
 pub(super) extern &quot;sysv64&quot; fn x86_64_check_sysenter(<br>&nbsp;&nbsp;&nbsp;&nbsp;stack: &amp;mut <a class="struct" href="../interrupts/idt/struct.InterruptErrorStack.html" title="struct aero_kernel::arch::x86_64::interrupts::idt::InterruptErrorStack">InterruptErrorStack</a><br>)</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Check the user-provided return addresses for system calls via SYSENTER</p>
 <p>We cannot execute <code>sysexit</code> on return with non-canonical return addresses, or we
 will take a fault in the kernel with the user’s GS base already swapped back.</p>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (848090dcd 2022-07-22)" ></div>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
 </body></html>
