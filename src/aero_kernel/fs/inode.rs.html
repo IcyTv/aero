@@ -526,7 +526,7 @@
 
 <span class="kw">use</span> <span class="ident">aero_syscall::prelude</span>::{<span class="ident">EPollEventFlags</span>, <span class="ident">PollEventFlags</span>};
 <span class="kw">use</span> <span class="ident">aero_syscall::socket::MessageHeader</span>;
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">MMapFlags</span>, <span class="ident">OpenFlags</span>};
+<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">MMapFlags</span>, <span class="ident">OpenFlags</span>, <span class="ident">SyscallError</span>};
 
 <span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
 <span class="kw">use</span> <span class="ident">alloc::sync::Weak</span>;
@@ -729,11 +729,11 @@
         <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">listen</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_backlog</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
+    <span class="kw">fn</span> <span class="ident">listen</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_backlog</span>: <span class="ident">usize</span>) -&gt; <span class="ident">::core::result::Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
+        <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTSOCK</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">accept</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SocketAddr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+    <span class="kw">fn</span> <span class="ident">accept</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">SocketAddr</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span><span class="op">&gt;</span> {
         <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
     }
 
@@ -1003,5 +1003,5 @@
     <span class="ident">dcache</span>.<span class="ident">get</span>(<span class="ident">cache_key</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (4d6d601c8 2022-07-26)" ></div>
 </body></html>

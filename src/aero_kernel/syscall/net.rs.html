@@ -132,6 +132,14 @@
 <span id="126">126</span>
 <span id="127">127</span>
 <span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">aero_syscall::socket::MessageHeader</span>;
 <span class="kw">use</span> <span class="ident">aero_syscall</span>::<span class="kw-2">*</span>;
 
@@ -142,6 +150,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::socket::SocketAddr</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
 
 <span class="doccomment">/// Creates a [`SocketAddr`] from the provided userland socket structure address. This</span>
 <span class="doccomment">/// is done by looking at the family field present in every socket address structure.</span>
@@ -172,9 +181,16 @@
 <span class="attribute">#[<span class="ident">syscall</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">accept</span>(
     <span class="ident">fd</span>: <span class="ident">usize</span>,
-    <span class="ident">address</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SocketAddr</span>,
-    <span class="ident">_length</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u32</span>,
+    <span class="ident">address</span>: <span class="ident">usize</span>,
+    <span class="ident">_length</span>: <span class="comment">/*&amp;mut u32*/</span> <span class="ident">usize</span>,
 ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
+    <span class="comment">// TODO: In the syscall macro, handle Option&lt;NonNull&lt;T&gt;&gt; param.</span>
+    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">address</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="prelude-val">Some</span>(<span class="ident">utils::validate_mut_ptr</span>(<span class="ident">address</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">SocketAddr</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>)
+    } <span class="kw">else</span> {
+        <span class="prelude-val">None</span>
+    };
+
     <span class="kw">let</span> <span class="ident">file_table</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">file_table</span>.<span class="ident">clone</span>();
     <span class="kw">let</span> <span class="ident">socket</span> <span class="op">=</span> <span class="ident">file_table</span>.<span class="ident">get_handle</span>(<span class="ident">fd</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
 
@@ -221,7 +237,7 @@
 <span class="attribute">#[<span class="ident">syscall</span>]</span>
 <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">socket</span>(<span class="ident">domain</span>: <span class="ident">usize</span>, <span class="ident">socket_type</span>: <span class="ident">usize</span>, <span class="ident">protocol</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
     <span class="kw">let</span> <span class="ident">socket</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">domain</span> <span class="kw">as</span> <span class="ident">u32</span> {
-        <span class="ident">AF_UNIX</span> =&gt; <span class="ident">UnixSocket::new</span>(<span class="prelude-val">None</span>),
+        <span class="ident">AF_UNIX</span> =&gt; <span class="ident">UnixSocket::new</span>(),
         <span class="kw">_</span> =&gt; {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;unsupported socket type: domain={domain}, socket_type={socket_type}, protocol={protocol}&quot;</span>
@@ -261,5 +277,5 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (7fe022f5a 2022-07-24)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (4d6d601c8 2022-07-26)" ></div>
 </body></html>
