@@ -95,102 +95,102 @@
 <span id="95">95</span>
 <span id="96">96</span>
 <span id="97">97</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident">aero_syscall::OpenFlags</span>;
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
+<span class="kw">use </span>aero_syscall::OpenFlags;
+<span class="kw">use </span>alloc::sync::Arc;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::buffer::Buffer</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">BlockQueue</span>, <span class="ident">Mutex</span>};
+<span class="kw">use </span><span class="kw">crate</span>::utils::buffer::Buffer;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::inode</span>::{<span class="ident">INodeInterface</span>, <span class="ident">PollFlags</span>, <span class="ident">PollTable</span>};
+<span class="kw">use </span><span class="kw">super</span>::inode::{INodeInterface, PollFlags, PollTable};
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Pipe</span> {
-    <span class="ident">queue</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Buffer</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>Pipe {
+    queue: Mutex&lt;Buffer&gt;,
 
-    <span class="ident">readers</span>: <span class="ident">BlockQueue</span>,
-    <span class="ident">writers</span>: <span class="ident">BlockQueue</span>,
+    readers: BlockQueue,
+    writers: BlockQueue,
 
-    <span class="doccomment">/// The number of writers currently connected to the pipe.</span>
-    <span class="ident">num_writers</span>: <span class="ident">AtomicUsize</span>,
+    <span class="doccomment">/// The number of writers currently connected to the pipe.
+    </span>num_writers: AtomicUsize,
 }
 
-<span class="kw">impl</span> <span class="ident">Pipe</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new</span>(<span class="self">Self</span> {
-            <span class="ident">queue</span>: <span class="ident">Mutex::new</span>(<span class="ident">Buffer::new</span>()),
+<span class="kw">impl </span>Pipe {
+    <span class="kw">pub fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        Arc::new(<span class="self">Self </span>{
+            queue: Mutex::new(Buffer::new()),
 
-            <span class="ident">readers</span>: <span class="ident">BlockQueue::new</span>(),
-            <span class="ident">writers</span>: <span class="ident">BlockQueue::new</span>(),
+            readers: BlockQueue::new(),
+            writers: BlockQueue::new(),
 
-            <span class="ident">num_writers</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
+            num_writers: AtomicUsize::new(<span class="number">0</span>),
         })
     }
 
-    <span class="doccomment">/// Returns whether the pipe has active writers.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_active_writers</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">num_writers</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="doccomment">/// Returns whether the pipe has active writers.
+    </span><span class="kw">pub fn </span>has_active_writers(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.num_writers.load(Ordering::SeqCst)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">Pipe</span> {
-    <span class="kw">fn</span> <span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">flags</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// Write end of the pipe:</span>
-        <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">OpenFlags::O_WRONLY</span>) {
-            <span class="self">self</span>.<span class="ident">num_writers</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>Pipe {
+    <span class="kw">fn </span>open(<span class="kw-2">&amp;</span><span class="self">self</span>, flags: OpenFlags) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+        <span class="comment">// Write end of the pipe:
+        </span><span class="kw">if </span>flags.contains(OpenFlags::O_WRONLY) {
+            <span class="self">self</span>.num_writers.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">flags</span>: <span class="ident">OpenFlags</span>) {
-        <span class="comment">// Write end of the pipe:</span>
-        <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">OpenFlags::O_WRONLY</span>) {
-            <span class="kw">let</span> <span class="ident">active_writers</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">num_writers</span>.<span class="ident">fetch_sub</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>) <span class="op">-</span> <span class="number">1</span>;
+    <span class="kw">fn </span>close(<span class="kw-2">&amp;</span><span class="self">self</span>, flags: OpenFlags) {
+        <span class="comment">// Write end of the pipe:
+        </span><span class="kw">if </span>flags.contains(OpenFlags::O_WRONLY) {
+            <span class="kw">let </span>active_writers = <span class="self">self</span>.num_writers.fetch_sub(<span class="number">1</span>, Ordering::SeqCst) - <span class="number">1</span>;
 
-            <span class="comment">// There are no active writers and no data to read (reached EOF).</span>
-            <span class="kw">if</span> <span class="ident">active_writers</span> <span class="op">==</span> <span class="number">0</span> {
-                <span class="self">self</span>.<span class="ident">readers</span>.<span class="ident">notify_complete</span>();
+            <span class="comment">// There are no active writers and no data to read (reached EOF).
+            </span><span class="kw">if </span>active_writers == <span class="number">0 </span>{
+                <span class="self">self</span>.readers.notify_complete();
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">readers</span>.<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">queue</span>, <span class="op">|</span><span class="ident">lock</span><span class="op">|</span> {
-            <span class="ident">lock</span>.<span class="ident">has_data</span>() <span class="op">|</span><span class="op">|</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">has_active_writers</span>() <span class="op">==</span> <span class="number">0</span>
-        })<span class="question-mark">?</span>;
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = <span class="self">self</span>.readers.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.queue, |lock| {
+            lock.has_data() || !<span class="self">self</span>.has_active_writers() == <span class="number">0
+        </span>})<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">read</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">read_data</span>(<span class="ident">buf</span>);
+        <span class="kw">let </span>read = buffer.read_data(buf);
 
-        <span class="kw">if</span> <span class="ident">read</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="comment">// TODO: Notify only the first process</span>
-            <span class="self">self</span>.<span class="ident">writers</span>.<span class="ident">notify_complete</span>();
+        <span class="kw">if </span>read &gt; <span class="number">0 </span>{
+            <span class="comment">// TODO: Notify only the first process
+            </span><span class="self">self</span>.writers.notify_complete();
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">read</span>)
+        <span class="prelude-val">Ok</span>(read)
     }
 
-    <span class="kw">fn</span> <span class="ident">write_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">lock_irq</span>().<span class="ident">write_data</span>(<span class="ident">buf</span>);
-        <span class="self">self</span>.<span class="ident">readers</span>.<span class="ident">notify_complete</span>();
+    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span>res = <span class="self">self</span>.queue.lock_irq().write_data(buf);
+        <span class="self">self</span>.readers.notify_complete();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">res</span>)
+        <span class="prelude-val">Ok</span>(res)
     }
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">PollTable</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> {
-        <span class="ident">table</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-            <span class="ident">e</span>.<span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">readers</span>);
-            <span class="ident">e</span>.<span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">writers</span>)
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; <span class="kw">super</span>::Result&lt;PollFlags&gt; {
+        table.map(|e| {
+            e.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.readers);
+            e.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.writers)
         });
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">PollFlags::OUT</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>flags = PollFlags::OUT;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">queue</span>.<span class="ident">lock_irq</span>().<span class="ident">has_data</span>() {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident">PollFlags::IN</span>;
+        <span class="kw">if </span><span class="self">self</span>.queue.lock_irq().has_data() {
+            flags |= PollFlags::IN;
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">flags</span>)
+        <span class="prelude-val">Ok</span>(flags)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

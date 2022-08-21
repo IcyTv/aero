@@ -39,46 +39,46 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
-</pre><pre class="rust"><code><span class="attribute">#![<span class="ident">no_std</span>]</span>
+</pre><pre class="rust"><code><span class="attribute">#![no_std]</span>
 
-<span class="kw">mod</span> <span class="ident">helper</span>;
-<span class="kw">mod</span> <span class="ident">host</span>;
-<span class="kw">mod</span> <span class="ident">raw</span>;
+<span class="kw">mod </span>helper;
+<span class="kw">mod </span>host;
+<span class="kw">mod </span>raw;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">host</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>host::<span class="kw-2">*</span>;
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
+<span class="kw">extern crate </span>alloc;
 
-<span class="doccomment">/// Initializes the ACPI revision.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_acpi_revision</span>(<span class="ident">revision</span>: <span class="ident">i32</span>) {
-    <span class="kw">unsafe</span> { <span class="ident">raw::lai_set_acpi_revision</span>(<span class="ident">revision</span>) }
+<span class="doccomment">/// Initializes the ACPI revision.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>set_acpi_revision(revision: i32) {
+    <span class="kw">unsafe </span>{ raw::lai_set_acpi_revision(revision) }
 }
 
-<span class="doccomment">/// Creates the ACPI namespace.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">create_namespace</span>() {
-    <span class="kw">unsafe</span> { <span class="ident">raw::lai_create_namespace</span>() }
+<span class="doccomment">/// Creates the ACPI namespace.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>create_namespace() {
+    <span class="kw">unsafe </span>{ raw::lai_create_namespace() }
 }
 
-<span class="doccomment">/// Enables ACPI SCI.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Parameters</span>
-<span class="doccomment">/// * `mode`: IRQ mode (ACPI spec section 5.8.1)</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enable_acpi</span>(<span class="ident">mode</span>: <span class="ident">u32</span>) {
-    <span class="kw">unsafe</span> { <span class="macro">assert_eq!</span>(<span class="ident">raw::lai_enable_acpi</span>(<span class="ident">mode</span>), <span class="ident">raw::LAI_SUCCESS</span>) }
+<span class="doccomment">/// Enables ACPI SCI.
+///
+/// ## Parameters
+/// * `mode`: IRQ mode (ACPI spec section 5.8.1)
+</span><span class="kw">pub fn </span>enable_acpi(mode: u32) {
+    <span class="kw">unsafe </span>{ <span class="macro">assert_eq!</span>(raw::lai_enable_acpi(mode), raw::LAI_SUCCESS) }
 }
 
-<span class="doccomment">/// Enters a sleeping state.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Parameters</span>
-<span class="doccomment">/// * `sleep_state`: 0-5 to correspond with states S0-S5</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enter_sleep</span>(<span class="ident">sleep_state</span>: <span class="ident">u8</span>) {
-    <span class="kw">unsafe</span> { <span class="macro">assert_eq!</span>(<span class="ident">raw::lai_enter_sleep</span>(<span class="ident">sleep_state</span>), <span class="ident">raw::LAI_SUCCESS</span>) }
+<span class="doccomment">/// Enters a sleeping state.
+///
+/// ## Parameters
+/// * `sleep_state`: 0-5 to correspond with states S0-S5
+</span><span class="kw">pub fn </span>enter_sleep(sleep_state: u8) {
+    <span class="kw">unsafe </span>{ <span class="macro">assert_eq!</span>(raw::lai_enter_sleep(sleep_state), raw::LAI_SUCCESS) }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset</span>() {
-    <span class="kw">unsafe</span> { <span class="macro">assert_eq!</span>(<span class="ident">raw::lai_acpi_reset</span>(), <span class="ident">raw::LAI_SUCCESS</span>) }
+<span class="kw">pub fn </span>reset() {
+    <span class="kw">unsafe </span>{ <span class="macro">assert_eq!</span>(raw::lai_acpi_reset(), raw::LAI_SUCCESS) }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

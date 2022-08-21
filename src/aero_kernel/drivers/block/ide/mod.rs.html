@@ -231,204 +231,204 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">mod</span> <span class="ident">channel</span>;
-<span class="kw">mod</span> <span class="ident">registers</span>;
+</span><span class="kw">mod </span>channel;
+<span class="kw">mod </span>registers;
 
-<span class="kw">use</span> <span class="ident">channel</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>channel::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+<span class="kw">use </span>alloc::sync::Arc;
+<span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::drivers::pci</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::drivers::pci::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::block</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::block</span>::{<span class="ident">BlockDevice</span>, <span class="ident">BlockDeviceInterface</span>};
+<span class="kw">use </span><span class="kw">crate</span>::fs::block;
+<span class="kw">use </span><span class="kw">crate</span>::fs::block::{BlockDevice, BlockDeviceInterface};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::OffsetPageTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::CeilDiv</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::OffsetPageTable;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
+<span class="kw">use </span><span class="kw">crate</span>::utils::CeilDiv;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ahci::DmaRequest</span>;
+<span class="kw">use </span><span class="kw">super</span>::ahci::DmaRequest;
 
-<span class="kw">static</span> <span class="ident">DRIVER</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Ide</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>DRIVER: Once&lt;Arc&lt;Ide&gt;&gt; = Once::new();
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IdeDrive</span> {
-    <span class="ident">slave</span>: <span class="ident">bool</span>,
-    <span class="ident">channel</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeChannel</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>IdeDrive {
+    slave: bool,
+    channel: Arc&lt;IdeChannel&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">IdeDrive</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">slave</span>: <span class="ident">bool</span>, <span class="ident">channel</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeChannel</span><span class="op">&gt;</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeDrive</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new</span>(<span class="ident">IdeDrive</span> { <span class="ident">slave</span>, <span class="ident">channel</span> })
+<span class="kw">impl </span>IdeDrive {
+    <span class="kw">pub fn </span>new(slave: bool, channel: Arc&lt;IdeChannel&gt;) -&gt; Arc&lt;IdeDrive&gt; {
+        Arc::new(IdeDrive { slave, channel })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">BlockDeviceInterface</span> <span class="kw">for</span> <span class="ident">IdeDrive</span> {
-    <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sector</span>: <span class="ident">usize</span>, <span class="ident">dest</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">dest</span>.<span class="ident">len</span>().<span class="ident">ceil_div</span>(<span class="number">512</span>);
-        <span class="kw">let</span> <span class="ident">request</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">DmaRequest::new</span>(<span class="ident">sector</span>, <span class="ident">count</span>));
+<span class="kw">impl </span>BlockDeviceInterface <span class="kw">for </span>IdeDrive {
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="kw">let </span>count = dest.len().ceil_div(<span class="number">512</span>);
+        <span class="kw">let </span>request = Arc::new(DmaRequest::new(sector, count));
 
-        <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">channel</span>.<span class="ident">run_request</span>(<span class="ident">request</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">slave</span>);
+        <span class="kw">let </span>res = <span class="self">self</span>.channel.run_request(request.clone(), <span class="self">self</span>.slave);
 
-        <span class="kw">if</span> <span class="ident">res</span>.<span class="ident">is_some</span>() {
-            <span class="ident">request</span>.<span class="ident">copy_into</span>(<span class="ident">dest</span>);
+        <span class="kw">if </span>res.is_some() {
+            request.copy_into(dest);
         }
 
-        <span class="ident">res</span>
+        res
     }
 
-    <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_sector</span>: <span class="ident">usize</span>, <span class="ident">_buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
+    <span class="kw">fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>, _sector: usize, _buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="macro">unimplemented!</span>()
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IdeDevice</span> {
-    <span class="ident">ide_devs</span>: [<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeDrive</span><span class="op">&gt;</span><span class="op">&gt;</span>; <span class="number">4</span>],
-    <span class="ident">channels</span>: [<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeChannel</span><span class="op">&gt;</span><span class="op">&gt;</span>; <span class="number">2</span>],
+<span class="kw">pub struct </span>IdeDevice {
+    ide_devs: [<span class="prelude-ty">Option</span>&lt;Arc&lt;IdeDrive&gt;&gt;; <span class="number">4</span>],
+    channels: [<span class="prelude-ty">Option</span>&lt;Arc&lt;IdeChannel&gt;&gt;; <span class="number">2</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">IdeDevice</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">IdeDevice</span> {
-        <span class="kw">const</span> <span class="ident">EMPTY_DRIVE</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeDrive</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
-        <span class="kw">const</span> <span class="ident">EMPTY_CHANNELS</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">IdeChannel</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+<span class="kw">impl </span>IdeDevice {
+    <span class="kw">pub fn </span>new() -&gt; IdeDevice {
+        <span class="kw">const </span>EMPTY_DRIVE: <span class="prelude-ty">Option</span>&lt;Arc&lt;IdeDrive&gt;&gt; = <span class="prelude-val">None</span>;
+        <span class="kw">const </span>EMPTY_CHANNELS: <span class="prelude-ty">Option</span>&lt;Arc&lt;IdeChannel&gt;&gt; = <span class="prelude-val">None</span>;
 
-        <span class="ident">IdeDevice</span> {
-            <span class="ident">ide_devs</span>: [<span class="ident">EMPTY_DRIVE</span>; <span class="number">4</span>],
-            <span class="ident">channels</span>: [<span class="ident">EMPTY_CHANNELS</span>; <span class="number">2</span>],
+        IdeDevice {
+            ide_devs: [EMPTY_DRIVE; <span class="number">4</span>],
+            channels: [EMPTY_CHANNELS; <span class="number">2</span>],
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IdeDevice</span> {
-    <span class="kw">fn</span> <span class="ident">launch</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">PciHeader</span>) {
+<span class="kw">impl </span>IdeDevice {
+    <span class="kw">fn </span>launch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: <span class="kw-2">&amp;</span>PciHeader) {
         <span class="macro">log::trace!</span>(<span class="string">&quot;ide: starting ide&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">program_interface</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">program_interface</span>();
+        <span class="kw">let </span>program_interface = header.program_interface();
 
-        <span class="kw">if</span> <span class="ident">program_interface</span>.<span class="ident">contains</span>(<span class="ident">ProgramInterface::DMA_CAPABLE</span>) {
+        <span class="kw">if </span>program_interface.contains(ProgramInterface::DMA_CAPABLE) {
             <span class="macro">log::warn!</span>(<span class="string">&quot;ide: dma not supported&quot;</span>);
             <span class="kw">return</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">get_header_type</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+        <span class="kw">if </span>header.get_header_type() != <span class="number">0 </span>{
             <span class="macro">log::debug!</span>(<span class="string">&quot;ide: header type != 0&quot;</span>);
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">bmid_1</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">base_address4</span>() <span class="op">&amp;</span> <span class="number">0xFFFF_FFFC</span>;
-        <span class="kw">let</span> <span class="ident">bmid_2</span> <span class="op">=</span> <span class="ident">bmid_1</span> <span class="op">+</span> <span class="number">8</span>;
+        <span class="kw">let </span>bmid_1 = header.base_address4() &amp; <span class="number">0xFFFF_FFFC</span>;
+        <span class="kw">let </span>bmid_2 = bmid_1 + <span class="number">8</span>;
 
-        <span class="kw">let</span> (<span class="ident">io1</span>, <span class="ident">io2</span>) <span class="op">=</span> {
+        <span class="kw">let </span>(io1, io2) = {
             (
-                <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">base_address0</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="ident">header</span>.<span class="ident">base_address0</span>() <span class="op">&amp;</span> <span class="number">0xFFFF_FFFC</span>
-                } <span class="kw">else</span> {
-                    <span class="number">0x1F0</span>
-                },
-                <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">base_address1</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="ident">header</span>.<span class="ident">base_address1</span>() <span class="op">&amp;</span> <span class="number">0xFFFF_FFFC</span>
-                } <span class="kw">else</span> {
-                    <span class="number">0x3F6</span>
-                },
+                <span class="kw">if </span>header.base_address0() != <span class="number">0 </span>{
+                    header.base_address0() &amp; <span class="number">0xFFFF_FFFC
+                </span>} <span class="kw">else </span>{
+                    <span class="number">0x1F0
+                </span>},
+                <span class="kw">if </span>header.base_address1() != <span class="number">0 </span>{
+                    header.base_address1() &amp; <span class="number">0xFFFF_FFFC
+                </span>} <span class="kw">else </span>{
+                    <span class="number">0x3F6
+                </span>},
             )
         };
 
-        <span class="kw">let</span> (<span class="ident">io3</span>, <span class="ident">io4</span>) <span class="op">=</span> {
+        <span class="kw">let </span>(io3, io4) = {
             (
-                <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">base_address2</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="ident">header</span>.<span class="ident">base_address2</span>() <span class="op">&amp;</span> <span class="number">0xFFFF_FFFC</span>
-                } <span class="kw">else</span> {
-                    <span class="number">0x170</span>
-                },
-                <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">base_address3</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="ident">header</span>.<span class="ident">base_address3</span>() <span class="op">&amp;</span> <span class="number">0xFFFF_FFFC</span>
-                } <span class="kw">else</span> {
-                    <span class="number">0x376</span>
-                },
+                <span class="kw">if </span>header.base_address2() != <span class="number">0 </span>{
+                    header.base_address2() &amp; <span class="number">0xFFFF_FFFC
+                </span>} <span class="kw">else </span>{
+                    <span class="number">0x170
+                </span>},
+                <span class="kw">if </span>header.base_address3() != <span class="number">0 </span>{
+                    header.base_address3() &amp; <span class="number">0xFFFF_FFFC
+                </span>} <span class="kw">else </span>{
+                    <span class="number">0x376
+                </span>},
             )
         };
 
-        <span class="kw">let</span> <span class="ident">c1</span> <span class="op">=</span> <span class="ident">IdeChannel::new</span>(<span class="ident">io1</span> <span class="kw">as</span> <span class="ident">u16</span>, <span class="ident">io2</span> <span class="kw">as</span> <span class="ident">u16</span>, <span class="ident">bmid_1</span> <span class="kw">as</span> <span class="ident">u16</span>, <span class="number">14</span>);
-        <span class="kw">let</span> <span class="ident">c2</span> <span class="op">=</span> <span class="ident">IdeChannel::new</span>(<span class="ident">io3</span> <span class="kw">as</span> <span class="ident">u16</span>, <span class="ident">io4</span> <span class="kw">as</span> <span class="ident">u16</span>, <span class="ident">bmid_2</span> <span class="kw">as</span> <span class="ident">u16</span>, <span class="number">15</span>);
+        <span class="kw">let </span>c1 = IdeChannel::new(io1 <span class="kw">as </span>u16, io2 <span class="kw">as </span>u16, bmid_1 <span class="kw">as </span>u16, <span class="number">14</span>);
+        <span class="kw">let </span>c2 = IdeChannel::new(io3 <span class="kw">as </span>u16, io4 <span class="kw">as </span>u16, bmid_2 <span class="kw">as </span>u16, <span class="number">15</span>);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">idx</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="kw">for</span> (<span class="ident">ci</span>, <span class="ident">c</span>) <span class="kw">in</span> [<span class="ident">c1</span>, <span class="ident">c2</span>].<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">s</span> <span class="kw">in</span> [<span class="bool-val">false</span>, <span class="bool-val">true</span>].<span class="ident">iter</span>() {
-                <span class="kw">if</span> <span class="ident">c</span>.<span class="ident">detect</span>(<span class="ident">s</span>) {
-                    <span class="self">self</span>.<span class="ident">ide_devs</span>[<span class="ident">idx</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">IdeDrive::new</span>(<span class="ident">s</span>, <span class="ident">c</span>.<span class="ident">clone</span>()));
-                    <span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>idx = <span class="number">0</span>;
+        <span class="kw">for </span>(ci, c) <span class="kw">in </span>[c1, c2].iter().enumerate() {
+            <span class="kw">for </span><span class="kw-2">&amp;</span>s <span class="kw">in </span>[<span class="bool-val">false</span>, <span class="bool-val">true</span>].iter() {
+                <span class="kw">if </span>c.detect(s) {
+                    <span class="self">self</span>.ide_devs[idx] = <span class="prelude-val">Some</span>(IdeDrive::new(s, c.clone()));
+                    idx += <span class="number">1</span>;
 
-                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">channels</span>[<span class="ident">ci</span>].<span class="ident">is_none</span>() {
-                        <span class="self">self</span>.<span class="ident">channels</span>[<span class="ident">ci</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">c</span>.<span class="ident">clone</span>());
+                    <span class="kw">if </span><span class="self">self</span>.channels[ci].is_none() {
+                        <span class="self">self</span>.channels[ci] = <span class="prelude-val">Some</span>(c.clone());
                     }
                 }
             }
         }
 
-        <span class="kw">if</span> <span class="ident">idx</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="ident">header</span>.<span class="ident">enable_bus_mastering</span>();
+        <span class="kw">if </span>idx &gt; <span class="number">0 </span>{
+            header.enable_bus_mastering();
 
-            <span class="kw">for</span> <span class="ident">channel</span> <span class="kw">in</span> <span class="self">self</span>
-                .<span class="ident">channels</span>
-                .<span class="ident">iter_mut</span>()
-                .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">is_some</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">a</span>.<span class="ident">as_mut</span>().<span class="ident">unwrap</span>())
+            <span class="kw">for </span>channel <span class="kw">in </span><span class="self">self
+                </span>.channels
+                .iter_mut()
+                .filter(|a| a.is_some())
+                .map(|a| a.as_mut().unwrap())
             {
-                <span class="ident">channel</span>.<span class="ident">init</span>();
+                channel.init();
             }
 
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">drive</span>) <span class="kw">in</span> <span class="self">self</span>
-                .<span class="ident">ide_devs</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">is_some</span>())
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">as_ref</span>().<span class="ident">unwrap</span>())
-                .<span class="ident">enumerate</span>()
+            <span class="kw">for </span>(i, drive) <span class="kw">in </span><span class="self">self
+                </span>.ide_devs
+                .iter()
+                .filter(|e| e.is_some())
+                .map(|e| e.as_ref().unwrap())
+                .enumerate()
             {
-                <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="macro">alloc::format!</span>(<span class="string">&quot;blck{}&quot;</span>, <span class="ident">i</span>);
-                <span class="kw">let</span> <span class="ident">block_device</span> <span class="op">=</span> <span class="ident">BlockDevice::new</span>(<span class="ident">name</span>, <span class="ident">drive</span>.<span class="ident">clone</span>());
+                <span class="kw">let </span>name = <span class="macro">alloc::format!</span>(<span class="string">&quot;blck{}&quot;</span>, i);
+                <span class="kw">let </span>block_device = BlockDevice::new(name, drive.clone());
 
-                <span class="ident">block::install_block_device</span>(<span class="ident">block_device</span>).<span class="ident">unwrap</span>();
+                block::install_block_device(block_device).unwrap();
             }
         }
     }
 }
 
-<span class="kw">struct</span> <span class="ident">Ide</span> {
-    <span class="ident">device</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">IdeDevice</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Ide {
+    device: Mutex&lt;IdeDevice&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">PciDeviceHandle</span> <span class="kw">for</span> <span class="ident">Ide</span> {
-    <span class="kw">fn</span> <span class="ident">handles</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">vendor_id</span>: <span class="ident">Vendor</span>, <span class="ident">device_id</span>: <span class="ident">DeviceType</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> (<span class="ident">vendor_id</span>, <span class="ident">device_id</span>) {
-            (<span class="ident">Vendor::Intel</span>, <span class="ident">DeviceType::IdeController</span>) =&gt; <span class="bool-val">true</span>,
+<span class="kw">impl </span>PciDeviceHandle <span class="kw">for </span>Ide {
+    <span class="kw">fn </span>handles(<span class="kw-2">&amp;</span><span class="self">self</span>, vendor_id: Vendor, device_id: DeviceType) -&gt; bool {
+        <span class="kw">match </span>(vendor_id, device_id) {
+            (Vendor::Intel, DeviceType::IdeController) =&gt; <span class="bool-val">true</span>,
 
-            <span class="kw">_</span> =&gt; <span class="bool-val">false</span>,
+            <span class="kw">_ </span>=&gt; <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">start</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">PciHeader</span>, <span class="ident">_offset_table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OffsetPageTable</span>) {
-        <span class="self">self</span>.<span class="ident">device</span>.<span class="ident">lock_irq</span>().<span class="ident">launch</span>(<span class="ident">header</span>);
+    <span class="kw">fn </span>start(<span class="kw-2">&amp;</span><span class="self">self</span>, header: <span class="kw-2">&amp;</span>PciHeader, _offset_table: <span class="kw-2">&amp;mut </span>OffsetPageTable) {
+        <span class="self">self</span>.device.lock_irq().launch(header);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">get_device</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Ide</span><span class="op">&gt;</span> {
-    <span class="ident">DRIVER</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;ide: attempted to get the ide driver instance before it was initialized&quot;</span>)
+<span class="kw">fn </span>get_device() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Arc&lt;Ide&gt; {
+    DRIVER
+        .get()
+        .expect(<span class="string">&quot;ide: attempted to get the ide driver instance before it was initialized&quot;</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="ident">DRIVER</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="ident">Arc::new</span>(<span class="ident">Ide</span> {
-            <span class="ident">device</span>: <span class="ident">Mutex::new</span>(<span class="ident">IdeDevice::new</span>()),
+<span class="kw">fn </span>init() {
+    DRIVER.call_once(|| {
+        Arc::new(Ide {
+            device: Mutex::new(IdeDevice::new()),
         })
     });
 
-    <span class="ident">register_device_driver</span>(<span class="ident">get_device</span>().<span class="ident">clone</span>());
+    register_device_driver(get_device().clone());
 }
 
-<span class="macro">crate::module_init!</span>(<span class="ident">init</span>);
+<span class="macro">crate::module_init!</span>(init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -2,69 +2,69 @@
 <p>The implementation uses either a ticket mutex or a regular spin mutex depending on whether the <code>spin_mutex</code> or
 <code>ticket_mutex</code> feature flag is enabled.</p>
 <h2 id="example"><a href="#example">Example</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin;
 
-<span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::Mutex::new</span>(<span class="number">0</span>);
+<span class="kw">let </span>lock = spin::Mutex::new(<span class="number">0</span>);
 
-<span class="comment">// Modify the data</span>
-<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">lock</span>() <span class="op">=</span> <span class="number">2</span>;
+<span class="comment">// Modify the data
+</span><span class="kw-2">*</span>lock.lock() = <span class="number">2</span>;
 
-<span class="comment">// Read the data</span>
-<span class="kw">let</span> <span class="ident">answer</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">lock</span>();
-<span class="macro">assert_eq!</span>(<span class="ident">answer</span>, <span class="number">2</span>);</code></pre></div>
+<span class="comment">// Read the data
+</span><span class="kw">let </span>answer = <span class="kw-2">*</span>lock.lock();
+<span class="macro">assert_eq!</span>(answer, <span class="number">2</span>);</code></pre></div>
 <h2 id="thread-safety-example"><a href="#thread-safety-example">Thread safety example</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin</span>;
-<span class="kw">use</span> <span class="ident">std::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Barrier</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin;
+<span class="kw">use </span>std::sync::{Arc, Barrier};
 
-<span class="kw">let</span> <span class="ident">thread_count</span> <span class="op">=</span> <span class="number">1000</span>;
-<span class="kw">let</span> <span class="ident">spin_mutex</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">spin::Mutex::new</span>(<span class="number">0</span>));
+<span class="kw">let </span>thread_count = <span class="number">1000</span>;
+<span class="kw">let </span>spin_mutex = Arc::new(spin::Mutex::new(<span class="number">0</span>));
 
-<span class="comment">// We use a barrier to ensure the readout happens after all writing</span>
-<span class="kw">let</span> <span class="ident">barrier</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">Barrier::new</span>(<span class="ident">thread_count</span> <span class="op">+</span> <span class="number">1</span>));
+<span class="comment">// We use a barrier to ensure the readout happens after all writing
+</span><span class="kw">let </span>barrier = Arc::new(Barrier::new(thread_count + <span class="number">1</span>));
 
-<span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="ident">thread_count</span>) {
-    <span class="kw">let</span> <span class="ident">my_barrier</span> <span class="op">=</span> <span class="ident">barrier</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">my_lock</span> <span class="op">=</span> <span class="ident">spin_mutex</span>.<span class="ident">clone</span>();
-    <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">my_lock</span>.<span class="ident">lock</span>();
-        <span class="kw-2">*</span><span class="ident">guard</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+<span class="kw">for _ in </span>(<span class="number">0</span>..thread_count) {
+    <span class="kw">let </span>my_barrier = barrier.clone();
+    <span class="kw">let </span>my_lock = spin_mutex.clone();
+    std::thread::spawn(<span class="kw">move </span>|| {
+        <span class="kw">let </span><span class="kw-2">mut </span>guard = my_lock.lock();
+        <span class="kw-2">*</span>guard += <span class="number">1</span>;
 
-        <span class="comment">// Release the lock to prevent a deadlock</span>
-        <span class="ident">drop</span>(<span class="ident">guard</span>);
-        <span class="ident">my_barrier</span>.<span class="ident">wait</span>();
+        <span class="comment">// Release the lock to prevent a deadlock
+        </span>drop(guard);
+        my_barrier.wait();
     });
 }
 
-<span class="ident">barrier</span>.<span class="ident">wait</span>();
+barrier.wait();
 
-<span class="kw">let</span> <span class="ident">answer</span> <span class="op">=</span> { <span class="kw-2">*</span><span class="ident">spin_mutex</span>.<span class="ident">lock</span>() };
-<span class="macro">assert_eq!</span>(<span class="ident">answer</span>, <span class="ident">thread_count</span>);</code></pre></div>
+<span class="kw">let </span>answer = { <span class="kw-2">*</span>spin_mutex.lock() };
+<span class="macro">assert_eq!</span>(answer, thread_count);</code></pre></div>
 </div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><div id="implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Mutex%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#117-150">source</a></span><a href="#impl-Mutex%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, R&gt; <a class="struct" href="struct.Mutex.html" title="struct spin::mutex::Mutex">Mutex</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.new" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#134-136">source</a></span><h4 class="code-header">pub const fn <a href="#method.new" class="fnname">new</a>(value: T) -&gt; Self</h4></section></summary><div class="docblock"><p>Creates a new <a href="struct.Mutex.html" title="Mutex"><code>Mutex</code></a> wrapping the supplied data.</p>
 <h5 id="example-1"><a href="#example-1">Example</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin::Mutex</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin::Mutex;
 
-<span class="kw">static</span> <span class="ident">MUTEX</span>: <span class="ident">Mutex</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(());
+<span class="kw">static </span>MUTEX: Mutex&lt;()&gt; = Mutex::new(());
 
-<span class="kw">fn</span> <span class="ident">demo</span>() {
-    <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">MUTEX</span>.<span class="ident">lock</span>();
-    <span class="comment">// do something with lock</span>
-    <span class="ident">drop</span>(<span class="ident">lock</span>);
+<span class="kw">fn </span>demo() {
+    <span class="kw">let </span>lock = MUTEX.lock();
+    <span class="comment">// do something with lock
+    </span>drop(lock);
 }</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.into_inner" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#147-149">source</a></span><h4 class="code-header">pub fn <a href="#method.into_inner" class="fnname">into_inner</a>(self) -&gt; T</h4></section></summary><div class="docblock"><p>Consumes this <a href="struct.Mutex.html" title="Mutex"><code>Mutex</code></a> and unwraps the underlying data.</p>
 <h5 id="example-2"><a href="#example-2">Example</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::Mutex::new</span>(<span class="number">42</span>);
-<span class="macro">assert_eq!</span>(<span class="number">42</span>, <span class="ident">lock</span>.<span class="ident">into_inner</span>());</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>lock = spin::Mutex::new(<span class="number">42</span>);
+<span class="macro">assert_eq!</span>(<span class="number">42</span>, lock.into_inner());</code></pre></div>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Mutex%3CT%2C%20R%3E-1" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#152-173">source</a></span><a href="#impl-Mutex%3CT%2C%20R%3E-1" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized, R:&nbsp;<a class="trait" href="../relax/trait.RelaxStrategy.html" title="trait spin::relax::RelaxStrategy">RelaxStrategy</a>&gt; <a class="struct" href="struct.Mutex.html" title="struct spin::mutex::Mutex">Mutex</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.lock" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#168-172">source</a></span><h4 class="code-header">pub fn <a href="#method.lock" class="fnname">lock</a>(&amp;self) -&gt; <a class="struct" href="struct.MutexGuard.html" title="struct spin::mutex::MutexGuard">MutexGuard</a>&lt;'_, T&gt;</h4></section></summary><div class="docblock"><p>Locks the <a href="struct.Mutex.html" title="Mutex"><code>Mutex</code></a> and returns a guard that permits access to the inner data.</p>
 <p>The returned value may be dereferenced for data access
 and the lock will be dropped when the guard falls out of scope.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::Mutex::new</span>(<span class="number">0</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>lock = spin::Mutex::new(<span class="number">0</span>);
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">lock</span>();
-    <span class="comment">// The lock is now locked and the data can be accessed</span>
-    <span class="kw-2">*</span><span class="ident">data</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    <span class="comment">// The lock is implicitly dropped at the end of the scope</span>
-}</code></pre></div>
+    <span class="kw">let </span><span class="kw-2">mut </span>data = lock.lock();
+    <span class="comment">// The lock is now locked and the data can be accessed
+    </span><span class="kw-2">*</span>data += <span class="number">1</span>;
+    <span class="comment">// The lock is implicitly dropped at the end of the scope
+</span>}</code></pre></div>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Mutex%3CT%2C%20R%3E-2" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#175-237">source</a></span><a href="#impl-Mutex%3CT%2C%20R%3E-2" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized, R&gt; <a class="struct" href="struct.Mutex.html" title="struct spin::mutex::Mutex">Mutex</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.is_locked" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#183-185">source</a></span><h4 class="code-header">pub fn <a href="#method.is_locked" class="fnname">is_locked</a>(&amp;self) -&gt; bool</h4></section></summary><div class="docblock"><p>Returns <code>true</code> if the lock is currently held.</p>
 <h5 id="safety"><a href="#safety">Safety</a></h5>
 <p>This function provides no synchronization guarantees and so its result should be considered ‘out of date’
@@ -76,22 +76,22 @@ thread. However, this can be useful in some instances for exposing the
 lock to FFI that doesn’t know how to deal with RAII.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_lock" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#214-218">source</a></span><h4 class="code-header">pub fn <a href="#method.try_lock" class="fnname">try_lock</a>(&amp;self) -&gt; Option&lt;<a class="struct" href="struct.MutexGuard.html" title="struct spin::mutex::MutexGuard">MutexGuard</a>&lt;'_, T&gt;&gt;</h4></section></summary><div class="docblock"><p>Try to lock this <a href="struct.Mutex.html" title="Mutex"><code>Mutex</code></a>, returning a lock guard if successful.</p>
 <h5 id="example-3"><a href="#example-3">Example</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::Mutex::new</span>(<span class="number">42</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>lock = spin::Mutex::new(<span class="number">42</span>);
 
-<span class="kw">let</span> <span class="ident">maybe_guard</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">try_lock</span>();
-<span class="macro">assert!</span>(<span class="ident">maybe_guard</span>.<span class="ident">is_some</span>());
+<span class="kw">let </span>maybe_guard = lock.try_lock();
+<span class="macro">assert!</span>(maybe_guard.is_some());
 
-<span class="comment">// `maybe_guard` is still held, so the second call fails</span>
-<span class="kw">let</span> <span class="ident">maybe_guard2</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">try_lock</span>();
-<span class="macro">assert!</span>(<span class="ident">maybe_guard2</span>.<span class="ident">is_none</span>());</code></pre></div>
+<span class="comment">// `maybe_guard` is still held, so the second call fails
+</span><span class="kw">let </span>maybe_guard2 = lock.try_lock();
+<span class="macro">assert!</span>(maybe_guard2.is_none());</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.get_mut" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#234-236">source</a></span><h4 class="code-header">pub fn <a href="#method.get_mut" class="fnname">get_mut</a>(&amp;mut self) -&gt; &amp;mut T</h4></section></summary><div class="docblock"><p>Returns a mutable reference to the underlying data.</p>
 <p>Since this call borrows the <a href="struct.Mutex.html" title="Mutex"><code>Mutex</code></a> mutably, and a mutable reference is guaranteed to be exclusive in Rust,
 no actual locking needs to take place – the mutable borrow statically guarantees no locks exist. As such,
 this is a ‘zero-cost’ operation.</p>
 <h5 id="example-4"><a href="#example-4">Example</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::Mutex::new</span>(<span class="number">0</span>);
-<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">get_mut</span>() <span class="op">=</span> <span class="number">10</span>;
-<span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">lock</span>(), <span class="number">10</span>);</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span><span class="kw-2">mut </span>lock = spin::Mutex::new(<span class="number">0</span>);
+<span class="kw-2">*</span>lock.get_mut() = <span class="number">10</span>;
+<span class="macro">assert_eq!</span>(<span class="kw-2">*</span>lock.lock(), <span class="number">10</span>);</code></pre></div>
 </div></details></div></details></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor"></a></h2><div id="trait-implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Debug-for-Mutex%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#239-243">source</a></span><a href="#impl-Debug-for-Mutex%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized + Debug, R&gt; Debug for <a class="struct" href="struct.Mutex.html" title="struct spin::mutex::Mutex">Mutex</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.fmt" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#240-242">source</a></span><a href="#method.fmt" class="anchor"></a><h4 class="code-header">fn <a class="fnname">fmt</a>(&amp;self, f: &amp;mut Formatter&lt;'_&gt;) -&gt; Result</h4></section></summary><div class='docblock'><p>Formats the value using the given formatter. <a>Read more</a></p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Default-for-Mutex%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#245-249">source</a></span><a href="#impl-Default-for-Mutex%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized + Default, R&gt; Default for <a class="struct" href="struct.Mutex.html" title="struct spin::mutex::Mutex">Mutex</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.default" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#246-248">source</a></span><a href="#method.default" class="anchor"></a><h4 class="code-header">fn <a class="fnname">default</a>() -&gt; Self</h4></section></summary><div class='docblock'><p>Returns the “default value” for a type. <a>Read more</a></p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-From%3CT%3E-for-Mutex%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#251-255">source</a></span><a href="#impl-From%3CT%3E-for-Mutex%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, R&gt; From&lt;T&gt; for <a class="struct" href="struct.Mutex.html" title="struct spin::mutex::Mutex">Mutex</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.from" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/mutex.rs.html#252-254">source</a></span><a href="#method.from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">from</a>(data: T) -&gt; Self</h4></section></summary><div class='docblock'><p>Converts to this type from the input type.</p>
@@ -115,4 +115,4 @@ if the lock was successfully acquired and <code>false</code> otherwise. <a href=
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_from" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_from</a>(value: U) -&gt; Result&lt;T, &lt;T as TryFrom&lt;U&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-TryInto%3CU%3E-for-Mutex%3CT%2C%20R%3E" class="impl has-srclink"><a href="#impl-TryInto%3CU%3E-for-Mutex%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, U&gt; TryInto&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: TryFrom&lt;T&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle" open><summary><section id="associatedtype.Error-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Error-1" class="anchor"></a><h4 class="code-header">type <a class="associatedtype">Error</a> = &lt;U as TryFrom&lt;T&gt;&gt;::Error</h4></section></summary><div class='docblock'><p>The type returned in the event of a conversion error.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_into" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_into" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_into</a>(self) -&gt; Result&lt;U, &lt;U as TryFrom&lt;T&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
-</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

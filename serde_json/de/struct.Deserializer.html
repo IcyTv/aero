@@ -42,15 +42,15 @@ still checked if the hex number represents a valid Unicode code point.</p>
 <p>You can use this to parse JSON strings containing invalid UTF-8 bytes,
 or unpaired surrogates.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">serde_bytes::ByteBuf</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>serde_bytes::ByteBuf;
 
-<span class="kw">fn</span> <span class="ident">look_at_bytes</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">serde_json::Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">json_data</span> <span class="op">=</span> <span class="string">b&quot;\&quot;some bytes: \xe5\x00\xe5\&quot;&quot;</span>;
-    <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">ByteBuf</span> <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="ident">json_data</span>)<span class="question-mark">?</span>;
+<span class="kw">fn </span>look_at_bytes() -&gt; <span class="prelude-ty">Result</span>&lt;(), serde_json::Error&gt; {
+    <span class="kw">let </span>json_data = <span class="string">b&quot;\&quot;some bytes: \xe5\x00\xe5\&quot;&quot;</span>;
+    <span class="kw">let </span>bytes: ByteBuf = serde_json::from_slice(json_data)<span class="question-mark">?</span>;
 
-    <span class="macro">assert_eq!</span>(<span class="string">b&#39;\xe5&#39;</span>, <span class="ident">bytes</span>[<span class="number">12</span>]);
-    <span class="macro">assert_eq!</span>(<span class="string">b&#39;\0&#39;</span>, <span class="ident">bytes</span>[<span class="number">13</span>]);
-    <span class="macro">assert_eq!</span>(<span class="string">b&#39;\xe5&#39;</span>, <span class="ident">bytes</span>[<span class="number">14</span>]);
+    <span class="macro">assert_eq!</span>(<span class="string">b&#39;\xe5&#39;</span>, bytes[<span class="number">12</span>]);
+    <span class="macro">assert_eq!</span>(<span class="string">b&#39;\0&#39;</span>, bytes[<span class="number">13</span>]);
+    <span class="macro">assert_eq!</span>(<span class="string">b&#39;\xe5&#39;</span>, bytes[<span class="number">14</span>]);
 
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div>
@@ -58,13 +58,13 @@ or unpaired surrogates.</p>
 to be valid. <code>\u</code> escape sequences are required to represent a valid
 Unicode code point or lone surrogate.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">serde_bytes::ByteBuf</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>serde_bytes::ByteBuf;
 
-<span class="kw">fn</span> <span class="ident">look_at_bytes</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">serde_json::Error</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">json_data</span> <span class="op">=</span> <span class="string">b&quot;\&quot;lone surrogate: \\uD801\&quot;&quot;</span>;
-    <span class="kw">let</span> <span class="ident">bytes</span>: <span class="ident">ByteBuf</span> <span class="op">=</span> <span class="ident">serde_json::from_slice</span>(<span class="ident">json_data</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">expected</span> <span class="op">=</span> <span class="string">b&quot;lone surrogate: \xED\xA0\x81&quot;</span>;
-    <span class="macro">assert_eq!</span>(<span class="ident">expected</span>, <span class="ident">bytes</span>.<span class="ident">as_slice</span>());
+<span class="kw">fn </span>look_at_bytes() -&gt; <span class="prelude-ty">Result</span>&lt;(), serde_json::Error&gt; {
+    <span class="kw">let </span>json_data = <span class="string">b&quot;\&quot;lone surrogate: \\uD801\&quot;&quot;</span>;
+    <span class="kw">let </span>bytes: ByteBuf = serde_json::from_slice(json_data)<span class="question-mark">?</span>;
+    <span class="kw">let </span>expected = <span class="string">b&quot;lone surrogate: \xED\xA0\x81&quot;</span>;
+    <span class="macro">assert_eq!</span>(expected, bytes.as_slice());
     <span class="prelude-val">Ok</span>(())
 }</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.deserialize_option" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/serde_json/de.rs.html#1648-1660">source</a></span><a href="#method.deserialize_option" class="anchor"></a><h4 class="code-header">fn <a href="../../serde/de/trait.Deserializer.html#tymethod.deserialize_option" class="fnname">deserialize_option</a>&lt;V&gt;(self, visitor: V) -&gt; <a class="type" href="../type.Result.html" title="type serde_json::Result">Result</a>&lt;V::<a class="associatedtype" href="../../serde/de/trait.Visitor.html#associatedtype.Value" title="type serde::de::Visitor::Value">Value</a>&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;V: <a class="trait" href="../../serde/de/trait.Visitor.html" title="trait serde::de::Visitor">Visitor</a>&lt;'de&gt;,&nbsp;</span></h4></section></summary><div class="docblock"><p>Parses a <code>null</code> as a None, and any other values as a <code>Some(...)</code>.</p>
@@ -126,4 +126,4 @@ deserialize their human-readable form. <a href="../../serde/de/trait.Deserialize
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_from" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_from</a>(value: U) -&gt; Result&lt;T, &lt;T as TryFrom&lt;U&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-TryInto%3CU%3E-for-Deserializer%3CR%3E" class="impl has-srclink"><a href="#impl-TryInto%3CU%3E-for-Deserializer%3CR%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, U&gt; TryInto&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: TryFrom&lt;T&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle" open><summary><section id="associatedtype.Error-2" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Error-2" class="anchor"></a><h4 class="code-header">type <a class="associatedtype">Error</a> = &lt;U as TryFrom&lt;T&gt;&gt;::Error</h4></section></summary><div class='docblock'><p>The type returned in the event of a conversion error.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_into" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_into" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_into</a>(self) -&gt; Result&lt;U, &lt;U as TryFrom&lt;T&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
-</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

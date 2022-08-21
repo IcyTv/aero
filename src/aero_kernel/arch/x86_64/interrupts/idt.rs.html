@@ -255,228 +255,228 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! The IDT is similar to the Global Descriptor Table in structure.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! **Notes**: &lt;https://wiki.osdev.org/Interrupt_Descriptor_Table&gt;</span>
+</span><span class="doccomment">//! The IDT is similar to the Global Descriptor Table in structure.
+//!
+//! **Notes**: &lt;https://wiki.osdev.org/Interrupt_Descriptor_Table&gt;
 
-<span class="kw">const</span> <span class="ident">IDT_ENTRIES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span>;
+</span><span class="kw">const </span>IDT_ENTRIES: usize = <span class="number">256</span>;
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">IDT</span>: [<span class="ident">IdtEntry</span>; <span class="ident">IDT_ENTRIES</span>] <span class="op">=</span> [<span class="ident">IdtEntry::NULL</span>; <span class="ident">IDT_ENTRIES</span>];
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static </span><span class="kw-2">mut </span>IDT: [IdtEntry; IDT_ENTRIES] = [IdtEntry::NULL; IDT_ENTRIES];
 
-<span class="kw">use</span> <span class="ident">core::mem::size_of</span>;
+<span class="kw">use </span>core::mem::size_of;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">arch::gdt::SegmentSelector</span>, <span class="ident">utils::sync::Mutex</span>};
+<span class="kw">use crate</span>::{arch::gdt::SegmentSelector, utils::sync::Mutex};
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IDTFlags</span>: <span class="ident">u8</span> {
-        <span class="kw">const</span> <span class="ident">PRESENT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-        <span class="kw">const</span> <span class="ident">RING_0</span> <span class="op">=</span> <span class="number">0</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">RING_1</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">RING_2</span> <span class="op">=</span> <span class="number">2</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">RING_3</span> <span class="op">=</span> <span class="number">3</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">SS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="kw">const</span> <span class="ident">INTERRUPT</span> <span class="op">=</span> <span class="number">0xE</span>;
-        <span class="kw">const</span> <span class="ident">TRAP</span> <span class="op">=</span> <span class="number">0xF</span>;
+    <span class="kw">pub struct </span>IDTFlags: u8 {
+        <span class="kw">const </span>PRESENT = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="kw">const </span>RING_0 = <span class="number">0 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="kw">const </span>RING_1 = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="kw">const </span>RING_2 = <span class="number">2 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="kw">const </span>RING_3 = <span class="number">3 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="kw">const </span>SS = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="kw">const </span>INTERRUPT = <span class="number">0xE</span>;
+        <span class="kw">const </span>TRAP = <span class="number">0xF</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">packed</span>)]</span>
-<span class="kw">struct</span> <span class="ident">IdtDescriptor</span> {
-    <span class="ident">size</span>: <span class="ident">u16</span>,
-    <span class="ident">offset</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(C, packed)]</span>
+<span class="kw">struct </span>IdtDescriptor {
+    size: u16,
+    offset: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">IdtDescriptor</span> {
-    <span class="doccomment">/// Create a new IDT descriptor.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">u16</span>, <span class="ident">offset</span>: <span class="ident">u64</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">size</span>, <span class="ident">offset</span> }
+<span class="kw">impl </span>IdtDescriptor {
+    <span class="doccomment">/// Create a new IDT descriptor.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">const fn </span>new(size: u16, offset: u64) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ size, offset }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">packed</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">IdtEntry</span> {
-    <span class="ident">offset_low</span>: <span class="ident">u16</span>,
-    <span class="ident">selector</span>: <span class="ident">u16</span>,
-    <span class="ident">ist</span>: <span class="ident">u8</span>,
-    <span class="ident">type_attr</span>: <span class="ident">u8</span>,
-    <span class="ident">offset_middle</span>: <span class="ident">u16</span>,
-    <span class="ident">offset_hi</span>: <span class="ident">u32</span>,
-    <span class="ident">ignore</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="attribute">#[repr(C, packed)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>IdtEntry {
+    offset_low: u16,
+    selector: u16,
+    ist: u8,
+    type_attr: u8,
+    offset_middle: u16,
+    offset_hi: u32,
+    ignore: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">IdtEntry</span> {
-    <span class="doccomment">/// IDT entry with all values defaulted to 0, ie `null`.</span>
-    <span class="kw">const</span> <span class="ident">NULL</span>: <span class="self">Self</span> <span class="op">=</span> <span class="self">Self</span> {
-        <span class="ident">offset_low</span>: <span class="number">0x00</span>,
-        <span class="ident">selector</span>: <span class="number">0x00</span>,
-        <span class="ident">ist</span>: <span class="number">0x00</span>,
-        <span class="ident">type_attr</span>: <span class="number">0x00</span>,
-        <span class="ident">offset_middle</span>: <span class="number">0x00</span>,
-        <span class="ident">offset_hi</span>: <span class="number">0x00</span>,
-        <span class="ident">ignore</span>: <span class="number">0x00</span>,
+<span class="kw">impl </span>IdtEntry {
+    <span class="doccomment">/// IDT entry with all values defaulted to 0, ie `null`.
+    </span><span class="kw">const </span>NULL: <span class="self">Self </span>= <span class="self">Self </span>{
+        offset_low: <span class="number">0x00</span>,
+        selector: <span class="number">0x00</span>,
+        ist: <span class="number">0x00</span>,
+        type_attr: <span class="number">0x00</span>,
+        offset_middle: <span class="number">0x00</span>,
+        offset_hi: <span class="number">0x00</span>,
+        ignore: <span class="number">0x00</span>,
     };
 
-    <span class="doccomment">/// Set the IDT entry flags.</span>
-    <span class="kw">fn</span> <span class="ident">set_flags</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flags</span>: <span class="ident">IDTFlags</span>) {
-        <span class="self">self</span>.<span class="ident">type_attr</span> <span class="op">=</span> <span class="ident">flags</span>.<span class="ident">bits</span>;
+    <span class="doccomment">/// Set the IDT entry flags.
+    </span><span class="kw">fn </span>set_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, flags: IDTFlags) {
+        <span class="self">self</span>.type_attr = flags.bits;
     }
 
-    <span class="doccomment">/// Set the IDT entry offset.</span>
-    <span class="kw">fn</span> <span class="ident">set_offset</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">selector</span>: <span class="ident">u16</span>, <span class="ident">base</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">selector</span> <span class="op">=</span> <span class="ident">selector</span>;
-        <span class="self">self</span>.<span class="ident">offset_low</span> <span class="op">=</span> <span class="ident">base</span> <span class="kw">as</span> <span class="ident">u16</span>;
-        <span class="self">self</span>.<span class="ident">offset_middle</span> <span class="op">=</span> (<span class="ident">base</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">16</span>) <span class="kw">as</span> <span class="ident">u16</span>;
-        <span class="self">self</span>.<span class="ident">offset_hi</span> <span class="op">=</span> (<span class="ident">base</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+    <span class="doccomment">/// Set the IDT entry offset.
+    </span><span class="kw">fn </span>set_offset(<span class="kw-2">&amp;mut </span><span class="self">self</span>, selector: u16, base: usize) {
+        <span class="self">self</span>.selector = selector;
+        <span class="self">self</span>.offset_low = base <span class="kw">as </span>u16;
+        <span class="self">self</span>.offset_middle = (base &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>u16;
+        <span class="self">self</span>.offset_hi = (base &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32;
     }
 
-    <span class="doccomment">/// Set the handler function of the IDT entry.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">set_function</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handler</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) {
-        <span class="self">self</span>.<span class="ident">set_flags</span>(<span class="ident">IDTFlags::PRESENT</span> <span class="op">|</span> <span class="ident">IDTFlags::RING_0</span> <span class="op">|</span> <span class="ident">IDTFlags::INTERRUPT</span>);
-        <span class="self">self</span>.<span class="ident">set_offset</span>(<span class="number">8</span>, <span class="ident">handler</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    }
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ScratchRegisters</span> {
-    <span class="kw">pub</span> <span class="ident">r11</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">r10</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">r9</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">r8</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rsi</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rdi</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rdx</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rcx</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rax</span>: <span class="ident">u64</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PreservedRegisters</span> {
-    <span class="kw">pub</span> <span class="ident">r15</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">r14</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">r13</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">r12</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rbp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rbx</span>: <span class="ident">u64</span>,
-}
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IretRegisters</span> {
-    <span class="kw">pub</span> <span class="ident">rip</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">cs</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rflags</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">rsp</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">ss</span>: <span class="ident">u64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">IretRegisters</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_user</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">SegmentSelector::from_bits_truncate</span>(<span class="self">self</span>.<span class="ident">cs</span> <span class="kw">as</span> <span class="ident">u16</span>).<span class="ident">contains</span>(<span class="ident">SegmentSelector::RPL_3</span>)
+    <span class="doccomment">/// Set the handler function of the IDT entry.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>set_function(<span class="kw-2">&amp;mut </span><span class="self">self</span>, handler: <span class="kw-2">*const </span>u8) {
+        <span class="self">self</span>.set_flags(IDTFlags::PRESENT | IDTFlags::RING_0 | IDTFlags::INTERRUPT);
+        <span class="self">self</span>.set_offset(<span class="number">8</span>, handler <span class="kw">as </span>usize);
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InterruptStack</span> {
-    <span class="kw">pub</span> <span class="ident">preserved</span>: <span class="ident">PreservedRegisters</span>,
-    <span class="kw">pub</span> <span class="ident">scratch</span>: <span class="ident">ScratchRegisters</span>,
-    <span class="kw">pub</span> <span class="ident">iret</span>: <span class="ident">IretRegisters</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>ScratchRegisters {
+    <span class="kw">pub </span>r11: u64,
+    <span class="kw">pub </span>r10: u64,
+    <span class="kw">pub </span>r9: u64,
+    <span class="kw">pub </span>r8: u64,
+    <span class="kw">pub </span>rsi: u64,
+    <span class="kw">pub </span>rdi: u64,
+    <span class="kw">pub </span>rdx: u64,
+    <span class="kw">pub </span>rcx: u64,
+    <span class="kw">pub </span>rax: u64,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InterruptErrorStack</span> {
-    <span class="kw">pub</span> <span class="ident">code</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">stack</span>: <span class="ident">InterruptStack</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>PreservedRegisters {
+    <span class="kw">pub </span>r15: u64,
+    <span class="kw">pub </span>r14: u64,
+    <span class="kw">pub </span>r13: u64,
+    <span class="kw">pub </span>r12: u64,
+    <span class="kw">pub </span>rbp: u64,
+    <span class="kw">pub </span>rbx: u64,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum</span> <span class="ident">IrqHandler</span> {
-    <span class="ident">ErrorHandler</span>(<span class="kw">fn</span>(<span class="kw-2">&amp;mut</span> <span class="ident">InterruptErrorStack</span>)),
-    <span class="ident">Handler</span>(<span class="kw">fn</span>(<span class="kw-2">&amp;mut</span> <span class="ident">InterruptStack</span>)),
+<span class="attribute">#[derive(Debug, Clone, Copy, Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>IretRegisters {
+    <span class="kw">pub </span>rip: u64,
+    <span class="kw">pub </span>cs: u64,
+    <span class="kw">pub </span>rflags: u64,
+    <span class="kw">pub </span>rsp: u64,
+    <span class="kw">pub </span>ss: u64,
+}
+
+<span class="kw">impl </span>IretRegisters {
+    <span class="kw">pub fn </span>is_user(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        SegmentSelector::from_bits_truncate(<span class="self">self</span>.cs <span class="kw">as </span>u16).contains(SegmentSelector::RPL_3)
+    }
+}
+
+<span class="attribute">#[derive(Debug, Clone, Copy, Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>InterruptStack {
+    <span class="kw">pub </span>preserved: PreservedRegisters,
+    <span class="kw">pub </span>scratch: ScratchRegisters,
+    <span class="kw">pub </span>iret: IretRegisters,
+}
+
+<span class="attribute">#[derive(Debug, Clone, Copy, Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>InterruptErrorStack {
+    <span class="kw">pub </span>code: u64,
+    <span class="kw">pub </span>stack: InterruptStack,
+}
+
+<span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">enum </span>IrqHandler {
+    ErrorHandler(<span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>InterruptErrorStack)),
+    Handler(<span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>InterruptStack)),
 
     <span class="prelude-val">None</span>,
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static</span> <span class="ident">INTERRUPT_HANDLERS</span>: <span class="ident">Mutex</span><span class="op">&lt;</span>[<span class="ident">IrqHandler</span>; <span class="ident">IDT_ENTRIES</span>]<span class="op">&gt;</span> <span class="op">=</span>
-    <span class="ident">Mutex::new</span>([<span class="ident">IrqHandler::None</span>; <span class="ident">IDT_ENTRIES</span>]);
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static </span>INTERRUPT_HANDLERS: Mutex&lt;[IrqHandler; IDT_ENTRIES]&gt; =
+    Mutex::new([IrqHandler::None; IDT_ENTRIES]);
 
-<span class="doccomment">/// Initialize the IDT.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::exceptions</span>;
+<span class="doccomment">/// Initialize the IDT.
+</span><span class="kw">pub fn </span>init() {
+    <span class="kw">use </span><span class="kw">super</span>::exceptions;
 
-    <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-        <span class="comment">// defined in `handlers.asm`</span>
-        <span class="kw">static</span> <span class="ident">interrupt_handlers</span>: [<span class="kw-2">*const</span> <span class="ident">u8</span>; <span class="ident">IDT_ENTRIES</span>];
+    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+        <span class="comment">// defined in `handlers.asm`
+        </span><span class="kw">static </span>interrupt_handlers: [<span class="kw-2">*const </span>u8; IDT_ENTRIES];
     }
 
-    <span class="kw">unsafe</span> {
-        <span class="kw">for</span> (<span class="ident">index</span>, <span class="kw-2">&amp;</span><span class="ident">handler</span>) <span class="kw">in</span> <span class="ident">interrupt_handlers</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="comment">// skip handler insertion if handler is null.</span>
-            <span class="kw">if</span> <span class="ident">handler</span>.<span class="ident">is_null</span>() {
+    <span class="kw">unsafe </span>{
+        <span class="kw">for </span>(index, <span class="kw-2">&amp;</span>handler) <span class="kw">in </span>interrupt_handlers.iter().enumerate() {
+            <span class="comment">// skip handler insertion if handler is null.
+            </span><span class="kw">if </span>handler.is_null() {
                 <span class="kw">continue</span>;
             }
 
-            <span class="ident">IDT</span>[<span class="ident">index</span>].<span class="ident">set_function</span>(<span class="ident">handler</span>);
+            IDT[index].set_function(handler);
         }
     }
 
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">0</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::divide_by_zero</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">1</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::debug</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">2</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::non_maskable</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">3</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::breakpoint</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">4</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::overflow</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">5</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::bound_range</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">6</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::invalid_opcode</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">7</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::device_not_available</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">8</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::double_fault</span>);
+    INTERRUPT_HANDLERS.lock()[<span class="number">0</span>] = IrqHandler::ErrorHandler(exceptions::divide_by_zero);
+    INTERRUPT_HANDLERS.lock()[<span class="number">1</span>] = IrqHandler::ErrorHandler(exceptions::debug);
+    INTERRUPT_HANDLERS.lock()[<span class="number">2</span>] = IrqHandler::ErrorHandler(exceptions::non_maskable);
+    INTERRUPT_HANDLERS.lock()[<span class="number">3</span>] = IrqHandler::ErrorHandler(exceptions::breakpoint);
+    INTERRUPT_HANDLERS.lock()[<span class="number">4</span>] = IrqHandler::ErrorHandler(exceptions::overflow);
+    INTERRUPT_HANDLERS.lock()[<span class="number">5</span>] = IrqHandler::ErrorHandler(exceptions::bound_range);
+    INTERRUPT_HANDLERS.lock()[<span class="number">6</span>] = IrqHandler::ErrorHandler(exceptions::invalid_opcode);
+    INTERRUPT_HANDLERS.lock()[<span class="number">7</span>] = IrqHandler::ErrorHandler(exceptions::device_not_available);
+    INTERRUPT_HANDLERS.lock()[<span class="number">8</span>] = IrqHandler::ErrorHandler(exceptions::double_fault);
 
-    <span class="comment">// INTERRUPT_HANDLERS.lock()[9] is reserved.</span>
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">10</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::invalid_tss</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">11</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::segment_not_present</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">12</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::stack_segment</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">13</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::protection</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">14</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::page_fault</span>);
+    <span class="comment">// INTERRUPT_HANDLERS.lock()[9] is reserved.
+    </span>INTERRUPT_HANDLERS.lock()[<span class="number">10</span>] = IrqHandler::ErrorHandler(exceptions::invalid_tss);
+    INTERRUPT_HANDLERS.lock()[<span class="number">11</span>] = IrqHandler::ErrorHandler(exceptions::segment_not_present);
+    INTERRUPT_HANDLERS.lock()[<span class="number">12</span>] = IrqHandler::ErrorHandler(exceptions::stack_segment);
+    INTERRUPT_HANDLERS.lock()[<span class="number">13</span>] = IrqHandler::ErrorHandler(exceptions::protection);
+    INTERRUPT_HANDLERS.lock()[<span class="number">14</span>] = IrqHandler::ErrorHandler(exceptions::page_fault);
 
-    <span class="comment">// INTERRUPT_HANDLERS.lock()[15] is reserved.</span>
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">16</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::fpu_fault</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">17</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::alignment_check</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">18</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::machine_check</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">19</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::simd</span>);
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">20</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::virtualization</span>);
+    <span class="comment">// INTERRUPT_HANDLERS.lock()[15] is reserved.
+    </span>INTERRUPT_HANDLERS.lock()[<span class="number">16</span>] = IrqHandler::ErrorHandler(exceptions::fpu_fault);
+    INTERRUPT_HANDLERS.lock()[<span class="number">17</span>] = IrqHandler::ErrorHandler(exceptions::alignment_check);
+    INTERRUPT_HANDLERS.lock()[<span class="number">18</span>] = IrqHandler::ErrorHandler(exceptions::machine_check);
+    INTERRUPT_HANDLERS.lock()[<span class="number">19</span>] = IrqHandler::ErrorHandler(exceptions::simd);
+    INTERRUPT_HANDLERS.lock()[<span class="number">20</span>] = IrqHandler::ErrorHandler(exceptions::virtualization);
 
-    <span class="comment">// INTERRUPT_HANDLERS.lock()[21..29] are reserved.</span>
-    <span class="ident">INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>()[<span class="number">30</span>] <span class="op">=</span> <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">exceptions::security</span>);
+    <span class="comment">// INTERRUPT_HANDLERS.lock()[21..29] are reserved.
+    </span>INTERRUPT_HANDLERS.lock()[<span class="number">30</span>] = IrqHandler::ErrorHandler(exceptions::security);
 
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">idt_descriptor</span> <span class="op">=</span> <span class="ident">IdtDescriptor::new</span>(
-            ((<span class="ident">IDT</span>.<span class="ident">len</span>() <span class="op">*</span> <span class="ident">size_of</span>::<span class="op">&lt;</span><span class="ident">IdtEntry</span><span class="op">&gt;</span>()) <span class="op">-</span> <span class="number">1</span>) <span class="kw">as</span> <span class="ident">u16</span>,
-            (<span class="kw-2">&amp;</span><span class="ident">IDT</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>) <span class="kw">as</span> <span class="ident">u64</span>,
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>idt_descriptor = IdtDescriptor::new(
+            ((IDT.len() * size_of::&lt;IdtEntry&gt;()) - <span class="number">1</span>) <span class="kw">as </span>u16,
+            (<span class="kw-2">&amp;</span>IDT <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>) <span class="kw">as </span>u64,
         );
 
-        <span class="ident">load_idt</span>(<span class="kw-2">&amp;</span><span class="ident">idt_descriptor</span>);
+        load_idt(<span class="kw-2">&amp;</span>idt_descriptor);
 
         <span class="comment">/*
          * Since lazy statics are initialized on the their first dereference, we have to
          * manually initialize the static as the first dereference happen in an IRQ interrupt.
          * This means that the controller will never be initialized as an IRQ interrupt requires
          * the controller to be initialized.
-         */</span>
-        <span class="ident">lazy_static::initialize</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::INTERRUPT_CONTROLLER</span>);
-        <span class="ident">lazy_static::initialize</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::PIC_CONTROLLER</span>);
-        <span class="ident">lazy_static::initialize</span>(<span class="kw-2">&amp;</span><span class="ident"><span class="kw">super</span>::APIC_CONTROLLER</span>);
+         */
+        </span>lazy_static::initialize(<span class="kw-2">&amp;</span><span class="kw">super</span>::INTERRUPT_CONTROLLER);
+        lazy_static::initialize(<span class="kw-2">&amp;</span><span class="kw">super</span>::PIC_CONTROLLER);
+        lazy_static::initialize(<span class="kw-2">&amp;</span><span class="kw">super</span>::APIC_CONTROLLER);
     }
 }
 
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_idt</span>(<span class="ident">idt_descriptor</span>: <span class="kw-2">&amp;</span><span class="ident">IdtDescriptor</span>) {
-    <span class="macro">asm!</span>(<span class="string">&quot;lidt [{}]&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">idt_descriptor</span>, <span class="ident">options</span>(<span class="ident">nostack</span>));
+<span class="attribute">#[inline(always)]</span>
+<span class="kw">unsafe fn </span>load_idt(idt_descriptor: <span class="kw-2">&amp;</span>IdtDescriptor) {
+    <span class="macro">asm!</span>(<span class="string">&quot;lidt [{}]&quot;</span>, <span class="kw">in</span>(reg) idt_descriptor, options(nostack));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

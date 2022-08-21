@@ -64,71 +64,71 @@
 <span id="64">64</span>
 <span id="65">65</span>
 <span id="66">66</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::SocketAddr</span>;
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::SocketAddr;
 
-<span class="comment">// sysdeps/aero/include/abi-bits/socket.h</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageHeader</span> {
-    <span class="doccomment">/// Pointer to the socket address structure.</span>
-    <span class="ident">name</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>,
-    <span class="doccomment">/// Size of the socket address structure.</span>
-    <span class="ident">name_len</span>: <span class="ident">usize</span>,
+<span class="comment">// sysdeps/aero/include/abi-bits/socket.h
+</span><span class="attribute">#[derive(Debug)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>MessageHeader {
+    <span class="doccomment">/// Pointer to the socket address structure.
+    </span>name: <span class="kw-2">*mut </span>u8,
+    <span class="doccomment">/// Size of the socket address structure.
+    </span>name_len: usize,
 
-    <span class="ident">iovec</span>: <span class="kw-2">*mut</span> <span class="ident">IoVec</span>, <span class="comment">// todo: use Option&lt;NonNull&lt;IoVec&gt;&gt;</span>
-    <span class="ident">iovec_len</span>: <span class="ident">i32</span>,    <span class="comment">// todo: use ffi::c_int</span>
+    iovec: <span class="kw-2">*mut </span>IoVec, <span class="comment">// todo: use Option&lt;NonNull&lt;IoVec&gt;&gt;
+    </span>iovec_len: i32,    <span class="comment">// todo: use ffi::c_int
 
-    <span class="ident">control</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>,
-    <span class="ident">control_len</span>: <span class="ident">usize</span>,
+    </span>control: <span class="kw-2">*const </span>u8,
+    control_len: usize,
 
-    <span class="ident">flags</span>: <span class="ident">i32</span>, <span class="comment">// todo: use ffi::c_int</span>
-}
+    flags: i32, <span class="comment">// todo: use ffi::c_int
+</span>}
 
-<span class="kw">impl</span> <span class="ident">MessageHeader</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name_mut</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">SocketAddr</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">T</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">name</span>.<span class="ident">is_null</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">impl </span>MessageHeader {
+    <span class="kw">pub fn </span>name_mut&lt;T: SocketAddr&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>T&gt; {
+        <span class="kw">if </span><span class="self">self</span>.name.is_null() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">name_len</span> <span class="op">==</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>());
+        <span class="macro">assert!</span>(<span class="self">self</span>.name_len == core::mem::size_of::&lt;T&gt;());
 
-        <span class="comment">// SAFETY: We know that the `name` pointer is valid and we have an exclusive reference to it.</span>
-        <span class="comment">// The size of name is checked above with the size of `T` and `T` is a `SocketAddr` so, its</span>
-        <span class="comment">// safe to create a mutable reference of `T` from the ptr.</span>
-        <span class="kw">unsafe</span> { <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">name</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">T</span>)) }
+        <span class="comment">// SAFETY: We know that the `name` pointer is valid and we have an exclusive reference to it.
+        // The size of name is checked above with the size of `T` and `T` is a `SocketAddr` so, its
+        // safe to create a mutable reference of `T` from the ptr.
+        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut *</span>(<span class="self">self</span>.name <span class="kw">as </span><span class="kw-2">*mut </span>T)) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iovecs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">IoVec</span>] {
-        <span class="comment">// SAFETY: We know that the `iovec` pointer is valid, initialized.</span>
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">iovec</span>, <span class="self">self</span>.<span class="ident">iovec_len</span> <span class="kw">as</span> <span class="ident">usize</span>) }
+    <span class="kw">pub fn </span>iovecs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[IoVec] {
+        <span class="comment">// SAFETY: We know that the `iovec` pointer is valid, initialized.
+        </span><span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.iovec, <span class="self">self</span>.iovec_len <span class="kw">as </span>usize) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iovecs_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">IoVec</span>] {
-        <span class="comment">// SAFETY: We know that the `iovec` pointer is valid, initialized and we have</span>
-        <span class="comment">// exclusive access so, its safe to construct a mutable slice from it.</span>
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">iovec</span>, <span class="self">self</span>.<span class="ident">iovec_len</span> <span class="kw">as</span> <span class="ident">usize</span>) }
+    <span class="kw">pub fn </span>iovecs_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[IoVec] {
+        <span class="comment">// SAFETY: We know that the `iovec` pointer is valid, initialized and we have
+        // exclusive access so, its safe to construct a mutable slice from it.
+        </span><span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(<span class="self">self</span>.iovec, <span class="self">self</span>.iovec_len <span class="kw">as </span>usize) }
     }
 }
 
-<span class="comment">// options/posix/include/bits/posix/iovec.h</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">IoVec</span> {
-    <span class="ident">base</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="comment">// todo: use Option&lt;NonNull&lt;u8&gt;&gt;</span>
-    <span class="ident">len</span>: <span class="ident">usize</span>,
+<span class="comment">// options/posix/include/bits/posix/iovec.h
+</span><span class="attribute">#[derive(Debug)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>IoVec {
+    base: <span class="kw-2">*mut </span>u8, <span class="comment">// todo: use Option&lt;NonNull&lt;u8&gt;&gt;
+    </span>len: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">IoVec</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_mut_slice</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>] {
-        <span class="comment">// SAFETY: We know that the `base` pointer is valid, initialized and we have</span>
-        <span class="comment">// exclusive access so, its safe to construct a mutable slice from it.</span>
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">base</span>, <span class="self">self</span>.<span class="ident">len</span>) }
+<span class="kw">impl </span>IoVec {
+    <span class="kw">pub fn </span>as_mut_slice(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[u8] {
+        <span class="comment">// SAFETY: We know that the `base` pointer is valid, initialized and we have
+        // exclusive access so, its safe to construct a mutable slice from it.
+        </span><span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(<span class="self">self</span>.base, <span class="self">self</span>.len) }
     }
 
-    <span class="doccomment">/// Returns the length of the I/O vector.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">len</span>
+    <span class="doccomment">/// Returns the length of the I/O vector.
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.len
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

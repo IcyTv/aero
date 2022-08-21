@@ -645,618 +645,618 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">aero_syscall::signal::SigProcMask</span>;
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">prelude</span>::<span class="kw-2">*</span>, <span class="ident">TimeSpec</span>};
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">OpenFlags</span>, <span class="ident">Stat</span>, <span class="ident">SyscallError</span>};
+</span><span class="kw">use </span>aero_syscall::signal::SigProcMask;
+<span class="kw">use </span>aero_syscall::{prelude::<span class="kw-2">*</span>, TimeSpec};
+<span class="kw">use </span>aero_syscall::{OpenFlags, Stat, SyscallError};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::epoll::EPoll</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::eventfd::EventFd</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::file_table::DuplicateHint</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode</span>::{<span class="ident">DirEntry</span>, <span class="ident">PollTable</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::pipe::Pipe</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>::{<span class="self">self</span>, <span class="ident">lookup_path</span>, <span class="ident">LookupMode</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::epoll::EPoll;
+<span class="kw">use </span><span class="kw">crate</span>::fs::eventfd::EventFd;
+<span class="kw">use </span><span class="kw">crate</span>::fs::file_table::DuplicateHint;
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::{DirEntry, PollTable};
+<span class="kw">use </span><span class="kw">crate</span>::fs::pipe::Pipe;
+<span class="kw">use </span><span class="kw">crate</span>::fs::{<span class="self">self</span>, lookup_path, LookupMode};
+<span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::Path</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::Path;
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>write(fd: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>handle = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="comment">// FIXME(heck for xeyes): fnctl should update the open flags!</span>
-    <span class="comment">//</span>
-    <span class="comment">// if handle</span>
-    <span class="comment">//     .flags</span>
-    <span class="comment">//     .intersects(OpenFlags::O_WRONLY | OpenFlags::O_RDWR)</span>
-    <span class="comment">// {</span>
-    <span class="prelude-val">Ok</span>(<span class="ident">handle</span>.<span class="ident">write</span>(<span class="ident">buffer</span>)<span class="question-mark">?</span>)
-    <span class="comment">// } else {</span>
-    <span class="comment">//     Err(SyscallError::EACCES)</span>
-    <span class="comment">// }</span>
-}
+    <span class="comment">// FIXME(heck for xeyes): fnctl should update the open flags!
+    //
+    // if handle
+    //     .flags
+    //     .intersects(OpenFlags::O_WRONLY | OpenFlags::O_RDWR)
+    // {
+    </span><span class="prelude-val">Ok</span>(handle.write(buffer)<span class="question-mark">?</span>)
+    <span class="comment">// } else {
+    //     Err(SyscallError::EACCES)
+    // }
+</span>}
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>read(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>handle = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">handle</span>
-        .<span class="ident">flags</span>
-        .<span class="ident">intersects</span>(<span class="ident">OpenFlags::O_RDONLY</span> <span class="op">|</span> <span class="ident">OpenFlags::O_RDWR</span>)
+    <span class="kw">if </span>handle
+        .flags
+        .intersects(OpenFlags::O_RDONLY | OpenFlags::O_RDWR)
     {
-        <span class="prelude-val">Ok</span>(<span class="ident">handle</span>.<span class="ident">read</span>(<span class="ident">buffer</span>)<span class="question-mark">?</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EACCES</span>)
+        <span class="prelude-val">Ok</span>(handle.read(buffer)<span class="question-mark">?</span>)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">Err</span>(SyscallError::EACCES)
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">open</span>(<span class="ident">_fd</span>: <span class="ident">usize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">mode</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">OpenFlags::from_bits</span>(<span class="ident">mode</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>open(_fd: usize, path: <span class="kw-2">&amp;</span>Path, mode: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span><span class="kw-2">mut </span>flags = OpenFlags::from_bits(mode).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">flags</span>.<span class="ident">intersects</span>(<span class="ident">OpenFlags::O_RDONLY</span> <span class="op">|</span> <span class="ident">OpenFlags::O_RDWR</span> <span class="op">|</span> <span class="ident">OpenFlags::O_WRONLY</span>) {
-        <span class="ident">flags</span>.<span class="ident">insert</span>(<span class="ident">OpenFlags::O_RDONLY</span>);
+    <span class="kw">if </span>!flags.intersects(OpenFlags::O_RDONLY | OpenFlags::O_RDWR | OpenFlags::O_WRONLY) {
+        flags.insert(OpenFlags::O_RDONLY);
     }
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lookup_mode</span> <span class="op">=</span> <span class="ident">LookupMode::None</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>lookup_mode = LookupMode::None;
 
-    <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">OpenFlags::O_CREAT</span>) {
-        <span class="ident">lookup_mode</span> <span class="op">=</span> <span class="ident">LookupMode::Create</span>;
+    <span class="kw">if </span>flags.contains(OpenFlags::O_CREAT) {
+        lookup_mode = LookupMode::Create;
     }
 
-    <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">fs::lookup_path_with_mode</span>(<span class="ident">path</span>, <span class="ident">lookup_mode</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>inode = fs::lookup_path_with_mode(path, lookup_mode)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">OpenFlags::O_DIRECTORY</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">inode</span>.<span class="ident">inode</span>().<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">is_directory</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTDIR</span>);
+    <span class="kw">if </span>flags.contains(OpenFlags::O_DIRECTORY) &amp;&amp; !inode.inode().metadata()<span class="question-mark">?</span>.is_directory() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::ENOTDIR);
     }
 
-    <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">OpenFlags::O_TRUNC</span>) {
-        <span class="ident">inode</span>.<span class="ident">inode</span>().<span class="ident">truncate</span>(<span class="number">0</span>)<span class="question-mark">?</span>;
+    <span class="kw">if </span>flags.contains(OpenFlags::O_TRUNC) {
+        inode.inode().truncate(<span class="number">0</span>)<span class="question-mark">?</span>;
     }
 
-    <span class="prelude-val">Ok</span>(<span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">open_file</span>(<span class="ident">inode</span>, <span class="ident">flags</span>)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .open_file(inode, flags)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dup</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">OpenFlags::from_bits</span>(<span class="ident">flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span> <span class="op">&amp;</span> <span class="ident">OpenFlags::O_CLOEXEC</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>dup(fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">? </span>&amp; OpenFlags::O_CLOEXEC;
 
-    <span class="ident">task</span>.<span class="ident">file_table</span>.<span class="ident">duplicate</span>(<span class="ident">fd</span>, <span class="ident">DuplicateHint::Any</span>, <span class="ident">flags</span>)
+    task.file_table.duplicate(fd, DuplicateHint::Any, flags)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dup2</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">new_fd</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">OpenFlags::from_bits</span>(<span class="ident">flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span> <span class="op">&amp;</span> <span class="ident">OpenFlags::O_CLOEXEC</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>dup2(fd: usize, new_fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">? </span>&amp; OpenFlags::O_CLOEXEC;
 
-    <span class="ident">task</span>.<span class="ident">file_table</span>
-        .<span class="ident">duplicate</span>(<span class="ident">fd</span>, <span class="ident">DuplicateHint::Exact</span>(<span class="ident">new_fd</span>), <span class="ident">flags</span>)
+    task.file_table
+        .duplicate(fd, DuplicateHint::Exact(new_fd), flags)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">getdents</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>getdents(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>handle = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">handle</span>.<span class="ident">get_dents</span>(<span class="ident">buffer</span>)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(handle.get_dents(buffer)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">close</span>(<span class="ident">fd</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">close_file</span>(<span class="ident">fd</span>);
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>close(fd: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>res = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .close_file(fd);
 
-    <span class="kw">if</span> <span class="ident">res</span> {
+    <span class="kw">if </span>res {
         <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
-    } <span class="kw">else</span> {
-        <span class="comment">// FD isn&#39;t a valid open file descriptor.</span>
-        <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EBADFD</span>)
+    } <span class="kw">else </span>{
+        <span class="comment">// FD isn&#39;t a valid open file descriptor.
+        </span><span class="prelude-val">Err</span>(SyscallError::EBADFD)
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">chdir</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">Path::new</span>(<span class="ident">path</span>))<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>chdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>inode = fs::lookup_path(Path::new(path))<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">inode</span>.<span class="ident">inode</span>().<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">is_directory</span>() {
-        <span class="comment">// A component of path is not a directory.</span>
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTDIR</span>);
+    <span class="kw">if </span>!inode.inode().metadata()<span class="question-mark">?</span>.is_directory() {
+        <span class="comment">// A component of path is not a directory.
+        </span><span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::ENOTDIR);
     }
 
-    <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">set_cwd</span>(<span class="ident">inode</span>);
+    scheduler::get_scheduler().current_task().set_cwd(inode);
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mkdirat</span>(<span class="ident">dfd</span>: <span class="ident">usize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="comment">// NOTE: If the pathname given in pathname is relative, then it is interpreted</span>
-    <span class="comment">// relative to the directory referred to by the file descriptor (rather than relative</span>
-    <span class="comment">// to the current working directory of the calling task, as is done by mkdir() for a</span>
-    <span class="comment">// relative pathname).</span>
-    <span class="kw">let</span> (<span class="ident">parent_inode</span>, <span class="ident">child</span>) <span class="op">=</span> <span class="kw">if</span> <span class="ident">path</span>.<span class="ident">is_absolute</span>() {
-        <span class="kw">let</span> (<span class="ident">path</span>, <span class="ident">child</span>) <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent_and_basename</span>();
-        (<span class="ident">fs::lookup_path</span>(<span class="ident">path</span>)<span class="question-mark">?</span>.<span class="ident">inode</span>(), <span class="ident">child</span>)
-    } <span class="kw">else</span> {
-        <span class="comment">// If pathname is relative and fd is the special value AT_FDCWD, then</span>
-        <span class="comment">// pathname is interpreted relative to the current working directory of the</span>
-        <span class="comment">// calling task.</span>
-        <span class="kw">if</span> <span class="ident">dfd</span> <span class="kw">as</span> <span class="ident">isize</span> <span class="op">==</span> <span class="ident">aero_syscall::AT_FDCWD</span> {
-            <span class="kw">let</span> <span class="ident">cwd</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">get_cwd_dirent</span>();
-            (<span class="ident">cwd</span>.<span class="ident">inode</span>(), <span class="ident">path</span>.<span class="ident">as_str</span>())
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-                .<span class="ident">current_task</span>()
-                .<span class="ident">file_table</span>
-                .<span class="ident">get_handle</span>(<span class="ident">dfd</span>)
-                .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>mkdirat(dfd: usize, path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="comment">// NOTE: If the pathname given in pathname is relative, then it is interpreted
+    // relative to the directory referred to by the file descriptor (rather than relative
+    // to the current working directory of the calling task, as is done by mkdir() for a
+    // relative pathname).
+    </span><span class="kw">let </span>(parent_inode, child) = <span class="kw">if </span>path.is_absolute() {
+        <span class="kw">let </span>(path, child) = path.parent_and_basename();
+        (fs::lookup_path(path)<span class="question-mark">?</span>.inode(), child)
+    } <span class="kw">else </span>{
+        <span class="comment">// If pathname is relative and fd is the special value AT_FDCWD, then
+        // pathname is interpreted relative to the current working directory of the
+        // calling task.
+        </span><span class="kw">if </span>dfd <span class="kw">as </span>isize == aero_syscall::AT_FDCWD {
+            <span class="kw">let </span>cwd = scheduler::get_scheduler().current_task().get_cwd_dirent();
+            (cwd.inode(), path.as_str())
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>handle = scheduler::get_scheduler()
+                .current_task()
+                .file_table
+                .get_handle(dfd)
+                .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-            (<span class="ident">handle</span>.<span class="ident">inode</span>(), <span class="ident">path</span>.<span class="ident">as_str</span>())
+            (handle.inode(), path.as_str())
         }
     };
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">parent_inode</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">is_directory</span>() {
-        <span class="comment">// A component of path is not a directory.</span>
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTDIR</span>);
+    <span class="kw">if </span>!parent_inode.metadata()<span class="question-mark">?</span>.is_directory() {
+        <span class="comment">// A component of path is not a directory.
+        </span><span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::ENOTDIR);
     }
 
-    <span class="kw">if</span> [<span class="string">&quot;&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>.<span class="ident">as_str</span>()) {
-        <span class="comment">// Cannot create a directory with a name of &quot;&quot;, &quot;.&quot;, or &quot;..&quot;.</span>
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EEXIST</span>);
+    <span class="kw">if </span>[<span class="string">&quot;&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].contains(<span class="kw-2">&amp;</span>path.as_str()) {
+        <span class="comment">// Cannot create a directory with a name of &quot;&quot;, &quot;.&quot;, or &quot;..&quot;.
+        </span><span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EEXIST);
     }
 
-    <span class="ident">parent_inode</span>.<span class="ident">mkdir</span>(<span class="ident">child</span>)<span class="question-mark">?</span>;
+    parent_inode.mkdir(child)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rmdir</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="ident">path</span>);
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>rmdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>path = Path::new(path);
 
-    <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">child</span>) <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent_and_basename</span>();
-    <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(<span class="kw">_</span>, child) = path.parent_and_basename();
+    <span class="kw">let </span>inode = fs::lookup_path(path)<span class="question-mark">?</span>;
 
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">inode</span>.<span class="ident">inode</span>().<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">is_directory</span>() {
-        <span class="comment">// ENOTDIR: A component used as a directory in pathname, is not in fact,</span>
-        <span class="comment">// a directory.</span>
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTDIR</span>);
+    <span class="kw">if </span>!inode.inode().metadata()<span class="question-mark">?</span>.is_directory() {
+        <span class="comment">// ENOTDIR: A component used as a directory in pathname, is not in fact,
+        // a directory.
+        </span><span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::ENOTDIR);
     }
 
-    <span class="ident">inode</span>.<span class="ident">inode</span>().<span class="ident">rmdir</span>(<span class="ident">child</span>)<span class="question-mark">?</span>;
-    <span class="ident">inode</span>.<span class="ident">drop_from_cache</span>();
+    inode.inode().rmdir(child)<span class="question-mark">?</span>;
+    inode.drop_from_cache();
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">getcwd</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">cwd</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">get_cwd</span>();
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>getcwd(buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>cwd = scheduler::get_scheduler().current_task().get_cwd();
 
-    <span class="ident">buffer</span>[..<span class="ident">cwd</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">cwd</span>.<span class="ident">as_bytes</span>());
-    <span class="prelude-val">Ok</span>(<span class="ident">cwd</span>.<span class="ident">len</span>())
+    buffer[..cwd.len()].copy_from_slice(cwd.as_bytes());
+    <span class="prelude-val">Ok</span>(cwd.len())
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ioctl</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">argument</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>ioctl(fd: usize, command: usize, argument: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>handle = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="kw">match</span> <span class="ident">command</span> {
-        <span class="comment">// Sets the close-on-exec file descriptor flag. This is equivalent</span>
-        <span class="comment">// to `fcntl(fd, F_SETFD, FD_CLOEXEC)`</span>
-        <span class="ident">FIOCLEX</span> =&gt; {
-            <span class="ident">handle</span>.<span class="ident">fd_flags</span>.<span class="ident">lock</span>().<span class="ident">insert</span>(<span class="ident">FdFlags::CLOEXEC</span>);
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="number">0x00</span>);
+    <span class="kw">match </span>command {
+        <span class="comment">// Sets the close-on-exec file descriptor flag. This is equivalent
+        // to `fcntl(fd, F_SETFD, FD_CLOEXEC)`
+        </span>FIOCLEX =&gt; {
+            handle.fd_flags.lock().insert(FdFlags::CLOEXEC);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0x00</span>);
         }
 
-        <span class="comment">// Handle file specific ioctl:</span>
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">handle</span>.<span class="ident">inode</span>().<span class="ident">ioctl</span>(<span class="ident">command</span>, <span class="ident">argument</span>)<span class="question-mark">?</span>),
+        <span class="comment">// Handle file specific ioctl:
+        </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Ok</span>(handle.inode().ioctl(command, argument)<span class="question-mark">?</span>),
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">seek</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">whence</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>seek(fd: usize, offset: usize, whence: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>handle = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">handle</span>.<span class="ident">seek</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">isize</span>, <span class="ident">aero_syscall::SeekWhence::from</span>(<span class="ident">whence</span>))<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(handle.seek(offset <span class="kw">as </span>isize, aero_syscall::SeekWhence::from(whence))<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pipe</span>(<span class="ident">fds</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">i32</span>; <span class="number">2</span>], <span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">OpenFlags::from_bits</span>(<span class="ident">flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">pipe</span> <span class="op">=</span> <span class="ident">Pipe::new</span>();
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>pipe(fds: <span class="kw-2">&amp;mut </span>[i32; <span class="number">2</span>], flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+    <span class="kw">let </span>pipe = Pipe::new();
 
-    <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">DirEntry::from_inode</span>(<span class="ident">pipe</span>, <span class="ident">String::from</span>(<span class="string">&quot;&lt;pipe&gt;&quot;</span>));
+    <span class="kw">let </span>entry = DirEntry::from_inode(pipe, String::from(<span class="string">&quot;&lt;pipe&gt;&quot;</span>));
 
-    <span class="kw">let</span> <span class="ident">flags_1</span> <span class="op">=</span> <span class="ident">OpenFlags::O_RDONLY</span> <span class="op">|</span> (<span class="ident">flags</span> <span class="op">&amp;</span> <span class="ident">OpenFlags::O_CLOEXEC</span>);
-    <span class="kw">let</span> <span class="ident">flags_2</span> <span class="op">=</span> <span class="ident">OpenFlags::O_WRONLY</span> <span class="op">|</span> (<span class="ident">flags</span> <span class="op">&amp;</span> <span class="ident">OpenFlags::O_CLOEXEC</span>);
+    <span class="kw">let </span>flags_1 = OpenFlags::O_RDONLY | (flags &amp; OpenFlags::O_CLOEXEC);
+    <span class="kw">let </span>flags_2 = OpenFlags::O_WRONLY | (flags &amp; OpenFlags::O_CLOEXEC);
 
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
 
-    <span class="kw">let</span> <span class="ident">fd1</span> <span class="op">=</span> <span class="ident">current_task</span>.<span class="ident">file_table</span>.<span class="ident">open_file</span>(<span class="ident">entry</span>.<span class="ident">clone</span>(), <span class="ident">flags_1</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">fd2</span> <span class="op">=</span> <span class="ident">current_task</span>.<span class="ident">file_table</span>.<span class="ident">open_file</span>(<span class="ident">entry</span>, <span class="ident">flags_2</span>);
+    <span class="kw">let </span>fd1 = current_task.file_table.open_file(entry.clone(), flags_1)<span class="question-mark">?</span>;
+    <span class="kw">let </span>fd2 = current_task.file_table.open_file(entry, flags_2);
 
-    <span class="comment">// If there was an error in opening the second file descriptor,</span>
-    <span class="comment">// then close the first file descriptor. Just to be safe :^)</span>
-    <span class="kw">let</span> <span class="ident">fd2</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">fd2</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; {
-            <span class="ident">current_task</span>.<span class="ident">file_table</span>.<span class="ident">close_file</span>(<span class="ident">fd1</span>);
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>.<span class="ident">into</span>());
+    <span class="comment">// If there was an error in opening the second file descriptor,
+    // then close the first file descriptor. Just to be safe :^)
+    </span><span class="kw">let </span>fd2 = <span class="kw">match </span>fd2 {
+        <span class="prelude-val">Err</span>(err) =&gt; {
+            current_task.file_table.close_file(fd1);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(err.into());
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">fd2</span>) =&gt; <span class="ident">fd2</span>,
+        <span class="prelude-val">Ok</span>(fd2) =&gt; fd2,
     };
 
-    <span class="ident">fds</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">fd1</span> <span class="kw">as</span> <span class="ident">i32</span>;
-    <span class="ident">fds</span>[<span class="number">1</span>] <span class="op">=</span> <span class="ident">fd2</span> <span class="kw">as</span> <span class="ident">i32</span>;
+    fds[<span class="number">0</span>] = fd1 <span class="kw">as </span>i32;
+    fds[<span class="number">1</span>] = fd2 <span class="kw">as </span>i32;
 
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unlink</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="comment">// TODO: Make use of the open flags.</span>
-    <span class="kw">let</span> <span class="ident">_flags</span> <span class="op">=</span> <span class="ident">OpenFlags::from_bits</span>(<span class="ident">flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">name</span> <span class="op">=</span> <span class="ident">path</span>.<span class="ident">container</span>();
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>unlink(fd: usize, path: <span class="kw-2">&amp;</span>Path, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="comment">// TODO: Make use of the open flags.
+    </span><span class="kw">let </span>_flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+    <span class="kw">let </span>name = path.container();
 
-    <span class="kw">if</span> <span class="ident">fd</span> <span class="kw">as</span> <span class="ident">isize</span> <span class="op">==</span> <span class="ident">aero_syscall::AT_FDCWD</span> {
-        <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+    <span class="kw">if </span>fd <span class="kw">as </span>isize == aero_syscall::AT_FDCWD {
+        <span class="kw">let </span>file = fs::lookup_path(path)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">dir</span>) <span class="op">=</span> <span class="ident">file</span>.<span class="ident">parent</span>() {
-            <span class="kw">let</span> <span class="ident">metadata</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">inode</span>().<span class="ident">metadata</span>()<span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(dir) = file.parent() {
+            <span class="kw">let </span>metadata = file.inode().metadata()<span class="question-mark">?</span>;
 
-            <span class="kw">if</span> <span class="ident">metadata</span>.<span class="ident">is_file</span>() {
-                <span class="ident">dir</span>.<span class="ident">inode</span>().<span class="ident">unlink</span>(<span class="ident">name</span>.<span class="ident">as_str</span>())<span class="question-mark">?</span>;
-                <span class="ident">file</span>.<span class="ident">drop_from_cache</span>();
+            <span class="kw">if </span>metadata.is_file() {
+                dir.inode().unlink(name.as_str())<span class="question-mark">?</span>;
+                file.drop_from_cache();
             }
         }
-    } <span class="kw">else</span> {
+    } <span class="kw">else </span>{
         <span class="macro">unimplemented!</span>()
     }
 
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">access</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">_mode</span>: <span class="ident">usize</span>, <span class="ident">_flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">fd</span> <span class="kw">as</span> <span class="ident">isize</span> <span class="op">==</span> <span class="ident">aero_syscall::AT_FDCWD</span> {
-        <span class="ident">lookup_path</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>access(fd: usize, path: <span class="kw-2">&amp;</span>Path, _mode: usize, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">if </span>fd <span class="kw">as </span>isize == aero_syscall::AT_FDCWD {
+        lookup_path(path)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
-    } <span class="kw">else</span> {
-        <span class="comment">// TODO: Implement atfd access</span>
-        <span class="macro">unimplemented!</span>()
+    } <span class="kw">else </span>{
+        <span class="comment">// TODO: Implement atfd access
+        </span><span class="macro">unimplemented!</span>()
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fcntl</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>fcntl(fd: usize, command: usize, arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>handle = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="kw">match</span> <span class="ident">command</span> {
-        <span class="comment">// F_DUPFD_CLOEXEC and F_DUPFD:</span>
-        <span class="comment">//</span>
-        <span class="comment">// Duplicate the file descriptor `fd` using the lowest-numbered</span>
-        <span class="comment">// available file descriptor greater than or equal to `arg`. This is</span>
-        <span class="comment">// different from `dup2(2)`, which uses exactly the file descriptor</span>
-        <span class="comment">// specified.</span>
-        <span class="comment">//</span>
-        <span class="comment">// F_DUPFD_CLOEXEC additionally sets the close-on-exec flag for the duplicate</span>
-        <span class="comment">// file descriptor.</span>
-        <span class="ident">aero_syscall::prelude::F_DUPFD_CLOEXEC</span> =&gt; <span class="ident">scheduler::get_scheduler</span>()
-            .<span class="ident">current_task</span>()
-            .<span class="ident">file_table</span>
-            .<span class="ident">duplicate</span>(<span class="ident">fd</span>, <span class="ident">DuplicateHint::GreatorOrEqual</span>(<span class="ident">arg</span>), <span class="ident">OpenFlags::O_CLOEXEC</span>),
+    <span class="kw">match </span>command {
+        <span class="comment">// F_DUPFD_CLOEXEC and F_DUPFD:
+        //
+        // Duplicate the file descriptor `fd` using the lowest-numbered
+        // available file descriptor greater than or equal to `arg`. This is
+        // different from `dup2(2)`, which uses exactly the file descriptor
+        // specified.
+        //
+        // F_DUPFD_CLOEXEC additionally sets the close-on-exec flag for the duplicate
+        // file descriptor.
+        </span>aero_syscall::prelude::F_DUPFD_CLOEXEC =&gt; scheduler::get_scheduler()
+            .current_task()
+            .file_table
+            .duplicate(fd, DuplicateHint::GreatorOrEqual(arg), OpenFlags::O_CLOEXEC),
 
-        <span class="comment">// Get the value of file descriptor flags.</span>
-        <span class="ident">aero_syscall::prelude::F_GETFD</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">fd_flags</span>.<span class="ident">lock</span>().<span class="ident">bits</span>();
-            <span class="prelude-val">Ok</span>(<span class="ident">flags</span>)
+        <span class="comment">// Get the value of file descriptor flags.
+        </span>aero_syscall::prelude::F_GETFD =&gt; {
+            <span class="kw">let </span>flags = handle.fd_flags.lock().bits();
+            <span class="prelude-val">Ok</span>(flags)
         }
 
-        <span class="comment">// Set the value of file descriptor flags:</span>
-        <span class="ident">aero_syscall::prelude::F_SETFD</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">FdFlags::from_bits</span>(<span class="ident">arg</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
-            <span class="ident">handle</span>.<span class="ident">fd_flags</span>.<span class="ident">lock</span>().<span class="ident">insert</span>(<span class="ident">flags</span>);
+        <span class="comment">// Set the value of file descriptor flags:
+        </span>aero_syscall::prelude::F_SETFD =&gt; {
+            <span class="kw">let </span>flags = FdFlags::from_bits(arg).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+            handle.fd_flags.lock().insert(flags);
 
             <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
         }
 
-        <span class="comment">// Get the value of file status flags:</span>
-        <span class="ident">aero_syscall::prelude::F_GETFL</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">flags</span>.<span class="ident">bits</span>();
-            <span class="prelude-val">Ok</span>(<span class="ident">flags</span>)
+        <span class="comment">// Get the value of file status flags:
+        </span>aero_syscall::prelude::F_GETFL =&gt; {
+            <span class="kw">let </span>flags = handle.flags.bits();
+            <span class="prelude-val">Ok</span>(flags)
         }
 
-        <span class="ident">aero_syscall::prelude::F_SETFL</span> =&gt; {
+        aero_syscall::prelude::F_SETFL =&gt; {
             <span class="macro">log::debug!</span>(<span class="string">&quot;F_SETFL: is a stub!&quot;</span>);
 
             <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
         }
 
-        <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;fcntl: unknown command {command}&quot;</span>),
+        <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;fcntl: unknown command {command}&quot;</span>),
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fstat</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">stat</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Stat</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>fstat(fd: usize, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>file = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="kw-2">*</span><span class="ident">stat</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">inode</span>().<span class="ident">stat</span>()<span class="question-mark">?</span>;
-
-    <span class="prelude-val">Ok</span>(<span class="number">0</span>)
-}
-
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">stat</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">stat</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Stat</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
-
-    <span class="kw-2">*</span><span class="ident">stat</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">inode</span>().<span class="ident">stat</span>()<span class="question-mark">?</span>;
+    <span class="kw-2">*</span>stat = file.inode().stat()<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_link</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">_buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>stat(path: <span class="kw-2">&amp;</span>Path, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>file = fs::lookup_path(path)<span class="question-mark">?</span>;
+
+    <span class="kw-2">*</span>stat = file.inode().stat()<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(<span class="number">0</span>)
+}
+
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>read_link(path: <span class="kw-2">&amp;</span>Path, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="macro">log::warn!</span>(<span class="string">&quot;read_link: is a stub! (path={path:?})&quot;</span>);
 
-    <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>)
+    <span class="prelude-val">Err</span>(SyscallError::EINVAL)
 }
 
-<span class="doccomment">/// Returns a file descriptor referring to the new epoll instance.</span>
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">epoll_create</span>(<span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">_flags</span> <span class="op">=</span> <span class="ident">EPollFlags::from_bits</span>(<span class="ident">flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// Returns a file descriptor referring to the new epoll instance.
+</span><span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>epoll_create(flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>_flags = EPollFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">epoll_file</span> <span class="op">=</span> <span class="ident">EPoll::new</span>();
-    <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">DirEntry::from_inode</span>(<span class="ident">epoll_file</span>, <span class="ident">String::from</span>(<span class="string">&quot;&lt;epoll&gt;&quot;</span>));
+    <span class="kw">let </span>epoll_file = EPoll::new();
+    <span class="kw">let </span>entry = DirEntry::from_inode(epoll_file, String::from(<span class="string">&quot;&lt;epoll&gt;&quot;</span>));
 
-    <span class="prelude-val">Ok</span>(<span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">open_file</span>(<span class="ident">entry</span>, <span class="ident">OpenFlags::O_RDWR</span>)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .open_file(entry, OpenFlags::O_RDWR)<span class="question-mark">?</span>)
 }
 
-<span class="doccomment">/// Used to add, modify, or remove entries in the interest list of the</span>
-<span class="doccomment">/// epoll instance referred to by the file descriptor. It requests that</span>
-<span class="doccomment">/// the operation be performed for the target file descriptor.</span>
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">epoll_ctl</span>(
-    <span class="ident">epfd</span>: <span class="ident">usize</span>,
-    <span class="ident">mode</span>: <span class="ident">usize</span>,
-    <span class="ident">fd</span>: <span class="ident">usize</span>,
-    <span class="ident">event</span>: <span class="kw-2">&amp;mut</span> <span class="ident">EPollEvent</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">epfd</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">epfd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// Used to add, modify, or remove entries in the interest list of the
+/// epoll instance referred to by the file descriptor. It requests that
+/// the operation be performed for the target file descriptor.
+</span><span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>epoll_ctl(
+    epfd: usize,
+    mode: usize,
+    fd: usize,
+    event: <span class="kw-2">&amp;mut </span>EPollEvent,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>epfd = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(epfd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">epoll</span> <span class="op">=</span> <span class="ident">epfd</span>
-        .<span class="ident">inode</span>()
-        .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">EPoll</span><span class="op">&gt;</span>()
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>epoll = epfd
+        .inode()
+        .downcast_arc::&lt;EPoll&gt;()
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">match</span> <span class="ident">mode</span> {
-        <span class="ident">EPOLL_CTL_ADD</span> =&gt; {
-            <span class="ident">epoll</span>.<span class="ident">add_event</span>(<span class="ident">fd</span>, <span class="ident">event</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+    <span class="kw">match </span>mode {
+        EPOLL_CTL_ADD =&gt; {
+            epoll.add_event(fd, event.clone())<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="number">0</span>)
         }
 
-        <span class="ident">EPOLL_CTL_DEL</span> =&gt; {
-            <span class="ident">epoll</span>.<span class="ident">remove_event</span>(<span class="ident">fd</span>)<span class="question-mark">?</span>;
+        EPOLL_CTL_DEL =&gt; {
+            epoll.remove_event(fd)<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="number">0</span>)
         }
 
-        <span class="ident">EPOLL_CTL_MOD</span> =&gt; {
-            <span class="ident">epoll</span>.<span class="ident">update_event</span>(<span class="ident">fd</span>, <span class="ident">event</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+        EPOLL_CTL_MOD =&gt; {
+            epoll.update_event(fd, event.clone())<span class="question-mark">?</span>;
             <span class="prelude-val">Ok</span>(<span class="number">0</span>)
         }
 
-        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;epoll_ctl: unknown mode {mode}&quot;</span>),
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;epoll_ctl: unknown mode {mode}&quot;</span>),
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">epoll_pwait</span>(
-    <span class="ident">epfd</span>: <span class="ident">usize</span>,
-    <span class="ident">event</span>: <span class="kw-2">&amp;mut</span> [<span class="kw-2">&amp;mut</span> <span class="ident">EPollEvent</span>],
-    <span class="ident">timeout</span>: <span class="ident">usize</span>,
-    <span class="ident">sigmask</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">max_events</span> <span class="op">=</span> <span class="ident">event</span>.<span class="ident">len</span>();
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>epoll_pwait(
+    epfd: usize,
+    event: <span class="kw-2">&amp;mut </span>[<span class="kw-2">&amp;mut </span>EPollEvent],
+    timeout: usize,
+    sigmask: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>max_events = event.len();
 
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">signals</span> <span class="op">=</span> <span class="ident">current_task</span>.<span class="ident">signals</span>();
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>signals = current_task.signals();
 
-    <span class="kw">let</span> <span class="ident">epfd</span> <span class="op">=</span> <span class="ident">current_task</span>
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">epfd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EBADFD</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>epfd = current_task
+        .file_table
+        .get_handle(epfd)
+        .ok_or(SyscallError::EBADFD)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">epfd</span> <span class="op">=</span> <span class="ident">epfd</span>
-        .<span class="ident">inode</span>()
-        .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">EPoll</span><span class="op">&gt;</span>()
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>epfd = epfd
+        .inode()
+        .downcast_arc::&lt;EPoll&gt;()
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_mask</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>old_mask = <span class="number">0</span>;
 
-    <span class="comment">// Update the signal mask.</span>
-    <span class="ident">signals</span>.<span class="ident">set_mask</span>(<span class="ident">SigProcMask::Set</span>, <span class="prelude-val">Some</span>(<span class="ident">sigmask</span> <span class="kw">as</span> <span class="ident">u64</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">old_mask</span>));
+    <span class="comment">// Update the signal mask.
+    </span>signals.set_mask(SigProcMask::Set, <span class="prelude-val">Some</span>(sigmask <span class="kw">as </span>u64), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>old_mask));
 
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">epfd</span>.<span class="ident">wait</span>(<span class="ident">event</span>, <span class="ident">max_events</span>, <span class="ident">timeout</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>result = epfd.wait(event, max_events, timeout)<span class="question-mark">?</span>;
 
-    <span class="comment">// Restore the orignal signal mask.</span>
-    <span class="ident">signals</span>.<span class="ident">set_mask</span>(<span class="ident">SigProcMask::Set</span>, <span class="prelude-val">Some</span>(<span class="ident">old_mask</span>), <span class="prelude-val">None</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">result</span>)
+    <span class="comment">// Restore the orignal signal mask.
+    </span>signals.set_mask(SigProcMask::Set, <span class="prelude-val">Some</span>(old_mask), <span class="prelude-val">None</span>);
+    <span class="prelude-val">Ok</span>(result)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">event_fd</span>(<span class="ident">_initval</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">EventFdFlags::from_bits</span>(<span class="ident">flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
-    <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">EventFdFlags::SEMAPHORE</span>)); <span class="comment">// todo: implement event fd semaphore support.</span>
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>event_fd(_initval: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>flags = EventFdFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+    <span class="macro">assert!</span>(!flags.contains(EventFdFlags::SEMAPHORE)); <span class="comment">// todo: implement event fd semaphore support.
 
-    <span class="kw">let</span> <span class="ident">eventfd_file</span> <span class="op">=</span> <span class="ident">EventFd::new</span>();
-    <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">DirEntry::from_inode</span>(<span class="ident">eventfd_file</span>, <span class="ident">String::from</span>(<span class="string">&quot;&lt;eventfd&gt;&quot;</span>));
+    </span><span class="kw">let </span>eventfd_file = EventFd::new();
+    <span class="kw">let </span>entry = DirEntry::from_inode(eventfd_file, String::from(<span class="string">&quot;&lt;eventfd&gt;&quot;</span>));
 
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
 
-    <span class="prelude-val">Ok</span>(<span class="ident">current_task</span>
-        .<span class="ident">file_table</span>
-        .<span class="ident">open_file</span>(<span class="ident">entry</span>, <span class="ident">OpenFlags::O_RDWR</span>)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(current_task
+        .file_table
+        .open_file(entry, OpenFlags::O_RDWR)<span class="question-mark">?</span>)
 }
 
-<span class="doccomment">/// Creates a new link (also known as a hard link) to an existing</span>
-<span class="doccomment">/// file.</span>
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">link</span>(<span class="ident">src_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>, <span class="ident">dest_path</span>: <span class="kw-2">&amp;</span><span class="ident">Path</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">src</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">src_path</span>)<span class="question-mark">?</span>.<span class="ident">inode</span>();
-    <span class="kw">let</span> (<span class="ident">dest_dir</span>, <span class="ident">dest_name</span>) <span class="op">=</span> <span class="ident">dest_path</span>.<span class="ident">parent_and_basename</span>();
+<span class="doccomment">/// Creates a new link (also known as a hard link) to an existing
+/// file.
+</span><span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>link(src_path: <span class="kw-2">&amp;</span>Path, dest_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>src = fs::lookup_path(src_path)<span class="question-mark">?</span>.inode();
+    <span class="kw">let </span>(dest_dir, dest_name) = dest_path.parent_and_basename();
 
-    <span class="kw">let</span> <span class="ident">dest_dir</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">dest_dir</span>)<span class="question-mark">?</span>.<span class="ident">inode</span>();
+    <span class="kw">let </span>dest_dir = fs::lookup_path(dest_dir)<span class="question-mark">?</span>.inode();
 
-    <span class="comment">// Cannot create a hardlink to a file on a different filesystem.</span>
-    <span class="comment">//</span>
-    <span class="comment">// SAFTEY: The pointers to the file system are valid since we know that there are</span>
-    <span class="comment">// strong references to it.</span>
-    <span class="comment">//</span>
-    <span class="comment">// TODO: Should this be moved to the inode impl?</span>
-    <span class="kw">if</span> <span class="ident">dest_dir</span>.<span class="ident">weak_filesystem</span>().<span class="ident">unwrap</span>().<span class="ident">as_ptr</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">src</span>.<span class="ident">weak_filesystem</span>().<span class="ident">unwrap</span>().<span class="ident">as_ptr</span>() {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>);
+    <span class="comment">// Cannot create a hardlink to a file on a different filesystem.
+    //
+    // SAFTEY: The pointers to the file system are valid since we know that there are
+    // strong references to it.
+    //
+    // TODO: Should this be moved to the inode impl?
+    </span><span class="kw">if </span>dest_dir.weak_filesystem().unwrap().as_ptr() != src.weak_filesystem().unwrap().as_ptr() {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EINVAL);
     }
 
-    <span class="ident">dest_dir</span>.<span class="ident">link</span>(<span class="ident">dest_name</span>, <span class="ident">src</span>)<span class="question-mark">?</span>;
+    dest_dir.link(dest_name, src)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="kw">fn</span> <span class="ident">do_poll</span>(<span class="ident">fds</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">PollFd</span>], <span class="ident">timeout</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">TimeSpec</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
+<span class="kw">fn </span>do_poll(fds: <span class="kw-2">&amp;mut </span>[PollFd], timeout: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>TimeSpec&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">poll_table</span> <span class="op">=</span> <span class="ident">PollTable::default</span>();
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span> <span class="op">=</span> <span class="number">0</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">refds</span> <span class="op">=</span> <span class="macro">alloc::vec!</span>[];
+    <span class="kw">let </span><span class="kw-2">mut </span>poll_table = PollTable::default();
+    <span class="kw">let </span><span class="kw-2">mut </span>n = <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>refds = <span class="macro">alloc::vec!</span>[];
 
-    <span class="comment">// Iterate over all the registered events and check if they are ready.</span>
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">fd</span>) <span class="kw">in</span> <span class="ident">fds</span>.<span class="ident">iter_mut</span>().<span class="ident">enumerate</span>() {
-        <span class="comment">// TODO: If an invalid file descriptor is provided then return EBADFD. Not implemented currently,</span>
-        <span class="comment">// since the init process (libc?) tries to POLL on the stdout, stdin and stdout file descriptors</span>
-        <span class="comment">// which are currently not present.</span>
-        <span class="comment">//</span>
-        <span class="comment">// One possible solution is to open the file descriptors when the init process</span>
-        <span class="comment">// is a kernel process?</span>
-        <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">current_task</span>.<span class="ident">file_table</span>.<span class="ident">get_handle</span>(<span class="ident">fd</span>.<span class="ident">fd</span> <span class="kw">as</span> <span class="ident">usize</span>) {
-            <span class="prelude-val">Some</span>(<span class="ident">v</span>) =&gt; <span class="ident">v</span>,
-            <span class="prelude-val">None</span> =&gt; {
-                <span class="ident">fd</span>.<span class="ident">revents</span> <span class="op">=</span> <span class="ident">PollEventFlags::empty</span>();
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="number">0</span>);
+    <span class="comment">// Iterate over all the registered events and check if they are ready.
+    </span><span class="kw">for </span>(i, fd) <span class="kw">in </span>fds.iter_mut().enumerate() {
+        <span class="comment">// TODO: If an invalid file descriptor is provided then return EBADFD. Not implemented currently,
+        // since the init process (libc?) tries to POLL on the stdout, stdin and stdout file descriptors
+        // which are currently not present.
+        //
+        // One possible solution is to open the file descriptors when the init process
+        // is a kernel process?
+        </span><span class="kw">let </span>handle = <span class="kw">match </span>current_task.file_table.get_handle(fd.fd <span class="kw">as </span>usize) {
+            <span class="prelude-val">Some</span>(v) =&gt; v,
+            <span class="prelude-val">None </span>=&gt; {
+                fd.revents = PollEventFlags::empty();
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0</span>);
             }
         };
 
-        <span class="kw">let</span> <span class="ident">ready</span>: <span class="ident">PollEventFlags</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">inode</span>().<span class="ident">poll</span>(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.<span class="ident">into</span>();
+        <span class="kw">let </span>ready: PollEventFlags = handle.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
 
-        <span class="kw">if</span> <span class="op">!</span>(<span class="ident">ready</span> <span class="op">&amp;</span> <span class="ident">fd</span>.<span class="ident">events</span>).<span class="ident">is_empty</span>() {
-            <span class="comment">// The registered event is ready; increment the number of ready events</span>
-            <span class="comment">// and update revents mask for this event.</span>
-            <span class="ident">fd</span>.<span class="ident">revents</span> <span class="op">=</span> <span class="ident">ready</span> <span class="op">&amp;</span> <span class="ident">fd</span>.<span class="ident">events</span>;
-            <span class="ident">n</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span>!(ready &amp; fd.events).is_empty() {
+            <span class="comment">// The registered event is ready; increment the number of ready events
+            // and update revents mask for this event.
+            </span>fd.revents = ready &amp; fd.events;
+            n += <span class="number">1</span>;
             <span class="kw">continue</span>;
         }
 
-        <span class="comment">// Not ready; add the event to the poll table.</span>
-        <span class="ident">handle</span>.<span class="ident">inode</span>().<span class="ident">poll</span>(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">poll_table</span>))<span class="question-mark">?</span>;
-        <span class="ident">refds</span>.<span class="ident">push</span>((<span class="ident">handle</span>, <span class="ident">i</span>));
+        <span class="comment">// Not ready; add the event to the poll table.
+        </span>handle.inode().poll(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>poll_table))<span class="question-mark">?</span>;
+        refds.push((handle, i));
     }
 
-    <span class="comment">// If all events are ready, we can return now.</span>
-    <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="number">0</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">refds</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span>);
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="ident">n</span>);
+    <span class="comment">// If all events are ready, we can return now.
+    </span><span class="kw">if </span>n &gt; <span class="number">0 </span>{
+        <span class="macro">debug_assert!</span>(refds.len() == <span class="number">0</span>);
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(n);
     }
 
-    <span class="comment">// Start the timer if timeout specified, if not, we can block indefinitely.</span>
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">timeout</span>) <span class="op">=</span> <span class="ident">timeout</span> {
-        <span class="comment">// If the timeout is zero, then we have to return without blocking.</span>
-        <span class="kw">if</span> <span class="ident">timeout</span>.<span class="ident">tv_nsec</span> <span class="op">==</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">timeout</span>.<span class="ident">tv_sec</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="number">0</span>);
+    <span class="comment">// Start the timer if timeout specified, if not, we can block indefinitely.
+    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(timeout) = timeout {
+        <span class="comment">// If the timeout is zero, then we have to return without blocking.
+        </span><span class="kw">if </span>timeout.tv_nsec == <span class="number">0 </span>&amp;&amp; timeout.tv_sec == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0</span>);
         }
     }
 
-    <span class="ident"><span class="kw">crate</span>::unwind::unwind_stack_trace</span>();
+    <span class="kw">crate</span>::unwind::unwind_stack_trace();
 
-    <span class="lifetime">&#39;search</span>: <span class="kw">loop</span> {
-        <span class="comment">// Wait till one of the file descriptor to be ready.</span>
-        <span class="ident">scheduler::get_scheduler</span>().<span class="ident">inner</span>.<span class="ident">await_io</span>()<span class="question-mark">?</span>;
+    <span class="lifetime">&#39;search</span>: <span class="kw">loop </span>{
+        <span class="comment">// Wait till one of the file descriptor to be ready.
+        </span>scheduler::get_scheduler().inner.await_io()<span class="question-mark">?</span>;
 
-        <span class="kw">for</span> (<span class="ident">handle</span>, <span class="ident">index</span>) <span class="kw">in</span> <span class="ident">refds</span>.<span class="ident">iter</span>() {
-            <span class="kw">let</span> <span class="ident">pollfd</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">fds</span>[<span class="kw-2">*</span><span class="ident">index</span>];
-            <span class="kw">let</span> <span class="ident">ready</span>: <span class="ident">PollEventFlags</span> <span class="op">=</span> <span class="ident">handle</span>.<span class="ident">inode</span>().<span class="ident">poll</span>(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.<span class="ident">into</span>();
+        <span class="kw">for </span>(handle, index) <span class="kw">in </span>refds.iter() {
+            <span class="kw">let </span>pollfd = <span class="kw-2">&amp;mut </span>fds[<span class="kw-2">*</span>index];
+            <span class="kw">let </span>ready: PollEventFlags = handle.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
 
-            <span class="kw">if</span> <span class="op">!</span>(<span class="ident">ready</span> <span class="op">&amp;</span> <span class="ident">pollfd</span>.<span class="ident">events</span>).<span class="ident">is_empty</span>() {
-                <span class="ident">pollfd</span>.<span class="ident">revents</span> <span class="op">=</span> <span class="ident">ready</span> <span class="op">&amp;</span> <span class="ident">pollfd</span>.<span class="ident">events</span>;
-                <span class="kw">break</span> <span class="lifetime">&#39;search</span> <span class="prelude-val">Ok</span>(<span class="number">1</span>);
+            <span class="kw">if </span>!(ready &amp; pollfd.events).is_empty() {
+                pollfd.revents = ready &amp; pollfd.events;
+                <span class="kw">break </span><span class="lifetime">&#39;search </span><span class="prelude-val">Ok</span>(<span class="number">1</span>);
             }
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">poll</span>(<span class="ident">fds</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">PollFd</span>], <span class="ident">timeout</span>: <span class="ident">usize</span>, <span class="ident">sigmask</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="comment">// Nothing to poll on.</span>
-    <span class="kw">if</span> <span class="ident">fds</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="number">0</span>);
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>poll(fds: <span class="kw-2">&amp;mut </span>[PollFd], timeout: usize, sigmask: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="comment">// Nothing to poll on.
+    </span><span class="kw">if </span>fds.len() == <span class="number">0 </span>{
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0</span>);
     }
 
-    <span class="comment">// The timeout can be NULL.</span>
-    <span class="kw">let</span> <span class="ident">timeout</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">timeout</span> <span class="op">!</span><span class="op">=</span> <span class="number">0x00</span> {
-        <span class="prelude-val">Some</span>(<span class="ident"><span class="kw">crate</span>::utils::validate_ptr</span>(<span class="ident">timeout</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">TimeSpec</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
+    <span class="comment">// The timeout can be NULL.
+    </span><span class="kw">let </span>timeout = <span class="kw">if </span>timeout != <span class="number">0x00 </span>{
+        <span class="prelude-val">Some</span>(<span class="kw">crate</span>::utils::validate_ptr(timeout <span class="kw">as </span><span class="kw-2">*const </span>TimeSpec).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">signals</span> <span class="op">=</span> <span class="ident">current_task</span>.<span class="ident">signals</span>();
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>signals = current_task.signals();
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_mask</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="kw">let </span><span class="kw-2">mut </span>old_mask = <span class="number">0</span>;
 
-    <span class="comment">// Update the signal mask.</span>
-    <span class="ident">signals</span>.<span class="ident">set_mask</span>(<span class="ident">SigProcMask::Set</span>, <span class="prelude-val">Some</span>(<span class="ident">sigmask</span> <span class="kw">as</span> <span class="ident">u64</span>), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">old_mask</span>));
+    <span class="comment">// Update the signal mask.
+    </span>signals.set_mask(SigProcMask::Set, <span class="prelude-val">Some</span>(sigmask <span class="kw">as </span>u64), <span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>old_mask));
 
-    <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">do_poll</span>(<span class="ident">fds</span>, <span class="ident">timeout</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>n = do_poll(fds, timeout)<span class="question-mark">?</span>;
 
-    <span class="comment">// Restore the orignal signal mask.</span>
-    <span class="ident">signals</span>.<span class="ident">set_mask</span>(<span class="ident">SigProcMask::Set</span>, <span class="prelude-val">Some</span>(<span class="ident">old_mask</span>), <span class="prelude-val">None</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">n</span>)
+    <span class="comment">// Restore the orignal signal mask.
+    </span>signals.set_mask(SigProcMask::Set, <span class="prelude-val">Some</span>(old_mask), <span class="prelude-val">None</span>);
+    <span class="prelude-val">Ok</span>(n)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -206,179 +206,179 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! Thread Local Storage (TLS) are per-thread global variables. On 64-bit each CPU core&#39;s</span>
-<span class="doccomment">//! `fs` GDT segment points to the thread local memory area where the thread local static&#39;s</span>
-<span class="doccomment">//! live. TLS statics are simply accessed through an offset from `fs`.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ## Notes</span>
-<span class="doccomment">//! * &lt;https://wiki.osdev.org/Thread_Local_Storage&gt;</span>
-<span class="doccomment">//! * &lt;https://doc.rust-lang.org/std/thread/struct.LocalKey.html&gt;</span>
+</span><span class="doccomment">//! Thread Local Storage (TLS) are per-thread global variables. On 64-bit each CPU core&#39;s
+//! `fs` GDT segment points to the thread local memory area where the thread local static&#39;s
+//! live. TLS statics are simply accessed through an offset from `fs`.
+//!
+//! ## Notes
+//! * &lt;https://wiki.osdev.org/Thread_Local_Storage&gt;
+//! * &lt;https://doc.rust-lang.org/std/thread/struct.LocalKey.html&gt;
 
-<span class="kw">use</span> <span class="ident">core::alloc::Layout</span>;
+</span><span class="kw">use </span>core::alloc::Layout;
 
-<span class="kw">use</span> <span class="ident">alloc::alloc::alloc_zeroed</span>;
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+<span class="kw">use </span>alloc::alloc::alloc_zeroed;
+<span class="kw">use </span>alloc::vec::Vec;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::gdt</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::gdt::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">use</span> <span class="ident">raw_cpuid::FeatureInfo</span>;
+<span class="kw">use </span>raw_cpuid::FeatureInfo;
 
-<span class="kw">type</span> <span class="ident">ProcFsCpuFeature</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw">fn</span>(<span class="kw-2">&amp;</span><span class="ident">FeatureInfo</span>) -&gt; <span class="ident">bool</span>);
+<span class="kw">type </span>ProcFsCpuFeature = (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw">fn</span>(<span class="kw-2">&amp;</span>FeatureInfo) -&gt; bool);
 
-<span class="kw">const</span> <span class="ident">CPU_FEATURES</span>: <span class="kw-2">&amp;</span>[<span class="ident">ProcFsCpuFeature</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
-    (<span class="string">&quot;sse3&quot;</span>, <span class="ident">FeatureInfo::has_sse3</span>),
-    (<span class="string">&quot;pclmulqdq&quot;</span>, <span class="ident">FeatureInfo::has_pclmulqdq</span>),
-    (<span class="string">&quot;ds_area&quot;</span>, <span class="ident">FeatureInfo::has_ds_area</span>),
-    (<span class="string">&quot;monitor_mwait&quot;</span>, <span class="ident">FeatureInfo::has_monitor_mwait</span>),
-    (<span class="string">&quot;cpl&quot;</span>, <span class="ident">FeatureInfo::has_cpl</span>),
-    (<span class="string">&quot;vmx&quot;</span>, <span class="ident">FeatureInfo::has_vmx</span>),
-    (<span class="string">&quot;smx&quot;</span>, <span class="ident">FeatureInfo::has_smx</span>),
-    (<span class="string">&quot;eist&quot;</span>, <span class="ident">FeatureInfo::has_eist</span>),
-    (<span class="string">&quot;tm2&quot;</span>, <span class="ident">FeatureInfo::has_tm2</span>),
-    (<span class="string">&quot;ssse3&quot;</span>, <span class="ident">FeatureInfo::has_ssse3</span>),
-    (<span class="string">&quot;cnxtid&quot;</span>, <span class="ident">FeatureInfo::has_cnxtid</span>),
-    (<span class="string">&quot;fma&quot;</span>, <span class="ident">FeatureInfo::has_fma</span>),
-    (<span class="string">&quot;cmpxchg16b&quot;</span>, <span class="ident">FeatureInfo::has_cmpxchg16b</span>),
-    (<span class="string">&quot;pdcm&quot;</span>, <span class="ident">FeatureInfo::has_pdcm</span>),
-    (<span class="string">&quot;pcid&quot;</span>, <span class="ident">FeatureInfo::has_pcid</span>),
-    (<span class="string">&quot;dca&quot;</span>, <span class="ident">FeatureInfo::has_dca</span>),
-    (<span class="string">&quot;sse41&quot;</span>, <span class="ident">FeatureInfo::has_sse41</span>),
-    (<span class="string">&quot;sse42&quot;</span>, <span class="ident">FeatureInfo::has_sse42</span>),
-    (<span class="string">&quot;x2apic&quot;</span>, <span class="ident">FeatureInfo::has_x2apic</span>),
-    (<span class="string">&quot;movbe&quot;</span>, <span class="ident">FeatureInfo::has_movbe</span>),
-    (<span class="string">&quot;popcnt&quot;</span>, <span class="ident">FeatureInfo::has_popcnt</span>),
-    (<span class="string">&quot;tsc_deadline&quot;</span>, <span class="ident">FeatureInfo::has_tsc_deadline</span>),
-    (<span class="string">&quot;aesni&quot;</span>, <span class="ident">FeatureInfo::has_aesni</span>),
-    (<span class="string">&quot;xsave&quot;</span>, <span class="ident">FeatureInfo::has_xsave</span>),
-    (<span class="string">&quot;oxsave&quot;</span>, <span class="ident">FeatureInfo::has_oxsave</span>),
-    (<span class="string">&quot;avx&quot;</span>, <span class="ident">FeatureInfo::has_avx</span>),
-    (<span class="string">&quot;f16c&quot;</span>, <span class="ident">FeatureInfo::has_f16c</span>),
-    (<span class="string">&quot;rdrand&quot;</span>, <span class="ident">FeatureInfo::has_rdrand</span>),
-    (<span class="string">&quot;hypervisor&quot;</span>, <span class="ident">FeatureInfo::has_hypervisor</span>),
-    (<span class="string">&quot;fpu&quot;</span>, <span class="ident">FeatureInfo::has_fpu</span>),
-    (<span class="string">&quot;vme&quot;</span>, <span class="ident">FeatureInfo::has_vme</span>),
-    (<span class="string">&quot;de&quot;</span>, <span class="ident">FeatureInfo::has_de</span>),
-    (<span class="string">&quot;pse&quot;</span>, <span class="ident">FeatureInfo::has_pse</span>),
-    (<span class="string">&quot;tsc&quot;</span>, <span class="ident">FeatureInfo::has_tsc</span>),
-    (<span class="string">&quot;msr&quot;</span>, <span class="ident">FeatureInfo::has_msr</span>),
-    (<span class="string">&quot;pae&quot;</span>, <span class="ident">FeatureInfo::has_pae</span>),
-    (<span class="string">&quot;mce&quot;</span>, <span class="ident">FeatureInfo::has_mce</span>),
-    (<span class="string">&quot;cmpxchg8b&quot;</span>, <span class="ident">FeatureInfo::has_cmpxchg8b</span>),
-    (<span class="string">&quot;apic&quot;</span>, <span class="ident">FeatureInfo::has_apic</span>),
-    (<span class="string">&quot;sysenter_sysexit&quot;</span>, <span class="ident">FeatureInfo::has_sysenter_sysexit</span>),
-    (<span class="string">&quot;mtrr&quot;</span>, <span class="ident">FeatureInfo::has_mtrr</span>),
-    (<span class="string">&quot;pge&quot;</span>, <span class="ident">FeatureInfo::has_pge</span>),
-    (<span class="string">&quot;mca&quot;</span>, <span class="ident">FeatureInfo::has_mca</span>),
-    (<span class="string">&quot;cmov&quot;</span>, <span class="ident">FeatureInfo::has_cmov</span>),
-    (<span class="string">&quot;pat&quot;</span>, <span class="ident">FeatureInfo::has_pat</span>),
-    (<span class="string">&quot;pse36&quot;</span>, <span class="ident">FeatureInfo::has_pse36</span>),
-    (<span class="string">&quot;psn&quot;</span>, <span class="ident">FeatureInfo::has_psn</span>),
-    (<span class="string">&quot;clflush&quot;</span>, <span class="ident">FeatureInfo::has_clflush</span>),
-    (<span class="string">&quot;ds&quot;</span>, <span class="ident">FeatureInfo::has_ds</span>),
-    (<span class="string">&quot;acpi&quot;</span>, <span class="ident">FeatureInfo::has_acpi</span>),
-    (<span class="string">&quot;mmx&quot;</span>, <span class="ident">FeatureInfo::has_mmx</span>),
-    (<span class="string">&quot;fxsave_fxstor&quot;</span>, <span class="ident">FeatureInfo::has_fxsave_fxstor</span>),
-    (<span class="string">&quot;sse&quot;</span>, <span class="ident">FeatureInfo::has_sse</span>),
-    (<span class="string">&quot;sse2&quot;</span>, <span class="ident">FeatureInfo::has_sse2</span>),
-    (<span class="string">&quot;ss&quot;</span>, <span class="ident">FeatureInfo::has_ss</span>),
-    (<span class="string">&quot;htt&quot;</span>, <span class="ident">FeatureInfo::has_htt</span>),
-    (<span class="string">&quot;tm&quot;</span>, <span class="ident">FeatureInfo::has_tm</span>),
-    (<span class="string">&quot;pbe&quot;</span>, <span class="ident">FeatureInfo::has_pbe</span>),
+<span class="kw">const </span>CPU_FEATURES: <span class="kw-2">&amp;</span>[ProcFsCpuFeature] = <span class="kw-2">&amp;</span>[
+    (<span class="string">&quot;sse3&quot;</span>, FeatureInfo::has_sse3),
+    (<span class="string">&quot;pclmulqdq&quot;</span>, FeatureInfo::has_pclmulqdq),
+    (<span class="string">&quot;ds_area&quot;</span>, FeatureInfo::has_ds_area),
+    (<span class="string">&quot;monitor_mwait&quot;</span>, FeatureInfo::has_monitor_mwait),
+    (<span class="string">&quot;cpl&quot;</span>, FeatureInfo::has_cpl),
+    (<span class="string">&quot;vmx&quot;</span>, FeatureInfo::has_vmx),
+    (<span class="string">&quot;smx&quot;</span>, FeatureInfo::has_smx),
+    (<span class="string">&quot;eist&quot;</span>, FeatureInfo::has_eist),
+    (<span class="string">&quot;tm2&quot;</span>, FeatureInfo::has_tm2),
+    (<span class="string">&quot;ssse3&quot;</span>, FeatureInfo::has_ssse3),
+    (<span class="string">&quot;cnxtid&quot;</span>, FeatureInfo::has_cnxtid),
+    (<span class="string">&quot;fma&quot;</span>, FeatureInfo::has_fma),
+    (<span class="string">&quot;cmpxchg16b&quot;</span>, FeatureInfo::has_cmpxchg16b),
+    (<span class="string">&quot;pdcm&quot;</span>, FeatureInfo::has_pdcm),
+    (<span class="string">&quot;pcid&quot;</span>, FeatureInfo::has_pcid),
+    (<span class="string">&quot;dca&quot;</span>, FeatureInfo::has_dca),
+    (<span class="string">&quot;sse41&quot;</span>, FeatureInfo::has_sse41),
+    (<span class="string">&quot;sse42&quot;</span>, FeatureInfo::has_sse42),
+    (<span class="string">&quot;x2apic&quot;</span>, FeatureInfo::has_x2apic),
+    (<span class="string">&quot;movbe&quot;</span>, FeatureInfo::has_movbe),
+    (<span class="string">&quot;popcnt&quot;</span>, FeatureInfo::has_popcnt),
+    (<span class="string">&quot;tsc_deadline&quot;</span>, FeatureInfo::has_tsc_deadline),
+    (<span class="string">&quot;aesni&quot;</span>, FeatureInfo::has_aesni),
+    (<span class="string">&quot;xsave&quot;</span>, FeatureInfo::has_xsave),
+    (<span class="string">&quot;oxsave&quot;</span>, FeatureInfo::has_oxsave),
+    (<span class="string">&quot;avx&quot;</span>, FeatureInfo::has_avx),
+    (<span class="string">&quot;f16c&quot;</span>, FeatureInfo::has_f16c),
+    (<span class="string">&quot;rdrand&quot;</span>, FeatureInfo::has_rdrand),
+    (<span class="string">&quot;hypervisor&quot;</span>, FeatureInfo::has_hypervisor),
+    (<span class="string">&quot;fpu&quot;</span>, FeatureInfo::has_fpu),
+    (<span class="string">&quot;vme&quot;</span>, FeatureInfo::has_vme),
+    (<span class="string">&quot;de&quot;</span>, FeatureInfo::has_de),
+    (<span class="string">&quot;pse&quot;</span>, FeatureInfo::has_pse),
+    (<span class="string">&quot;tsc&quot;</span>, FeatureInfo::has_tsc),
+    (<span class="string">&quot;msr&quot;</span>, FeatureInfo::has_msr),
+    (<span class="string">&quot;pae&quot;</span>, FeatureInfo::has_pae),
+    (<span class="string">&quot;mce&quot;</span>, FeatureInfo::has_mce),
+    (<span class="string">&quot;cmpxchg8b&quot;</span>, FeatureInfo::has_cmpxchg8b),
+    (<span class="string">&quot;apic&quot;</span>, FeatureInfo::has_apic),
+    (<span class="string">&quot;sysenter_sysexit&quot;</span>, FeatureInfo::has_sysenter_sysexit),
+    (<span class="string">&quot;mtrr&quot;</span>, FeatureInfo::has_mtrr),
+    (<span class="string">&quot;pge&quot;</span>, FeatureInfo::has_pge),
+    (<span class="string">&quot;mca&quot;</span>, FeatureInfo::has_mca),
+    (<span class="string">&quot;cmov&quot;</span>, FeatureInfo::has_cmov),
+    (<span class="string">&quot;pat&quot;</span>, FeatureInfo::has_pat),
+    (<span class="string">&quot;pse36&quot;</span>, FeatureInfo::has_pse36),
+    (<span class="string">&quot;psn&quot;</span>, FeatureInfo::has_psn),
+    (<span class="string">&quot;clflush&quot;</span>, FeatureInfo::has_clflush),
+    (<span class="string">&quot;ds&quot;</span>, FeatureInfo::has_ds),
+    (<span class="string">&quot;acpi&quot;</span>, FeatureInfo::has_acpi),
+    (<span class="string">&quot;mmx&quot;</span>, FeatureInfo::has_mmx),
+    (<span class="string">&quot;fxsave_fxstor&quot;</span>, FeatureInfo::has_fxsave_fxstor),
+    (<span class="string">&quot;sse&quot;</span>, FeatureInfo::has_sse),
+    (<span class="string">&quot;sse2&quot;</span>, FeatureInfo::has_sse2),
+    (<span class="string">&quot;ss&quot;</span>, FeatureInfo::has_ss),
+    (<span class="string">&quot;htt&quot;</span>, FeatureInfo::has_htt),
+    (<span class="string">&quot;tm&quot;</span>, FeatureInfo::has_tm),
+    (<span class="string">&quot;pbe&quot;</span>, FeatureInfo::has_pbe),
 ];
 
-<span class="kw">static</span> <span class="ident">CPU_INFO</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">CpuInfo</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>());
+<span class="kw">static </span>CPU_INFO: Mutex&lt;Vec&lt;CpuInfo&gt;&gt; = Mutex::new(Vec::new());
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CpuInfo</span> {
-    <span class="kw">pub</span> <span class="ident">cpuid</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>CpuInfo {
+    <span class="kw">pub </span>cpuid: usize,
 
-    <span class="kw">pub</span> <span class="ident">fpu</span>: <span class="ident">bool</span>,
-    <span class="kw">pub</span> <span class="ident">vendor</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">brand</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">features</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>fpu: bool,
+    <span class="kw">pub </span>vendor: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>brand: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    <span class="kw">pub </span>features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PerCpuData</span> {
-    <span class="kw">pub</span> <span class="ident">cpuid</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">lapic_timer_frequency</span>: <span class="ident">u32</span>,
+<span class="kw">pub struct </span>PerCpuData {
+    <span class="kw">pub </span>cpuid: usize,
+    <span class="kw">pub </span>lapic_timer_frequency: u32,
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">gdt</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> [<span class="ident">GdtEntry</span>],
+    <span class="kw">pub</span>(<span class="kw">super</span>) gdt: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>[GdtEntry],
 }
 
-<span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_cpuid</span>() -&gt; <span class="ident">usize</span> {
-    <span class="ident">get_percpu</span>().<span class="ident">cpuid</span>
+<span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.
+</span><span class="kw">pub fn </span>get_cpuid() -&gt; usize {
+    get_percpu().cpuid
 }
 
-<span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_percpu</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> <span class="ident">PerCpuData</span> {
-    <span class="kw">unsafe</span> { (<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">io::rdmsr</span>(<span class="ident">io::IA32_GS_BASE</span>) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Kpcr</span>)).<span class="ident">cpu_local</span> }
+<span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.
+</span><span class="kw">pub fn </span>get_percpu() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PerCpuData {
+    <span class="kw">unsafe </span>{ (<span class="kw-2">&amp;mut *</span>(io::rdmsr(io::IA32_GS_BASE) <span class="kw">as </span><span class="kw-2">*mut </span>Kpcr)).cpu_local }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">cpuid</span>: <span class="ident">usize</span>) {
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">PerCpuData</span><span class="op">&gt;</span>();
+<span class="kw">pub fn </span>init(cpuid: usize) {
+    <span class="kw">let </span>size = core::mem::size_of::&lt;PerCpuData&gt;();
 
-    <span class="comment">// NOTE: Inside kernel space, the GS base will always point to the CPU local data and when</span>
-    <span class="comment">// jumping to userland `swapgs` is called making the GS base point to the userland TLS data.</span>
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">tss_layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(
-            <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">Kpcr</span><span class="op">&gt;</span>(),
-            <span class="ident">core::mem::align_of</span>::<span class="op">&lt;</span><span class="ident">Kpcr</span><span class="op">&gt;</span>(),
+    <span class="comment">// NOTE: Inside kernel space, the GS base will always point to the CPU local data and when
+    // jumping to userland `swapgs` is called making the GS base point to the userland TLS data.
+    </span><span class="kw">unsafe </span>{
+        <span class="kw">let </span>tss_layout = Layout::from_size_align_unchecked(
+            core::mem::size_of::&lt;Kpcr&gt;(),
+            core::mem::align_of::&lt;Kpcr&gt;(),
         );
 
-        <span class="kw">let</span> <span class="ident">tss_ptr</span> <span class="op">=</span> <span class="ident">alloc_zeroed</span>(<span class="ident">tss_layout</span>) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Tss</span>;
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_GS_BASE</span>, <span class="ident">tss_ptr</span> <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="kw">let </span>tss_ptr = alloc_zeroed(tss_layout) <span class="kw">as </span><span class="kw-2">*mut </span>Tss;
+        io::wrmsr(io::IA32_GS_BASE, tss_ptr <span class="kw">as </span>u64);
 
-        <span class="kw">let</span> <span class="ident">tls_layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">size</span>, <span class="number">8</span>);
-        <span class="kw">let</span> <span class="ident">tls_raw_ptr</span> <span class="op">=</span> <span class="ident">alloc_zeroed</span>(<span class="ident">tls_layout</span>);
+        <span class="kw">let </span>tls_layout = Layout::from_size_align_unchecked(size, <span class="number">8</span>);
+        <span class="kw">let </span>tls_raw_ptr = alloc_zeroed(tls_layout);
 
-        <span class="ident"><span class="kw">crate</span>::arch::gdt::get_kpcr</span>().<span class="ident">cpu_local</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">tls_raw_ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">PerCpuData</span>);
+        <span class="kw">crate</span>::arch::gdt::get_kpcr().cpu_local = <span class="kw-2">&amp;mut *</span>(tls_raw_ptr <span class="kw">as </span><span class="kw-2">*mut </span>PerCpuData);
     }
 
-    <span class="ident">get_percpu</span>().<span class="ident">cpuid</span> <span class="op">=</span> <span class="ident">cpuid</span>;
+    get_percpu().cpuid = cpuid;
 
-    <span class="kw">let</span> <span class="ident">cpuid</span> <span class="op">=</span> <span class="ident">raw_cpuid::CpuId::new</span>();
+    <span class="kw">let </span>cpuid = raw_cpuid::CpuId::new();
 
-    <span class="kw">let</span> <span class="ident">features</span> <span class="op">=</span> <span class="ident">cpuid</span>
-        .<span class="ident">get_feature_info</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">cpu_features</span><span class="op">|</span> {
-            <span class="ident">CPU_FEATURES</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">check_fn</span>)<span class="op">|</span> (<span class="ident">check_fn</span>)(<span class="kw-2">&amp;</span><span class="ident">cpu_features</span>))
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">name</span>)
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>()
+    <span class="kw">let </span>features = cpuid
+        .get_feature_info()
+        .map(|cpu_features| {
+            CPU_FEATURES
+                .iter()
+                .filter(|(<span class="kw">_</span>, check_fn)| (check_fn)(<span class="kw-2">&amp;</span>cpu_features))
+                .map(|(name, <span class="kw">_</span>)| name)
+                .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;()
         })
-        .<span class="ident">unwrap_or</span>(<span class="ident">Vec::new</span>());
+        .unwrap_or(Vec::new());
 
-    <span class="ident">CPU_INFO</span>.<span class="ident">lock</span>().<span class="ident">push</span>(<span class="ident">CpuInfo</span> {
-        <span class="ident">cpuid</span>: <span class="number">0</span>,
+    CPU_INFO.lock().push(CpuInfo {
+        cpuid: <span class="number">0</span>,
 
-        <span class="ident">fpu</span>: <span class="ident">cpuid</span>
-            .<span class="ident">get_feature_info</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">has_fpu</span>())
-            .<span class="ident">unwrap_or</span>(<span class="bool-val">false</span>),
+        fpu: cpuid
+            .get_feature_info()
+            .map(|e| e.has_fpu())
+            .unwrap_or(<span class="bool-val">false</span>),
 
-        <span class="ident">features</span>,
-        <span class="ident">vendor</span>: <span class="ident">cpuid</span>.<span class="ident">get_vendor_info</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">String::from</span>(<span class="ident">e</span>.<span class="ident">as_str</span>())),
-        <span class="ident">brand</span>: <span class="ident">cpuid</span>
-            .<span class="ident">get_processor_brand_string</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">String::from</span>(<span class="ident">e</span>.<span class="ident">as_str</span>())),
+        features,
+        vendor: cpuid.get_vendor_info().map(|e| String::from(e.as_str())),
+        brand: cpuid
+            .get_processor_brand_string()
+            .map(|e| String::from(e.as_str())),
     })
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">for_cpu_info_cached</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="ident">f</span>: <span class="ident">F</span>)
-<span class="kw">where</span>
-    <span class="ident">F</span>: <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">CpuInfo</span>),
+<span class="kw">pub fn </span>for_cpu_info_cached&lt;F&gt;(<span class="kw-2">mut </span>f: F)
+<span class="kw">where
+    </span>F: FnMut(<span class="kw-2">&amp;</span>CpuInfo),
 {
-    <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">CPU_INFO</span>.<span class="ident">lock</span>();
+    <span class="kw">let </span>lock = CPU_INFO.lock();
 
-    <span class="kw">for</span> <span class="ident">info</span> <span class="kw">in</span> <span class="ident">lock</span>.<span class="ident">iter</span>() {
-        <span class="ident">f</span>(<span class="kw-2">&amp;</span><span class="ident">info</span>);
+    <span class="kw">for </span>info <span class="kw">in </span>lock.iter() {
+        f(<span class="kw-2">&amp;</span>info);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

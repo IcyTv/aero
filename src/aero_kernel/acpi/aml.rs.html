@@ -34,41 +34,41 @@
 <span id="34">34</span>
 <span id="35">35</span>
 <span id="36">36</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>alloc::sync::Arc;
+<span class="kw">use </span>spin::Once;
 
-<span class="doccomment">/// ## Reference</span>
-<span class="doccomment">/// * [ACPI Sleeping States](https://uefi.org/specs/ACPI/6.4/16_Waking_and_Sleeping/sleeping-states.html)</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u8</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SleepState</span> {
-    <span class="ident">S5</span> <span class="op">=</span> <span class="number">5</span>,
+<span class="doccomment">/// ## Reference
+/// * [ACPI Sleeping States](https://uefi.org/specs/ACPI/6.4/16_Waking_and_Sleeping/sleeping-states.html)
+</span><span class="attribute">#[repr(u8)]</span>
+<span class="kw">pub enum </span>SleepState {
+    S5 = <span class="number">5</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">AmlSubsystem</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="kw">fn</span> <span class="ident">enter_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="ident">SleepState</span>);
-    <span class="doccomment">/// Ensures that the system control interrupt (SCI) is properly</span>
-    <span class="doccomment">/// configured, disables SCI event sources, installs the SCI handler, and</span>
-    <span class="doccomment">/// transfers the system hardware into ACPI mode.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Parameters</span>
-    <span class="doccomment">/// * `mode` - IRQ mode (ACPI spec section 5.8.1)</span>
-    <span class="kw">fn</span> <span class="ident">enable_acpi</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">mode</span>: <span class="ident">u32</span>);
+<span class="kw">pub trait </span>AmlSubsystem: Send + Sync {
+    <span class="kw">fn </span>enter_state(<span class="kw-2">&amp;</span><span class="self">self</span>, state: SleepState);
+    <span class="doccomment">/// Ensures that the system control interrupt (SCI) is properly
+    /// configured, disables SCI event sources, installs the SCI handler, and
+    /// transfers the system hardware into ACPI mode.
+    ///
+    /// ## Parameters
+    /// * `mode` - IRQ mode (ACPI spec section 5.8.1)
+    </span><span class="kw">fn </span>enable_acpi(<span class="kw-2">&amp;</span><span class="self">self</span>, mode: u32);
 }
 
-<span class="kw">static</span> <span class="ident">AML_SUBSYSTEM</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">AmlSubsystem</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>AML_SUBSYSTEM: Once&lt;Arc&lt;<span class="kw">dyn </span>AmlSubsystem&gt;&gt; = Once::new();
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_subsystem</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">AmlSubsystem</span><span class="op">&gt;</span> {
-    <span class="ident">AML_SUBSYSTEM</span>.<span class="ident">get</span>().<span class="ident">unwrap</span>().<span class="ident">clone</span>()
+<span class="kw">pub fn </span>get_subsystem() -&gt; Arc&lt;<span class="kw">dyn </span>AmlSubsystem&gt; {
+    AML_SUBSYSTEM.get().unwrap().clone()
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">subsystem</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">AmlSubsystem</span><span class="op">&gt;</span>) {
+<span class="kw">pub fn </span>init(subsystem: Arc&lt;<span class="kw">dyn </span>AmlSubsystem&gt;) {
     <span class="macro">assert!</span>(
-        <span class="ident">AML_SUBSYSTEM</span>.<span class="ident">get</span>().<span class="ident">is_none</span>(),
-        <span class="string">&quot;aml: subsystem already initialized&quot;</span>
-    );
+        AML_SUBSYSTEM.get().is_none(),
+        <span class="string">&quot;aml: subsystem already initialized&quot;
+    </span>);
 
-    <span class="ident">AML_SUBSYSTEM</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">subsystem</span>);
+    AML_SUBSYSTEM.call_once(|| subsystem);
     <span class="macro">log::debug!</span>(<span class="string">&quot;aml: subsystem initialized&quot;</span>);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

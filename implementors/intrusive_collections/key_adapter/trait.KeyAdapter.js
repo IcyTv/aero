@@ -1,3 +1,3 @@
-(function() {var implementors = {};
-implementors["aero_kernel"] = [{"text":"impl&lt;'a&gt; <a class=\"trait\" href=\"intrusive_collections/key_adapter/trait.KeyAdapter.html\" title=\"trait intrusive_collections::key_adapter::KeyAdapter\">KeyAdapter</a>&lt;'a&gt; for <a class=\"struct\" href=\"aero_kernel/mem/vmalloc/struct.VmallocAreaAdaptor.html\" title=\"struct aero_kernel::mem::vmalloc::VmallocAreaAdaptor\">VmallocAreaAdaptor</a>","synthetic":false,"types":["aero_kernel::mem::vmalloc::VmallocAreaAdaptor"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
+(function() {var implementors = {
+"aero_kernel":[["impl&lt;'a&gt; <a class=\"trait\" href=\"intrusive_collections/key_adapter/trait.KeyAdapter.html\" title=\"trait intrusive_collections::key_adapter::KeyAdapter\">KeyAdapter</a>&lt;'a&gt; for <a class=\"struct\" href=\"aero_kernel/mem/vmalloc/struct.VmallocAreaAdaptor.html\" title=\"struct aero_kernel::mem::vmalloc::VmallocAreaAdaptor\">VmallocAreaAdaptor</a>"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

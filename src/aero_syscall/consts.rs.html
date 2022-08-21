@@ -331,304 +331,304 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::OpenFlags</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::OpenFlags;
 
-<span class="comment">// syscall number constants:</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_READ</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_WRITE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_OPEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_CLOSE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SHUTDOWN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EXIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_FORK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">6</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_REBOOT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">7</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_MMAP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_MUNMAP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">9</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_ARCH_PRCTL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">10</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETDENTS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">11</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETCWD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">12</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_CHDIR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">13</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_MKDIR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">14</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_MKDIR_AT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">15</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_RMDIR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EXEC</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">17</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_LOG</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">18</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_UNAME</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">19</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_WAITPID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">20</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_IOCTL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">21</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETPID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">22</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SOCKET</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">23</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_CONNECT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">24</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_BIND</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">25</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_LISTEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">26</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_ACCEPT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">27</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SEEK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">28</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETTID</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">29</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETTIME</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">30</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SLEEP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">31</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_ACCESS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_PIPE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">33</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_UNLINK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">34</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETHOSTNAME</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">35</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SETHOSTNAME</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">36</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_INFO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">37</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_CLONE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">38</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SIGRETURN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">39</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SIGACTION</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">40</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SIGPROCMASK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">41</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_DUP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">42</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_FCNTL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">43</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_DUP2</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">44</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_IPC_SEND</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">45</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_IPC_RECV</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">46</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_IPC_DISCOVER_ROOT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">47</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_IPC_BECOME_ROOT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">48</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_STAT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">49</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_FSTAT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">50</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_READ_LINK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">51</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EPOLL_CREATE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">52</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EPOLL_PWAIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">53</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EPOLL_CTL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">54</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EVENT_FD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">55</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_KILL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">56</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_FUTEX_WAIT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">57</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_FUTEX_WAKE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">58</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_LINK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">59</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_BACKTRACE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">60</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_POLL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">61</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_EXIT_THREAD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">62</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SOCK_RECV</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">63</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_SETITIMER</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SYS_GETITIMER</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">65</span>;
+<span class="comment">// syscall number constants:
+</span><span class="kw">pub const </span>SYS_READ: usize = <span class="number">0</span>;
+<span class="kw">pub const </span>SYS_WRITE: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>SYS_OPEN: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>SYS_CLOSE: usize = <span class="number">3</span>;
+<span class="kw">pub const </span>SYS_SHUTDOWN: usize = <span class="number">4</span>;
+<span class="kw">pub const </span>SYS_EXIT: usize = <span class="number">5</span>;
+<span class="kw">pub const </span>SYS_FORK: usize = <span class="number">6</span>;
+<span class="kw">pub const </span>SYS_REBOOT: usize = <span class="number">7</span>;
+<span class="kw">pub const </span>SYS_MMAP: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>SYS_MUNMAP: usize = <span class="number">9</span>;
+<span class="kw">pub const </span>SYS_ARCH_PRCTL: usize = <span class="number">10</span>;
+<span class="kw">pub const </span>SYS_GETDENTS: usize = <span class="number">11</span>;
+<span class="kw">pub const </span>SYS_GETCWD: usize = <span class="number">12</span>;
+<span class="kw">pub const </span>SYS_CHDIR: usize = <span class="number">13</span>;
+<span class="kw">pub const </span>SYS_MKDIR: usize = <span class="number">14</span>;
+<span class="kw">pub const </span>SYS_MKDIR_AT: usize = <span class="number">15</span>;
+<span class="kw">pub const </span>SYS_RMDIR: usize = <span class="number">16</span>;
+<span class="kw">pub const </span>SYS_EXEC: usize = <span class="number">17</span>;
+<span class="kw">pub const </span>SYS_LOG: usize = <span class="number">18</span>;
+<span class="kw">pub const </span>SYS_UNAME: usize = <span class="number">19</span>;
+<span class="kw">pub const </span>SYS_WAITPID: usize = <span class="number">20</span>;
+<span class="kw">pub const </span>SYS_IOCTL: usize = <span class="number">21</span>;
+<span class="kw">pub const </span>SYS_GETPID: usize = <span class="number">22</span>;
+<span class="kw">pub const </span>SYS_SOCKET: usize = <span class="number">23</span>;
+<span class="kw">pub const </span>SYS_CONNECT: usize = <span class="number">24</span>;
+<span class="kw">pub const </span>SYS_BIND: usize = <span class="number">25</span>;
+<span class="kw">pub const </span>SYS_LISTEN: usize = <span class="number">26</span>;
+<span class="kw">pub const </span>SYS_ACCEPT: usize = <span class="number">27</span>;
+<span class="kw">pub const </span>SYS_SEEK: usize = <span class="number">28</span>;
+<span class="kw">pub const </span>SYS_GETTID: usize = <span class="number">29</span>;
+<span class="kw">pub const </span>SYS_GETTIME: usize = <span class="number">30</span>;
+<span class="kw">pub const </span>SYS_SLEEP: usize = <span class="number">31</span>;
+<span class="kw">pub const </span>SYS_ACCESS: usize = <span class="number">32</span>;
+<span class="kw">pub const </span>SYS_PIPE: usize = <span class="number">33</span>;
+<span class="kw">pub const </span>SYS_UNLINK: usize = <span class="number">34</span>;
+<span class="kw">pub const </span>SYS_GETHOSTNAME: usize = <span class="number">35</span>;
+<span class="kw">pub const </span>SYS_SETHOSTNAME: usize = <span class="number">36</span>;
+<span class="kw">pub const </span>SYS_INFO: usize = <span class="number">37</span>;
+<span class="kw">pub const </span>SYS_CLONE: usize = <span class="number">38</span>;
+<span class="kw">pub const </span>SYS_SIGRETURN: usize = <span class="number">39</span>;
+<span class="kw">pub const </span>SYS_SIGACTION: usize = <span class="number">40</span>;
+<span class="kw">pub const </span>SYS_SIGPROCMASK: usize = <span class="number">41</span>;
+<span class="kw">pub const </span>SYS_DUP: usize = <span class="number">42</span>;
+<span class="kw">pub const </span>SYS_FCNTL: usize = <span class="number">43</span>;
+<span class="kw">pub const </span>SYS_DUP2: usize = <span class="number">44</span>;
+<span class="kw">pub const </span>SYS_IPC_SEND: usize = <span class="number">45</span>;
+<span class="kw">pub const </span>SYS_IPC_RECV: usize = <span class="number">46</span>;
+<span class="kw">pub const </span>SYS_IPC_DISCOVER_ROOT: usize = <span class="number">47</span>;
+<span class="kw">pub const </span>SYS_IPC_BECOME_ROOT: usize = <span class="number">48</span>;
+<span class="kw">pub const </span>SYS_STAT: usize = <span class="number">49</span>;
+<span class="kw">pub const </span>SYS_FSTAT: usize = <span class="number">50</span>;
+<span class="kw">pub const </span>SYS_READ_LINK: usize = <span class="number">51</span>;
+<span class="kw">pub const </span>SYS_EPOLL_CREATE: usize = <span class="number">52</span>;
+<span class="kw">pub const </span>SYS_EPOLL_PWAIT: usize = <span class="number">53</span>;
+<span class="kw">pub const </span>SYS_EPOLL_CTL: usize = <span class="number">54</span>;
+<span class="kw">pub const </span>SYS_EVENT_FD: usize = <span class="number">55</span>;
+<span class="kw">pub const </span>SYS_KILL: usize = <span class="number">56</span>;
+<span class="kw">pub const </span>SYS_FUTEX_WAIT: usize = <span class="number">57</span>;
+<span class="kw">pub const </span>SYS_FUTEX_WAKE: usize = <span class="number">58</span>;
+<span class="kw">pub const </span>SYS_LINK: usize = <span class="number">59</span>;
+<span class="kw">pub const </span>SYS_BACKTRACE: usize = <span class="number">60</span>;
+<span class="kw">pub const </span>SYS_POLL: usize = <span class="number">61</span>;
+<span class="kw">pub const </span>SYS_EXIT_THREAD: usize = <span class="number">62</span>;
+<span class="kw">pub const </span>SYS_SOCK_RECV: usize = <span class="number">63</span>;
+<span class="kw">pub const </span>SYS_SETITIMER: usize = <span class="number">64</span>;
+<span class="kw">pub const </span>SYS_GETITIMER: usize = <span class="number">65</span>;
 
-<span class="comment">// constants for fcntl()&#39;s command argument:</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_DUPFD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_DUPFD_CLOEXEC</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_GETFD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_SETFD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_GETFL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_SETFL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">6</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_GETLK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">7</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_SETLK</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_SETLKW</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">9</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_GETOWN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">10</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">F_SETOWN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">11</span>;
+<span class="comment">// constants for fcntl()&#39;s command argument:
+</span><span class="kw">pub const </span>F_DUPFD: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>F_DUPFD_CLOEXEC: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>F_GETFD: usize = <span class="number">3</span>;
+<span class="kw">pub const </span>F_SETFD: usize = <span class="number">4</span>;
+<span class="kw">pub const </span>F_GETFL: usize = <span class="number">5</span>;
+<span class="kw">pub const </span>F_SETFL: usize = <span class="number">6</span>;
+<span class="kw">pub const </span>F_GETLK: usize = <span class="number">7</span>;
+<span class="kw">pub const </span>F_SETLK: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>F_SETLKW: usize = <span class="number">9</span>;
+<span class="kw">pub const </span>F_GETOWN: usize = <span class="number">10</span>;
+<span class="kw">pub const </span>F_SETOWN: usize = <span class="number">11</span>;
 
-<span class="comment">// constants for fcntl()&#39;s additional argument of F_GETFD and F_SETFD:</span>
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FdFlags</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">CLOEXEC</span> <span class="op">=</span> <span class="number">1</span>;
+<span class="comment">// constants for fcntl()&#39;s additional argument of F_GETFD and F_SETFD:
+</span><span class="macro">bitflags::bitflags!</span> {
+    <span class="kw">pub struct </span>FdFlags: usize {
+        <span class="kw">const </span>CLOEXEC = <span class="number">1</span>;
     }
 }
 
-<span class="comment">// constants for the epoll API:</span>
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EPollFlags</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">CLOEXEC</span>  <span class="op">=</span> <span class="number">1</span>;
+<span class="comment">// constants for the epoll API:
+</span><span class="macro">bitflags::bitflags!</span> {
+    <span class="kw">pub struct </span>EPollFlags: usize {
+        <span class="kw">const </span>CLOEXEC  = <span class="number">1</span>;
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EPOLL_CTL_ADD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EPOLL_CTL_DEL</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">EPOLL_CTL_MOD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
+<span class="kw">pub const </span>EPOLL_CTL_ADD: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>EPOLL_CTL_DEL: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>EPOLL_CTL_MOD: usize = <span class="number">3</span>;
 
-<span class="comment">// structures for the epoll API:</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">union</span> <span class="ident">EPollData</span> {
-    <span class="kw">pub</span> <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">fd</span>: <span class="ident">i32</span>,
-    <span class="kw">pub</span> <span class="ident">u32</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">u64</span>: <span class="ident">u64</span>,
+<span class="comment">// structures for the epoll API:
+</span><span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub union </span>EPollData {
+    <span class="kw">pub </span>ptr: <span class="kw-2">*mut </span>u8,
+    <span class="kw">pub </span>fd: i32,
+    <span class="kw">pub </span>u32: u32,
+    <span class="kw">pub </span>u64: u64,
 }
 
-<span class="comment">// options/linux/include/sys/epoll.h</span>
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EPollEventFlags</span>: <span class="ident">u32</span> {
-        <span class="kw">const</span> <span class="ident">IN</span>        <span class="op">=</span> <span class="number">0x001</span>;
-        <span class="doccomment">/// There is an exceptional condition on the file descriptor.</span>
-        <span class="kw">const</span> <span class="ident">PRI</span>       <span class="op">=</span> <span class="number">0x002</span>;
-        <span class="kw">const</span> <span class="ident">OUT</span>       <span class="op">=</span> <span class="number">0x004</span>;
-        <span class="kw">const</span> <span class="ident">RDNORM</span>    <span class="op">=</span> <span class="number">0x040</span>;
-        <span class="kw">const</span> <span class="ident">RDBAND</span>    <span class="op">=</span> <span class="number">0x080</span>;
-        <span class="kw">const</span> <span class="ident">WRNORM</span>    <span class="op">=</span> <span class="number">0x100</span>;
-        <span class="kw">const</span> <span class="ident">WRBAND</span>    <span class="op">=</span> <span class="number">0x200</span>;
-        <span class="kw">const</span> <span class="ident">MSG</span>       <span class="op">=</span> <span class="number">0x400</span>;
-        <span class="kw">const</span> <span class="ident">ERR</span>       <span class="op">=</span> <span class="number">0x008</span>;
-        <span class="kw">const</span> <span class="ident">HUP</span>       <span class="op">=</span> <span class="number">0x010</span>;
-        <span class="kw">const</span> <span class="ident">RDHUP</span>     <span class="op">=</span> <span class="number">0x2000</span>;
-        <span class="kw">const</span> <span class="ident">EXCLUSIVE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">28</span>;
-        <span class="kw">const</span> <span class="ident">WAKEUP</span>    <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">29</span>;
-        <span class="kw">const</span> <span class="ident">ONESHOT</span>   <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">30</span>;
-        <span class="kw">const</span> <span class="ident">ET</span>        <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>;
+<span class="comment">// options/linux/include/sys/epoll.h
+</span><span class="macro">bitflags::bitflags!</span> {
+    <span class="kw">pub struct </span>EPollEventFlags: u32 {
+        <span class="kw">const </span>IN        = <span class="number">0x001</span>;
+        <span class="doccomment">/// There is an exceptional condition on the file descriptor.
+        </span><span class="kw">const </span>PRI       = <span class="number">0x002</span>;
+        <span class="kw">const </span>OUT       = <span class="number">0x004</span>;
+        <span class="kw">const </span>RDNORM    = <span class="number">0x040</span>;
+        <span class="kw">const </span>RDBAND    = <span class="number">0x080</span>;
+        <span class="kw">const </span>WRNORM    = <span class="number">0x100</span>;
+        <span class="kw">const </span>WRBAND    = <span class="number">0x200</span>;
+        <span class="kw">const </span>MSG       = <span class="number">0x400</span>;
+        <span class="kw">const </span>ERR       = <span class="number">0x008</span>;
+        <span class="kw">const </span>HUP       = <span class="number">0x010</span>;
+        <span class="kw">const </span>RDHUP     = <span class="number">0x2000</span>;
+        <span class="kw">const </span>EXCLUSIVE = <span class="number">1 </span>&lt;&lt; <span class="number">28</span>;
+        <span class="kw">const </span>WAKEUP    = <span class="number">1 </span>&lt;&lt; <span class="number">29</span>;
+        <span class="kw">const </span>ONESHOT   = <span class="number">1 </span>&lt;&lt; <span class="number">30</span>;
+        <span class="kw">const </span>ET        = <span class="number">1 </span>&lt;&lt; <span class="number">31</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EPollEvent</span> {
-    <span class="kw">pub</span> <span class="ident">events</span>: <span class="ident">EPollEventFlags</span>,
-    <span class="kw">pub</span> <span class="ident">data</span>: <span class="ident">EPollData</span>,
+<span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>EPollEvent {
+    <span class="kw">pub </span>events: EPollEventFlags,
+    <span class="kw">pub </span>data: EPollData,
 }
 
-<span class="kw">impl</span> <span class="ident">core::fmt::Debug</span> <span class="kw">for</span> <span class="ident">EPollEvent</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">core::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">core::fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;EPollEvent&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;events&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">events</span>)
-            .<span class="ident">finish</span>()
+<span class="kw">impl </span>core::fmt::Debug <span class="kw">for </span>EPollEvent {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
+        f.debug_struct(<span class="string">&quot;EPollEvent&quot;</span>)
+            .field(<span class="string">&quot;events&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.events)
+            .finish()
     }
 }
 
-<span class="comment">// structures for the poll API:</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PollFd</span> {
-    <span class="kw">pub</span> <span class="ident">fd</span>: <span class="ident">i32</span>,
-    <span class="kw">pub</span> <span class="ident">events</span>: <span class="ident">PollEventFlags</span>,
-    <span class="kw">pub</span> <span class="ident">revents</span>: <span class="ident">PollEventFlags</span>,
+<span class="comment">// structures for the poll API:
+</span><span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>PollFd {
+    <span class="kw">pub </span>fd: i32,
+    <span class="kw">pub </span>events: PollEventFlags,
+    <span class="kw">pub </span>revents: PollEventFlags,
 }
 
-<span class="comment">// sysdeps/aero/include/abi-bits/poll.h</span>
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PollEventFlags</span>: <span class="ident">i16</span> {
-        <span class="kw">const</span> <span class="ident">IN</span>     <span class="op">=</span> <span class="number">0x01</span>;
-        <span class="kw">const</span> <span class="ident">OUT</span>    <span class="op">=</span> <span class="number">0x02</span>;
-        <span class="kw">const</span> <span class="ident">PRI</span>    <span class="op">=</span> <span class="number">0x04</span>;
-        <span class="kw">const</span> <span class="ident">HUP</span>    <span class="op">=</span> <span class="number">0x08</span>;
-        <span class="kw">const</span> <span class="ident">ERR</span>    <span class="op">=</span> <span class="number">0x10</span>;
-        <span class="kw">const</span> <span class="ident">RDHUP</span>  <span class="op">=</span> <span class="number">0x20</span>;
-        <span class="kw">const</span> <span class="ident">NVAL</span>   <span class="op">=</span> <span class="number">0x40</span>;
-        <span class="kw">const</span> <span class="ident">WRNORM</span> <span class="op">=</span> <span class="number">0x80</span>;
+<span class="comment">// sysdeps/aero/include/abi-bits/poll.h
+</span><span class="macro">bitflags::bitflags!</span> {
+    <span class="kw">pub struct </span>PollEventFlags: i16 {
+        <span class="kw">const </span>IN     = <span class="number">0x01</span>;
+        <span class="kw">const </span>OUT    = <span class="number">0x02</span>;
+        <span class="kw">const </span>PRI    = <span class="number">0x04</span>;
+        <span class="kw">const </span>HUP    = <span class="number">0x08</span>;
+        <span class="kw">const </span>ERR    = <span class="number">0x10</span>;
+        <span class="kw">const </span>RDHUP  = <span class="number">0x20</span>;
+        <span class="kw">const </span>NVAL   = <span class="number">0x40</span>;
+        <span class="kw">const </span>WRNORM = <span class="number">0x80</span>;
     }
 }
 
-<span class="comment">// constants for generic ioctls (applicable to any file descriptor):</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FIONREAD</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x541b</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FIONBIO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x5421</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FIONCLEX</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x5450</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FIOCLEX</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x5451</span>;
+<span class="comment">// constants for generic ioctls (applicable to any file descriptor):
+</span><span class="kw">pub const </span>FIONREAD: usize = <span class="number">0x541b</span>;
+<span class="kw">pub const </span>FIONBIO: usize = <span class="number">0x5421</span>;
+<span class="kw">pub const </span>FIONCLEX: usize = <span class="number">0x5450</span>;
+<span class="kw">pub const </span>FIOCLEX: usize = <span class="number">0x5451</span>;
 
-<span class="comment">// constants for event fd:</span>
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="comment">// mlibc/options/linux/include/sys/eventfd.h</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventFdFlags</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">SEMAPHORE</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">CLOEXEC</span>   <span class="op">=</span> <span class="ident">OpenFlags::O_CLOEXEC</span>.<span class="ident">bits</span>();
-        <span class="kw">const</span> <span class="ident">NONBLOCK</span>  <span class="op">=</span> <span class="ident">OpenFlags::O_NONBLOCK</span>.<span class="ident">bits</span>();
+<span class="comment">// constants for event fd:
+</span><span class="macro">bitflags::bitflags!</span> {
+    <span class="comment">// mlibc/options/linux/include/sys/eventfd.h
+    </span><span class="kw">pub struct </span>EventFdFlags: usize {
+        <span class="kw">const </span>SEMAPHORE = <span class="number">1</span>;
+        <span class="kw">const </span>CLOEXEC   = OpenFlags::O_CLOEXEC.bits();
+        <span class="kw">const </span>NONBLOCK  = OpenFlags::O_NONBLOCK.bits();
     }
 }
 
-<span class="comment">// framebuffer constants:</span>
-<span class="comment">//</span>
-<span class="comment">// NOTE: The framebuffer constants and structs are derived from the layout</span>
-<span class="comment">// of these constants and structs in the linux usermode API.</span>
-<span class="comment">//</span>
-<span class="comment">// https://github.com/torvalds/linux/blob/master/include/uapi/linux/fb.h</span>
-<span class="comment">//</span>
-<span class="comment">// TODO: Move these constants and structures to the Aero UAPI crate.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FBIOGET_VSCREENINFO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x4600</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FBIOPUT_VSCREENINFO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x4601</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FBIOGET_FSCREENINFO</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x4602</span>;
+<span class="comment">// framebuffer constants:
+//
+// NOTE: The framebuffer constants and structs are derived from the layout
+// of these constants and structs in the linux usermode API.
+//
+// https://github.com/torvalds/linux/blob/master/include/uapi/linux/fb.h
+//
+// TODO: Move these constants and structures to the Aero UAPI crate.
+</span><span class="kw">pub const </span>FBIOGET_VSCREENINFO: usize = <span class="number">0x4600</span>;
+<span class="kw">pub const </span>FBIOPUT_VSCREENINFO: usize = <span class="number">0x4601</span>;
+<span class="kw">pub const </span>FBIOGET_FSCREENINFO: usize = <span class="number">0x4602</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_TYPE_PACKED_PIXELS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_TYPE_PLANES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_TYPE_INTERLEAVED_PLANES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_TYPE_TEXT</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_TYPE_VGA_PLANES</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_TYPE_FOURCC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">5</span>;
+<span class="kw">pub const </span>FB_TYPE_PACKED_PIXELS: u32 = <span class="number">0</span>;
+<span class="kw">pub const </span>FB_TYPE_PLANES: u32 = <span class="number">1</span>;
+<span class="kw">pub const </span>FB_TYPE_INTERLEAVED_PLANES: u32 = <span class="number">2</span>;
+<span class="kw">pub const </span>FB_TYPE_TEXT: u32 = <span class="number">3</span>;
+<span class="kw">pub const </span>FB_TYPE_VGA_PLANES: u32 = <span class="number">4</span>;
+<span class="kw">pub const </span>FB_TYPE_FOURCC: u32 = <span class="number">5</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_MONO01</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_MONO10</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_TRUECOLOR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_PSEUDOCOLOR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_DIRECTCOLOR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_STATIC_PSEUDOCOLOR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VISUAL_FOURCC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">6</span>;
+<span class="kw">pub const </span>FB_VISUAL_MONO01: u32 = <span class="number">0</span>;
+<span class="kw">pub const </span>FB_VISUAL_MONO10: u32 = <span class="number">1</span>;
+<span class="kw">pub const </span>FB_VISUAL_TRUECOLOR: u32 = <span class="number">2</span>;
+<span class="kw">pub const </span>FB_VISUAL_PSEUDOCOLOR: u32 = <span class="number">3</span>;
+<span class="kw">pub const </span>FB_VISUAL_DIRECTCOLOR: u32 = <span class="number">4</span>;
+<span class="kw">pub const </span>FB_VISUAL_STATIC_PSEUDOCOLOR: u32 = <span class="number">5</span>;
+<span class="kw">pub const </span>FB_VISUAL_FOURCC: u32 = <span class="number">6</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_ACTIVATE_NOW</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_ACTIVATE_NXTOPEN</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_ACTIVATE_TEST</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_ACTIVATE_MASK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">15</span>;
+<span class="kw">pub const </span>FB_ACTIVATE_NOW: u32 = <span class="number">0</span>;
+<span class="kw">pub const </span>FB_ACTIVATE_NXTOPEN: u32 = <span class="number">1</span>;
+<span class="kw">pub const </span>FB_ACTIVATE_TEST: u32 = <span class="number">2</span>;
+<span class="kw">pub const </span>FB_ACTIVATE_MASK: u32 = <span class="number">15</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VMODE_NONINTERLACED</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VMODE_INTERLACED</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VMODE_DOUBLE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VMODE_ODD_FLD_FIRST</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">FB_VMODE_MASK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">255</span>;
+<span class="kw">pub const </span>FB_VMODE_NONINTERLACED: u32 = <span class="number">0</span>;
+<span class="kw">pub const </span>FB_VMODE_INTERLACED: u32 = <span class="number">1</span>;
+<span class="kw">pub const </span>FB_VMODE_DOUBLE: u32 = <span class="number">2</span>;
+<span class="kw">pub const </span>FB_VMODE_ODD_FLD_FIRST: u32 = <span class="number">4</span>;
+<span class="kw">pub const </span>FB_VMODE_MASK: u32 = <span class="number">255</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FramebufferBitField</span> {
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">length</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">msb_right</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Default, Debug, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>FramebufferBitField {
+    <span class="kw">pub </span>offset: u32,
+    <span class="kw">pub </span>length: u32,
+    <span class="kw">pub </span>msb_right: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">FramebufferBitField</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">shift</span>: <span class="ident">u32</span>, <span class="ident">size</span>: <span class="ident">u32</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">offset</span>: <span class="ident">shift</span>,
-            <span class="ident">length</span>: <span class="ident">size</span>,
-            <span class="ident">msb_right</span>: <span class="number">0</span>,
+<span class="kw">impl </span>FramebufferBitField {
+    <span class="kw">pub fn </span>new(shift: u32, size: u32) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            offset: shift,
+            length: size,
+            msb_right: <span class="number">0</span>,
         }
     }
 }
 
-<span class="comment">// framebuffer variable screen info:</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FramebufferVScreenInfo</span> {
-    <span class="kw">pub</span> <span class="ident">xres</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">yres</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">xres_virtual</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">yres_virtual</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">xoffset</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">yoffset</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">bits_per_pixel</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">grayscale</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">red</span>: <span class="ident">FramebufferBitField</span>,
-    <span class="kw">pub</span> <span class="ident">green</span>: <span class="ident">FramebufferBitField</span>,
-    <span class="kw">pub</span> <span class="ident">blue</span>: <span class="ident">FramebufferBitField</span>,
-    <span class="kw">pub</span> <span class="ident">transp</span>: <span class="ident">FramebufferBitField</span>,
-    <span class="kw">pub</span> <span class="ident">nonstd</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">activate</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">accel_flags</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">pixclock</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">left_margin</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">right_margin</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">upper_margin</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">lower_margin</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">hsync_len</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">vsync_len</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">sync</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">vmode</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">rotate</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">colorspace</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">reserved</span>: [<span class="ident">u32</span>; <span class="number">4</span>],
+<span class="comment">// framebuffer variable screen info:
+</span><span class="attribute">#[derive(Default, Debug, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>FramebufferVScreenInfo {
+    <span class="kw">pub </span>xres: u32,
+    <span class="kw">pub </span>yres: u32,
+    <span class="kw">pub </span>xres_virtual: u32,
+    <span class="kw">pub </span>yres_virtual: u32,
+    <span class="kw">pub </span>xoffset: u32,
+    <span class="kw">pub </span>yoffset: u32,
+    <span class="kw">pub </span>bits_per_pixel: u32,
+    <span class="kw">pub </span>grayscale: u32,
+    <span class="kw">pub </span>red: FramebufferBitField,
+    <span class="kw">pub </span>green: FramebufferBitField,
+    <span class="kw">pub </span>blue: FramebufferBitField,
+    <span class="kw">pub </span>transp: FramebufferBitField,
+    <span class="kw">pub </span>nonstd: u32,
+    <span class="kw">pub </span>activate: u32,
+    <span class="kw">pub </span>height: u32,
+    <span class="kw">pub </span>width: u32,
+    <span class="kw">pub </span>accel_flags: u32,
+    <span class="kw">pub </span>pixclock: u32,
+    <span class="kw">pub </span>left_margin: u32,
+    <span class="kw">pub </span>right_margin: u32,
+    <span class="kw">pub </span>upper_margin: u32,
+    <span class="kw">pub </span>lower_margin: u32,
+    <span class="kw">pub </span>hsync_len: u32,
+    <span class="kw">pub </span>vsync_len: u32,
+    <span class="kw">pub </span>sync: u32,
+    <span class="kw">pub </span>vmode: u32,
+    <span class="kw">pub </span>rotate: u32,
+    <span class="kw">pub </span>colorspace: u32,
+    <span class="kw">pub </span>reserved: [u32; <span class="number">4</span>],
 }
 
-<span class="comment">// framebuffer fixed screen info:</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FramebufferFScreenInfo</span> {
-    <span class="kw">pub</span> <span class="ident">id</span>: [<span class="ident">u8</span>; <span class="number">16</span>],
-    <span class="kw">pub</span> <span class="ident">smem_start</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">smem_len</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">typee</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">type_aux</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">visual</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">xpanstep</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">ypanstep</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">ywrapstep</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">line_length</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">mmio_start</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">mmio_len</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">accel</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">capabilities</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">reserved</span>: [<span class="ident">u16</span>; <span class="number">2</span>],
+<span class="comment">// framebuffer fixed screen info:
+</span><span class="attribute">#[derive(Default, Debug, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>FramebufferFScreenInfo {
+    <span class="kw">pub </span>id: [u8; <span class="number">16</span>],
+    <span class="kw">pub </span>smem_start: u64,
+    <span class="kw">pub </span>smem_len: u32,
+    <span class="kw">pub </span>typee: u32,
+    <span class="kw">pub </span>type_aux: u32,
+    <span class="kw">pub </span>visual: u32,
+    <span class="kw">pub </span>xpanstep: u16,
+    <span class="kw">pub </span>ypanstep: u16,
+    <span class="kw">pub </span>ywrapstep: u16,
+    <span class="kw">pub </span>line_length: u32,
+    <span class="kw">pub </span>mmio_start: u64,
+    <span class="kw">pub </span>mmio_len: u32,
+    <span class="kw">pub </span>accel: u32,
+    <span class="kw">pub </span>capabilities: u16,
+    <span class="kw">pub </span>reserved: [u16; <span class="number">2</span>],
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

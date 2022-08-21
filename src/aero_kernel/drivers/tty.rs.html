@@ -885,40 +885,40 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">alloc::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+</span><span class="kw">use </span>alloc::sync::{Arc, Weak};
+<span class="kw">use </span>alloc::vec::Vec;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::devfs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode</span>::{<span class="self">self</span>, <span class="ident">PollFlags</span>, <span class="ident">PollTable</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rendy</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs;
+<span class="kw">use </span><span class="kw">crate</span>::fs::devfs;
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::{<span class="self">self</span>, PollFlags, PollTable};
+<span class="kw">use </span><span class="kw">crate</span>::rendy;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode::INodeInterface</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::VirtAddr</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">BlockQueue</span>, <span class="ident">Mutex</span>};
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::INodeInterface;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::keyboard::KeyCode</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::keyboard::KeyboardListener</span>;
+<span class="kw">use </span><span class="kw">super</span>::keyboard::KeyCode;
+<span class="kw">use </span><span class="kw">super</span>::keyboard::KeyboardListener;
 
 <span class="macro">lazy_static::lazy_static!</span> {
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">TTY</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Tty</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Tty::new</span>();
+    <span class="kw">static </span><span class="kw-2">ref </span>TTY: Arc&lt;Tty&gt; = Tty::new();
 
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">TERMIOS</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">aero_syscall::Termios</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="ident">aero_syscall::Termios</span> {
-        <span class="ident">c_iflag</span>: <span class="number">0</span>,
-        <span class="ident">c_oflag</span>: <span class="ident">aero_syscall::TermiosOFlag::empty</span>(),
-        <span class="ident">c_cflag</span>: <span class="ident">aero_syscall::TermiosCFlag::empty</span>(),
-        <span class="ident">c_lflag</span>: <span class="ident">aero_syscall::TermiosLFlag::ECHO</span> <span class="op">|</span> <span class="ident">aero_syscall::TermiosLFlag::ICANON</span>,
-        <span class="ident">c_line</span>: <span class="number">0</span>,
-        <span class="ident">c_cc</span>: [<span class="number">0</span>; <span class="number">11</span>],
-        <span class="ident">c_ispeed</span>: <span class="number">0</span>,
-        <span class="ident">c_ospeed</span>: <span class="number">0</span>,
+    <span class="kw">static </span><span class="kw-2">ref </span>TERMIOS: Mutex&lt;aero_syscall::Termios&gt; = Mutex::new(aero_syscall::Termios {
+        c_iflag: <span class="number">0</span>,
+        c_oflag: aero_syscall::TermiosOFlag::empty(),
+        c_cflag: aero_syscall::TermiosCFlag::empty(),
+        c_lflag: aero_syscall::TermiosLFlag::ECHO | aero_syscall::TermiosLFlag::ICANON,
+        c_line: <span class="number">0</span>,
+        c_cc: [<span class="number">0</span>; <span class="number">11</span>],
+        c_ispeed: <span class="number">0</span>,
+        c_ospeed: <span class="number">0</span>,
     });
 }
 
-<span class="comment">// From the linux kernel: https://github.com/torvalds/linux/blob/master/drivers/tty/vt/defkeymap.c_shipped</span>
-<span class="kw">const</span> <span class="ident">PLAIN_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="comment">// From the linux kernel: https://github.com/torvalds/linux/blob/master/drivers/tty/vt/defkeymap.c_shipped
+</span><span class="kw">const </span>PLAIN_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf01b</span>, <span class="number">0xf031</span>, <span class="number">0xf032</span>, <span class="number">0xf033</span>, <span class="number">0xf034</span>, <span class="number">0xf035</span>, <span class="number">0xf036</span>, <span class="number">0xf037</span>, <span class="number">0xf038</span>, <span class="number">0xf039</span>, <span class="number">0xf030</span>,
     <span class="number">0xf02d</span>, <span class="number">0xf03d</span>, <span class="number">0xf07f</span>, <span class="number">0xf009</span>, <span class="number">0xfb71</span>, <span class="number">0xfb77</span>, <span class="number">0xfb65</span>, <span class="number">0xfb72</span>, <span class="number">0xfb74</span>, <span class="number">0xfb79</span>, <span class="number">0xfb75</span>, <span class="number">0xfb69</span>,
     <span class="number">0xfb6f</span>, <span class="number">0xfb70</span>, <span class="number">0xf05b</span>, <span class="number">0xf05d</span>, <span class="number">0xf201</span>, <span class="number">0xf702</span>, <span class="number">0xfb61</span>, <span class="number">0xfb73</span>, <span class="number">0xfb64</span>, <span class="number">0xfb66</span>, <span class="number">0xfb67</span>, <span class="number">0xfb68</span>,
@@ -932,7 +932,7 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">SHIFT_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>SHIFT_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf01b</span>, <span class="number">0xf021</span>, <span class="number">0xf040</span>, <span class="number">0xf023</span>, <span class="number">0xf024</span>, <span class="number">0xf025</span>, <span class="number">0xf05e</span>, <span class="number">0xf026</span>, <span class="number">0xf02a</span>, <span class="number">0xf028</span>, <span class="number">0xf029</span>,
     <span class="number">0xf05f</span>, <span class="number">0xf02b</span>, <span class="number">0xf07f</span>, <span class="number">0xf009</span>, <span class="number">0xfb51</span>, <span class="number">0xfb57</span>, <span class="number">0xfb45</span>, <span class="number">0xfb52</span>, <span class="number">0xfb54</span>, <span class="number">0xfb59</span>, <span class="number">0xfb55</span>, <span class="number">0xfb49</span>,
     <span class="number">0xfb4f</span>, <span class="number">0xfb50</span>, <span class="number">0xf07b</span>, <span class="number">0xf07d</span>, <span class="number">0xf201</span>, <span class="number">0xf702</span>, <span class="number">0xfb41</span>, <span class="number">0xfb53</span>, <span class="number">0xfb44</span>, <span class="number">0xfb46</span>, <span class="number">0xfb47</span>, <span class="number">0xfb48</span>,
@@ -946,7 +946,7 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">ALTGR_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>ALTGR_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf040</span>, <span class="number">0xf200</span>, <span class="number">0xf024</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf07b</span>, <span class="number">0xf05b</span>, <span class="number">0xf05d</span>, <span class="number">0xf07d</span>,
     <span class="number">0xf05c</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xfb71</span>, <span class="number">0xfb77</span>, <span class="number">0xf918</span>, <span class="number">0xfb72</span>, <span class="number">0xfb74</span>, <span class="number">0xfb79</span>, <span class="number">0xfb75</span>, <span class="number">0xfb69</span>,
     <span class="number">0xfb6f</span>, <span class="number">0xfb70</span>, <span class="number">0xf200</span>, <span class="number">0xf07e</span>, <span class="number">0xf201</span>, <span class="number">0xf702</span>, <span class="number">0xf914</span>, <span class="number">0xfb73</span>, <span class="number">0xf917</span>, <span class="number">0xf919</span>, <span class="number">0xfb67</span>, <span class="number">0xfb68</span>,
@@ -960,7 +960,7 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">CTRL_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>CTRL_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf000</span>, <span class="number">0xf01b</span>, <span class="number">0xf01c</span>, <span class="number">0xf01d</span>, <span class="number">0xf01e</span>, <span class="number">0xf01f</span>, <span class="number">0xf07f</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
     <span class="number">0xf01f</span>, <span class="number">0xf200</span>, <span class="number">0xf008</span>, <span class="number">0xf200</span>, <span class="number">0xf011</span>, <span class="number">0xf017</span>, <span class="number">0xf005</span>, <span class="number">0xf012</span>, <span class="number">0xf014</span>, <span class="number">0xf019</span>, <span class="number">0xf015</span>, <span class="number">0xf009</span>,
     <span class="number">0xf00f</span>, <span class="number">0xf010</span>, <span class="number">0xf01b</span>, <span class="number">0xf01d</span>, <span class="number">0xf201</span>, <span class="number">0xf702</span>, <span class="number">0xf001</span>, <span class="number">0xf013</span>, <span class="number">0xf004</span>, <span class="number">0xf006</span>, <span class="number">0xf007</span>, <span class="number">0xf008</span>,
@@ -974,7 +974,7 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">SHIFT_CTRL_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>SHIFT_CTRL_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf000</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
     <span class="number">0xf01f</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf011</span>, <span class="number">0xf017</span>, <span class="number">0xf005</span>, <span class="number">0xf012</span>, <span class="number">0xf014</span>, <span class="number">0xf019</span>, <span class="number">0xf015</span>, <span class="number">0xf009</span>,
     <span class="number">0xf00f</span>, <span class="number">0xf010</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf201</span>, <span class="number">0xf702</span>, <span class="number">0xf001</span>, <span class="number">0xf013</span>, <span class="number">0xf004</span>, <span class="number">0xf006</span>, <span class="number">0xf007</span>, <span class="number">0xf008</span>,
@@ -988,7 +988,7 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">ALT_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>ALT_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf81b</span>, <span class="number">0xf831</span>, <span class="number">0xf832</span>, <span class="number">0xf833</span>, <span class="number">0xf834</span>, <span class="number">0xf835</span>, <span class="number">0xf836</span>, <span class="number">0xf837</span>, <span class="number">0xf838</span>, <span class="number">0xf839</span>, <span class="number">0xf830</span>,
     <span class="number">0xf82d</span>, <span class="number">0xf83d</span>, <span class="number">0xf87f</span>, <span class="number">0xf809</span>, <span class="number">0xf871</span>, <span class="number">0xf877</span>, <span class="number">0xf865</span>, <span class="number">0xf872</span>, <span class="number">0xf874</span>, <span class="number">0xf879</span>, <span class="number">0xf875</span>, <span class="number">0xf869</span>,
     <span class="number">0xf86f</span>, <span class="number">0xf870</span>, <span class="number">0xf85b</span>, <span class="number">0xf85d</span>, <span class="number">0xf80d</span>, <span class="number">0xf702</span>, <span class="number">0xf861</span>, <span class="number">0xf873</span>, <span class="number">0xf864</span>, <span class="number">0xf866</span>, <span class="number">0xf867</span>, <span class="number">0xf868</span>,
@@ -1002,7 +1002,7 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">const</span> <span class="ident">CTRL_ALT_MAP</span>: <span class="kw-2">&amp;</span>[<span class="ident">u16</span>; <span class="number">128</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
+<span class="kw">const </span>CTRL_ALT_MAP: <span class="kw-2">&amp;</span>[u16; <span class="number">128</span>] = <span class="kw-2">&amp;</span>[
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf811</span>, <span class="number">0xf817</span>, <span class="number">0xf805</span>, <span class="number">0xf812</span>, <span class="number">0xf814</span>, <span class="number">0xf819</span>, <span class="number">0xf815</span>, <span class="number">0xf809</span>,
     <span class="number">0xf80f</span>, <span class="number">0xf810</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf201</span>, <span class="number">0xf702</span>, <span class="number">0xf801</span>, <span class="number">0xf813</span>, <span class="number">0xf804</span>, <span class="number">0xf806</span>, <span class="number">0xf807</span>, <span class="number">0xf808</span>,
@@ -1016,707 +1016,707 @@
     <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>, <span class="number">0xf200</span>,
 ];
 
-<span class="kw">struct</span> <span class="ident">StdinBuffer</span> {
-    <span class="ident">back_buffer</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="ident">front_buffer</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="comment">// more like a queue</span>
+<span class="kw">struct </span>StdinBuffer {
+    back_buffer: Vec&lt;u8&gt;,
+    front_buffer: Vec&lt;u8&gt;, <span class="comment">// more like a queue
 
-    <span class="ident">cursor</span>: <span class="ident">usize</span>,
+    </span>cursor: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">StdinBuffer</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">back_buffer</span>: <span class="ident">Vec::new</span>(),
-            <span class="ident">front_buffer</span>: <span class="ident">Vec::new</span>(),
+<span class="kw">impl </span>StdinBuffer {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            back_buffer: Vec::new(),
+            front_buffer: Vec::new(),
 
-            <span class="ident">cursor</span>: <span class="number">0</span>,
+            cursor: <span class="number">0</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">swap_buffer</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">back_buffer</span>.<span class="ident">drain</span>(..) {
-            <span class="self">self</span>.<span class="ident">front_buffer</span>.<span class="ident">push</span>(<span class="ident">c</span>);
+    <span class="kw">fn </span>swap_buffer(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>c <span class="kw">in </span><span class="self">self</span>.back_buffer.drain(..) {
+            <span class="self">self</span>.front_buffer.push(c);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">is_complete</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">back_buffer</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">front_buffer</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="number">0</span>
+    <span class="kw">fn </span>is_complete(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.back_buffer.len() &gt; <span class="number">0 </span>|| <span class="self">self</span>.front_buffer.len() &gt; <span class="number">0
+    </span>}
+
+    <span class="kw">fn </span>advance_cursor(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.cursor += <span class="number">1</span>;
     }
-
-    <span class="kw">fn</span> <span class="ident">advance_cursor</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">cursor</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
 }
 
-<span class="kw">struct</span> <span class="ident">TtyState</span> {
-    <span class="ident">lshift</span>: <span class="ident">bool</span>,
-    <span class="ident">rshift</span>: <span class="ident">bool</span>,
-    <span class="ident">lctrl</span>: <span class="ident">bool</span>,
-    <span class="ident">rctrl</span>: <span class="ident">bool</span>,
-    <span class="ident">lalt</span>: <span class="ident">bool</span>,
-    <span class="ident">altgr</span>: <span class="ident">bool</span>,
-    <span class="ident">caps</span>: <span class="ident">bool</span>,
+<span class="kw">struct </span>TtyState {
+    lshift: bool,
+    rshift: bool,
+    lctrl: bool,
+    rctrl: bool,
+    lalt: bool,
+    altgr: bool,
+    caps: bool,
 
-    <span class="ident">parser</span>: <span class="ident">vte::Parser</span>,
+    parser: vte::Parser,
 }
 
-<span class="kw">struct</span> <span class="ident">Tty</span> {
-    <span class="ident">device_id</span>: <span class="ident">usize</span>,
-    <span class="ident">state</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">TtyState</span><span class="op">&gt;</span>,
-    <span class="ident">sref</span>: <span class="ident">Weak</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Tty {
+    device_id: usize,
+    state: Mutex&lt;TtyState&gt;,
+    sref: Weak&lt;<span class="self">Self</span>&gt;,
 
-    <span class="ident">stdin</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">StdinBuffer</span><span class="op">&gt;</span>,
-    <span class="ident">block_queue</span>: <span class="ident">BlockQueue</span>,
+    stdin: Mutex&lt;StdinBuffer&gt;,
+    block_queue: BlockQueue,
 }
 
-<span class="kw">impl</span> <span class="ident">Tty</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">sref</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">device_id</span>: <span class="ident">devfs::alloc_device_marker</span>(),
-            <span class="ident">state</span>: <span class="ident">Mutex::new</span>(<span class="ident">TtyState</span> {
-                <span class="ident">lshift</span>: <span class="bool-val">false</span>,
-                <span class="ident">rshift</span>: <span class="bool-val">false</span>,
-                <span class="ident">lctrl</span>: <span class="bool-val">false</span>,
-                <span class="ident">rctrl</span>: <span class="bool-val">false</span>,
-                <span class="ident">lalt</span>: <span class="bool-val">false</span>,
-                <span class="ident">altgr</span>: <span class="bool-val">false</span>,
-                <span class="ident">caps</span>: <span class="bool-val">false</span>,
+<span class="kw">impl </span>Tty {
+    <span class="kw">fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        Arc::new_cyclic(|sref| <span class="self">Self </span>{
+            device_id: devfs::alloc_device_marker(),
+            state: Mutex::new(TtyState {
+                lshift: <span class="bool-val">false</span>,
+                rshift: <span class="bool-val">false</span>,
+                lctrl: <span class="bool-val">false</span>,
+                rctrl: <span class="bool-val">false</span>,
+                lalt: <span class="bool-val">false</span>,
+                altgr: <span class="bool-val">false</span>,
+                caps: <span class="bool-val">false</span>,
 
-                <span class="ident">parser</span>: <span class="ident">vte::Parser::new</span>(),
+                parser: vte::Parser::new(),
             }),
-            <span class="ident">block_queue</span>: <span class="ident">BlockQueue::new</span>(),
-            <span class="ident">stdin</span>: <span class="ident">Mutex::new</span>(<span class="ident">StdinBuffer::new</span>()),
-            <span class="ident">sref</span>: <span class="ident">sref</span>.<span class="ident">clone</span>(),
+            block_queue: BlockQueue::new(),
+            stdin: Mutex::new(StdinBuffer::new()),
+            sref: sref.clone(),
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">Tty</span> {
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">block_queue</span>
-            .<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">stdin</span>, <span class="op">|</span><span class="ident">future</span><span class="op">|</span> <span class="ident">future</span>.<span class="ident">is_complete</span>())<span class="question-mark">?</span>;
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>Tty {
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; fs::Result&lt;usize&gt; {
+        <span class="self">self</span>.block_queue
+            .block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.stdin, |future| future.is_complete())<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-        <span class="comment">// record the back buffer size before swapping</span>
-        <span class="ident">stdin</span>.<span class="ident">swap_buffer</span>();
-        <span class="kw">let</span> <span class="ident">back_len</span> <span class="op">=</span> <span class="ident">stdin</span>.<span class="ident">front_buffer</span>.<span class="ident">len</span>();
+        <span class="comment">// record the back buffer size before swapping
+        </span>stdin.swap_buffer();
+        <span class="kw">let </span>back_len = stdin.front_buffer.len();
 
-        <span class="kw">if</span> <span class="ident">buffer</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">stdin</span>.<span class="ident">front_buffer</span>.<span class="ident">len</span>() {
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">c</span>) <span class="kw">in</span> <span class="ident">stdin</span>.<span class="ident">front_buffer</span>.<span class="ident">drain</span>(..).<span class="ident">enumerate</span>() {
-                <span class="ident">buffer</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">c</span>;
+        <span class="kw">if </span>buffer.len() &gt; stdin.front_buffer.len() {
+            <span class="kw">for </span>(i, c) <span class="kw">in </span>stdin.front_buffer.drain(..).enumerate() {
+                buffer[i] = c;
             }
-        } <span class="kw">else</span> {
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">c</span>) <span class="kw">in</span> <span class="ident">stdin</span>.<span class="ident">front_buffer</span>.<span class="ident">drain</span>(..<span class="ident">buffer</span>.<span class="ident">len</span>()).<span class="ident">enumerate</span>() {
-                <span class="ident">buffer</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">c</span>;
+        } <span class="kw">else </span>{
+            <span class="kw">for </span>(i, c) <span class="kw">in </span>stdin.front_buffer.drain(..buffer.len()).enumerate() {
+                buffer[i] = c;
             }
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">core::cmp::min</span>(<span class="ident">buffer</span>.<span class="ident">len</span>(), <span class="ident">back_len</span>))
+        <span class="prelude-val">Ok</span>(core::cmp::min(buffer.len(), back_len))
     }
 
-    <span class="kw">fn</span> <span class="ident">write_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">lock_irq</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">performer</span> <span class="op">=</span> <span class="ident">AnsiEscape</span>;
+    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.state.lock_irq();
+        <span class="kw">let </span><span class="kw-2">mut </span>performer = AnsiEscape;
 
-        <span class="kw">for</span> <span class="ident">character</span> <span class="kw">in</span> <span class="ident">buffer</span>.<span class="ident">iter</span>() {
-            <span class="ident">state</span>.<span class="ident">parser</span>.<span class="ident">advance</span>(<span class="kw-2">&amp;mut</span> <span class="ident">performer</span>, <span class="kw-2">*</span><span class="ident">character</span>);
+        <span class="kw">for </span>character <span class="kw">in </span>buffer.iter() {
+            state.parser.advance(<span class="kw-2">&amp;mut </span>performer, <span class="kw-2">*</span>character);
         }
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;TTY::write_at(): {}&quot;</span>, <span class="kw">unsafe</span> {
-            <span class="ident">core::str::from_utf8_unchecked</span>(<span class="ident">buffer</span>)
+        <span class="macro">log::debug!</span>(<span class="string">&quot;TTY::write_at(): {}&quot;</span>, <span class="kw">unsafe </span>{
+            core::str::from_utf8_unchecked(buffer)
         });
 
-        <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>.<span class="ident">len</span>())
+        <span class="prelude-val">Ok</span>(buffer.len())
     }
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">PollTable</span><span class="op">&gt;</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> {
-        <span class="ident">table</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">block_queue</span>));
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">PollFlags::empty</span>();
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; fs::Result&lt;PollFlags&gt; {
+        table.map(|e| e.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.block_queue));
+        <span class="kw">let </span><span class="kw-2">mut </span>events = PollFlags::empty();
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>().<span class="ident">is_complete</span>() {
-            <span class="ident">events</span>.<span class="ident">insert</span>(<span class="ident">PollFlags::IN</span>);
+        <span class="kw">if </span><span class="self">self</span>.stdin.lock_irq().is_complete() {
+            events.insert(PollFlags::IN);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">events</span>)
+        <span class="prelude-val">Ok</span>(events)
     }
 
-    <span class="kw">fn</span> <span class="ident">ioctl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="ident">command</span> {
-            <span class="ident">aero_syscall::TIOCGWINSZ</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">winsize</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">arg</span> <span class="kw">as</span> <span class="ident">u64</span>);
-                <span class="kw">let</span> <span class="ident">winsize</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">winsize</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">aero_syscall::WinSize</span><span class="op">&gt;</span>()) };
+    <span class="kw">fn </span>ioctl(<span class="kw-2">&amp;</span><span class="self">self</span>, command: usize, arg: usize) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">match </span>command {
+            aero_syscall::TIOCGWINSZ =&gt; {
+                <span class="kw">let </span>winsize = VirtAddr::new(arg <span class="kw">as </span>u64);
+                <span class="kw">let </span>winsize = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(winsize.as_mut_ptr::&lt;aero_syscall::WinSize&gt;()) };
 
-                <span class="kw">let</span> (<span class="ident">rows</span>, <span class="ident">cols</span>) <span class="op">=</span> <span class="ident">rendy::get_rows_cols</span>();
+                <span class="kw">let </span>(rows, cols) = rendy::get_rows_cols();
 
-                <span class="ident">winsize</span>.<span class="ident">ws_row</span> <span class="op">=</span> <span class="ident">rows</span> <span class="kw">as</span> <span class="ident">u16</span>;
-                <span class="ident">winsize</span>.<span class="ident">ws_col</span> <span class="op">=</span> <span class="ident">cols</span> <span class="kw">as</span> <span class="ident">u16</span>;
+                winsize.ws_row = rows <span class="kw">as </span>u16;
+                winsize.ws_col = cols <span class="kw">as </span>u16;
 
-                <span class="kw">let</span> (<span class="ident">xpixel</span>, <span class="ident">ypixel</span>) <span class="op">=</span> <span class="ident">rendy::get_resolution</span>();
+                <span class="kw">let </span>(xpixel, ypixel) = rendy::get_resolution();
 
-                <span class="ident">winsize</span>.<span class="ident">ws_xpixel</span> <span class="op">=</span> <span class="ident">xpixel</span> <span class="kw">as</span> <span class="ident">u16</span>;
-                <span class="ident">winsize</span>.<span class="ident">ws_ypixel</span> <span class="op">=</span> <span class="ident">ypixel</span> <span class="kw">as</span> <span class="ident">u16</span>;
+                winsize.ws_xpixel = xpixel <span class="kw">as </span>u16;
+                winsize.ws_ypixel = ypixel <span class="kw">as </span>u16;
 
                 <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
             }
 
-            <span class="ident">aero_syscall::TCGETS</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">termios</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">arg</span> <span class="kw">as</span> <span class="ident">u64</span>);
-                <span class="kw">let</span> <span class="ident">termios</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">termios</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">aero_syscall::Termios</span><span class="op">&gt;</span>()) };
+            aero_syscall::TCGETS =&gt; {
+                <span class="kw">let </span>termios = VirtAddr::new(arg <span class="kw">as </span>u64);
+                <span class="kw">let </span>termios = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(termios.as_mut_ptr::&lt;aero_syscall::Termios&gt;()) };
 
-                <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">TERMIOS</span>.<span class="ident">lock_irq</span>();
-                <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">lock</span>;
+                <span class="kw">let </span>lock = TERMIOS.lock_irq();
+                <span class="kw">let </span>this = <span class="kw-2">&amp;*</span>lock;
 
-                <span class="kw-2">*</span><span class="ident">termios</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">clone</span>();
+                <span class="kw-2">*</span>termios = this.clone();
                 <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
             }
 
-            <span class="ident">aero_syscall::TCSETSF</span> =&gt; {
-                <span class="comment">// Allow the output buffer to drain, discard pending input.</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
-                <span class="ident">stdin</span>.<span class="ident">back_buffer</span>.<span class="ident">clear</span>();
-                <span class="ident">stdin</span>.<span class="ident">cursor</span> <span class="op">=</span> <span class="number">0</span>;
-                <span class="ident">core::mem::drop</span>(<span class="ident">stdin</span>);
+            aero_syscall::TCSETSF =&gt; {
+                <span class="comment">// Allow the output buffer to drain, discard pending input.
+                </span><span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
+                stdin.back_buffer.clear();
+                stdin.cursor = <span class="number">0</span>;
+                core::mem::drop(stdin);
 
-                <span class="kw">let</span> <span class="ident">termios</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">arg</span> <span class="kw">as</span> <span class="ident">u64</span>);
-                <span class="kw">let</span> <span class="ident">termios</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">termios</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">aero_syscall::Termios</span><span class="op">&gt;</span>()) };
+                <span class="kw">let </span>termios = VirtAddr::new(arg <span class="kw">as </span>u64);
+                <span class="kw">let </span>termios = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(termios.as_mut_ptr::&lt;aero_syscall::Termios&gt;()) };
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">TERMIOS</span>.<span class="ident">lock_irq</span>();
-                <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">lock</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>lock = TERMIOS.lock_irq();
+                <span class="kw">let </span>this = <span class="kw-2">&amp;mut *</span>lock;
 
-                <span class="kw-2">*</span><span class="ident">this</span> <span class="op">=</span> <span class="ident">termios</span>.<span class="ident">clone</span>();
+                <span class="kw-2">*</span>this = termios.clone();
                 <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
             }
 
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">fs::FileSystemError::NotSupported</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(fs::FileSystemError::NotSupported),
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">devfs::Device</span> <span class="kw">for</span> <span class="ident">Tty</span> {
-    <span class="kw">fn</span> <span class="ident">device_marker</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">device_id</span>
+<span class="kw">impl </span>devfs::Device <span class="kw">for </span>Tty {
+    <span class="kw">fn </span>device_marker(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.device_id
     }
 
-    <span class="kw">fn</span> <span class="ident">device_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="ident">String::from</span>(<span class="string">&quot;tty&quot;</span>)
+    <span class="kw">fn </span>device_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        String::from(<span class="string">&quot;tty&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">inode::INodeInterface</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>inode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;<span class="kw">dyn </span>inode::INodeInterface&gt; {
+        <span class="self">self</span>.sref.upgrade().unwrap()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">KeyboardListener</span> <span class="kw">for</span> <span class="ident">Tty</span> {
-    <span class="kw">fn</span> <span class="ident">on_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="ident">KeyCode</span>, <span class="ident">released</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">state</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="ident">termios</span> <span class="op">=</span> <span class="ident">TERMIOS</span>.<span class="ident">lock_irq</span>();
+<span class="kw">impl </span>KeyboardListener <span class="kw">for </span>Tty {
+    <span class="kw">fn </span>on_key(<span class="kw-2">&amp;</span><span class="self">self</span>, key: KeyCode, released: bool) {
+        <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.state.lock();
+        <span class="kw">let </span>termios = TERMIOS.lock_irq();
 
-        <span class="kw">let</span> <span class="ident">push_str</span> <span class="op">=</span> <span class="op">|</span><span class="ident">k</span>: <span class="kw-2">&amp;</span><span class="ident">str</span><span class="op">|</span> {
-            <span class="comment">// TODO: decckm</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">let </span>push_str = |k: <span class="kw-2">&amp;</span>str| {
+            <span class="comment">// TODO: decckm
+            </span><span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-            <span class="kw">for</span> <span class="ident">each</span> <span class="kw">in</span> <span class="ident">k</span>.<span class="ident">bytes</span>() {
-                <span class="ident">stdin</span>.<span class="ident">back_buffer</span>.<span class="ident">push</span>(<span class="ident">each</span>);
+            <span class="kw">for </span>each <span class="kw">in </span>k.bytes() {
+                stdin.back_buffer.push(each);
             }
         };
 
-        <span class="kw">let</span> <span class="ident">lchar</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">shift</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lshift</span> <span class="op">|</span><span class="op">|</span> <span class="ident">state</span>.<span class="ident">rshift</span>;
-            <span class="kw">let</span> <span class="ident">ctrl</span> <span class="op">=</span> <span class="ident">state</span>.<span class="ident">lctrl</span> <span class="op">|</span><span class="op">|</span> <span class="ident">state</span>.<span class="ident">rctrl</span>;
+        <span class="kw">let </span>lchar = || {
+            <span class="kw">let </span><span class="kw-2">mut </span>shift = state.lshift || state.rshift;
+            <span class="kw">let </span>ctrl = state.lctrl || state.rctrl;
 
-            <span class="kw">if</span> <span class="ident">state</span>.<span class="ident">caps</span> <span class="op">&amp;&amp;</span> <span class="ident">state</span>.<span class="ident">caps</span> {
-                <span class="ident">shift</span> <span class="op">=</span> <span class="op">!</span><span class="ident">shift</span>;
+            <span class="kw">if </span>state.caps &amp;&amp; state.caps {
+                shift = !shift;
             }
 
-            <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">shift</span>, <span class="ident">ctrl</span>, <span class="ident">state</span>.<span class="ident">lalt</span>, <span class="ident">state</span>.<span class="ident">altgr</span>) {
-                (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">PLAIN_MAP</span>,
-                (<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">SHIFT_MAP</span>,
-                (<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">CTRL_MAP</span>,
-                (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">ALT_MAP</span>,
-                (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; <span class="ident">ALTGR_MAP</span>,
-                (<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">SHIFT_CTRL_MAP</span>,
-                (<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; <span class="ident">CTRL_ALT_MAP</span>,
-                <span class="kw">_</span> =&gt; <span class="ident">PLAIN_MAP</span>,
+            <span class="kw">let </span>map = <span class="kw">match </span>(shift, ctrl, state.lalt, state.altgr) {
+                (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; PLAIN_MAP,
+                (<span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; SHIFT_MAP,
+                (<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; CTRL_MAP,
+                (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; ALT_MAP,
+                (<span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; ALTGR_MAP,
+                (<span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; SHIFT_CTRL_MAP,
+                (<span class="bool-val">false</span>, <span class="bool-val">true</span>, <span class="bool-val">true</span>, <span class="bool-val">false</span>) =&gt; CTRL_ALT_MAP,
+                <span class="kw">_ </span>=&gt; PLAIN_MAP,
             };
 
-            <span class="kw">let</span> <span class="ident">character</span> <span class="op">=</span>
-                <span class="kw">unsafe</span> { <span class="ident">core::char::from_u32_unchecked</span>((<span class="ident">map</span>[<span class="ident">key</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">&amp;</span> <span class="number">0xff</span>) <span class="kw">as</span> <span class="kw">_</span>) };
+            <span class="kw">let </span>character =
+                <span class="kw">unsafe </span>{ core::char::from_u32_unchecked((map[key <span class="kw">as </span>usize] &amp; <span class="number">0xff</span>) <span class="kw">as _</span>) };
 
-            <span class="comment">// Check if the character is actually printable printable.</span>
-            <span class="kw">if</span> <span class="op">!</span>(<span class="number">0x20</span>..<span class="number">0x7e</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span>(<span class="ident">character</span> <span class="kw">as</span> <span class="ident">u32</span>)) {
+            <span class="comment">// Check if the character is actually printable printable.
+            </span><span class="kw">if </span>!(<span class="number">0x20</span>..<span class="number">0x7e</span>).contains(<span class="kw-2">&amp;</span>(character <span class="kw">as </span>u32)) {
                 <span class="kw">return</span>;
             }
 
             {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+                <span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-                <span class="ident">stdin</span>.<span class="ident">back_buffer</span>.<span class="ident">push</span>(<span class="ident">character</span> <span class="kw">as</span> <span class="ident">u8</span>);
-                <span class="ident">stdin</span>.<span class="ident">advance_cursor</span>();
+                stdin.back_buffer.push(character <span class="kw">as </span>u8);
+                stdin.advance_cursor();
             }
 
-            <span class="kw">if</span> <span class="ident">termios</span>.<span class="ident">c_lflag</span>.<span class="ident">contains</span>(<span class="ident">aero_syscall::TermiosLFlag::ECHO</span>) {
-                <span class="macro">rendy::print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">character</span>);
+            <span class="kw">if </span>termios.c_lflag.contains(aero_syscall::TermiosLFlag::ECHO) {
+                <span class="macro">rendy::print!</span>(<span class="string">&quot;{}&quot;</span>, character);
             }
         };
 
-        <span class="kw">let</span> <span class="ident">backspace</span> <span class="op">=</span> <span class="op">|</span><span class="op">|</span> {
-            <span class="kw">if</span> <span class="ident">termios</span>.<span class="ident">c_lflag</span>.<span class="ident">contains</span>(<span class="ident">aero_syscall::TermiosLFlag::ICANON</span>) {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">let </span>backspace = || {
+            <span class="kw">if </span>termios.c_lflag.contains(aero_syscall::TermiosLFlag::ICANON) {
+                <span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-                <span class="kw">if</span> <span class="ident">stdin</span>.<span class="ident">back_buffer</span>.<span class="ident">pop</span>().<span class="ident">is_some</span>() {
-                    <span class="kw">if</span> <span class="ident">termios</span>.<span class="ident">c_lflag</span>.<span class="ident">contains</span>(<span class="ident">aero_syscall::TermiosLFlag::ECHO</span>) {
-                        <span class="ident">rendy::backspace</span>();
-                        <span class="ident">stdin</span>.<span class="ident">cursor</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">if </span>stdin.back_buffer.pop().is_some() {
+                    <span class="kw">if </span>termios.c_lflag.contains(aero_syscall::TermiosLFlag::ECHO) {
+                        rendy::backspace();
+                        stdin.cursor -= <span class="number">1</span>;
                     }
                 }
-            } <span class="kw">else</span> {
-                <span class="ident">push_str</span>(<span class="string">&quot;\x08&quot;</span>);
+            } <span class="kw">else </span>{
+                push_str(<span class="string">&quot;\x08&quot;</span>);
             }
         };
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">termios</span>.<span class="ident">c_lflag</span>.<span class="ident">contains</span>(<span class="ident">aero_syscall::TermiosLFlag::ICANON</span>) <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">released</span> {
-            <span class="kw">match</span> <span class="ident">key</span> {
-                <span class="ident">KeyCode::KEY_BACKSPACE</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; <span class="ident">backspace</span>(),
-                <span class="ident">KeyCode::KEY_CAPSLOCK</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; <span class="ident">state</span>.<span class="ident">caps</span> <span class="op">=</span> <span class="op">!</span><span class="ident">state</span>.<span class="ident">caps</span>,
+        <span class="kw">if </span>!termios.c_lflag.contains(aero_syscall::TermiosLFlag::ICANON) &amp;&amp; !released {
+            <span class="kw">match </span>key {
+                KeyCode::KEY_BACKSPACE <span class="kw">if </span>!released =&gt; backspace(),
+                KeyCode::KEY_CAPSLOCK <span class="kw">if </span>!released =&gt; state.caps = !state.caps,
 
-                <span class="ident">KeyCode::KEY_LEFTSHIFT</span> =&gt; <span class="ident">state</span>.<span class="ident">lshift</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-                <span class="ident">KeyCode::KEY_RIGHTSHIFT</span> =&gt; <span class="ident">state</span>.<span class="ident">rshift</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
+                KeyCode::KEY_LEFTSHIFT =&gt; state.lshift = !released,
+                KeyCode::KEY_RIGHTSHIFT =&gt; state.rshift = !released,
 
-                <span class="ident">KeyCode::KEY_LEFTCTRL</span> =&gt; <span class="ident">state</span>.<span class="ident">lctrl</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-                <span class="ident">KeyCode::KEY_RIGHTCTRL</span> =&gt; <span class="ident">state</span>.<span class="ident">rctrl</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
+                KeyCode::KEY_LEFTCTRL =&gt; state.lctrl = !released,
+                KeyCode::KEY_RIGHTCTRL =&gt; state.rctrl = !released,
 
-                <span class="ident">KeyCode::KEY_LEFTALT</span> =&gt; <span class="ident">state</span>.<span class="ident">lalt</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-                <span class="ident">KeyCode::KEY_RIGHTALT</span> =&gt; <span class="ident">state</span>.<span class="ident">altgr</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-                <span class="ident">KeyCode::KEY_ENTER</span> =&gt; <span class="ident">push_str</span>(<span class="string">&quot;\n&quot;</span>),
+                KeyCode::KEY_LEFTALT =&gt; state.lalt = !released,
+                KeyCode::KEY_RIGHTALT =&gt; state.altgr = !released,
+                KeyCode::KEY_ENTER =&gt; push_str(<span class="string">&quot;\n&quot;</span>),
 
-                <span class="ident">KeyCode::KEY_UP</span> =&gt; <span class="ident">push_str</span>(<span class="string">&quot;\x1b[A&quot;</span>),
-                <span class="ident">KeyCode::KEY_LEFT</span> =&gt; <span class="ident">push_str</span>(<span class="string">&quot;\x1b[D&quot;</span>),
-                <span class="ident">KeyCode::KEY_DOWN</span> =&gt; <span class="ident">push_str</span>(<span class="string">&quot;\x1b[B&quot;</span>),
-                <span class="ident">KeyCode::KEY_RIGHT</span> =&gt; <span class="ident">push_str</span>(<span class="string">&quot;\x1b[C&quot;</span>),
+                KeyCode::KEY_UP =&gt; push_str(<span class="string">&quot;\x1b[A&quot;</span>),
+                KeyCode::KEY_LEFT =&gt; push_str(<span class="string">&quot;\x1b[D&quot;</span>),
+                KeyCode::KEY_DOWN =&gt; push_str(<span class="string">&quot;\x1b[B&quot;</span>),
+                KeyCode::KEY_RIGHT =&gt; push_str(<span class="string">&quot;\x1b[C&quot;</span>),
 
-                <span class="kw">_</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; <span class="ident">lchar</span>(),
-                <span class="kw">_</span> =&gt; {}
+                <span class="kw">_ if </span>!released =&gt; lchar(),
+                <span class="kw">_ </span>=&gt; {}
             }
 
-            <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>().<span class="ident">cursor</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">block_queue</span>.<span class="ident">notify_complete</span>();
+            <span class="self">self</span>.stdin.lock_irq().cursor = <span class="number">0</span>;
+            <span class="self">self</span>.block_queue.notify_complete();
             <span class="kw">return</span>;
         }
 
-        <span class="kw">match</span> <span class="ident">key</span> {
-            <span class="ident">KeyCode::KEY_CAPSLOCK</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; <span class="ident">state</span>.<span class="ident">caps</span> <span class="op">=</span> <span class="op">!</span><span class="ident">state</span>.<span class="ident">caps</span>,
-            <span class="ident">KeyCode::KEY_ENTER</span> <span class="op">|</span> <span class="ident">KeyCode::KEY_KPENTER</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">match </span>key {
+            KeyCode::KEY_CAPSLOCK <span class="kw">if </span>!released =&gt; state.caps = !state.caps,
+            KeyCode::KEY_ENTER | KeyCode::KEY_KPENTER <span class="kw">if </span>!released =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-                <span class="ident">stdin</span>.<span class="ident">back_buffer</span>.<span class="ident">push</span>(<span class="string">&#39;\n&#39;</span> <span class="kw">as</span> <span class="ident">u8</span>);
-                <span class="ident">stdin</span>.<span class="ident">cursor</span> <span class="op">=</span> <span class="number">0</span>;
+                stdin.back_buffer.push(<span class="string">&#39;\n&#39; </span><span class="kw">as </span>u8);
+                stdin.cursor = <span class="number">0</span>;
 
-                <span class="kw">if</span> <span class="ident">termios</span>.<span class="ident">c_lflag</span>.<span class="ident">contains</span>(<span class="ident">aero_syscall::TermiosLFlag::ECHO</span>) {
+                <span class="kw">if </span>termios.c_lflag.contains(aero_syscall::TermiosLFlag::ECHO) {
                     <span class="macro">rendy::print!</span>(<span class="string">&quot;\n&quot;</span>);
                 }
 
-                <span class="self">self</span>.<span class="ident">block_queue</span>.<span class="ident">notify_complete</span>();
+                <span class="self">self</span>.block_queue.notify_complete();
             }
 
-            <span class="ident">KeyCode::KEY_BACKSPACE</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; <span class="ident">backspace</span>(),
+            KeyCode::KEY_BACKSPACE <span class="kw">if </span>!released =&gt; backspace(),
 
-            <span class="ident">KeyCode::KEY_LEFTSHIFT</span> =&gt; <span class="ident">state</span>.<span class="ident">lshift</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-            <span class="ident">KeyCode::KEY_RIGHTSHIFT</span> =&gt; <span class="ident">state</span>.<span class="ident">rshift</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
+            KeyCode::KEY_LEFTSHIFT =&gt; state.lshift = !released,
+            KeyCode::KEY_RIGHTSHIFT =&gt; state.rshift = !released,
 
-            <span class="ident">KeyCode::KEY_LEFTCTRL</span> =&gt; <span class="ident">state</span>.<span class="ident">lctrl</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-            <span class="ident">KeyCode::KEY_RIGHTCTRL</span> =&gt; <span class="ident">state</span>.<span class="ident">rctrl</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
+            KeyCode::KEY_LEFTCTRL =&gt; state.lctrl = !released,
+            KeyCode::KEY_RIGHTCTRL =&gt; state.rctrl = !released,
 
-            <span class="ident">KeyCode::KEY_LEFTALT</span> =&gt; <span class="ident">state</span>.<span class="ident">lalt</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
-            <span class="ident">KeyCode::KEY_RIGHTALT</span> =&gt; <span class="ident">state</span>.<span class="ident">altgr</span> <span class="op">=</span> <span class="op">!</span><span class="ident">released</span>,
+            KeyCode::KEY_LEFTALT =&gt; state.lalt = !released,
+            KeyCode::KEY_RIGHTALT =&gt; state.altgr = !released,
 
-            <span class="ident">KeyCode::KEY_LEFT</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+            KeyCode::KEY_LEFT <span class="kw">if </span>!released =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-                <span class="comment">// We are at the start of the input so, we cannot shift</span>
-                <span class="comment">// the cursor to the left anymore.</span>
-                <span class="kw">if</span> <span class="ident">stdin</span>.<span class="ident">cursor</span> <span class="op">==</span> <span class="number">0</span> {
+                <span class="comment">// We are at the start of the input so, we cannot shift
+                // the cursor to the left anymore.
+                </span><span class="kw">if </span>stdin.cursor == <span class="number">0 </span>{
                     <span class="kw">return</span>;
                 }
 
-                <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
-                <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">y</span>);
+                <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
+                rendy::set_cursor_position(x - <span class="number">1</span>, y);
 
-                <span class="ident">stdin</span>.<span class="ident">cursor</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+                stdin.cursor -= <span class="number">1</span>;
             }
 
-            <span class="ident">KeyCode::KEY_RIGHT</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stdin</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">stdin</span>.<span class="ident">lock_irq</span>();
+            KeyCode::KEY_RIGHT <span class="kw">if </span>!released =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>stdin = <span class="self">self</span>.stdin.lock_irq();
 
-                <span class="comment">// We are at the end of the input so, we cannot shift</span>
-                <span class="comment">// the cursor to the right anymore.</span>
-                <span class="kw">if</span> <span class="ident">stdin</span>.<span class="ident">cursor</span> <span class="op">==</span> <span class="ident">stdin</span>.<span class="ident">back_buffer</span>.<span class="ident">len</span>() {
+                <span class="comment">// We are at the end of the input so, we cannot shift
+                // the cursor to the right anymore.
+                </span><span class="kw">if </span>stdin.cursor == stdin.back_buffer.len() {
                     <span class="kw">return</span>;
                 }
 
-                <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
-                <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span> <span class="op">+</span> <span class="number">1</span>, <span class="ident">y</span>);
+                <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
+                rendy::set_cursor_position(x + <span class="number">1</span>, y);
 
-                <span class="ident">stdin</span>.<span class="ident">advance_cursor</span>();
+                stdin.advance_cursor();
             }
 
-            <span class="kw">_</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">released</span> =&gt; <span class="ident">lchar</span>(),
+            <span class="kw">_ if </span>!released =&gt; lchar(),
 
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
     }
 }
 
-<span class="kw">enum</span> <span class="ident">ParsedColor</span> {
-    <span class="ident">Unknown</span>,
-    <span class="ident">Foreground</span>(<span class="ident">u16</span>),
-    <span class="ident">Background</span>(<span class="ident">u16</span>),
+<span class="kw">enum </span>ParsedColor {
+    Unknown,
+    Foreground(u16),
+    Background(u16),
 }
 
-<span class="kw">const</span> <span class="ident">SGR_FOREGROUND_OFFSET_1</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">30</span>;
-<span class="kw">const</span> <span class="ident">SGR_BACKGROUND_OFFSET_1</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">40</span>;
-<span class="kw">const</span> <span class="ident">SGR_FOREGROUND_OFFSET_2</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">90</span>;
-<span class="kw">const</span> <span class="ident">SGR_BACKGROUND_OFFSET_2</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">100</span>;
+<span class="kw">const </span>SGR_FOREGROUND_OFFSET_1: u16 = <span class="number">30</span>;
+<span class="kw">const </span>SGR_BACKGROUND_OFFSET_1: u16 = <span class="number">40</span>;
+<span class="kw">const </span>SGR_FOREGROUND_OFFSET_2: u16 = <span class="number">90</span>;
+<span class="kw">const </span>SGR_BACKGROUND_OFFSET_2: u16 = <span class="number">100</span>;
 
-<span class="kw">const</span> <span class="ident">ANSI_COLORS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>; <span class="number">8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
-    <span class="number">0x00000000</span>, <span class="comment">// black</span>
-    <span class="number">0x00aa0000</span>, <span class="comment">// red</span>
-    <span class="number">0x0000aa00</span>, <span class="comment">// green</span>
-    <span class="number">0x00aa5500</span>, <span class="comment">// brown</span>
-    <span class="number">0x000000aa</span>, <span class="comment">// blue</span>
-    <span class="number">0x00aa00aa</span>, <span class="comment">// magenta</span>
-    <span class="number">0x0000aaaa</span>, <span class="comment">// cyan</span>
-    <span class="number">0x00aaaaaa</span>, <span class="comment">// grey</span>
-];
+<span class="kw">const </span>ANSI_COLORS: <span class="kw-2">&amp;</span>[u32; <span class="number">8</span>] = <span class="kw-2">&amp;</span>[
+    <span class="number">0x00000000</span>, <span class="comment">// black
+    </span><span class="number">0x00aa0000</span>, <span class="comment">// red
+    </span><span class="number">0x0000aa00</span>, <span class="comment">// green
+    </span><span class="number">0x00aa5500</span>, <span class="comment">// brown
+    </span><span class="number">0x000000aa</span>, <span class="comment">// blue
+    </span><span class="number">0x00aa00aa</span>, <span class="comment">// magenta
+    </span><span class="number">0x0000aaaa</span>, <span class="comment">// cyan
+    </span><span class="number">0x00aaaaaa</span>, <span class="comment">// grey
+</span>];
 
-<span class="kw">const</span> <span class="ident">ANSI_BRIGHT_COLORS</span>: <span class="kw-2">&amp;</span>[<span class="ident">u32</span>; <span class="number">8</span>] <span class="op">=</span> <span class="kw-2">&amp;</span>[
-    <span class="number">0x00555555</span>, <span class="comment">// black</span>
-    <span class="number">0x00ff5555</span>, <span class="comment">// red</span>
-    <span class="number">0x0055ff55</span>, <span class="comment">// green</span>
-    <span class="number">0x00ffff55</span>, <span class="comment">// brown</span>
-    <span class="number">0x005555ff</span>, <span class="comment">// blue</span>
-    <span class="number">0x00ff55ff</span>, <span class="comment">// magenta</span>
-    <span class="number">0x0055ffff</span>, <span class="comment">// cyan</span>
-    <span class="number">0x00ffffff</span>, <span class="comment">// grey</span>
-];
+<span class="kw">const </span>ANSI_BRIGHT_COLORS: <span class="kw-2">&amp;</span>[u32; <span class="number">8</span>] = <span class="kw-2">&amp;</span>[
+    <span class="number">0x00555555</span>, <span class="comment">// black
+    </span><span class="number">0x00ff5555</span>, <span class="comment">// red
+    </span><span class="number">0x0055ff55</span>, <span class="comment">// green
+    </span><span class="number">0x00ffff55</span>, <span class="comment">// brown
+    </span><span class="number">0x005555ff</span>, <span class="comment">// blue
+    </span><span class="number">0x00ff55ff</span>, <span class="comment">// magenta
+    </span><span class="number">0x0055ffff</span>, <span class="comment">// cyan
+    </span><span class="number">0x00ffffff</span>, <span class="comment">// grey
+</span>];
 
-<span class="kw">fn</span> <span class="ident">fixed_to_rgb</span>(<span class="ident">fixed</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span> {
-    <span class="ident">fixed</span> <span class="kw">as</span> <span class="ident">u32</span>
+<span class="kw">fn </span>fixed_to_rgb(fixed: u16) -&gt; u32 {
+    fixed <span class="kw">as </span>u32
 }
 
-<span class="kw">struct</span> <span class="ident">AnsiEscape</span>;
+<span class="kw">struct </span>AnsiEscape;
 
-<span class="kw">impl</span> <span class="ident">vte::Perform</span> <span class="kw">for</span> <span class="ident">AnsiEscape</span> {
-    <span class="kw">fn</span> <span class="ident">print</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">char</span>: <span class="ident">char</span>) {
-        <span class="macro">rendy::print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">char</span>);
+<span class="kw">impl </span>vte::Perform <span class="kw">for </span>AnsiEscape {
+    <span class="kw">fn </span>print(<span class="kw-2">&amp;mut </span><span class="self">self</span>, char: char) {
+        <span class="macro">rendy::print!</span>(<span class="string">&quot;{}&quot;</span>, char);
     }
 
-    <span class="kw">fn</span> <span class="ident">execute</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) {
-        <span class="kw">let</span> <span class="ident">char</span> <span class="op">=</span> <span class="ident">byte</span> <span class="kw">as</span> <span class="ident">char</span>;
+    <span class="kw">fn </span>execute(<span class="kw-2">&amp;mut </span><span class="self">self</span>, byte: u8) {
+        <span class="kw">let </span>char = byte <span class="kw">as </span>char;
 
-        <span class="kw">match</span> <span class="ident">char</span> {
-            <span class="string">&#39;\n&#39;</span> <span class="op">|</span> <span class="string">&#39;\t&#39;</span> =&gt; <span class="macro">rendy::print!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">char</span>),
+        <span class="kw">match </span>char {
+            <span class="string">&#39;\n&#39; </span>| <span class="string">&#39;\t&#39; </span>=&gt; <span class="macro">rendy::print!</span>(<span class="string">&quot;{}&quot;</span>, char),
 
-            <span class="string">&#39;\r&#39;</span> =&gt; {
-                <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
-                <span class="ident">rendy::set_cursor_position</span>(<span class="number">0</span>, <span class="ident">y</span>)
+            <span class="string">&#39;\r&#39; </span>=&gt; {
+                <span class="kw">let </span>(<span class="kw">_</span>, y) = rendy::get_cursor_position();
+                rendy::set_cursor_position(<span class="number">0</span>, y)
             }
 
-            <span class="string">&#39;\u{8}&#39;</span> =&gt; {
-                <span class="ident">rendy::backspace</span>();
+            <span class="string">&#39;\u{8}&#39; </span>=&gt; {
+                rendy::backspace();
             }
 
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">csi_dispatch</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="ident">vte::Params</span>,
-        <span class="ident">_intermediates</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>],
-        <span class="ident">ignore</span>: <span class="ident">bool</span>,
-        <span class="ident">action</span>: <span class="ident">char</span>,
+    <span class="kw">fn </span>csi_dispatch(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        params: <span class="kw-2">&amp;</span>vte::Params,
+        _intermediates: <span class="kw-2">&amp;</span>[u8],
+        ignore: bool,
+        action: char,
     ) {
-        <span class="kw">if</span> <span class="ident">ignore</span> {
+        <span class="kw">if </span>ignore {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">match</span> <span class="ident">action</span> {
-            <span class="comment">// Moves the cursor to row `n`, column `m`. The values are</span>
-            <span class="comment">// 1-based, and default to 1 (top left corner) if omitted.</span>
-            <span class="string">&#39;H&#39;</span> <span class="op">|</span> <span class="string">&#39;f&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">iter</span>();
+        <span class="kw">match </span>action {
+            <span class="comment">// Moves the cursor to row `n`, column `m`. The values are
+            // 1-based, and default to 1 (top left corner) if omitted.
+            </span><span class="string">&#39;H&#39; </span>| <span class="string">&#39;f&#39; </span>=&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>iter = params.iter();
 
-                <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>;
-                <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="ident">iter</span>.<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>;
+                <span class="kw">let </span>x = iter.next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as </span>usize;
+                <span class="kw">let </span>y = iter.next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as </span>usize;
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">x</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">x</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> { <span class="ident">x</span> <span class="op">-</span> <span class="number">1</span> } <span class="kw">else</span> { <span class="ident">x</span> };
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">y</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">y</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> { <span class="ident">y</span> <span class="op">-</span> <span class="number">1</span> } <span class="kw">else</span> { <span class="ident">y</span> };
+                <span class="kw">let </span><span class="kw-2">mut </span>x = <span class="kw">if </span>x != <span class="number">0 </span>{ x - <span class="number">1 </span>} <span class="kw">else </span>{ x };
+                <span class="kw">let </span><span class="kw-2">mut </span>y = <span class="kw">if </span>y != <span class="number">0 </span>{ y - <span class="number">1 </span>} <span class="kw">else </span>{ y };
 
-                <span class="kw">let</span> (<span class="ident">rows</span>, <span class="ident">cols</span>) <span class="op">=</span> <span class="ident">rendy::get_term_info</span>();
+                <span class="kw">let </span>(rows, cols) = rendy::get_term_info();
 
-                <span class="comment">// Make sure the provided coordinates are valid.</span>
-                <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">cols</span> {
-                    <span class="ident">x</span> <span class="op">=</span> <span class="ident">cols</span> <span class="op">-</span> <span class="number">1</span>;
+                <span class="comment">// Make sure the provided coordinates are valid.
+                </span><span class="kw">if </span>x &gt;= cols {
+                    x = cols - <span class="number">1</span>;
                 }
 
-                <span class="kw">if</span> <span class="ident">y</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">rows</span> {
-                    <span class="ident">y</span> <span class="op">=</span> <span class="ident">rows</span> <span class="op">-</span> <span class="number">1</span>;
+                <span class="kw">if </span>y &gt;= rows {
+                    y = rows - <span class="number">1</span>;
                 }
 
-                <span class="comment">// Move the cursor to the position.</span>
-                <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span>, <span class="ident">y</span>);
+                <span class="comment">// Move the cursor to the position.
+                </span>rendy::set_cursor_position(x, y);
             }
 
-            <span class="string">&#39;l&#39;</span> <span class="op">|</span> <span class="string">&#39;h&#39;</span> =&gt; <span class="kw">match</span> <span class="ident">params</span>.<span class="ident">iter</span>().<span class="ident">next</span>() {
+            <span class="string">&#39;l&#39; </span>| <span class="string">&#39;h&#39; </span>=&gt; <span class="kw">match </span>params.iter().next() {
                 <span class="prelude-val">Some</span>([<span class="number">25</span>]) =&gt; {
-                    <span class="comment">// Disable the cursor if action == &#39;l` and enable it if action</span>
-                    <span class="comment">// == &#39;h&#39;.</span>
-                    <span class="ident">rendy::set_cursor_visibility</span>(<span class="ident">action</span> <span class="op">==</span> <span class="string">&#39;h&#39;</span>)
+                    <span class="comment">// Disable the cursor if action == &#39;l` and enable it if action
+                    // == &#39;h&#39;.
+                    </span>rendy::set_cursor_visibility(action == <span class="string">&#39;h&#39;</span>)
                 }
 
-                <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
+                <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
             },
 
-            <span class="comment">// Clears parts of the screen.</span>
-            <span class="string">&#39;J&#39;</span> =&gt; {
-                <span class="comment">// If `n` is missing, it defaults to 0.</span>
-                <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">iter</span>().<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="comment">// Clears parts of the screen.
+            </span><span class="string">&#39;J&#39; </span>=&gt; {
+                <span class="comment">// If `n` is missing, it defaults to 0.
+                </span><span class="kw">let </span>n = params.iter().next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>] <span class="kw">as </span>usize;
 
-                <span class="kw">match</span> <span class="ident">n</span> {
-                    <span class="comment">// If `n` is 0 (or missing), clear from cursor to end of screen.</span>
-                    <span class="number">0</span> =&gt; {
-                        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
-                        <span class="kw">let</span> (<span class="ident">term_rows</span>, <span class="ident">term_cols</span>) <span class="op">=</span> <span class="ident">rendy::get_rows_cols</span>();
+                <span class="kw">match </span>n {
+                    <span class="comment">// If `n` is 0 (or missing), clear from cursor to end of screen.
+                    </span><span class="number">0 </span>=&gt; {
+                        <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
+                        <span class="kw">let </span>(term_rows, term_cols) = rendy::get_rows_cols();
 
-                        <span class="kw">let</span> <span class="ident">rows_remaining</span> <span class="op">=</span> <span class="ident">term_rows</span> <span class="op">-</span> (<span class="ident">y</span> <span class="op">+</span> <span class="number">1</span>);
-                        <span class="kw">let</span> <span class="ident">cols_diff</span> <span class="op">=</span> <span class="ident">term_cols</span> <span class="op">-</span> (<span class="ident">x</span> <span class="op">+</span> <span class="number">1</span>);
-                        <span class="kw">let</span> <span class="ident">to_clear</span> <span class="op">=</span> <span class="ident">rows_remaining</span> <span class="op">*</span> <span class="ident">term_cols</span> <span class="op">+</span> <span class="ident">cols_diff</span>;
+                        <span class="kw">let </span>rows_remaining = term_rows - (y + <span class="number">1</span>);
+                        <span class="kw">let </span>cols_diff = term_cols - (x + <span class="number">1</span>);
+                        <span class="kw">let </span>to_clear = rows_remaining * term_cols + cols_diff;
 
-                        <span class="ident">rendy::set_auto_flush</span>(<span class="bool-val">false</span>);
+                        rendy::set_auto_flush(<span class="bool-val">false</span>);
 
-                        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">to_clear</span> {
+                        <span class="kw">for _ in </span><span class="number">0</span>..to_clear {
                             <span class="macro">rendy::print!</span>(<span class="string">&quot; &quot;</span>);
                         }
 
-                        <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span>, <span class="ident">y</span>);
-                        <span class="ident">rendy::double_buffer_flush</span>();
-                        <span class="ident">rendy::set_auto_flush</span>(<span class="bool-val">true</span>);
+                        rendy::set_cursor_position(x, y);
+                        rendy::double_buffer_flush();
+                        rendy::set_auto_flush(<span class="bool-val">true</span>);
                     }
 
-                    <span class="number">1</span> =&gt; <span class="macro">unimplemented!</span>(),
+                    <span class="number">1 </span>=&gt; <span class="macro">unimplemented!</span>(),
 
-                    <span class="comment">// If `n` is 2 or 3, clear the entire screen.</span>
-                    <span class="comment">//</span>
-                    <span class="comment">// TODO(Andy-Python-Programmer): When we support scrollback buffer, if `n` is</span>
-                    <span class="comment">// 3, clear the entire scrollback buffer as well.</span>
-                    <span class="number">2</span> <span class="op">|</span> <span class="number">3</span> =&gt; <span class="ident">rendy::clear_screen</span>(<span class="bool-val">false</span>),
+                    <span class="comment">// If `n` is 2 or 3, clear the entire screen.
+                    //
+                    // TODO(Andy-Python-Programmer): When we support scrollback buffer, if `n` is
+                    // 3, clear the entire scrollback buffer as well.
+                    </span><span class="number">2 </span>| <span class="number">3 </span>=&gt; rendy::clear_screen(<span class="bool-val">false</span>),
 
-                    <span class="comment">// Unknown value, do nothing.</span>
-                    <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
+                    <span class="comment">// Unknown value, do nothing.
+                    </span><span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
                 }
             }
 
-            <span class="string">&#39;C&#39;</span> =&gt; {
-                <span class="comment">// If `n` is missing, it defaults to 1.</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">iter</span>().<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="string">&#39;C&#39; </span>=&gt; {
+                <span class="comment">// If `n` is missing, it defaults to 1.
+                </span><span class="kw">let </span><span class="kw-2">mut </span>n = params.iter().next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as </span>usize;
 
-                <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
-                <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">term_cols</span>) <span class="op">=</span> <span class="ident">rendy::get_rows_cols</span>();
+                <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
+                <span class="kw">let </span>(<span class="kw">_</span>, term_cols) = rendy::get_rows_cols();
 
-                <span class="kw">if</span> <span class="ident">x</span> <span class="op">+</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">term_cols</span> <span class="op">-</span> <span class="number">1</span> {
-                    <span class="ident">n</span> <span class="op">=</span> (<span class="ident">term_cols</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">-</span> <span class="ident">x</span>;
+                <span class="kw">if </span>x + n &gt; term_cols - <span class="number">1 </span>{
+                    n = (term_cols - <span class="number">1</span>) - x;
                 }
 
-                <span class="kw">if</span> <span class="ident">n</span> <span class="op">==</span> <span class="number">0</span> {
-                    <span class="ident">n</span> <span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">if </span>n == <span class="number">0 </span>{
+                    n = <span class="number">1</span>;
                 }
 
-                <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span> <span class="op">+</span> <span class="ident">n</span>, <span class="ident">y</span>);
+                rendy::set_cursor_position(x + n, y);
             }
 
-            <span class="string">&#39;K&#39;</span> =&gt; {
-                <span class="comment">// If `n` is missing, it defaults to 0.</span>
-                <span class="kw">let</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">iter</span>().<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="string">&#39;K&#39; </span>=&gt; {
+                <span class="comment">// If `n` is missing, it defaults to 0.
+                </span><span class="kw">let </span>n = params.iter().next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>] <span class="kw">as </span>usize;
 
-                <span class="comment">// NOTE: The cursor position does not change.</span>
-                <span class="kw">match</span> <span class="ident">n</span> {
-                    <span class="comment">// If `n` is 0 (or missing), clear from cursor to the end of the line.</span>
-                    <span class="number">0</span> =&gt; {
-                        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
-                        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">term_cols</span>) <span class="op">=</span> <span class="ident">rendy::get_rows_cols</span>();
+                <span class="comment">// NOTE: The cursor position does not change.
+                </span><span class="kw">match </span>n {
+                    <span class="comment">// If `n` is 0 (or missing), clear from cursor to the end of the line.
+                    </span><span class="number">0 </span>=&gt; {
+                        <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
+                        <span class="kw">let </span>(<span class="kw">_</span>, term_cols) = rendy::get_rows_cols();
 
-                        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="ident">x</span>..<span class="ident">term_cols</span> {
+                        <span class="kw">for _ in </span>x..term_cols {
                             <span class="macro">rendy::print!</span>(<span class="string">&quot; &quot;</span>);
                         }
 
-                        <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span>, <span class="ident">y</span>);
+                        rendy::set_cursor_position(x, y);
                     }
 
-                    <span class="comment">// If `n` is 1, clear from cursor to beginning of the line.</span>
-                    <span class="number">1</span> =&gt; {
-                        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
+                    <span class="comment">// If `n` is 1, clear from cursor to beginning of the line.
+                    </span><span class="number">1 </span>=&gt; {
+                        <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
 
-                        <span class="ident">rendy::set_cursor_position</span>(<span class="number">0</span>, <span class="ident">y</span>);
+                        rendy::set_cursor_position(<span class="number">0</span>, y);
 
-                        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">x</span> {
+                        <span class="kw">for _ in </span><span class="number">0</span>..x {
                             <span class="macro">rendy::print!</span>(<span class="string">&quot; &quot;</span>)
                         }
                     }
 
-                    <span class="comment">// If `n` is 2, clear entire line.</span>
-                    <span class="number">2</span> =&gt; {
-                        <span class="kw">let</span> (<span class="kw">_</span>, <span class="ident">term_cols</span>) <span class="op">=</span> <span class="ident">rendy::get_rows_cols</span>();
-                        <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
+                    <span class="comment">// If `n` is 2, clear entire line.
+                    </span><span class="number">2 </span>=&gt; {
+                        <span class="kw">let </span>(<span class="kw">_</span>, term_cols) = rendy::get_rows_cols();
+                        <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
 
-                        <span class="ident">rendy::set_cursor_position</span>(<span class="number">0</span>, <span class="ident">y</span>);
+                        rendy::set_cursor_position(<span class="number">0</span>, y);
 
-                        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">term_cols</span> {
+                        <span class="kw">for _ in </span><span class="number">0</span>..term_cols {
                             <span class="macro">rendy::print!</span>(<span class="string">&quot; &quot;</span>)
                         }
 
-                        <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span>, <span class="ident">y</span>);
+                        rendy::set_cursor_position(x, y);
                     }
 
-                    <span class="kw">_</span> =&gt; <span class="macro">unimplemented!</span>(),
+                    <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(),
                 }
             }
 
-            <span class="string">&#39;D&#39;</span> =&gt; {
-                <span class="comment">// If `n` is missing, it defaults to 1.</span>
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">n</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">iter</span>().<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="string">&#39;D&#39; </span>=&gt; {
+                <span class="comment">// If `n` is missing, it defaults to 1.
+                </span><span class="kw">let </span><span class="kw-2">mut </span>n = params.iter().next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">1</span>])[<span class="number">0</span>] <span class="kw">as </span>usize;
 
-                <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">y</span>) <span class="op">=</span> <span class="ident">rendy::get_cursor_position</span>();
+                <span class="kw">let </span>(x, y) = rendy::get_cursor_position();
 
-                <span class="comment">// If the cursor is already at the edge of the screen, this has no effect.</span>
-                <span class="kw">if</span> <span class="ident">n</span> <span class="op">&gt;</span> <span class="ident">x</span> {
-                    <span class="ident">n</span> <span class="op">=</span> <span class="ident">x</span>;
+                <span class="comment">// If the cursor is already at the edge of the screen, this has no effect.
+                </span><span class="kw">if </span>n &gt; x {
+                    n = x;
                 }
 
-                <span class="kw">if</span> <span class="ident">n</span> <span class="op">==</span> <span class="number">0</span> {
-                    <span class="ident">n</span> <span class="op">=</span> <span class="number">1</span>;
+                <span class="kw">if </span>n == <span class="number">0 </span>{
+                    n = <span class="number">1</span>;
                 }
 
-                <span class="ident">rendy::set_cursor_position</span>(<span class="ident">x</span> <span class="op">-</span> <span class="ident">n</span>, <span class="ident">y</span>);
+                rendy::set_cursor_position(x - n, y);
             }
 
-            <span class="comment">// Sets colors and style of the characters following this code.</span>
-            <span class="string">&#39;m&#39;</span> =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">piter</span> <span class="op">=</span> <span class="ident">params</span>.<span class="ident">iter</span>();
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">bright</span> <span class="op">=</span> <span class="bool-val">false</span>;
+            <span class="comment">// Sets colors and style of the characters following this code.
+            </span><span class="string">&#39;m&#39; </span>=&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>piter = params.iter();
+                <span class="kw">let </span><span class="kw-2">mut </span>bright = <span class="bool-val">false</span>;
 
-                <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">param</span>) <span class="op">=</span> <span class="ident">piter</span>.<span class="ident">next</span>() {
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">param</span>.<span class="ident">is_empty</span>() {
-                        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">param</span>[<span class="number">0</span>];
+                <span class="kw">while let </span><span class="prelude-val">Some</span>(param) = piter.next() {
+                    <span class="kw">if </span>!param.is_empty() {
+                        <span class="kw">let </span>p1 = param[<span class="number">0</span>];
 
-                        <span class="kw">match</span> <span class="ident">p1</span> {
-                            <span class="comment">// Reset or normal. All attributes off.</span>
-                            <span class="number">0</span> =&gt; {
-                                <span class="ident">bright</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                                <span class="comment">// TODO: Turn off dim.</span>
+                        <span class="kw">match </span>p1 {
+                            <span class="comment">// Reset or normal. All attributes off.
+                            </span><span class="number">0 </span>=&gt; {
+                                bright = <span class="bool-val">false</span>;
+                                <span class="comment">// TODO: Turn off dim.
 
-                                <span class="ident">rendy::reset_default</span>();
+                                </span>rendy::reset_default();
                             }
 
-                            <span class="comment">// Bold or increased intensity:</span>
-                            <span class="number">1</span> =&gt; {
-                                <span class="ident">bright</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                                <span class="comment">// TODO: Turn off dim.</span>
+                            <span class="comment">// Bold or increased intensity:
+                            </span><span class="number">1 </span>=&gt; {
+                                bright = <span class="bool-val">true</span>;
+                                <span class="comment">// TODO: Turn off dim.
+                            </span>}
+
+                            <span class="comment">// Faint, decreased intensity, or dim.
+                            </span><span class="number">2 </span>=&gt; {
+                                <span class="comment">// TODO: Turn on dim.
+                                </span>bright = <span class="bool-val">false</span>;
                             }
 
-                            <span class="comment">// Faint, decreased intensity, or dim.</span>
-                            <span class="number">2</span> =&gt; {
-                                <span class="comment">// TODO: Turn on dim.</span>
-                                <span class="ident">bright</span> <span class="op">=</span> <span class="bool-val">false</span>;
-                            }
-
-                            <span class="ident">code</span> =&gt; {
-                                <span class="kw">let</span> <span class="ident">parsed_color</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">code</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">30</span> <span class="op">&amp;&amp;</span> <span class="ident">code</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">37</span> {
-                                    <span class="ident">ParsedColor::Foreground</span>(<span class="ident">code</span> <span class="op">-</span> <span class="ident">SGR_FOREGROUND_OFFSET_1</span>)
-                                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">code</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">40</span> <span class="op">&amp;&amp;</span> <span class="ident">code</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">47</span> {
-                                    <span class="ident">ParsedColor::Background</span>(<span class="ident">code</span> <span class="op">-</span> <span class="ident">SGR_BACKGROUND_OFFSET_1</span>)
-                                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">code</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">90</span> <span class="op">&amp;&amp;</span> <span class="ident">code</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">97</span> {
-                                    <span class="ident">ParsedColor::Foreground</span>(<span class="ident">code</span> <span class="op">-</span> <span class="ident">SGR_FOREGROUND_OFFSET_2</span>)
-                                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">code</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">100</span> <span class="op">&amp;&amp;</span> <span class="ident">code</span> <span class="op">&lt;</span><span class="op">=</span> <span class="number">107</span> {
-                                    <span class="ident">ParsedColor::Background</span>(<span class="ident">code</span> <span class="op">-</span> <span class="ident">SGR_BACKGROUND_OFFSET_2</span>)
-                                } <span class="kw">else</span> {
-                                    <span class="ident">ParsedColor::Unknown</span>
+                            code =&gt; {
+                                <span class="kw">let </span>parsed_color = <span class="kw">if </span>code &gt;= <span class="number">30 </span>&amp;&amp; code &lt;= <span class="number">37 </span>{
+                                    ParsedColor::Foreground(code - SGR_FOREGROUND_OFFSET_1)
+                                } <span class="kw">else if </span>code &gt;= <span class="number">40 </span>&amp;&amp; code &lt;= <span class="number">47 </span>{
+                                    ParsedColor::Background(code - SGR_BACKGROUND_OFFSET_1)
+                                } <span class="kw">else if </span>code &gt;= <span class="number">90 </span>&amp;&amp; code &lt;= <span class="number">97 </span>{
+                                    ParsedColor::Foreground(code - SGR_FOREGROUND_OFFSET_2)
+                                } <span class="kw">else if </span>code &gt;= <span class="number">100 </span>&amp;&amp; code &lt;= <span class="number">107 </span>{
+                                    ParsedColor::Background(code - SGR_BACKGROUND_OFFSET_2)
+                                } <span class="kw">else </span>{
+                                    ParsedColor::Unknown
                                 };
 
-                                <span class="kw">match</span> <span class="ident">parsed_color</span> {
-                                    <span class="ident">ParsedColor::Foreground</span>(<span class="ident">color</span>) =&gt; {
-                                        <span class="kw">let</span> <span class="ident">ccode</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">bright</span> {
-                                            <span class="ident">ANSI_BRIGHT_COLORS</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>]
-                                        } <span class="kw">else</span> {
-                                            <span class="ident">ANSI_COLORS</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                                <span class="kw">match </span>parsed_color {
+                                    ParsedColor::Foreground(color) =&gt; {
+                                        <span class="kw">let </span>ccode = <span class="kw">if </span>bright {
+                                            ANSI_BRIGHT_COLORS[color <span class="kw">as </span>usize]
+                                        } <span class="kw">else </span>{
+                                            ANSI_COLORS[color <span class="kw">as </span>usize]
                                         };
 
-                                        <span class="ident">rendy::set_text_fg</span>(<span class="ident">ccode</span>);
+                                        rendy::set_text_fg(ccode);
                                     }
 
-                                    <span class="ident">ParsedColor::Background</span>(<span class="ident">color</span>) =&gt; {
-                                        <span class="kw">let</span> <span class="ident">ccode</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">bright</span> {
-                                            <span class="ident">ANSI_BRIGHT_COLORS</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>]
-                                        } <span class="kw">else</span> {
-                                            <span class="ident">ANSI_COLORS</span>[<span class="ident">color</span> <span class="kw">as</span> <span class="ident">usize</span>]
+                                    ParsedColor::Background(color) =&gt; {
+                                        <span class="kw">let </span>ccode = <span class="kw">if </span>bright {
+                                            ANSI_BRIGHT_COLORS[color <span class="kw">as </span>usize]
+                                        } <span class="kw">else </span>{
+                                            ANSI_COLORS[color <span class="kw">as </span>usize]
                                         };
 
-                                        <span class="ident">rendy::set_text_bg</span>(<span class="ident">ccode</span>);
+                                        rendy::set_text_bg(ccode);
                                     }
 
-                                    <span class="ident">ParsedColor::Unknown</span> =&gt; {
-                                        <span class="kw">let</span> <span class="ident">parse_rgb</span> <span class="op">=</span>
-                                            <span class="op">|</span><span class="ident">setter</span>: <span class="kw">fn</span>(<span class="ident">u32</span>), <span class="ident">piter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">vte::ParamsIter</span><span class="op">|</span> {
-                                                <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> <span class="ident">piter</span>.<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
-                                                <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> <span class="ident">piter</span>.<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
-                                                <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">piter</span>.<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
+                                    ParsedColor::Unknown =&gt; {
+                                        <span class="kw">let </span>parse_rgb =
+                                            |setter: <span class="kw">fn</span>(u32), piter: <span class="kw-2">&amp;mut </span>vte::ParamsIter| {
+                                                <span class="kw">let </span>r = piter.next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
+                                                <span class="kw">let </span>g = piter.next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
+                                                <span class="kw">let </span>b = piter.next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
 
-                                                <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span>
-                                                    (<span class="ident">r</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span> <span class="op">|</span> (<span class="ident">g</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span> <span class="op">|</span> <span class="ident">b</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                                                <span class="kw">let </span>color =
+                                                    (r <span class="kw">as </span>u32) &lt;&lt; <span class="number">16 </span>| (g <span class="kw">as </span>u32) &lt;&lt; <span class="number">8 </span>| b <span class="kw">as </span>u32;
 
-                                                <span class="ident">setter</span>(<span class="ident">color</span>);
+                                                setter(color);
                                             };
 
-                                        <span class="kw">let</span> <span class="ident">parse_fixed</span> <span class="op">=</span>
-                                            <span class="op">|</span><span class="ident">setter</span>: <span class="kw">fn</span>(<span class="ident">u32</span>), <span class="ident">piter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">vte::ParamsIter</span><span class="op">|</span> {
-                                                <span class="kw">let</span> <span class="ident">fixed</span> <span class="op">=</span> <span class="ident">piter</span>.<span class="ident">next</span>().<span class="ident">unwrap_or</span>(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
-                                                <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span> <span class="ident">fixed_to_rgb</span>(<span class="ident">fixed</span>);
+                                        <span class="kw">let </span>parse_fixed =
+                                            |setter: <span class="kw">fn</span>(u32), piter: <span class="kw-2">&amp;mut </span>vte::ParamsIter| {
+                                                <span class="kw">let </span>fixed = piter.next().unwrap_or(<span class="kw-2">&amp;</span>[<span class="number">0</span>])[<span class="number">0</span>];
+                                                <span class="kw">let </span>color = fixed_to_rgb(fixed);
 
-                                                <span class="ident">setter</span>(<span class="ident">color</span>);
+                                                setter(color);
                                             };
 
-                                        <span class="kw">let</span> <span class="ident">run_special_parser</span> <span class="op">=</span>
-                                            <span class="op">|</span><span class="ident">setter</span>: <span class="kw">fn</span>(<span class="ident">u32</span>), <span class="ident">piter</span>: <span class="kw-2">&amp;mut</span> <span class="ident">vte::ParamsIter</span><span class="op">|</span> {
-                                                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">arg_typee</span>) <span class="op">=</span> <span class="ident">piter</span>.<span class="ident">next</span>() {
-                                                    <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">arg_typee</span>[<span class="number">0</span>];
+                                        <span class="kw">let </span>run_special_parser =
+                                            |setter: <span class="kw">fn</span>(u32), piter: <span class="kw-2">&amp;mut </span>vte::ParamsIter| {
+                                                <span class="kw">if let </span><span class="prelude-val">Some</span>(arg_typee) = piter.next() {
+                                                    <span class="kw">let </span>p1 = arg_typee[<span class="number">0</span>];
 
-                                                    <span class="kw">match</span> <span class="ident">p1</span> {
-                                                        <span class="comment">// A colour number from 0 to 255, for use in 256-colour terminal</span>
-                                                        <span class="comment">// environments.</span>
-                                                        <span class="comment">//</span>
-                                                        <span class="comment">// - Colours 0 to 7 are the `Black` to `White` variants respectively.</span>
-                                                        <span class="comment">// - Colours 8 to 15 are brighter versions of the eight colours above.</span>
-                                                        <span class="comment">// - Colours 16 to 231 contain several palettes of bright colours,</span>
-                                                        <span class="comment">// - Colours 232 to 255 are shades of grey from black to white.</span>
-                                                        <span class="comment">//</span>
-                                                        <span class="comment">// [cc]: https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg</span>
-                                                        <span class="number">5</span> =&gt; <span class="ident">parse_fixed</span>(<span class="ident">setter</span>, <span class="ident">piter</span>),
+                                                    <span class="kw">match </span>p1 {
+                                                        <span class="comment">// A colour number from 0 to 255, for use in 256-colour terminal
+                                                        // environments.
+                                                        //
+                                                        // - Colours 0 to 7 are the `Black` to `White` variants respectively.
+                                                        // - Colours 8 to 15 are brighter versions of the eight colours above.
+                                                        // - Colours 16 to 231 contain several palettes of bright colours,
+                                                        // - Colours 232 to 255 are shades of grey from black to white.
+                                                        //
+                                                        // [cc]: https://upload.wikimedia.org/wikipedia/commons/1/15/Xterm_256color_chart.svg
+                                                        </span><span class="number">5 </span>=&gt; parse_fixed(setter, piter),
 
-                                                        <span class="comment">// A 24-bit RGB color, as specified by ISO-8613-3.</span>
-                                                        <span class="number">2</span> =&gt; <span class="ident">parse_rgb</span>(<span class="ident">setter</span>, <span class="ident">piter</span>),
+                                                        <span class="comment">// A 24-bit RGB color, as specified by ISO-8613-3.
+                                                        </span><span class="number">2 </span>=&gt; parse_rgb(setter, piter),
 
-                                                        <span class="kw">_</span> =&gt; (),
+                                                        <span class="kw">_ </span>=&gt; (),
                                                     }
                                                 }
                                             };
 
-                                        <span class="comment">// Background</span>
-                                        <span class="kw">if</span> <span class="ident">code</span> <span class="op">==</span> <span class="number">48</span> {
-                                            <span class="ident">run_special_parser</span>(<span class="ident">rendy::set_text_bg</span>, <span class="kw-2">&amp;mut</span> <span class="ident">piter</span>);
+                                        <span class="comment">// Background
+                                        </span><span class="kw">if </span>code == <span class="number">48 </span>{
+                                            run_special_parser(rendy::set_text_bg, <span class="kw-2">&amp;mut </span>piter);
                                         }
-                                        <span class="comment">// Foreground</span>
-                                        <span class="kw">else</span> <span class="kw">if</span> <span class="ident">code</span> <span class="op">==</span> <span class="number">38</span> {
-                                            <span class="ident">run_special_parser</span>(<span class="ident">rendy::set_text_fg</span>, <span class="kw-2">&amp;mut</span> <span class="ident">piter</span>);
+                                        <span class="comment">// Foreground
+                                        </span><span class="kw">else if </span>code == <span class="number">38 </span>{
+                                            run_special_parser(rendy::set_text_fg, <span class="kw-2">&amp;mut </span>piter);
                                         }
                                     }
                                 }
@@ -1726,17 +1726,17 @@
                 }
             }
 
-            <span class="kw">_</span> =&gt; <span class="macro">log::debug!</span>(<span class="string">&quot;unknown action: {}&quot;</span>, <span class="ident">action</span>),
+            <span class="kw">_ </span>=&gt; <span class="macro">log::debug!</span>(<span class="string">&quot;unknown action: {}&quot;</span>, action),
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">init_tty</span>() {
-    <span class="ident"><span class="kw">super</span>::keyboard::register_keyboard_listener</span>(<span class="ident">TTY</span>.<span class="ident">as_ref</span>().<span class="ident">clone</span>());
+<span class="kw">fn </span>init_tty() {
+    <span class="kw">super</span>::keyboard::register_keyboard_listener(TTY.as_ref().clone());
 
-    <span class="ident">devfs::install_device</span>(<span class="ident">TTY</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;failed to register tty as a device&quot;</span>);
+    devfs::install_device(TTY.clone()).expect(<span class="string">&quot;failed to register tty as a device&quot;</span>);
 }
 
-<span class="macro">crate::module_init!</span>(<span class="ident">init_tty</span>);
+<span class="macro">crate::module_init!</span>(init_tty);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

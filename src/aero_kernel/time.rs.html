@@ -149,122 +149,122 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! The PIT (Programmable Interval Timer) chip basically consists of an oscillator,</span>
-<span class="doccomment">//! a prescaler and 3 independent frequency dividers and it is used to create time intervals</span>
-<span class="doccomment">//! and calculate *estimate* time since epoch.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! **Notes**: &lt;https://wiki.osdev.org/Programmable_Interval_Timer&gt;</span>
+</span><span class="doccomment">//! The PIT (Programmable Interval Timer) chip basically consists of an oscillator,
+//! a prescaler and 3 independent frequency dividers and it is used to create time intervals
+//! and calculate *estimate* time since epoch.
+//!
+//! **Notes**: &lt;https://wiki.osdev.org/Programmable_Interval_Timer&gt;
 
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+</span><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident">aero_syscall::TimeSpec</span>;
-<span class="kw">use</span> <span class="ident">stivale_boot::v2::StivaleEpochTag</span>;
+<span class="kw">use </span>aero_syscall::TimeSpec;
+<span class="kw">use </span>stivale_boot::v2::StivaleEpochTag;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::apic</span>;
+<span class="kw">use </span><span class="kw">crate</span>::apic;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::interrupts</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::interrupts::InterruptStack</span>;
+<span class="kw">use </span><span class="kw">crate</span>::arch::interrupts;
+<span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::InterruptStack;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">const</span> <span class="ident">PIT_FREQUENCY_HZ</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1000</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PIT_DIVIDEND</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1193182</span>;
+<span class="kw">const </span>PIT_FREQUENCY_HZ: usize = <span class="number">1000</span>;
+<span class="kw">pub const </span>PIT_DIVIDEND: usize = <span class="number">1193182</span>;
 
-<span class="kw">static</span> <span class="ident">UPTIME_RAW</span>: <span class="ident">AtomicUsize</span> <span class="op">=</span> <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>);
-<span class="kw">static</span> <span class="ident">UPTIME_SEC</span>: <span class="ident">AtomicUsize</span> <span class="op">=</span> <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>);
+<span class="kw">static </span>UPTIME_RAW: AtomicUsize = AtomicUsize::new(<span class="number">0</span>);
+<span class="kw">static </span>UPTIME_SEC: AtomicUsize = AtomicUsize::new(<span class="number">0</span>);
 
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">EPOCH_TAG</span>: <span class="ident">spin::Once</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleEpochTag</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">spin::Once::new</span>();
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">REALTIME_CLOCK</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">aero_syscall::TimeSpec</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="ident">aero_syscall::TimeSpec</span> {
-    <span class="ident">tv_sec</span>: <span class="number">0</span>,
-    <span class="ident">tv_nsec</span>: <span class="number">0</span>,
+<span class="kw">pub static </span>EPOCH_TAG: spin::Once&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleEpochTag&gt; = spin::Once::new();
+<span class="kw">pub static </span>REALTIME_CLOCK: Mutex&lt;aero_syscall::TimeSpec&gt; = Mutex::new(aero_syscall::TimeSpec {
+    tv_sec: <span class="number">0</span>,
+    tv_nsec: <span class="number">0</span>,
 });
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_uptime_ticks</span>() -&gt; <span class="ident">usize</span> {
-    <span class="ident">UPTIME_SEC</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+<span class="kw">pub fn </span>get_uptime_ticks() -&gt; usize {
+    UPTIME_SEC.load(Ordering::SeqCst)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_realtime_clock</span>() -&gt; <span class="ident">TimeSpec</span> {
-    <span class="ident">REALTIME_CLOCK</span>.<span class="ident">lock_irq</span>().<span class="ident">clone</span>()
+<span class="kw">pub fn </span>get_realtime_clock() -&gt; TimeSpec {
+    REALTIME_CLOCK.lock_irq().clone()
 }
 
-<span class="doccomment">/// Returns the current amount of PIT ticks.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_current_count</span>() -&gt; <span class="ident">u16</span> {
-    <span class="kw">unsafe</span> {
-        <span class="ident">io::outb</span>(<span class="number">0x43</span>, <span class="number">0</span>);
+<span class="doccomment">/// Returns the current amount of PIT ticks.
+</span><span class="kw">pub fn </span>get_current_count() -&gt; u16 {
+    <span class="kw">unsafe </span>{
+        io::outb(<span class="number">0x43</span>, <span class="number">0</span>);
 
-        <span class="kw">let</span> <span class="ident">lower</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="number">0x40</span>) <span class="kw">as</span> <span class="ident">u16</span>;
-        <span class="kw">let</span> <span class="ident">higher</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="number">0x40</span>) <span class="kw">as</span> <span class="ident">u16</span>;
+        <span class="kw">let </span>lower = io::inb(<span class="number">0x40</span>) <span class="kw">as </span>u16;
+        <span class="kw">let </span>higher = io::inb(<span class="number">0x40</span>) <span class="kw">as </span>u16;
 
-        (<span class="ident">higher</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>) <span class="op">|</span> <span class="ident">lower</span>
+        (higher &lt;&lt; <span class="number">8</span>) | lower
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_reload_value</span>(<span class="ident">new_count</span>: <span class="ident">u16</span>) {
-    <span class="comment">// Channel 0, lo/hi access mode, mode 2 (rate generator)</span>
-    <span class="kw">unsafe</span> {
-        <span class="ident">io::outb</span>(<span class="number">0x43</span>, <span class="number">0x34</span>);
-        <span class="ident">io::outb</span>(<span class="number">0x40</span>, <span class="ident">new_count</span> <span class="kw">as</span> <span class="ident">u8</span>);
-        <span class="ident">io::outb</span>(<span class="number">0x40</span>, (<span class="ident">new_count</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">u8</span>);
+<span class="kw">pub fn </span>set_reload_value(new_count: u16) {
+    <span class="comment">// Channel 0, lo/hi access mode, mode 2 (rate generator)
+    </span><span class="kw">unsafe </span>{
+        io::outb(<span class="number">0x43</span>, <span class="number">0x34</span>);
+        io::outb(<span class="number">0x40</span>, new_count <span class="kw">as </span>u8);
+        io::outb(<span class="number">0x40</span>, (new_count &gt;&gt; <span class="number">8</span>) <span class="kw">as </span>u8);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_frequency</span>(<span class="ident">frequency</span>: <span class="ident">usize</span>) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_divisor</span> <span class="op">=</span> <span class="ident">PIT_DIVIDEND</span> <span class="op">/</span> <span class="ident">frequency</span>;
+<span class="kw">pub fn </span>set_frequency(frequency: usize) {
+    <span class="kw">let </span><span class="kw-2">mut </span>new_divisor = PIT_DIVIDEND / frequency;
 
-    <span class="kw">if</span> <span class="ident">PIT_DIVIDEND</span> <span class="op">%</span> <span class="ident">frequency</span> <span class="op">&gt;</span> <span class="ident">frequency</span> <span class="op">/</span> <span class="number">2</span> {
-        <span class="ident">new_divisor</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">if </span>PIT_DIVIDEND % frequency &gt; frequency / <span class="number">2 </span>{
+        new_divisor += <span class="number">1</span>;
     }
 
-    <span class="ident">set_reload_value</span>(<span class="ident">new_divisor</span> <span class="kw">as</span> <span class="ident">u16</span>);
+    set_reload_value(new_divisor <span class="kw">as </span>u16);
 }
 
-<span class="kw">fn</span> <span class="ident">pit_irq_handler</span>(<span class="ident">_stack</span>: <span class="kw-2">&amp;mut</span> <span class="ident">InterruptStack</span>) {
+<span class="kw">fn </span>pit_irq_handler(_stack: <span class="kw-2">&amp;mut </span>InterruptStack) {
     {
-        <span class="kw">let</span> <span class="ident">interval</span> <span class="op">=</span> <span class="ident">aero_syscall::TimeSpec</span> {
-            <span class="ident">tv_sec</span>: <span class="number">0</span>,
-            <span class="ident">tv_nsec</span>: (<span class="number">1000000000</span> <span class="op">/</span> <span class="ident">PIT_FREQUENCY_HZ</span>) <span class="kw">as</span> <span class="ident">isize</span>,
+        <span class="kw">let </span>interval = aero_syscall::TimeSpec {
+            tv_sec: <span class="number">0</span>,
+            tv_nsec: (<span class="number">1000000000 </span>/ PIT_FREQUENCY_HZ) <span class="kw">as </span>isize,
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">REALTIME_CLOCK</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = REALTIME_CLOCK.lock_irq();
 
-        <span class="kw">if</span> <span class="ident">this</span>.<span class="ident">tv_nsec</span> <span class="op">+</span> <span class="ident">interval</span>.<span class="ident">tv_nsec</span> <span class="op">&gt;</span> <span class="number">999999999</span> {
-            <span class="kw">let</span> <span class="ident">diff</span> <span class="op">=</span> (<span class="ident">this</span>.<span class="ident">tv_nsec</span> <span class="op">+</span> <span class="ident">interval</span>.<span class="ident">tv_nsec</span>) <span class="op">-</span> <span class="number">1000000000</span>;
+        <span class="kw">if </span>this.tv_nsec + interval.tv_nsec &gt; <span class="number">999999999 </span>{
+            <span class="kw">let </span>diff = (this.tv_nsec + interval.tv_nsec) - <span class="number">1000000000</span>;
 
-            <span class="ident">this</span>.<span class="ident">tv_nsec</span> <span class="op">=</span> <span class="ident">diff</span>;
-            <span class="ident">this</span>.<span class="ident">tv_sec</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        } <span class="kw">else</span> {
-            <span class="ident">this</span>.<span class="ident">tv_nsec</span> <span class="op">+</span><span class="op">=</span> <span class="ident">interval</span>.<span class="ident">tv_nsec</span>
+            this.tv_nsec = diff;
+            this.tv_sec += <span class="number">1</span>;
+        } <span class="kw">else </span>{
+            this.tv_nsec += interval.tv_nsec
         }
 
-        <span class="ident">this</span>.<span class="ident">tv_sec</span> <span class="op">+</span><span class="op">=</span> <span class="ident">interval</span>.<span class="ident">tv_sec</span>;
+        this.tv_sec += interval.tv_sec;
     }
 
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">UPTIME_RAW</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::Relaxed</span>); <span class="comment">// Increment uptime raw ticks.</span>
+    <span class="kw">let </span>value = UPTIME_RAW.fetch_add(<span class="number">1</span>, Ordering::Relaxed); <span class="comment">// Increment uptime raw ticks.
 
-    <span class="kw">if</span> <span class="ident">value</span> <span class="op">%</span> <span class="ident">PIT_FREQUENCY_HZ</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="ident">UPTIME_SEC</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::Relaxed</span>); <span class="comment">// Increment uptime seconds</span>
-    }
+    </span><span class="kw">if </span>value % PIT_FREQUENCY_HZ == <span class="number">0 </span>{
+        UPTIME_SEC.fetch_add(<span class="number">1</span>, Ordering::Relaxed); <span class="comment">// Increment uptime seconds
+    </span>}
 }
 
-<span class="doccomment">/// This function is responsible for initializing the PIT chip and setting</span>
-<span class="doccomment">/// up the IRQ.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="ident">apic::get_local_apic</span>().<span class="ident">timer_calibrate</span>();
+<span class="doccomment">/// This function is responsible for initializing the PIT chip and setting
+/// up the IRQ.
+</span><span class="kw">pub fn </span>init() {
+    apic::get_local_apic().timer_calibrate();
 
-    <span class="ident">REALTIME_CLOCK</span>.<span class="ident">lock</span>().<span class="ident">tv_sec</span> <span class="op">=</span> <span class="ident">EPOCH_TAG</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;failed to initialize realtime clock&quot;</span>)
-        .<span class="ident">epoch</span> <span class="kw">as</span> <span class="ident">isize</span>;
+    REALTIME_CLOCK.lock().tv_sec = EPOCH_TAG
+        .get()
+        .expect(<span class="string">&quot;failed to initialize realtime clock&quot;</span>)
+        .epoch <span class="kw">as </span>isize;
 
-    <span class="ident">set_frequency</span>(<span class="ident">PIT_FREQUENCY_HZ</span>);
+    set_frequency(PIT_FREQUENCY_HZ);
 
-    <span class="kw">let</span> <span class="ident">pit_vector</span> <span class="op">=</span> <span class="ident">interrupts::allocate_vector</span>();
-    <span class="ident">interrupts::register_handler</span>(<span class="ident">pit_vector</span>, <span class="ident">pit_irq_handler</span>);
+    <span class="kw">let </span>pit_vector = interrupts::allocate_vector();
+    interrupts::register_handler(pit_vector, pit_irq_handler);
 
-    <span class="ident">apic::io_apic_setup_legacy_irq</span>(<span class="number">0</span>, <span class="ident">pit_vector</span>, <span class="number">1</span>); <span class="comment">// Set up the IRQ.</span>
-}
+    apic::io_apic_setup_legacy_irq(<span class="number">0</span>, pit_vector, <span class="number">1</span>); <span class="comment">// Set up the IRQ.
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

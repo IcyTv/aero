@@ -2,18 +2,18 @@
 the kernel functionality at runtime. When a kernel module is no longer needed,
 it can be unloaded. Most of the device drivers are used in the form of kernel modules.</p>
 <h3 id="example"><a href="#example">Example</a></h3>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn</span> <span class="ident">hello_init</span>() {}
-<span class="kw">fn</span> <span class="ident">hello_exit</span>() {}
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>hello_init() {}
+<span class="kw">fn </span>hello_exit() {}
 
-<span class="macro">aero_kernel::module_init!</span>(<span class="ident">hello_init</span>);
-<span class="macro">aero_kernel::module_exit!</span>(<span class="ident">hello_exit</span>);</code></pre></div>
+<span class="macro">aero_kernel::module_init!</span>(hello_init);
+<span class="macro">aero_kernel::module_exit!</span>(hello_exit);</code></pre></div>
 </div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.ModuleInit.html" title="aero_kernel::modules::ModuleInit struct">ModuleInit</a></div><div class="item-right docblock-short"><p>Inner helper structure holding the module init function as a void pointer. This struct
 is required as we cannot directly store a pointer in the static as it needs to implement
-<a href="../prelude/rust_2021/trait.Sync.html" title="Sync">Sync</a>.</p>
+<a href="../prelude/rust_2021/_core/marker/trait.Sync.html" title="Sync">Sync</a>.</p>
 </div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.init.html" title="aero_kernel::modules::init fn">init</a><span title="Restricted Visibility">&nbsp;🔒</span> </div><div class="item-right docblock-short"><p>This function is responsible for initializing all of the kernel modules. Since currently
 we cannot read the ext2 root filesystem, we link all of the kernel modules into the kernel
 itself (this is temporary and modules will be loaded from the filesystem in the future).</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.make_module_init.html" title="aero_kernel::modules::make_module_init fn">make_module_init</a></div><div class="item-right docblock-short"><p>Inner helper function to make sure the function provided to the <a href="../macro.module_init.html" title="module_init">module_init</a> macro
 has a valid function signature. This function returns the passed module init function as
 a const void pointer.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

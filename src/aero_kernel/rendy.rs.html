@@ -987,960 +987,960 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::fmt::Write</span>;
+</span><span class="kw">use </span>core::fmt::Write;
 
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
-<span class="kw">use</span> <span class="ident">core::u8</span>;
+<span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::u8;
 
-<span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
+<span class="kw">use </span>alloc::boxed::Box;
 
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+<span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cmdline::CommandLine</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::align_up</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::PhysAddr</span>;
+<span class="kw">use </span><span class="kw">crate</span>::cmdline::CommandLine;
+<span class="kw">use </span><span class="kw">crate</span>::mem;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::align_up;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::PhysAddr;
 
-<span class="kw">use</span> <span class="ident">stivale_boot::v2::StivaleFramebufferTag</span>;
+<span class="kw">use </span>stivale_boot::v2::StivaleFramebufferTag;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">static</span> <span class="ident">FONT</span>: <span class="kw-2">&amp;</span>[[<span class="ident">u8</span>; <span class="ident">FONT_HEIGHT</span>]; <span class="ident">FONT_GLYPHS</span>] <span class="op">=</span>
-    <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="ident">core::mem::transmute</span>(<span class="kw-2">*</span><span class="macro">include_bytes!</span>(<span class="string">&quot;../../font.bin&quot;</span>)) };
+<span class="kw">static </span>FONT: <span class="kw-2">&amp;</span>[[u8; FONT_HEIGHT]; FONT_GLYPHS] =
+    <span class="kw">unsafe </span>{ <span class="kw-2">&amp;</span>core::mem::transmute(<span class="kw-2">*</span><span class="macro">include_bytes!</span>(<span class="string">&quot;../../font.bin&quot;</span>)) };
 
-<span class="comment">// This is an example of how the rendered screen will look like:</span>
-<span class="comment">//</span>
-<span class="comment">// ```text</span>
-<span class="comment">// -----------------------------------------------------|</span>
-<span class="comment">//                         YPAD                         |</span>
-<span class="comment">// -----------------------------------------------------|</span>
-<span class="comment">//  MARGIN | XPAD |        DATA         | XPAD | MARGIN |</span>
-<span class="comment">// -----------------------------------------------------|</span>
-<span class="comment">//  MARGIN | XPAD |        DATA         | XPAD | MARGIN |</span>
-<span class="comment">// -----------------------------------------------------|</span>
-<span class="comment">//                         YPAD                         |</span>
-<span class="comment">// -----------------------------------------------------|</span>
-<span class="comment">// ```</span>
+<span class="comment">// This is an example of how the rendered screen will look like:
+//
+// ```text
+// -----------------------------------------------------|
+//                         YPAD                         |
+// -----------------------------------------------------|
+//  MARGIN | XPAD |        DATA         | XPAD | MARGIN |
+// -----------------------------------------------------|
+//  MARGIN | XPAD |        DATA         | XPAD | MARGIN |
+// -----------------------------------------------------|
+//                         YPAD                         |
+// -----------------------------------------------------|
+// ```
 
-<span class="kw">const</span> <span class="ident">FONT_WIDTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">const</span> <span class="ident">FONT_HEIGHT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">16</span>;
-<span class="kw">const</span> <span class="ident">FONT_GLYPHS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">256</span>;
+</span><span class="kw">const </span>FONT_WIDTH: usize = <span class="number">8</span>;
+<span class="kw">const </span>FONT_HEIGHT: usize = <span class="number">16</span>;
+<span class="kw">const </span>FONT_GLYPHS: usize = <span class="number">256</span>;
 
-<span class="kw">const</span> <span class="ident">DEFAULT_MARGIN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">64</span> <span class="op">/</span> <span class="number">2</span>;
-<span class="kw">const</span> <span class="ident">TAB_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="kw">const </span>DEFAULT_MARGIN: usize = <span class="number">64 </span>/ <span class="number">2</span>;
+<span class="kw">const </span>TAB_SIZE: usize = <span class="number">4</span>;
 
-<span class="doccomment">/// The amount of VGA font glyphs.</span>
+<span class="doccomment">/// The amount of VGA font glyphs.
 
-<span class="kw">const</span> <span class="ident">MARGIN_GRADIENT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">const</span> <span class="ident">DWORD_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
+</span><span class="kw">const </span>MARGIN_GRADIENT: usize = <span class="number">4</span>;
+<span class="kw">const </span>DWORD_SIZE: usize = core::mem::size_of::&lt;u32&gt;();
 
-<span class="kw">const</span> <span class="ident">DEFAULT_TEXT_BACKGROUND</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">u32::MAX</span>;
-<span class="kw">const</span> <span class="ident">DEFAULT_TEXT_FOREGROUND</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xaaaaaa</span>;
+<span class="kw">const </span>DEFAULT_TEXT_BACKGROUND: u32 = u32::MAX;
+<span class="kw">const </span>DEFAULT_TEXT_FOREGROUND: u32 = <span class="number">0xaaaaaa</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DEFAULT_THEME_BACKGROUND</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x50000000</span>;
+<span class="kw">pub const </span>DEFAULT_THEME_BACKGROUND: u32 = <span class="number">0x50000000</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Character</span> {
-    <span class="ident">char</span>: <span class="ident">char</span>,
-    <span class="ident">fg</span>: <span class="ident">u32</span>,
-    <span class="ident">bg</span>: <span class="ident">u32</span>,
+<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]</span>
+<span class="kw">struct </span>Character {
+    char: char,
+    fg: u32,
+    bg: u32,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">QueueCharacter</span> {
-    <span class="ident">char</span>: <span class="ident">Character</span>,
-    <span class="ident">x</span>: <span class="ident">usize</span>,
-    <span class="ident">y</span>: <span class="ident">usize</span>,
+<span class="attribute">#[derive(Debug, PartialEq, Clone)]</span>
+<span class="kw">struct </span>QueueCharacter {
+    char: Character,
+    x: usize,
+    y: usize,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ColorCode</span>(<span class="ident">u32</span>, <span class="ident">u32</span>);
+<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+<span class="kw">pub struct </span>ColorCode(u32, u32);
 
-<span class="kw">impl</span> <span class="ident">ColorCode</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">foreground</span>: <span class="ident">u32</span>, <span class="ident">background</span>: <span class="ident">u32</span>) -&gt; <span class="ident">ColorCode</span> {
-        <span class="ident">ColorCode</span>(<span class="ident">foreground</span>, <span class="ident">background</span>)
+<span class="kw">impl </span>ColorCode {
+    <span class="kw">pub fn </span>new(foreground: u32, background: u32) -&gt; ColorCode {
+        ColorCode(foreground, background)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_foreground</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="number">0</span>
+    <span class="kw">pub fn </span>get_foreground(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
+
+    <span class="kw">pub fn </span>get_background(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+        <span class="self">self</span>.<span class="number">1
+    </span>}
+}
+
+<span class="doccomment">/// Color format of pixels in the framebuffer.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[allow(warnings)]</span> <span class="comment">// FIXME: Construct the other variants of this enum.
+</span><span class="kw">pub enum </span>PixelFormat {
+    <span class="doccomment">/// One byte red, then one byte green, then one byte blue.
+    </span>RGB,
+    <span class="doccomment">/// One byte blue, then one byte green, then one byte red.
+    </span>BGR,
+    <span class="doccomment">/// A single byte, representing the grayscale value.
+    </span>U8,
+}
+
+<span class="attribute">#[derive(Debug, Clone, Copy)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>RendyInfo {
+    <span class="doccomment">/// The total size in bytes.
+    </span><span class="kw">pub </span>byte_len: usize,
+    <span class="doccomment">/// The width in pixels.
+    </span><span class="kw">pub </span>horizontal_resolution: usize,
+    <span class="doccomment">/// The height in pixels.
+    </span><span class="kw">pub </span>vertical_resolution: usize,
+    <span class="doccomment">/// The color format of each pixel.
+    </span><span class="kw">pub </span>pixel_format: PixelFormat,
+    <span class="doccomment">/// The number of bits per pixel.
+    </span><span class="kw">pub </span>bits_per_pixel: usize,
+    <span class="doccomment">/// Number of pixels between the start of a line and the start of the next.
+    ///
+    /// Some framebuffers use additional padding at the end of a line, so this
+    /// value might be larger than `horizontal_resolution`. It is
+    /// therefore recommended to use this field for calculating the start address of a line.
+    </span><span class="kw">pub </span>stride: usize,
+
+    <span class="kw">pub </span>red_mask_shift: u8,
+    <span class="kw">pub </span>red_mask_size: u8,
+
+    <span class="kw">pub </span>green_mask_shift: u8,
+    <span class="kw">pub </span>green_mask_size: u8,
+
+    <span class="kw">pub </span>blue_mask_shift: u8,
+    <span class="kw">pub </span>blue_mask_size: u8,
+}
+
+<span class="attribute">#[repr(C, packed)]</span>
+<span class="kw">struct </span>BmpHeader {
+    bf_signature: [u8; <span class="number">2</span>],
+    bf_size: u32,
+    reserved: u32,
+    bf_offset: u32,
+
+    bi_size: u32,
+    bi_width: u32,
+    bi_height: u32,
+    bi_planes: u16,
+    bi_bpp: u16,
+    bi_compression: u32,
+    bi_image_size: u32,
+    bi_xcount: u32,
+    bi_ycount: u32,
+    bi_clr_used: u32,
+    bi_clr_important: u32,
+    red_mask: u32,
+    green_mask: u32,
+    blue_mask: u32,
+}
+
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">struct </span>Image {
+    image: Box&lt;[u8]&gt;,
+
+    img_width: usize,
+    img_height: usize,
+    bpp: usize,
+    pitch: usize,
+}
+
+<span class="kw">fn </span>parse_bmp_image(data: <span class="kw-2">&amp;</span>[u8]) -&gt; Image {
+    <span class="kw">let </span>header: <span class="kw-2">&amp;</span>BmpHeader =
+        <span class="kw">unsafe </span>{ core::mem::transmute(data <span class="kw">as </span><span class="kw-2">*const </span>[u8] <span class="kw">as </span><span class="kw-2">*const </span>u8 <span class="kw">as </span><span class="kw-2">*const </span>BmpHeader) };
+
+    <span class="comment">// Check if the BMP image has the correct signature (ie. &quot;BM&quot;).
+    </span><span class="macro">assert!</span>(<span class="kw-2">&amp;</span>header.bf_signature == <span class="string">b&quot;BM&quot;</span>);
+
+    <span class="comment">// We do not support BPP lower then 8.
+    </span><span class="macro">assert!</span>(header.bi_bpp % <span class="number">8 </span>== <span class="number">0</span>);
+
+    <span class="kw">let </span><span class="kw-2">mut </span>image = mem::alloc_boxed_buffer::&lt;u8&gt;(header.bf_size <span class="kw">as </span>usize);
+    <span class="kw">let </span>bytes = image.len();
+
+    (<span class="kw-2">&amp;mut </span>image[..bytes - header.bf_offset <span class="kw">as </span>usize])
+        .copy_from_slice(<span class="kw-2">&amp;</span>data[header.bf_offset <span class="kw">as </span>usize..header.bf_size <span class="kw">as </span>usize]);
+
+    Image {
+        image,
+
+        img_width: header.bi_width <span class="kw">as </span>usize,
+        img_height: header.bi_height <span class="kw">as </span>usize,
+        bpp: header.bi_bpp <span class="kw">as </span>usize,
+        pitch: align_up((header.bi_width * header.bi_bpp <span class="kw">as </span>u32) <span class="kw">as </span>u64, <span class="number">32</span>) <span class="kw">as </span>usize / <span class="number">8</span>,
     }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_background</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u32</span> {
-        <span class="self">self</span>.<span class="number">1</span>
-    }
 }
 
-<span class="doccomment">/// Color format of pixels in the framebuffer.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">warnings</span>)]</span> <span class="comment">// FIXME: Construct the other variants of this enum.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">PixelFormat</span> {
-    <span class="doccomment">/// One byte red, then one byte green, then one byte blue.</span>
-    <span class="ident">RGB</span>,
-    <span class="doccomment">/// One byte blue, then one byte green, then one byte red.</span>
-    <span class="ident">BGR</span>,
-    <span class="doccomment">/// A single byte, representing the grayscale value.</span>
-    <span class="ident">U8</span>,
+<span class="kw">pub struct </span>DebugRendy&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="doccomment">/// The raw framebuffer pointer queried from the BIOS or UEFI firmware represented
+    /// as a [u8] slice.
+    </span>buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;this </span><span class="kw-2">mut </span>[u32],
+    info: RendyInfo,
+
+    x_pos: usize,
+    y_pos: usize,
+
+    old_x_pos: usize,
+    old_y_pos: usize,
+
+    rows: usize,
+    cols: usize,
+
+    color: ColorCode,
+    theme_background: u32,
+
+    queue: Box&lt;[QueueCharacter]&gt;,
+    grid: Box&lt;[Character]&gt;,
+    map: Box&lt;[<span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>QueueCharacter&gt;]&gt;,
+    bg_canvas: Box&lt;[u32]&gt;,
+
+    queue_cursor: usize,
+
+    offset_x: usize,
+    offset_y: usize,
+
+    cursor_visibility: bool,
+    auto_flush: bool,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RendyInfo</span> {
-    <span class="doccomment">/// The total size in bytes.</span>
-    <span class="kw">pub</span> <span class="ident">byte_len</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// The width in pixels.</span>
-    <span class="kw">pub</span> <span class="ident">horizontal_resolution</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// The height in pixels.</span>
-    <span class="kw">pub</span> <span class="ident">vertical_resolution</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// The color format of each pixel.</span>
-    <span class="kw">pub</span> <span class="ident">pixel_format</span>: <span class="ident">PixelFormat</span>,
-    <span class="doccomment">/// The number of bits per pixel.</span>
-    <span class="kw">pub</span> <span class="ident">bits_per_pixel</span>: <span class="ident">usize</span>,
-    <span class="doccomment">/// Number of pixels between the start of a line and the start of the next.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Some framebuffers use additional padding at the end of a line, so this</span>
-    <span class="doccomment">/// value might be larger than `horizontal_resolution`. It is</span>
-    <span class="doccomment">/// therefore recommended to use this field for calculating the start address of a line.</span>
-    <span class="kw">pub</span> <span class="ident">stride</span>: <span class="ident">usize</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; DebugRendy&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="doccomment">/// Create a new debug renderer with the default foreground color set to white and
+    /// background color set to black.
+    </span><span class="kw">pub fn </span>new(buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;this </span><span class="kw-2">mut </span>[u32], info: RendyInfo, cmdline: <span class="kw-2">&amp;</span>CommandLine) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>width = info.horizontal_resolution;
+        <span class="kw">let </span>height = info.vertical_resolution;
 
-    <span class="kw">pub</span> <span class="ident">red_mask_shift</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">red_mask_size</span>: <span class="ident">u8</span>,
+        <span class="kw">let </span>offset_x = DEFAULT_MARGIN + ((width - DEFAULT_MARGIN * <span class="number">2</span>) % FONT_WIDTH) / <span class="number">2</span>;
+        <span class="kw">let </span>offset_y = DEFAULT_MARGIN + ((height - DEFAULT_MARGIN * <span class="number">2</span>) % FONT_HEIGHT) / <span class="number">2</span>;
 
-    <span class="kw">pub</span> <span class="ident">green_mask_shift</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">green_mask_size</span>: <span class="ident">u8</span>,
+        <span class="kw">let </span>cols = (width - DEFAULT_MARGIN * <span class="number">2</span>) / FONT_WIDTH;
+        <span class="kw">let </span>rows = (height - DEFAULT_MARGIN * <span class="number">2</span>) / FONT_HEIGHT;
 
-    <span class="kw">pub</span> <span class="ident">blue_mask_shift</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">blue_mask_size</span>: <span class="ident">u8</span>,
-}
+        <span class="kw">let </span>grid_size = rows * cols * core::mem::size_of::&lt;Character&gt;();
+        <span class="kw">let </span>grid = mem::alloc_boxed_buffer::&lt;Character&gt;(grid_size);
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">packed</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BmpHeader</span> {
-    <span class="ident">bf_signature</span>: [<span class="ident">u8</span>; <span class="number">2</span>],
-    <span class="ident">bf_size</span>: <span class="ident">u32</span>,
-    <span class="ident">reserved</span>: <span class="ident">u32</span>,
-    <span class="ident">bf_offset</span>: <span class="ident">u32</span>,
+        <span class="kw">let </span>queue_size = rows * cols * core::mem::size_of::&lt;QueueCharacter&gt;();
+        <span class="kw">let </span>queue = mem::alloc_boxed_buffer::&lt;QueueCharacter&gt;(queue_size);
 
-    <span class="ident">bi_size</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_width</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_height</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_planes</span>: <span class="ident">u16</span>,
-    <span class="ident">bi_bpp</span>: <span class="ident">u16</span>,
-    <span class="ident">bi_compression</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_image_size</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_xcount</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_ycount</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_clr_used</span>: <span class="ident">u32</span>,
-    <span class="ident">bi_clr_important</span>: <span class="ident">u32</span>,
-    <span class="ident">red_mask</span>: <span class="ident">u32</span>,
-    <span class="ident">green_mask</span>: <span class="ident">u32</span>,
-    <span class="ident">blue_mask</span>: <span class="ident">u32</span>,
-}
+        <span class="kw">let </span>map_size = rows * cols * core::mem::size_of::&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">*const </span>QueueCharacter&gt;&gt;();
+        <span class="kw">let </span>map = mem::alloc_boxed_buffer::&lt;<span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>QueueCharacter&gt;&gt;(map_size);
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Image</span> {
-    <span class="ident">image</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>,
+        <span class="kw">let </span>bg_canvas_size = width * height * core::mem::size_of::&lt;u32&gt;();
+        <span class="kw">let </span>bg_canvas = mem::alloc_boxed_buffer::&lt;u32&gt;(bg_canvas_size);
 
-    <span class="ident">img_width</span>: <span class="ident">usize</span>,
-    <span class="ident">img_height</span>: <span class="ident">usize</span>,
-    <span class="ident">bpp</span>: <span class="ident">usize</span>,
-    <span class="ident">pitch</span>: <span class="ident">usize</span>,
-}
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self </span>{
+            buffer,
+            info,
 
-<span class="kw">fn</span> <span class="ident">parse_bmp_image</span>(<span class="ident">data</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">Image</span> {
-    <span class="kw">let</span> <span class="ident">header</span>: <span class="kw-2">&amp;</span><span class="ident">BmpHeader</span> <span class="op">=</span>
-        <span class="kw">unsafe</span> { <span class="ident">core::mem::transmute</span>(<span class="ident">data</span> <span class="kw">as</span> <span class="kw-2">*const</span> [<span class="ident">u8</span>] <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">BmpHeader</span>) };
+            x_pos: <span class="number">0</span>,
+            y_pos: <span class="number">0</span>,
 
-    <span class="comment">// Check if the BMP image has the correct signature (ie. &quot;BM&quot;).</span>
-    <span class="macro">assert!</span>(<span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">bf_signature</span> <span class="op">==</span> <span class="string">b&quot;BM&quot;</span>);
+            old_x_pos: <span class="number">0</span>,
+            old_y_pos: <span class="number">0</span>,
 
-    <span class="comment">// We do not support BPP lower then 8.</span>
-    <span class="macro">assert!</span>(<span class="ident">header</span>.<span class="ident">bi_bpp</span> <span class="op">%</span> <span class="number">8</span> <span class="op">==</span> <span class="number">0</span>);
+            rows,
+            cols,
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">image</span> <span class="op">=</span> <span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">header</span>.<span class="ident">bf_size</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="kw">let</span> <span class="ident">bytes</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">len</span>();
+            theme_background: cmdline.theme_background,
+            color: ColorCode::new(DEFAULT_TEXT_FOREGROUND, DEFAULT_TEXT_BACKGROUND),
 
-    (<span class="kw-2">&amp;mut</span> <span class="ident">image</span>[..<span class="ident">bytes</span> <span class="op">-</span> <span class="ident">header</span>.<span class="ident">bf_offset</span> <span class="kw">as</span> <span class="ident">usize</span>])
-        .<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>[<span class="ident">header</span>.<span class="ident">bf_offset</span> <span class="kw">as</span> <span class="ident">usize</span>..<span class="ident">header</span>.<span class="ident">bf_size</span> <span class="kw">as</span> <span class="ident">usize</span>]);
+            queue,
+            grid,
+            map,
+            bg_canvas,
 
-    <span class="ident">Image</span> {
-        <span class="ident">image</span>,
+            queue_cursor: <span class="number">0</span>,
 
-        <span class="ident">img_width</span>: <span class="ident">header</span>.<span class="ident">bi_width</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">img_height</span>: <span class="ident">header</span>.<span class="ident">bi_height</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">bpp</span>: <span class="ident">header</span>.<span class="ident">bi_bpp</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">pitch</span>: <span class="ident">align_up</span>((<span class="ident">header</span>.<span class="ident">bi_width</span> <span class="op">*</span> <span class="ident">header</span>.<span class="ident">bi_bpp</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="kw">as</span> <span class="ident">u64</span>, <span class="number">32</span>) <span class="kw">as</span> <span class="ident">usize</span> <span class="op">/</span> <span class="number">8</span>,
-    }
-}
+            offset_x,
+            offset_y,
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DebugRendy</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The raw framebuffer pointer queried from the BIOS or UEFI firmware represented</span>
-    <span class="doccomment">/// as a [u8] slice.</span>
-    <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;this</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>],
-    <span class="ident">info</span>: <span class="ident">RendyInfo</span>,
-
-    <span class="ident">x_pos</span>: <span class="ident">usize</span>,
-    <span class="ident">y_pos</span>: <span class="ident">usize</span>,
-
-    <span class="ident">old_x_pos</span>: <span class="ident">usize</span>,
-    <span class="ident">old_y_pos</span>: <span class="ident">usize</span>,
-
-    <span class="ident">rows</span>: <span class="ident">usize</span>,
-    <span class="ident">cols</span>: <span class="ident">usize</span>,
-
-    <span class="ident">color</span>: <span class="ident">ColorCode</span>,
-    <span class="ident">theme_background</span>: <span class="ident">u32</span>,
-
-    <span class="ident">queue</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">QueueCharacter</span>]<span class="op">&gt;</span>,
-    <span class="ident">grid</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">Character</span>]<span class="op">&gt;</span>,
-    <span class="ident">map</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*mut</span> <span class="ident">QueueCharacter</span><span class="op">&gt;</span>]<span class="op">&gt;</span>,
-    <span class="ident">bg_canvas</span>: <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u32</span>]<span class="op">&gt;</span>,
-
-    <span class="ident">queue_cursor</span>: <span class="ident">usize</span>,
-
-    <span class="ident">offset_x</span>: <span class="ident">usize</span>,
-    <span class="ident">offset_y</span>: <span class="ident">usize</span>,
-
-    <span class="ident">cursor_visibility</span>: <span class="ident">bool</span>,
-    <span class="ident">auto_flush</span>: <span class="ident">bool</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">DebugRendy</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Create a new debug renderer with the default foreground color set to white and</span>
-    <span class="doccomment">/// background color set to black.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;this</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>], <span class="ident">info</span>: <span class="ident">RendyInfo</span>, <span class="ident">cmdline</span>: <span class="kw-2">&amp;</span><span class="ident">CommandLine</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">horizontal_resolution</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="ident">info</span>.<span class="ident">vertical_resolution</span>;
-
-        <span class="kw">let</span> <span class="ident">offset_x</span> <span class="op">=</span> <span class="ident">DEFAULT_MARGIN</span> <span class="op">+</span> ((<span class="ident">width</span> <span class="op">-</span> <span class="ident">DEFAULT_MARGIN</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">%</span> <span class="ident">FONT_WIDTH</span>) <span class="op">/</span> <span class="number">2</span>;
-        <span class="kw">let</span> <span class="ident">offset_y</span> <span class="op">=</span> <span class="ident">DEFAULT_MARGIN</span> <span class="op">+</span> ((<span class="ident">height</span> <span class="op">-</span> <span class="ident">DEFAULT_MARGIN</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">%</span> <span class="ident">FONT_HEIGHT</span>) <span class="op">/</span> <span class="number">2</span>;
-
-        <span class="kw">let</span> <span class="ident">cols</span> <span class="op">=</span> (<span class="ident">width</span> <span class="op">-</span> <span class="ident">DEFAULT_MARGIN</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">/</span> <span class="ident">FONT_WIDTH</span>;
-        <span class="kw">let</span> <span class="ident">rows</span> <span class="op">=</span> (<span class="ident">height</span> <span class="op">-</span> <span class="ident">DEFAULT_MARGIN</span> <span class="op">*</span> <span class="number">2</span>) <span class="op">/</span> <span class="ident">FONT_HEIGHT</span>;
-
-        <span class="kw">let</span> <span class="ident">grid_size</span> <span class="op">=</span> <span class="ident">rows</span> <span class="op">*</span> <span class="ident">cols</span> <span class="op">*</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">Character</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">grid</span> <span class="op">=</span> <span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">Character</span><span class="op">&gt;</span>(<span class="ident">grid_size</span>);
-
-        <span class="kw">let</span> <span class="ident">queue_size</span> <span class="op">=</span> <span class="ident">rows</span> <span class="op">*</span> <span class="ident">cols</span> <span class="op">*</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">QueueCharacter</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">QueueCharacter</span><span class="op">&gt;</span>(<span class="ident">queue_size</span>);
-
-        <span class="kw">let</span> <span class="ident">map_size</span> <span class="op">=</span> <span class="ident">rows</span> <span class="op">*</span> <span class="ident">cols</span> <span class="op">*</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*const</span> <span class="ident">QueueCharacter</span><span class="op">&gt;</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">map</span> <span class="op">=</span> <span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">*mut</span> <span class="ident">QueueCharacter</span><span class="op">&gt;</span><span class="op">&gt;</span>(<span class="ident">map_size</span>);
-
-        <span class="kw">let</span> <span class="ident">bg_canvas_size</span> <span class="op">=</span> <span class="ident">width</span> <span class="op">*</span> <span class="ident">height</span> <span class="op">*</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>();
-        <span class="kw">let</span> <span class="ident">bg_canvas</span> <span class="op">=</span> <span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>(<span class="ident">bg_canvas_size</span>);
-
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">buffer</span>,
-            <span class="ident">info</span>,
-
-            <span class="ident">x_pos</span>: <span class="number">0</span>,
-            <span class="ident">y_pos</span>: <span class="number">0</span>,
-
-            <span class="ident">old_x_pos</span>: <span class="number">0</span>,
-            <span class="ident">old_y_pos</span>: <span class="number">0</span>,
-
-            <span class="ident">rows</span>,
-            <span class="ident">cols</span>,
-
-            <span class="ident">theme_background</span>: <span class="ident">cmdline</span>.<span class="ident">theme_background</span>,
-            <span class="ident">color</span>: <span class="ident">ColorCode::new</span>(<span class="ident">DEFAULT_TEXT_FOREGROUND</span>, <span class="ident">DEFAULT_TEXT_BACKGROUND</span>),
-
-            <span class="ident">queue</span>,
-            <span class="ident">grid</span>,
-            <span class="ident">map</span>,
-            <span class="ident">bg_canvas</span>,
-
-            <span class="ident">queue_cursor</span>: <span class="number">0</span>,
-
-            <span class="ident">offset_x</span>,
-            <span class="ident">offset_y</span>,
-
-            <span class="ident">cursor_visibility</span>: <span class="bool-val">true</span>,
-            <span class="ident">auto_flush</span>: <span class="bool-val">true</span>,
+            cursor_visibility: <span class="bool-val">true</span>,
+            auto_flush: <span class="bool-val">true</span>,
         };
 
-        <span class="kw">let</span> <span class="ident">image</span> <span class="op">=</span> <span class="ident">cmdline</span>.<span class="ident">term_background</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">a</span><span class="op">|</span> <span class="ident">parse_bmp_image</span>(<span class="ident">a</span>));
+        <span class="kw">let </span>image = cmdline.term_background.map(|a| parse_bmp_image(a));
 
-        <span class="ident">this</span>.<span class="ident">generate_canvas</span>(<span class="ident">image</span>);
-        <span class="ident">this</span>.<span class="ident">clear</span>(<span class="bool-val">true</span>);
-        <span class="ident">this</span>.<span class="ident">double_buffer_flush</span>();
+        this.generate_canvas(image);
+        this.clear(<span class="bool-val">true</span>);
+        this.double_buffer_flush();
 
-        <span class="ident">this</span>
+        this
     }
 
-    <span class="kw">fn</span> <span class="ident">genloop</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">image</span>: <span class="kw-2">&amp;</span><span class="ident">Image</span>,
-        <span class="ident">xstart</span>: <span class="ident">usize</span>,
-        <span class="ident">xend</span>: <span class="ident">usize</span>,
-        <span class="ident">ystart</span>: <span class="ident">usize</span>,
-        <span class="ident">yend</span>: <span class="ident">usize</span>,
-        <span class="ident">blender</span>: <span class="ident">F</span>,
-    ) <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="ident">Fn</span>(<span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">u32</span>) -&gt; <span class="ident">usize</span>,
+    <span class="kw">fn </span>genloop&lt;F&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        image: <span class="kw-2">&amp;</span>Image,
+        xstart: usize,
+        xend: usize,
+        ystart: usize,
+        yend: usize,
+        blender: F,
+    ) <span class="kw">where
+        </span>F: Fn(usize, usize, u32) -&gt; usize,
     {
-        <span class="kw">let</span> <span class="ident">img_width</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">img_width</span>;
-        <span class="kw">let</span> <span class="ident">img_height</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">img_height</span>;
-        <span class="kw">let</span> <span class="ident">img_pitch</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">pitch</span>;
+        <span class="kw">let </span>img_width = image.img_width;
+        <span class="kw">let </span>img_height = image.img_height;
+        <span class="kw">let </span>img_pitch = image.pitch;
 
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">horizontal_resolution</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">vertical_resolution</span>;
-        <span class="kw">let</span> <span class="ident">col_size</span> <span class="op">=</span> <span class="ident">image</span>.<span class="ident">bpp</span> <span class="op">/</span> <span class="number">8</span>;
+        <span class="kw">let </span>width = <span class="self">self</span>.info.horizontal_resolution;
+        <span class="kw">let </span>height = <span class="self">self</span>.info.vertical_resolution;
+        <span class="kw">let </span>col_size = image.bpp / <span class="number">8</span>;
 
-        <span class="comment">// Tiled Image:</span>
-        <span class="comment">// for y in ystart..yend {</span>
-        <span class="comment">//     let image_y = y % img_height;</span>
-        <span class="comment">//     let mut image_x = xstart % img_width;</span>
-        <span class="comment">//     let off = img_pitch * (img_height - 1 - image_y);</span>
-        <span class="comment">//     let fb_off = self.info.stride / 4 * y;</span>
+        <span class="comment">// Tiled Image:
+        // for y in ystart..yend {
+        //     let image_y = y % img_height;
+        //     let mut image_x = xstart % img_width;
+        //     let off = img_pitch * (img_height - 1 - image_y);
+        //     let fb_off = self.info.stride / 4 * y;
 
-        <span class="comment">//     for x in xstart..xend {</span>
-        <span class="comment">//         let img_pixel =</span>
-        <span class="comment">//             unsafe { (image.image.as_ptr()).add(image_x * colsize + off) as *const u32 };</span>
+        //     for x in xstart..xend {
+        //         let img_pixel =
+        //             unsafe { (image.image.as_ptr()).add(image_x * colsize + off) as *const u32 };
 
-        <span class="comment">//         let i = blender(x, y, unsafe { *img_pixel });</span>
+        //         let i = blender(x, y, unsafe { *img_pixel });
 
-        <span class="comment">//         unsafe {</span>
-        <span class="comment">//             *self.buffer.as_mut_ptr().add(fb_off + x) = i as u32;</span>
-        <span class="comment">//         }</span>
+        //         unsafe {
+        //             *self.buffer.as_mut_ptr().add(fb_off + x) = i as u32;
+        //         }
 
-        <span class="comment">//         if image_x == img_width {</span>
-        <span class="comment">//             image_x = 0;</span>
-        <span class="comment">//         }</span>
+        //         if image_x == img_width {
+        //             image_x = 0;
+        //         }
 
-        <span class="comment">//         image_x += 1;</span>
-        <span class="comment">//     }</span>
-        <span class="comment">// }</span>
+        //         image_x += 1;
+        //     }
+        // }
 
-        <span class="comment">// Stretched Image:</span>
-        <span class="comment">//</span>
-        <span class="comment">// So you can set x = xstart * ratio, and increment by ratio at each iteration.</span>
-        <span class="kw">let</span> <span class="ident">int_to_fixedp6</span> <span class="op">=</span> <span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="op">*</span> <span class="number">64</span>;
-        <span class="kw">let</span> <span class="ident">fixedp6_to_int</span> <span class="op">=</span> <span class="op">|</span><span class="ident">v</span><span class="op">|</span> <span class="ident">v</span> <span class="op">/</span> <span class="number">64</span>;
+        // Stretched Image:
+        //
+        // So you can set x = xstart * ratio, and increment by ratio at each iteration.
+        </span><span class="kw">let </span>int_to_fixedp6 = |v| v * <span class="number">64</span>;
+        <span class="kw">let </span>fixedp6_to_int = |v| v / <span class="number">64</span>;
 
-        <span class="kw">for</span> <span class="ident">y</span> <span class="kw">in</span> <span class="ident">ystart</span>..<span class="ident">yend</span> {
-            <span class="kw">let</span> <span class="ident">img_y</span> <span class="op">=</span> (<span class="ident">y</span> <span class="op">*</span> <span class="ident">img_height</span>) <span class="op">/</span> <span class="ident">height</span>; <span class="comment">// Calculate Y with full precision :)</span>
-            <span class="kw">let</span> <span class="ident">off</span> <span class="op">=</span> <span class="ident">img_pitch</span> <span class="op">*</span> (<span class="ident">img_height</span> <span class="op">-</span> <span class="number">1</span> <span class="op">-</span> <span class="ident">img_y</span>);
+        <span class="kw">for </span>y <span class="kw">in </span>ystart..yend {
+            <span class="kw">let </span>img_y = (y * img_height) / height; <span class="comment">// Calculate Y with full precision :)
+            </span><span class="kw">let </span>off = img_pitch * (img_height - <span class="number">1 </span>- img_y);
 
-            <span class="kw">let</span> <span class="ident">fb_off</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">stride</span> <span class="op">/</span> <span class="number">4</span> <span class="op">*</span> <span class="ident">y</span>;
-            <span class="kw">let</span> <span class="ident">canvas_off</span> <span class="op">=</span> <span class="ident">width</span> <span class="op">*</span> <span class="ident">y</span>;
+            <span class="kw">let </span>fb_off = <span class="self">self</span>.info.stride / <span class="number">4 </span>* y;
+            <span class="kw">let </span>canvas_off = width * y;
 
-            <span class="kw">let</span> <span class="ident">ratio</span> <span class="op">=</span> <span class="ident">int_to_fixedp6</span>(<span class="ident">img_width</span>) <span class="op">/</span> <span class="ident">width</span>;
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">img_x</span> <span class="op">=</span> <span class="ident">ratio</span> <span class="op">*</span> <span class="ident">xstart</span>;
+            <span class="kw">let </span>ratio = int_to_fixedp6(img_width) / width;
+            <span class="kw">let </span><span class="kw-2">mut </span>img_x = ratio * xstart;
 
-            <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="ident">xstart</span>..<span class="ident">xend</span> {
-                <span class="kw">let</span> <span class="ident">img_pixel</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                    (<span class="ident">image</span>.<span class="ident">image</span>.<span class="ident">as_ptr</span>()).<span class="ident">add</span>(<span class="ident">fixedp6_to_int</span>(<span class="ident">img_x</span>) <span class="op">*</span> <span class="ident">col_size</span> <span class="op">+</span> <span class="ident">off</span>) <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u32</span>
+            <span class="kw">for </span>x <span class="kw">in </span>xstart..xend {
+                <span class="kw">let </span>img_pixel = <span class="kw">unsafe </span>{
+                    (image.image.as_ptr()).add(fixedp6_to_int(img_x) * col_size + off) <span class="kw">as </span><span class="kw-2">*const </span>u32
                 };
 
-                <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="ident">blender</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">img_pixel</span> });
+                <span class="kw">let </span>i = blender(x, y, <span class="kw">unsafe </span>{ <span class="kw-2">*</span>img_pixel });
 
-                <span class="kw">unsafe</span> {
-                    <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">add</span>(<span class="ident">fb_off</span> <span class="op">+</span> <span class="ident">x</span>) <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>;
-                    <span class="self">self</span>.<span class="ident">bg_canvas</span>[<span class="ident">canvas_off</span> <span class="op">+</span> <span class="ident">x</span>] <span class="op">=</span> <span class="ident">i</span> <span class="kw">as</span> <span class="ident">u32</span>;
+                <span class="kw">unsafe </span>{
+                    <span class="kw-2">*</span><span class="self">self</span>.buffer.as_mut_ptr().add(fb_off + x) = i <span class="kw">as </span>u32;
+                    <span class="self">self</span>.bg_canvas[canvas_off + x] = i <span class="kw">as </span>u32;
                 }
 
-                <span class="ident">img_x</span> <span class="op">+</span><span class="op">=</span> <span class="ident">ratio</span>;
+                img_x += ratio;
             }
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_framebuffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u32</span>] {
-        <span class="self">self</span>.<span class="ident">buffer</span>
+    <span class="kw">pub fn </span>get_framebuffer&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u32] {
+        <span class="self">self</span>.buffer
     }
 
-    <span class="kw">fn</span> <span class="ident">loop_external</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">image</span>: <span class="kw-2">&amp;</span><span class="ident">Image</span>,
-        <span class="ident">xstart</span>: <span class="ident">usize</span>,
-        <span class="ident">xend</span>: <span class="ident">usize</span>,
-        <span class="ident">ystart</span>: <span class="ident">usize</span>,
-        <span class="ident">yend</span>: <span class="ident">usize</span>,
+    <span class="kw">fn </span>loop_external(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        image: <span class="kw-2">&amp;</span>Image,
+        xstart: usize,
+        xend: usize,
+        ystart: usize,
+        yend: usize,
     ) {
-        <span class="self">self</span>.<span class="ident">genloop</span>(<span class="ident">image</span>, <span class="ident">xstart</span>, <span class="ident">xend</span>, <span class="ident">ystart</span>, <span class="ident">yend</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">__</span>, <span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="kw">as</span> <span class="ident">usize</span>)
+        <span class="self">self</span>.genloop(image, xstart, xend, ystart, yend, |<span class="kw">_</span>, __, c| c <span class="kw">as </span>usize)
     }
 
-    <span class="kw">fn</span> <span class="ident">loop_internal</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">image</span>: <span class="kw-2">&amp;</span><span class="ident">Image</span>,
-        <span class="ident">xstart</span>: <span class="ident">usize</span>,
-        <span class="ident">xend</span>: <span class="ident">usize</span>,
-        <span class="ident">ystart</span>: <span class="ident">usize</span>,
-        <span class="ident">yend</span>: <span class="ident">usize</span>,
+    <span class="kw">fn </span>loop_internal(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        image: <span class="kw-2">&amp;</span>Image,
+        xstart: usize,
+        xend: usize,
+        ystart: usize,
+        yend: usize,
     ) {
-        <span class="kw">let</span> <span class="ident">color_blend</span> <span class="op">=</span> <span class="op">|</span><span class="ident">fg</span>: <span class="ident">u32</span>, <span class="ident">bg</span>: <span class="ident">u32</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">alpha</span> <span class="op">=</span> <span class="number">255</span> <span class="op">-</span> (<span class="ident">fg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">24</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span>;
-            <span class="kw">let</span> <span class="ident">inv_alpha</span> <span class="op">=</span> (<span class="ident">fg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">24</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="number">1</span>;
+        <span class="kw">let </span>color_blend = |fg: u32, bg: u32| {
+            <span class="kw">let </span>alpha = <span class="number">255 </span>- (fg &gt;&gt; <span class="number">24</span>) <span class="kw">as </span>u8 <span class="kw">as </span>u32;
+            <span class="kw">let </span>inv_alpha = (fg &gt;&gt; <span class="number">24</span>) <span class="kw">as </span>u8 <span class="kw">as </span>u32 + <span class="number">1</span>;
 
-            <span class="kw">let</span> <span class="ident">r</span> <span class="op">=</span> (<span class="ident">alpha</span> <span class="op">*</span> (<span class="ident">fg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">16</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="ident">inv_alpha</span> <span class="op">*</span> (<span class="ident">bg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">16</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">/</span> <span class="number">256</span>;
-            <span class="kw">let</span> <span class="ident">g</span> <span class="op">=</span> (<span class="ident">alpha</span> <span class="op">*</span> (<span class="ident">fg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="ident">inv_alpha</span> <span class="op">*</span> (<span class="ident">bg</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">/</span> <span class="number">256</span>;
-            <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> (<span class="ident">alpha</span> <span class="op">*</span> <span class="ident">fg</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">+</span> <span class="ident">inv_alpha</span> <span class="op">*</span> <span class="ident">bg</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">/</span> <span class="number">256</span>;
+            <span class="kw">let </span>r = (alpha * (fg &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>u8 <span class="kw">as </span>u32 + inv_alpha * (bg &gt;&gt; <span class="number">16</span>) <span class="kw">as </span>u8 <span class="kw">as </span>u32) / <span class="number">256</span>;
+            <span class="kw">let </span>g = (alpha * (fg &gt;&gt; <span class="number">8</span>) <span class="kw">as </span>u8 <span class="kw">as </span>u32 + inv_alpha * (bg &gt;&gt; <span class="number">8</span>) <span class="kw">as </span>u8 <span class="kw">as </span>u32) / <span class="number">256</span>;
+            <span class="kw">let </span>b = (alpha * fg <span class="kw">as </span>u8 <span class="kw">as </span>u32 + inv_alpha * bg <span class="kw">as </span>u8 <span class="kw">as </span>u32) / <span class="number">256</span>;
 
-            (<span class="number">0</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">24</span>) <span class="op">|</span> ((<span class="ident">r</span> <span class="op">&amp;</span> <span class="number">0xFF</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>) <span class="op">|</span> ((<span class="ident">g</span> <span class="op">&amp;</span> <span class="number">0xFF</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>) <span class="op">|</span> (<span class="ident">b</span> <span class="op">&amp;</span> <span class="number">0xFF</span>)
+            (<span class="number">0 </span>&lt;&lt; <span class="number">24</span>) | ((r &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">16</span>) | ((g &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">8</span>) | (b &amp; <span class="number">0xFF</span>)
         };
 
-        <span class="kw">let</span> <span class="ident">theme_background</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">theme_background</span>;
+        <span class="kw">let </span>theme_background = <span class="self">self</span>.theme_background;
 
-        <span class="self">self</span>.<span class="ident">genloop</span>(<span class="ident">image</span>, <span class="ident">xstart</span>, <span class="ident">xend</span>, <span class="ident">ystart</span>, <span class="ident">yend</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">__</span>, <span class="ident">c</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">blend</span> <span class="op">=</span> <span class="ident">color_blend</span>(<span class="ident">theme_background</span>, <span class="ident">c</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-            <span class="ident">blend</span>
+        <span class="self">self</span>.genloop(image, xstart, xend, ystart, yend, |<span class="kw">_</span>, __, c| {
+            <span class="kw">let </span>blend = color_blend(theme_background, c) <span class="kw">as </span>usize;
+            blend
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">generate_canvas</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">image</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Image</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">width</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">horizontal_resolution</span>;
-        <span class="kw">let</span> <span class="ident">height</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">vertical_resolution</span>;
+    <span class="kw">fn </span>generate_canvas(<span class="kw-2">&amp;mut </span><span class="self">self</span>, image: <span class="prelude-ty">Option</span>&lt;Image&gt;) {
+        <span class="kw">let </span>width = <span class="self">self</span>.info.horizontal_resolution;
+        <span class="kw">let </span>height = <span class="self">self</span>.info.vertical_resolution;
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">image</span>) <span class="op">=</span> <span class="ident">image</span> {
-            <span class="kw">let</span> <span class="ident">frame_width</span> <span class="op">=</span> <span class="ident">width</span> <span class="op">/</span> <span class="number">2</span> <span class="op">-</span> (<span class="ident">FONT_WIDTH</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span>) <span class="op">/</span> <span class="number">2</span>;
-            <span class="kw">let</span> <span class="ident">frame_height</span> <span class="op">=</span> <span class="ident">height</span> <span class="op">/</span> <span class="number">2</span> <span class="op">-</span> (<span class="ident">FONT_HEIGHT</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">rows</span>) <span class="op">/</span> <span class="number">2</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(image) = image {
+            <span class="kw">let </span>frame_width = width / <span class="number">2 </span>- (FONT_WIDTH * <span class="self">self</span>.cols) / <span class="number">2</span>;
+            <span class="kw">let </span>frame_height = height / <span class="number">2 </span>- (FONT_HEIGHT * <span class="self">self</span>.rows) / <span class="number">2</span>;
 
-            <span class="kw">let</span> <span class="ident">frame_width_end</span> <span class="op">=</span> <span class="ident">frame_width</span> <span class="op">+</span> <span class="ident">FONT_WIDTH</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span>;
-            <span class="kw">let</span> <span class="ident">frame_height_end</span> <span class="op">=</span> <span class="ident">frame_height</span> <span class="op">+</span> <span class="ident">FONT_HEIGHT</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">rows</span>;
+            <span class="kw">let </span>frame_width_end = frame_width + FONT_WIDTH * <span class="self">self</span>.cols;
+            <span class="kw">let </span>frame_height_end = frame_height + FONT_HEIGHT * <span class="self">self</span>.rows;
 
-            <span class="kw">let</span> <span class="ident">fheight</span> <span class="op">=</span> <span class="ident">frame_height</span> <span class="op">-</span> <span class="ident">MARGIN_GRADIENT</span>;
-            <span class="kw">let</span> <span class="ident">fheight_end</span> <span class="op">=</span> <span class="ident">frame_height_end</span> <span class="op">+</span> <span class="ident">MARGIN_GRADIENT</span>;
+            <span class="kw">let </span>fheight = frame_height - MARGIN_GRADIENT;
+            <span class="kw">let </span>fheight_end = frame_height_end + MARGIN_GRADIENT;
 
-            <span class="kw">let</span> <span class="ident">fwidth</span> <span class="op">=</span> <span class="ident">frame_width</span> <span class="op">-</span> <span class="ident">MARGIN_GRADIENT</span>;
-            <span class="kw">let</span> <span class="ident">fwidth_end</span> <span class="op">=</span> <span class="ident">frame_width_end</span> <span class="op">+</span> <span class="ident">MARGIN_GRADIENT</span>;
+            <span class="kw">let </span>fwidth = frame_width - MARGIN_GRADIENT;
+            <span class="kw">let </span>fwidth_end = frame_width_end + MARGIN_GRADIENT;
 
-            <span class="self">self</span>.<span class="ident">loop_external</span>(<span class="kw-2">&amp;</span><span class="ident">image</span>, <span class="number">0</span>, <span class="ident">width</span>, <span class="number">0</span>, <span class="ident">fheight</span>);
-            <span class="self">self</span>.<span class="ident">loop_external</span>(<span class="kw-2">&amp;</span><span class="ident">image</span>, <span class="number">0</span>, <span class="ident">width</span>, <span class="ident">fheight_end</span>, <span class="ident">height</span>);
-            <span class="self">self</span>.<span class="ident">loop_external</span>(<span class="kw-2">&amp;</span><span class="ident">image</span>, <span class="number">0</span>, <span class="ident">fwidth</span>, <span class="ident">fheight</span>, <span class="ident">fheight_end</span>);
-            <span class="self">self</span>.<span class="ident">loop_external</span>(<span class="kw-2">&amp;</span><span class="ident">image</span>, <span class="ident">fwidth_end</span>, <span class="ident">width</span>, <span class="ident">fheight</span>, <span class="ident">fheight_end</span>);
-            <span class="self">self</span>.<span class="ident">loop_internal</span>(
-                <span class="kw-2">&amp;</span><span class="ident">image</span>,
-                <span class="ident">frame_width</span>,
-                <span class="ident">frame_width_end</span>,
-                <span class="ident">frame_height</span>,
-                <span class="ident">frame_height_end</span>,
+            <span class="self">self</span>.loop_external(<span class="kw-2">&amp;</span>image, <span class="number">0</span>, width, <span class="number">0</span>, fheight);
+            <span class="self">self</span>.loop_external(<span class="kw-2">&amp;</span>image, <span class="number">0</span>, width, fheight_end, height);
+            <span class="self">self</span>.loop_external(<span class="kw-2">&amp;</span>image, <span class="number">0</span>, fwidth, fheight, fheight_end);
+            <span class="self">self</span>.loop_external(<span class="kw-2">&amp;</span>image, fwidth_end, width, fheight, fheight_end);
+            <span class="self">self</span>.loop_internal(
+                <span class="kw-2">&amp;</span>image,
+                frame_width,
+                frame_width_end,
+                frame_height,
+                frame_height_end,
             );
-        } <span class="kw">else</span> {
-            <span class="kw">for</span> <span class="ident">y</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">height</span> {
-                <span class="kw">for</span> <span class="ident">x</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">width</span> {
-                    <span class="self">self</span>.<span class="ident">bg_canvas</span>[<span class="ident">y</span> <span class="op">*</span> <span class="ident">width</span> <span class="op">+</span> <span class="ident">x</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">theme_background</span>;
-                    <span class="self">self</span>.<span class="ident">plot_pixel</span>(<span class="ident">x</span>, <span class="ident">y</span>, <span class="self">self</span>.<span class="ident">theme_background</span>);
+        } <span class="kw">else </span>{
+            <span class="kw">for </span>y <span class="kw">in </span><span class="number">0</span>..height {
+                <span class="kw">for </span>x <span class="kw">in </span><span class="number">0</span>..width {
+                    <span class="self">self</span>.bg_canvas[y * width + x] = <span class="self">self</span>.theme_background;
+                    <span class="self">self</span>.plot_pixel(x, y, <span class="self">self</span>.theme_background);
                 }
             }
         }
     }
 
-    <span class="doccomment">/// Plots a pixel at the given coordinates with the provided colour.</span>
-    <span class="kw">fn</span> <span class="ident">plot_pixel</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>, <span class="ident">colour</span>: <span class="ident">u32</span>) {
-        <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">horizontal_resolution</span> <span class="op">|</span><span class="op">|</span> <span class="ident">y</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">vertical_resolution</span> {
+    <span class="doccomment">/// Plots a pixel at the given coordinates with the provided colour.
+    </span><span class="kw">fn </span>plot_pixel(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: usize, y: usize, colour: u32) {
+        <span class="kw">if </span>x &gt;= <span class="self">self</span>.info.horizontal_resolution || y &gt;= <span class="self">self</span>.info.vertical_resolution {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">x</span> <span class="op">+</span> (<span class="self">self</span>.<span class="ident">info</span>.<span class="ident">stride</span> <span class="op">/</span> <span class="ident">DWORD_SIZE</span>) <span class="op">*</span> <span class="ident">y</span>;
-        <span class="self">self</span>.<span class="ident">buffer</span>[<span class="ident">offset</span>] <span class="op">=</span> <span class="ident">colour</span>;
+        <span class="kw">let </span>offset = x + (<span class="self">self</span>.info.stride / DWORD_SIZE) * y;
+        <span class="self">self</span>.buffer[offset] = colour;
     }
 
-    <span class="kw">fn</span> <span class="ident">push_to_queue</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">char</span>: <span class="kw-2">&amp;</span><span class="ident">Character</span>, <span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>) {
-        <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">cols</span> <span class="op">|</span><span class="op">|</span> <span class="ident">y</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rows</span> {
+    <span class="kw">fn </span>push_to_queue(<span class="kw-2">&amp;mut </span><span class="self">self</span>, char: <span class="kw-2">&amp;</span>Character, x: usize, y: usize) {
+        <span class="kw">if </span>x &gt;= <span class="self">self</span>.cols || y &gt;= <span class="self">self</span>.rows {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="ident">y</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span> <span class="op">+</span> <span class="ident">x</span>;
-        <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>];
+        <span class="kw">let </span>i = y * <span class="self">self</span>.cols + x;
+        <span class="kw">let </span>item = <span class="self">self</span>.map[i];
 
-        <span class="kw">if</span> <span class="ident">item</span>.<span class="ident">is_none</span>() {
-            <span class="kw">if</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">grid</span>[<span class="ident">i</span>] <span class="op">==</span> <span class="ident">char</span> {
+        <span class="kw">if </span>item.is_none() {
+            <span class="kw">if </span><span class="kw-2">&amp;</span><span class="self">self</span>.grid[i] == char {
                 <span class="kw">return</span>;
             }
 
-            <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">queue</span>[<span class="self">self</span>.<span class="ident">queue_cursor</span>];
-            <span class="self">self</span>.<span class="ident">queue_cursor</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            <span class="kw">let </span>queue = <span class="kw-2">&amp;mut </span><span class="self">self</span>.queue[<span class="self">self</span>.queue_cursor];
+            <span class="self">self</span>.queue_cursor += <span class="number">1</span>;
 
-            <span class="ident">queue</span>.<span class="ident">x</span> <span class="op">=</span> <span class="ident">x</span>;
-            <span class="ident">queue</span>.<span class="ident">y</span> <span class="op">=</span> <span class="ident">y</span>;
+            queue.x = x;
+            queue.y = y;
 
-            <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">queue</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span>);
+            <span class="self">self</span>.map[i] = <span class="prelude-val">Some</span>(queue <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>];
+        <span class="kw">let </span>item = <span class="self">self</span>.map[i];
 
-        <span class="kw">unsafe</span> {
-            (<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">item</span>.<span class="ident">unwrap</span>()).<span class="ident">char</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">char</span>;
+        <span class="kw">unsafe </span>{
+            (<span class="kw-2">&amp;mut *</span>item.unwrap()).char = <span class="kw-2">*</span>char;
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">mv</span>: <span class="ident">bool</span>) {
-        <span class="kw">let</span> <span class="ident">char</span> <span class="op">=</span> <span class="ident">Character</span> {
-            <span class="ident">char</span>: <span class="string">&#39; &#39;</span>,
-            <span class="ident">fg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_foreground</span>(),
-            <span class="ident">bg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_background</span>(),
+    <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>, mv: bool) {
+        <span class="kw">let </span>char = Character {
+            char: <span class="string">&#39; &#39;</span>,
+            fg: <span class="self">self</span>.color.get_foreground(),
+            bg: <span class="self">self</span>.color.get_background(),
         };
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">rows</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span> {
-            <span class="self">self</span>.<span class="ident">push_to_queue</span>(<span class="kw-2">&amp;</span><span class="ident">char</span>, <span class="ident">i</span> <span class="op">%</span> <span class="self">self</span>.<span class="ident">cols</span>, <span class="ident">i</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">cols</span>);
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.rows * <span class="self">self</span>.cols {
+            <span class="self">self</span>.push_to_queue(<span class="kw-2">&amp;</span>char, i % <span class="self">self</span>.cols, i / <span class="self">self</span>.cols);
         }
 
-        <span class="kw">if</span> <span class="ident">mv</span> {
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">=</span> <span class="number">0</span>;
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">set_auto_flush</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) {
-        <span class="self">self</span>.<span class="ident">auto_flush</span> <span class="op">=</span> <span class="ident">yes</span>;
-    }
-
-    <span class="kw">fn</span> <span class="ident">write_string</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">for</span> <span class="ident">char</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">chars</span>() {
-            <span class="self">self</span>.<span class="ident">write_character</span>(<span class="ident">char</span>)
-        }
-
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">auto_flush</span> {
-            <span class="self">self</span>.<span class="ident">double_buffer_flush</span>();
+        <span class="kw">if </span>mv {
+            <span class="self">self</span>.x_pos = <span class="number">0</span>;
+            <span class="self">self</span>.y_pos = <span class="number">0</span>;
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">draw_cursor</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">char</span>;
+    <span class="kw">fn </span>set_auto_flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) {
+        <span class="self">self</span>.auto_flush = yes;
+    }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>].<span class="ident">is_some</span>() {
-            <span class="kw">unsafe</span> {
-                <span class="ident">char</span> <span class="op">=</span> (<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>].<span class="ident">unwrap</span>()).<span class="ident">char</span>;
+    <span class="kw">fn </span>write_string(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) {
+        <span class="kw">for </span>char <span class="kw">in </span>string.chars() {
+            <span class="self">self</span>.write_character(char)
+        }
+
+        <span class="kw">if </span><span class="self">self</span>.auto_flush {
+            <span class="self">self</span>.double_buffer_flush();
+        }
+    }
+
+    <span class="kw">fn </span>draw_cursor(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>i = <span class="self">self</span>.x_pos + <span class="self">self</span>.y_pos * <span class="self">self</span>.cols;
+        <span class="kw">let </span><span class="kw-2">mut </span>char;
+
+        <span class="kw">if </span><span class="self">self</span>.map[i].is_some() {
+            <span class="kw">unsafe </span>{
+                char = (<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map[i].unwrap()).char;
             }
-        } <span class="kw">else</span> {
-            <span class="ident">char</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">grid</span>[<span class="ident">i</span>];
+        } <span class="kw">else </span>{
+            char = <span class="self">self</span>.grid[i];
         }
 
-        <span class="kw">let</span> <span class="ident">temp</span> <span class="op">=</span> <span class="ident">char</span>.<span class="ident">fg</span>;
-        <span class="ident">char</span>.<span class="ident">fg</span> <span class="op">=</span> <span class="ident">char</span>.<span class="ident">bg</span>;
-        <span class="ident">char</span>.<span class="ident">bg</span> <span class="op">=</span> <span class="ident">temp</span>;
+        <span class="kw">let </span>temp = char.fg;
+        char.fg = char.bg;
+        char.bg = temp;
 
-        <span class="self">self</span>.<span class="ident">plot_char</span>(<span class="self">self</span>.<span class="ident">x_pos</span>, <span class="self">self</span>.<span class="ident">y_pos</span>, <span class="ident">char</span>);
+        <span class="self">self</span>.plot_char(<span class="self">self</span>.x_pos, <span class="self">self</span>.y_pos, char);
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>].<span class="ident">is_some</span>() {
-            <span class="kw">unsafe</span> {
-                <span class="self">self</span>.<span class="ident">grid</span>[<span class="ident">i</span>] <span class="op">=</span> (<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>].<span class="ident">unwrap</span>()).<span class="ident">char</span>;
+        <span class="kw">if </span><span class="self">self</span>.map[i].is_some() {
+            <span class="kw">unsafe </span>{
+                <span class="self">self</span>.grid[i] = (<span class="kw-2">&amp;mut *</span><span class="self">self</span>.map[i].unwrap()).char;
             }
 
-            <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="prelude-val">None</span>;
+            <span class="self">self</span>.map[i] = <span class="prelude-val">None</span>;
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">plot_char</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>, <span class="ident">char</span>: <span class="ident">Character</span>) {
-        <span class="kw">let</span> <span class="ident">ch</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">char</span>.<span class="ident">char</span> {
-            <span class="ident">ch</span> <span class="kw">if</span> <span class="ident">ch</span>.<span class="ident">is_ascii</span>() =&gt; <span class="ident">ch</span>,
-            <span class="kw">_</span> =&gt; <span class="string">&#39;?&#39;</span> <span class="kw">as</span> <span class="ident">char</span>,
+    <span class="kw">fn </span>plot_char(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: usize, y: usize, char: Character) {
+        <span class="kw">let </span>ch = <span class="kw">match </span>char.char {
+            ch <span class="kw">if </span>ch.is_ascii() =&gt; ch,
+            <span class="kw">_ </span>=&gt; <span class="string">&#39;?&#39; </span><span class="kw">as </span>char,
         };
 
-        <span class="kw">if</span> <span class="ident">x</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">cols</span> <span class="op">|</span><span class="op">|</span> <span class="ident">y</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rows</span> {
+        <span class="kw">if </span>x &gt;= <span class="self">self</span>.cols || y &gt;= <span class="self">self</span>.rows {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">x</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">offset_x</span> <span class="op">+</span> <span class="ident">x</span> <span class="op">*</span> <span class="ident">FONT_WIDTH</span>;
-        <span class="kw">let</span> <span class="ident">y</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">offset_y</span> <span class="op">+</span> <span class="ident">y</span> <span class="op">*</span> <span class="ident">FONT_HEIGHT</span>;
-        <span class="kw">let</span> <span class="ident">glyph</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">FONT</span>[<span class="ident">ch</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="kw">let </span>x = <span class="self">self</span>.offset_x + x * FONT_WIDTH;
+        <span class="kw">let </span>y = <span class="self">self</span>.offset_y + y * FONT_HEIGHT;
+        <span class="kw">let </span>glyph = <span class="kw-2">&amp;</span>FONT[ch <span class="kw">as </span>usize];
 
-        <span class="comment">// naming: fx, fy for font coordinates and gx, gy for glyph coordinates</span>
-        <span class="kw">for</span> <span class="ident">gy</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">FONT_HEIGHT</span> {
-            <span class="kw">let</span> <span class="ident">fb_line</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="self">self</span>.<span class="ident">buffer</span>
-                    .<span class="ident">as_mut_ptr</span>()
-                    .<span class="ident">add</span>(<span class="ident">x</span> <span class="op">+</span> (<span class="ident">y</span> <span class="op">+</span> <span class="ident">gy</span>) <span class="op">*</span> (<span class="self">self</span>.<span class="ident">info</span>.<span class="ident">stride</span> <span class="op">/</span> <span class="number">4</span>))
+        <span class="comment">// naming: fx, fy for font coordinates and gx, gy for glyph coordinates
+        </span><span class="kw">for </span>gy <span class="kw">in </span><span class="number">0</span>..FONT_HEIGHT {
+            <span class="kw">let </span>fb_line = <span class="kw">unsafe </span>{
+                <span class="self">self</span>.buffer
+                    .as_mut_ptr()
+                    .add(x + (y + gy) * (<span class="self">self</span>.info.stride / <span class="number">4</span>))
             };
 
-            <span class="kw">let</span> <span class="ident">canvas_line</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                <span class="self">self</span>.<span class="ident">bg_canvas</span>
-                    .<span class="ident">as_mut_ptr</span>()
-                    .<span class="ident">add</span>(<span class="ident">x</span> <span class="op">+</span> (<span class="ident">y</span> <span class="op">+</span> <span class="ident">gy</span>) <span class="op">*</span> <span class="self">self</span>.<span class="ident">info</span>.<span class="ident">horizontal_resolution</span>)
+            <span class="kw">let </span>canvas_line = <span class="kw">unsafe </span>{
+                <span class="self">self</span>.bg_canvas
+                    .as_mut_ptr()
+                    .add(x + (y + gy) * <span class="self">self</span>.info.horizontal_resolution)
             };
 
-            <span class="kw">for</span> <span class="ident">gx</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">FONT_WIDTH</span> {
-                <span class="kw">let</span> <span class="ident">draw</span> <span class="op">=</span> <span class="ident">glyph</span>[<span class="ident">gy</span>] <span class="op">&amp;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> (<span class="ident">FONT_WIDTH</span> <span class="op">-</span> <span class="ident">gx</span> <span class="op">-</span> <span class="number">1</span>)) <span class="op">!</span><span class="op">=</span> <span class="number">0</span>;
-                <span class="kw">let</span> <span class="ident">color</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">draw</span> {
-                    <span class="ident">char</span>.<span class="ident">fg</span>
-                } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">char</span>.<span class="ident">bg</span> <span class="op">==</span> <span class="ident">u32::MAX</span> {
-                    <span class="kw">unsafe</span> { <span class="kw-2">*</span><span class="ident">canvas_line</span>.<span class="ident">add</span>(<span class="ident">gx</span>) }
-                } <span class="kw">else</span> {
-                    <span class="ident">char</span>.<span class="ident">bg</span>
+            <span class="kw">for </span>gx <span class="kw">in </span><span class="number">0</span>..FONT_WIDTH {
+                <span class="kw">let </span>draw = glyph[gy] &amp; (<span class="number">1 </span>&lt;&lt; (FONT_WIDTH - gx - <span class="number">1</span>)) != <span class="number">0</span>;
+                <span class="kw">let </span>color = <span class="kw">if </span>draw {
+                    char.fg
+                } <span class="kw">else if </span>char.bg == u32::MAX {
+                    <span class="kw">unsafe </span>{ <span class="kw-2">*</span>canvas_line.add(gx) }
+                } <span class="kw">else </span>{
+                    char.bg
                 };
 
-                <span class="kw">unsafe</span> {
-                    <span class="kw-2">*</span><span class="ident">fb_line</span>.<span class="ident">add</span>(<span class="ident">gx</span>) <span class="op">=</span> <span class="ident">color</span>;
+                <span class="kw">unsafe </span>{
+                    <span class="kw-2">*</span>fb_line.add(gx) = color;
                 }
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">double_buffer_flush</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">cursor_visibility</span> {
-            <span class="self">self</span>.<span class="ident">draw_cursor</span>();
+    <span class="kw">fn </span>double_buffer_flush(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.cursor_visibility {
+            <span class="self">self</span>.draw_cursor();
         }
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="self">self</span>.<span class="ident">queue_cursor</span> {
-            <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">queue</span>[<span class="ident">i</span>].<span class="ident">clone</span>();
-            <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">queue</span>.<span class="ident">y</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span> <span class="op">+</span> <span class="ident">queue</span>.<span class="ident">x</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="self">self</span>.queue_cursor {
+            <span class="kw">let </span>queue = <span class="self">self</span>.queue[i].clone();
+            <span class="kw">let </span>offset = queue.y * <span class="self">self</span>.cols + queue.x;
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">offset</span>].<span class="ident">is_none</span>() {
+            <span class="kw">if </span><span class="self">self</span>.map[offset].is_none() {
                 <span class="kw">continue</span>;
             }
 
-            <span class="self">self</span>.<span class="ident">plot_char</span>(<span class="ident">queue</span>.<span class="ident">x</span>, <span class="ident">queue</span>.<span class="ident">y</span>, <span class="ident">queue</span>.<span class="ident">char</span>);
+            <span class="self">self</span>.plot_char(queue.x, queue.y, queue.char);
 
-            <span class="self">self</span>.<span class="ident">grid</span>[<span class="ident">offset</span>] <span class="op">=</span> <span class="ident">queue</span>.<span class="ident">char</span>;
-            <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">offset</span>] <span class="op">=</span> <span class="prelude-val">None</span>;
+            <span class="self">self</span>.grid[offset] = queue.char;
+            <span class="self">self</span>.map[offset] = <span class="prelude-val">None</span>;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">old_x_pos</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">old_y_pos</span> <span class="op">!</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">y_pos</span> {
-            <span class="self">self</span>.<span class="ident">plot_char</span>(
-                <span class="self">self</span>.<span class="ident">old_x_pos</span>,
-                <span class="self">self</span>.<span class="ident">old_y_pos</span>,
-                <span class="self">self</span>.<span class="ident">grid</span>[<span class="self">self</span>.<span class="ident">old_x_pos</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">old_y_pos</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span>],
+        <span class="kw">if </span><span class="self">self</span>.old_x_pos != <span class="self">self</span>.x_pos || <span class="self">self</span>.old_y_pos != <span class="self">self</span>.y_pos {
+            <span class="self">self</span>.plot_char(
+                <span class="self">self</span>.old_x_pos,
+                <span class="self">self</span>.old_y_pos,
+                <span class="self">self</span>.grid[<span class="self">self</span>.old_x_pos + <span class="self">self</span>.old_y_pos * <span class="self">self</span>.cols],
             );
         }
 
-        <span class="self">self</span>.<span class="ident">old_x_pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">x_pos</span>;
-        <span class="self">self</span>.<span class="ident">old_y_pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">y_pos</span>;
+        <span class="self">self</span>.old_x_pos = <span class="self">self</span>.x_pos;
+        <span class="self">self</span>.old_y_pos = <span class="self">self</span>.y_pos;
 
-        <span class="self">self</span>.<span class="ident">queue_cursor</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="self">self</span>.queue_cursor = <span class="number">0</span>;
     }
 
-    <span class="kw">fn</span> <span class="ident">raw_put_char</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">char</span>: <span class="ident">char</span>) {
-        <span class="kw">let</span> <span class="ident">char</span> <span class="op">=</span> <span class="ident">Character</span> {
-            <span class="ident">char</span>,
-            <span class="ident">fg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_foreground</span>(),
-            <span class="ident">bg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_background</span>(),
+    <span class="kw">fn </span>raw_put_char(<span class="kw-2">&amp;mut </span><span class="self">self</span>, char: char) {
+        <span class="kw">let </span>char = Character {
+            char,
+            fg: <span class="self">self</span>.color.get_foreground(),
+            bg: <span class="self">self</span>.color.get_background(),
         };
 
-        <span class="self">self</span>.<span class="ident">push_to_queue</span>(<span class="kw-2">&amp;</span><span class="ident">char</span>, <span class="self">self</span>.<span class="ident">x_pos</span>, <span class="self">self</span>.<span class="ident">y_pos</span>);
-        <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="self">self</span>.push_to_queue(<span class="kw-2">&amp;</span>char, <span class="self">self</span>.x_pos, <span class="self">self</span>.y_pos);
+        <span class="self">self</span>.x_pos += <span class="number">1</span>;
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">cols</span> {
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span><span class="self">self</span>.x_pos == <span class="self">self</span>.cols {
+            <span class="self">self</span>.x_pos = <span class="number">0</span>;
+            <span class="self">self</span>.y_pos += <span class="number">1</span>;
         }
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">rows</span> {
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="self">self</span>.<span class="ident">scroll</span>();
-        }
-    }
-
-    <span class="kw">fn</span> <span class="ident">newline</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">rows</span> <span class="op">-</span> <span class="number">1</span> {
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="number">0</span>;
-            <span class="self">self</span>.<span class="ident">scroll</span>();
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">if </span><span class="self">self</span>.y_pos == <span class="self">self</span>.rows {
+            <span class="self">self</span>.x_pos = <span class="number">0</span>;
+            <span class="self">self</span>.y_pos -= <span class="number">1</span>;
+            <span class="self">self</span>.scroll();
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">write_character</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">char</span>: <span class="ident">char</span>) {
-        <span class="kw">match</span> <span class="ident">char</span> {
-            <span class="string">&#39;\n&#39;</span> =&gt; <span class="self">self</span>.<span class="ident">newline</span>(),
+    <span class="kw">fn </span>newline(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.y_pos == <span class="self">self</span>.rows - <span class="number">1 </span>{
+            <span class="self">self</span>.x_pos = <span class="number">0</span>;
+            <span class="self">self</span>.scroll();
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.y_pos += <span class="number">1</span>;
+            <span class="self">self</span>.x_pos = <span class="number">0</span>;
+        }
+    }
 
-            <span class="string">&#39;\t&#39;</span> =&gt; {
-                <span class="kw">if</span> (<span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">/</span> <span class="ident">TAB_SIZE</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">cols</span> {
-                    <span class="self">self</span>.<span class="ident">set_cursor_position</span>(<span class="self">self</span>.<span class="ident">cols</span> <span class="op">-</span> <span class="number">1</span>, <span class="self">self</span>.<span class="ident">y_pos</span>);
+    <span class="kw">fn </span>write_character(<span class="kw-2">&amp;mut </span><span class="self">self</span>, char: char) {
+        <span class="kw">match </span>char {
+            <span class="string">&#39;\n&#39; </span>=&gt; <span class="self">self</span>.newline(),
+
+            <span class="string">&#39;\t&#39; </span>=&gt; {
+                <span class="kw">if </span>(<span class="self">self</span>.x_pos / TAB_SIZE + <span class="number">1</span>) &gt;= <span class="self">self</span>.cols {
+                    <span class="self">self</span>.set_cursor_position(<span class="self">self</span>.cols - <span class="number">1</span>, <span class="self">self</span>.y_pos);
                     <span class="kw">return</span>;
                 }
 
-                <span class="self">self</span>.<span class="ident">set_cursor_position</span>((<span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">/</span> <span class="ident">TAB_SIZE</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">TAB_SIZE</span>, <span class="self">self</span>.<span class="ident">y_pos</span>);
+                <span class="self">self</span>.set_cursor_position((<span class="self">self</span>.x_pos / TAB_SIZE + <span class="number">1</span>) * TAB_SIZE, <span class="self">self</span>.y_pos);
             }
 
-            <span class="string">&#39;\r&#39;</span> =&gt; {}
+            <span class="string">&#39;\r&#39; </span>=&gt; {}
 
-            <span class="kw">_</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">raw_put_char</span>(<span class="ident">char</span>);
+            <span class="kw">_ </span>=&gt; {
+                <span class="self">self</span>.raw_put_char(char);
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">scroll</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">cols</span>..<span class="self">self</span>.<span class="ident">rows</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span> {
-            <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">map</span>[<span class="ident">i</span>];
-            <span class="kw">let</span> <span class="ident">res</span>;
+    <span class="kw">fn </span>scroll(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>i <span class="kw">in </span><span class="self">self</span>.cols..<span class="self">self</span>.rows * <span class="self">self</span>.cols {
+            <span class="kw">let </span>queue = <span class="self">self</span>.map[i];
+            <span class="kw">let </span>res;
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">char</span>) <span class="op">=</span> <span class="ident">queue</span> {
-                <span class="kw">unsafe</span> {
-                    <span class="ident">res</span> <span class="op">=</span> (<span class="kw-2">*</span><span class="ident">char</span>).<span class="ident">char</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(char) = queue {
+                <span class="kw">unsafe </span>{
+                    res = (<span class="kw-2">*</span>char).char;
                 }
-            } <span class="kw">else</span> {
-                <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">grid</span>[<span class="ident">i</span>];
+            } <span class="kw">else </span>{
+                res = <span class="self">self</span>.grid[i];
             }
 
-            <span class="self">self</span>.<span class="ident">push_to_queue</span>(
-                <span class="kw-2">&amp;</span><span class="ident">res</span>,
-                (<span class="ident">i</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">cols</span>) <span class="op">%</span> <span class="self">self</span>.<span class="ident">cols</span>,
-                (<span class="ident">i</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">cols</span>) <span class="op">/</span> <span class="self">self</span>.<span class="ident">cols</span>,
+            <span class="self">self</span>.push_to_queue(
+                <span class="kw-2">&amp;</span>res,
+                (i - <span class="self">self</span>.cols) % <span class="self">self</span>.cols,
+                (i - <span class="self">self</span>.cols) / <span class="self">self</span>.cols,
             );
         }
 
-        <span class="comment">// Clear the last line of the screen.</span>
-        <span class="kw">let</span> <span class="ident">empty</span> <span class="op">=</span> <span class="ident">Character</span> {
-            <span class="ident">char</span>: <span class="string">&#39; &#39;</span>,
-            <span class="ident">fg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_foreground</span>(),
-            <span class="ident">bg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_background</span>(),
+        <span class="comment">// Clear the last line of the screen.
+        </span><span class="kw">let </span>empty = Character {
+            char: <span class="string">&#39; &#39;</span>,
+            fg: <span class="self">self</span>.color.get_foreground(),
+            bg: <span class="self">self</span>.color.get_background(),
         };
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> ((<span class="self">self</span>.<span class="ident">rows</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span>)..<span class="self">self</span>.<span class="ident">rows</span> <span class="op">*</span> <span class="self">self</span>.<span class="ident">cols</span> {
-            <span class="self">self</span>.<span class="ident">push_to_queue</span>(<span class="kw-2">&amp;</span><span class="ident">empty</span>, <span class="ident">i</span> <span class="op">%</span> <span class="self">self</span>.<span class="ident">cols</span>, <span class="ident">i</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">cols</span>);
+        <span class="kw">for </span>i <span class="kw">in </span>((<span class="self">self</span>.rows - <span class="number">1</span>) * <span class="self">self</span>.cols)..<span class="self">self</span>.rows * <span class="self">self</span>.cols {
+            <span class="self">self</span>.push_to_queue(<span class="kw-2">&amp;</span>empty, i % <span class="self">self</span>.cols, i / <span class="self">self</span>.cols);
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">backspace</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">empty</span> <span class="op">=</span> <span class="ident">Character</span> {
-            <span class="ident">char</span>: <span class="string">&#39; &#39;</span>,
-            <span class="ident">fg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_foreground</span>(),
-            <span class="ident">bg</span>: <span class="self">self</span>.<span class="ident">color</span>.<span class="ident">get_background</span>(),
+    <span class="kw">fn </span>backspace(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>empty = Character {
+            char: <span class="string">&#39; &#39;</span>,
+            fg: <span class="self">self</span>.color.get_foreground(),
+            bg: <span class="self">self</span>.color.get_background(),
         };
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cols</span> <span class="op">-</span> <span class="number">1</span>;
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span><span class="self">self</span>.x_pos == <span class="number">0 </span>{
+            <span class="self">self</span>.y_pos -= <span class="number">1</span>;
+            <span class="self">self</span>.x_pos = <span class="self">self</span>.cols - <span class="number">1</span>;
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.x_pos -= <span class="number">1</span>;
         }
 
-        <span class="self">self</span>.<span class="ident">push_to_queue</span>(<span class="kw-2">&amp;</span><span class="ident">empty</span>, <span class="self">self</span>.<span class="ident">x_pos</span>, <span class="self">self</span>.<span class="ident">y_pos</span>);
-        <span class="self">self</span>.<span class="ident">double_buffer_flush</span>();
+        <span class="self">self</span>.push_to_queue(<span class="kw-2">&amp;</span>empty, <span class="self">self</span>.x_pos, <span class="self">self</span>.y_pos);
+        <span class="self">self</span>.double_buffer_flush();
     }
 
-    <span class="kw">fn</span> <span class="ident">set_cursor_position</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>) {
-        <span class="macro">assert!</span>(<span class="ident">x</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">cols</span> <span class="op">&amp;&amp;</span> <span class="ident">y</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">rows</span>);
+    <span class="kw">fn </span>set_cursor_position(<span class="kw-2">&amp;mut </span><span class="self">self</span>, x: usize, y: usize) {
+        <span class="macro">assert!</span>(x &lt;= <span class="self">self</span>.cols &amp;&amp; y &lt;= <span class="self">self</span>.rows);
 
-        <span class="self">self</span>.<span class="ident">x_pos</span> <span class="op">=</span> <span class="ident">x</span>;
-        <span class="self">self</span>.<span class="ident">y_pos</span> <span class="op">=</span> <span class="ident">y</span>;
-        <span class="self">self</span>.<span class="ident">double_buffer_flush</span>();
+        <span class="self">self</span>.x_pos = x;
+        <span class="self">self</span>.y_pos = y;
+        <span class="self">self</span>.double_buffer_flush();
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">fmt::Write</span> <span class="kw">for</span> <span class="ident">DebugRendy</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">write_str</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="self">self</span>.<span class="ident">write_string</span>(<span class="ident">string</span>);
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; fmt::Write <span class="kw">for </span>DebugRendy&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="kw">fn </span>write_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) -&gt; fmt::Result {
+        <span class="self">self</span>.write_string(string);
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">DebugRendy</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">DebugRendy</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {}
+<span class="kw">unsafe impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; Send <span class="kw">for </span>DebugRendy&lt;<span class="lifetime">&#39;this</span>&gt; {}
+<span class="kw">unsafe impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; Sync <span class="kw">for </span>DebugRendy&lt;<span class="lifetime">&#39;this</span>&gt; {}
 
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">DEBUG_RENDY</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">DebugRendy</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">pub static </span>DEBUG_RENDY: Once&lt;Mutex&lt;DebugRendy&gt;&gt; = Once::new();
 
-<span class="kw">pub</span> <span class="kw">macro</span> <span class="ident">print</span> {
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::rendy::_print</span>(<span class="macro">format_args!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>))),
+<span class="kw">pub macro </span>print {
+    ($(<span class="macro-nonterminal">$arg</span>:tt)<span class="kw-2">*</span>) =&gt; (<span class="macro-nonterminal">$crate::rendy::_print</span>(<span class="macro">format_args!</span>($(<span class="macro-nonterminal">$arg</span>)<span class="kw-2">*</span>))),
 }
 
-<span class="kw">pub</span> <span class="kw">macro</span> <span class="ident">println</span> {
+<span class="kw">pub macro </span>println {
     () =&gt; (<span class="macro-nonterminal">$</span><span class="macro">crate::rendy::print!</span>(<span class="string">&quot;\n&quot;</span>)),
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; (<span class="macro-nonterminal">$</span><span class="macro">crate::rendy::print!</span>(<span class="string">&quot;{}\n&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>))),
+    ($(<span class="macro-nonterminal">$arg</span>:tt)<span class="kw-2">*</span>) =&gt; (<span class="macro-nonterminal">$</span><span class="macro">crate::rendy::print!</span>(<span class="string">&quot;{}\n&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$arg</span>)<span class="kw-2">*</span>))),
 }
 
-<span class="kw">pub</span> <span class="kw">macro</span> <span class="ident">dbg</span> {
+<span class="kw">pub macro </span>dbg {
     () =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::rendy::println!</span>(<span class="string">&quot;[{}:{}]&quot;</span>, <span class="macro-nonterminal">$</span><span class="macro">crate::file!</span>(), <span class="macro-nonterminal">$</span><span class="macro">crate::line!</span>());
     },
 
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>:<span class="ident">expr</span> $(,)<span class="question-mark">?</span>) =&gt; {
-        <span class="comment">// Use of `match` here is intentional because it affects the lifetimes</span>
-        <span class="comment">// of temporaries - https://stackoverflow.com/a/48732525/1063961</span>
-        <span class="kw">match</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span> {
-            <span class="ident">tmp</span> =&gt; {
+    (<span class="macro-nonterminal">$val</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
+        <span class="comment">// Use of `match` here is intentional because it affects the lifetimes
+        // of temporaries - https://stackoverflow.com/a/48732525/1063961
+        </span><span class="kw">match </span><span class="macro-nonterminal">$val </span>{
+            tmp =&gt; {
                 <span class="macro-nonterminal">$</span><span class="macro">crate::rendy::println!</span>(<span class="string">&quot;[{}:{}] {} = {:#?}&quot;</span>,
-                    <span class="macro">core::file!</span>(), <span class="macro">core::line!</span>(), <span class="macro">core::stringify!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>), <span class="kw-2">&amp;</span><span class="ident">tmp</span>);
-                <span class="ident">tmp</span>
+                    <span class="macro">core::file!</span>(), <span class="macro">core::line!</span>(), <span class="macro">core::stringify!</span>(<span class="macro-nonterminal">$val</span>), <span class="kw-2">&amp;</span>tmp);
+                tmp
             }
         }
     },
 
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>:<span class="ident">expr</span>),<span class="op">+</span> $(,)<span class="question-mark">?</span>) =&gt; {
-        ($(<span class="macro-nonterminal">$</span><span class="macro">crate::rendy::dbg!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">val</span>)),<span class="op">+</span>,)
+    ($(<span class="macro-nonterminal">$val</span>:expr),+ $(,)<span class="question-mark">?</span>) =&gt; {
+        ($(<span class="macro-nonterminal">$</span><span class="macro">crate::rendy::dbg!</span>(<span class="macro-nonterminal">$val</span>)),+,)
     },
 }
 
-<span class="doccomment">/// Return true if the terminal is initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_initialized</span>() -&gt; <span class="ident">bool</span> {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">is_some</span>()
+<span class="doccomment">/// Return true if the terminal is initialized.
+</span><span class="kw">pub fn </span>is_initialized() -&gt; bool {
+    DEBUG_RENDY.get().is_some()
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">_print</span>(<span class="ident">args</span>: <span class="ident">fmt::Arguments</span>) {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">write_fmt</span>(<span class="ident">args</span>));
+<span class="attribute">#[doc(hidden)]</span>
+<span class="kw">pub fn </span>_print(args: fmt::Arguments) {
+    DEBUG_RENDY.get().map(|l| l.lock_irq().write_fmt(args));
 }
 
-<span class="doccomment">/// Clears the screen and if `mv` is set to true, resets the</span>
-<span class="doccomment">/// cursor position to `0`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_screen</span>(<span class="ident">mv</span>: <span class="ident">bool</span>) {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">clear</span>(<span class="ident">mv</span>));
+<span class="doccomment">/// Clears the screen and if `mv` is set to true, resets the
+/// cursor position to `0`.
+</span><span class="kw">pub fn </span>clear_screen(mv: bool) {
+    DEBUG_RENDY.get().map(|l| l.lock_irq().clear(mv));
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">backspace</span>() {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">backspace</span>());
+<span class="kw">pub fn </span>backspace() {
+    DEBUG_RENDY.get().map(|l| l.lock_irq().backspace());
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_text_color</span>(<span class="ident">fg</span>: <span class="ident">u32</span>, <span class="ident">bg</span>: <span class="ident">u32</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">color</span> <span class="op">=</span> <span class="ident">ColorCode::new</span>(<span class="ident">fg</span>, <span class="ident">bg</span>));
+<span class="kw">pub fn </span>set_text_color(fg: u32, bg: u32) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| l.lock_irq().color = ColorCode::new(fg, bg));
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_text_fg</span>(<span class="ident">fg</span>: <span class="ident">u32</span>) {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">color</span>.<span class="number">0</span> <span class="op">=</span> <span class="ident">fg</span>);
+<span class="kw">pub fn </span>set_text_fg(fg: u32) {
+    DEBUG_RENDY.get().map(|l| l.lock_irq().color.<span class="number">0 </span>= fg);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_text_bg</span>(<span class="ident">bg</span>: <span class="ident">u32</span>) {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">color</span>.<span class="number">1</span> <span class="op">=</span> <span class="ident">bg</span>);
+<span class="kw">pub fn </span>set_text_bg(bg: u32) {
+    DEBUG_RENDY.get().map(|l| l.lock_irq().color.<span class="number">1 </span>= bg);
 }
 
-<span class="doccomment">/// Resets the text foreground and background to their default values.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">reset_default</span>() {
-    <span class="ident">set_text_color</span>(<span class="ident">DEFAULT_TEXT_FOREGROUND</span>, <span class="ident">DEFAULT_TEXT_BACKGROUND</span>)
+<span class="doccomment">/// Resets the text foreground and background to their default values.
+</span><span class="kw">pub fn </span>reset_default() {
+    set_text_color(DEFAULT_TEXT_FOREGROUND, DEFAULT_TEXT_BACKGROUND)
 }
 
-<span class="doccomment">/// Returns the terminal&#39;s resolution in the form of a `(horizontal_resolution, vertical_resolution)`</span>
-<span class="doccomment">/// tuple.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// # Panics</span>
-<span class="doccomment">/// This function was called before the terminal was initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_resolution</span>() -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>();
+<span class="doccomment">/// Returns the terminal&#39;s resolution in the form of a `(horizontal_resolution, vertical_resolution)`
+/// tuple.
+///
+/// # Panics
+/// This function was called before the terminal was initialized.
+</span><span class="kw">pub fn </span>get_resolution() -&gt; (usize, usize) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| {
+            <span class="kw">let </span>this = l.lock_irq();
 
             (
-                <span class="ident">this</span>.<span class="ident">info</span>.<span class="ident">horizontal_resolution</span>,
-                <span class="ident">this</span>.<span class="ident">info</span>.<span class="ident">vertical_resolution</span>,
+                this.info.horizontal_resolution,
+                this.info.vertical_resolution,
             )
         })
-        .<span class="ident">expect</span>(<span class="string">&quot;get_resolution: invoked before the terminal was initialized&quot;</span>)
+        .expect(<span class="string">&quot;get_resolution: invoked before the terminal was initialized&quot;</span>)
 }
 
-<span class="doccomment">/// # Panics</span>
-<span class="doccomment">/// This function was called before the terminal was initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rendy_info</span>() -&gt; <span class="ident">RendyInfo</span> {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>();
-            <span class="ident">this</span>.<span class="ident">info</span>
+<span class="doccomment">/// # Panics
+/// This function was called before the terminal was initialized.
+</span><span class="kw">pub fn </span>get_rendy_info() -&gt; RendyInfo {
+    DEBUG_RENDY
+        .get()
+        .map(|l| {
+            <span class="kw">let </span>this = l.lock_irq();
+            this.info
         })
-        .<span class="ident">expect</span>(<span class="string">&quot;get_rendy_info: invoked before the terminal was initialized&quot;</span>)
+        .expect(<span class="string">&quot;get_rendy_info: invoked before the terminal was initialized&quot;</span>)
 }
 
-<span class="doccomment">/// Returns the terminal&#39;s rows and columns in the form of a `(rows, columns)` tuple.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_rows_cols</span>() -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>();
-            (<span class="ident">this</span>.<span class="ident">rows</span>, <span class="ident">this</span>.<span class="ident">cols</span>)
+<span class="doccomment">/// Returns the terminal&#39;s rows and columns in the form of a `(rows, columns)` tuple.
+</span><span class="kw">pub fn </span>get_rows_cols() -&gt; (usize, usize) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| {
+            <span class="kw">let </span>this = l.lock_irq();
+            (this.rows, this.cols)
         })
-        .<span class="ident">expect</span>(<span class="string">&quot;get_rows_cols: invoked before the terminal was initialized&quot;</span>)
+        .expect(<span class="string">&quot;get_rows_cols: invoked before the terminal was initialized&quot;</span>)
 }
 
-<span class="doccomment">/// Gets the cursor position as a tuple `(x, y)`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// Attempted to get the cursor position before the terminal was initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_cursor_position</span>() -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>();
-            (<span class="ident">lock</span>.<span class="ident">x_pos</span>, <span class="ident">lock</span>.<span class="ident">y_pos</span>)
+<span class="doccomment">/// Gets the cursor position as a tuple `(x, y)`.
+///
+/// ## Panics
+/// Attempted to get the cursor position before the terminal was initialized.
+</span><span class="kw">pub fn </span>get_cursor_position() -&gt; (usize, usize) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| {
+            <span class="kw">let </span>lock = l.lock_irq();
+            (lock.x_pos, lock.y_pos)
         })
-        .<span class="ident">expect</span>(<span class="string">&quot;get_cursor_position: invoked before the terminal was initialized&quot;</span>)
+        .expect(<span class="string">&quot;get_cursor_position: invoked before the terminal was initialized&quot;</span>)
 }
 
-<span class="doccomment">/// Sets the cursor position to the provided `x` and `y` coordinates.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// * If the provided `x` position is greator then the amount of columns.</span>
-<span class="doccomment">/// * If the provided `y` position is greator then the amount of rows.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_cursor_position</span>(<span class="ident">x</span>: <span class="ident">usize</span>, <span class="ident">y</span>: <span class="ident">usize</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">set_cursor_position</span>(<span class="ident">x</span>, <span class="ident">y</span>));
+<span class="doccomment">/// Sets the cursor position to the provided `x` and `y` coordinates.
+///
+/// ## Panics
+/// * If the provided `x` position is greator then the amount of columns.
+/// * If the provided `y` position is greator then the amount of rows.
+</span><span class="kw">pub fn </span>set_cursor_position(x: usize, y: usize) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| l.lock_irq().set_cursor_position(x, y));
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_cursor_visibility</span>(<span class="ident">yes</span>: <span class="ident">bool</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">cursor_visibility</span> <span class="op">=</span> <span class="ident">yes</span>);
+<span class="kw">pub fn </span>set_cursor_visibility(yes: bool) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| l.lock_irq().cursor_visibility = yes);
 }
 
-<span class="doccomment">/// Returns a tuple of the amount of `(rows, columns)` in the terminal.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// This function was called before the terminal was initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_term_info</span>() -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">lock_irq</span>();
-            (<span class="ident">lock</span>.<span class="ident">rows</span>, <span class="ident">lock</span>.<span class="ident">cols</span>)
+<span class="doccomment">/// Returns a tuple of the amount of `(rows, columns)` in the terminal.
+///
+/// ## Panics
+/// This function was called before the terminal was initialized.
+</span><span class="kw">pub fn </span>get_term_info() -&gt; (usize, usize) {
+    DEBUG_RENDY
+        .get()
+        .map(|l| {
+            <span class="kw">let </span>lock = l.lock_irq();
+            (lock.rows, lock.cols)
         })
-        .<span class="ident">expect</span>(<span class="string">&quot;get_term_info: invoked before the terminal was initialized&quot;</span>)
+        .expect(<span class="string">&quot;get_term_info: invoked before the terminal was initialized&quot;</span>)
 }
 
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// This function was called before the terminal was initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_auto_flush</span>(<span class="ident">yes</span>: <span class="ident">bool</span>) {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">lock_irq</span>().<span class="ident">set_auto_flush</span>(<span class="ident">yes</span>))
-        .<span class="ident">expect</span>(<span class="string">&quot;set_auto_flush: invoked before the terminal was initialized&quot;</span>);
+<span class="doccomment">/// ## Panics
+/// This function was called before the terminal was initialized.
+</span><span class="kw">pub fn </span>set_auto_flush(yes: bool) {
+    DEBUG_RENDY
+        .get()
+        .map(|e| e.lock_irq().set_auto_flush(yes))
+        .expect(<span class="string">&quot;set_auto_flush: invoked before the terminal was initialized&quot;</span>);
 }
 
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// This function was called before the terminal was initialized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">double_buffer_flush</span>() {
-    <span class="ident">DEBUG_RENDY</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">lock_irq</span>().<span class="ident">double_buffer_flush</span>())
-        .<span class="ident">expect</span>(<span class="string">&quot;double_buffer_flush: invoked before the terminal was initialized&quot;</span>);
+<span class="doccomment">/// ## Panics
+/// This function was called before the terminal was initialized.
+</span><span class="kw">pub fn </span>double_buffer_flush() {
+    DEBUG_RENDY
+        .get()
+        .map(|e| e.lock_irq().double_buffer_flush())
+        .expect(<span class="string">&quot;double_buffer_flush: invoked before the terminal was initialized&quot;</span>);
 }
 
-<span class="doccomment">/// Force-unlocks the rendy to prevent a deadlock.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Saftey</span>
-<span class="doccomment">/// This method is not memory safe and should be only used when absolutely necessary.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">force_unlock</span>() {
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">force_unlock</span>());
+<span class="doccomment">/// Force-unlocks the rendy to prevent a deadlock.
+///
+/// ## Saftey
+/// This method is not memory safe and should be only used when absolutely necessary.
+</span><span class="kw">pub unsafe fn </span>force_unlock() {
+    DEBUG_RENDY.get().map(|l| l.force_unlock());
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">framebuffer_tag</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleFramebufferTag</span>, <span class="ident">cmdline</span>: <span class="kw-2">&amp;</span><span class="ident">CommandLine</span>) {
-    <span class="kw">let</span> <span class="ident">framebuffer_info</span> <span class="op">=</span> <span class="ident">RendyInfo</span> {
-        <span class="ident">byte_len</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">size</span>(),
-        <span class="ident">bits_per_pixel</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">framebuffer_bpp</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">horizontal_resolution</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">framebuffer_width</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">vertical_resolution</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">framebuffer_height</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">pixel_format</span>: <span class="ident">PixelFormat::BGR</span>,
-        <span class="ident">stride</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">framebuffer_pitch</span> <span class="kw">as</span> <span class="ident">usize</span>,
+<span class="kw">pub fn </span>init(framebuffer_tag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleFramebufferTag, cmdline: <span class="kw-2">&amp;</span>CommandLine) {
+    <span class="kw">let </span>framebuffer_info = RendyInfo {
+        byte_len: framebuffer_tag.size(),
+        bits_per_pixel: framebuffer_tag.framebuffer_bpp <span class="kw">as </span>usize,
+        horizontal_resolution: framebuffer_tag.framebuffer_width <span class="kw">as </span>usize,
+        vertical_resolution: framebuffer_tag.framebuffer_height <span class="kw">as </span>usize,
+        pixel_format: PixelFormat::BGR,
+        stride: framebuffer_tag.framebuffer_pitch <span class="kw">as </span>usize,
 
-        <span class="ident">red_mask_shift</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">red_mask_shift</span>,
-        <span class="ident">red_mask_size</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">red_mask_size</span>,
+        red_mask_shift: framebuffer_tag.red_mask_shift,
+        red_mask_size: framebuffer_tag.red_mask_size,
 
-        <span class="ident">green_mask_shift</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">green_mask_shift</span>,
-        <span class="ident">green_mask_size</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">green_mask_size</span>,
+        green_mask_shift: framebuffer_tag.green_mask_shift,
+        green_mask_size: framebuffer_tag.green_mask_size,
 
-        <span class="ident">blue_mask_shift</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">blue_mask_shift</span>,
-        <span class="ident">blue_mask_size</span>: <span class="ident">framebuffer_tag</span>.<span class="ident">blue_mask_size</span>,
+        blue_mask_shift: framebuffer_tag.blue_mask_shift,
+        blue_mask_size: framebuffer_tag.blue_mask_size,
     };
 
-    <span class="kw">let</span> <span class="ident">framebuffer_addr</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">framebuffer_tag</span>.<span class="ident">framebuffer_addr</span>).<span class="ident">as_hhdm_virt</span>();
+    <span class="kw">let </span>framebuffer_addr = PhysAddr::new(framebuffer_tag.framebuffer_addr).as_hhdm_virt();
 
-    <span class="kw">let</span> <span class="ident">framebuffer</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-        <span class="ident">core::slice::from_raw_parts_mut</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>(
-            <span class="ident">framebuffer_addr</span>.<span class="ident">as_mut_ptr</span>(),
-            <span class="ident">framebuffer_info</span>.<span class="ident">byte_len</span>,
+    <span class="kw">let </span>framebuffer = <span class="kw">unsafe </span>{
+        core::slice::from_raw_parts_mut::&lt;u32&gt;(
+            framebuffer_addr.as_mut_ptr(),
+            framebuffer_info.byte_len,
         )
     };
 
-    <span class="kw">let</span> <span class="ident">rendy</span> <span class="op">=</span> <span class="ident">DebugRendy::new</span>(<span class="ident">framebuffer</span>, <span class="ident">framebuffer_info</span>, <span class="ident">cmdline</span>);
+    <span class="kw">let </span>rendy = DebugRendy::new(framebuffer, framebuffer_info, cmdline);
 
-    <span class="ident">DEBUG_RENDY</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">rendy</span>));
+    DEBUG_RENDY.call_once(|| Mutex::new(rendy));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

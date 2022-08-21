@@ -58,31 +58,31 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::Path</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::fs;
+<span class="kw">use </span><span class="kw">crate</span>::fs::Path;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduler</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">signals</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">task</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">vm</span>;
+<span class="kw">pub mod </span>scheduler;
+<span class="kw">pub mod </span>signals;
+<span class="kw">pub mod </span>task;
+<span class="kw">pub mod </span>vm;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>() -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">init_path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;/usr/bin/init&quot;</span>);
-    <span class="kw">let</span> <span class="ident">init_inode</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">init_path</span>)<span class="question-mark">?</span>;
+<span class="kw">pub fn </span>run() -&gt; fs::Result&lt;()&gt; {
+    <span class="kw">let </span>init_path = Path::new(<span class="string">&quot;/usr/bin/init&quot;</span>);
+    <span class="kw">let </span>init_inode = fs::lookup_path(init_path)<span class="question-mark">?</span>;
 
-    <span class="ident">scheduler::get_scheduler</span>().<span class="ident">exec</span>(<span class="ident">init_inode</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+    scheduler::get_scheduler().exec(init_inode, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
     <span class="prelude-val">Ok</span>(())
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_tests</span>() -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">utest_path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="string">&quot;/usr/bin/utest&quot;</span>);
-    <span class="kw">let</span> <span class="ident">utest_inode</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">utest_path</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[cfg(test)]</span>
+<span class="kw">pub fn </span>run_tests() -&gt; fs::Result&lt;()&gt; {
+    <span class="kw">let </span>utest_path = Path::new(<span class="string">&quot;/usr/bin/utest&quot;</span>);
+    <span class="kw">let </span>utest_inode = fs::lookup_path(utest_path)<span class="question-mark">?</span>;
 
-    <span class="ident">scheduler::get_scheduler</span>().<span class="ident">exec</span>(<span class="ident">utest_inode</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
+    scheduler::get_scheduler().exec(utest_inode, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>);
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

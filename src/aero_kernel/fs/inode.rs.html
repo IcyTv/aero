@@ -514,359 +514,359 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+</span><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident">aero_syscall::prelude</span>::{<span class="ident">EPollEventFlags</span>, <span class="ident">PollEventFlags</span>};
-<span class="kw">use</span> <span class="ident">aero_syscall::socket::MessageHeader</span>;
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">MMapFlags</span>, <span class="ident">OpenFlags</span>, <span class="ident">SyscallError</span>};
+<span class="kw">use </span>aero_syscall::prelude::{EPollEventFlags, PollEventFlags};
+<span class="kw">use </span>aero_syscall::socket::MessageHeader;
+<span class="kw">use </span>aero_syscall::{MMapFlags, OpenFlags, SyscallError};
 
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
-<span class="kw">use</span> <span class="ident">alloc::sync::Weak</span>;
+<span class="kw">use </span>alloc::sync::Arc;
+<span class="kw">use </span>alloc::sync::Weak;
 
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">intrusive_collections::UnsafeRef</span>;
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>intrusive_collections::UnsafeRef;
+<span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::PhysFrame</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::socket::unix::UnixSocket</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::socket::SocketAddr</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::BlockQueue</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::PhysFrame;
+<span class="kw">use </span><span class="kw">crate</span>::socket::unix::UnixSocket;
+<span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
+<span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::BlockQueue;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache::Cacheable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache::CachedINode</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache</span>::{<span class="ident">DirCacheItem</span>, <span class="ident">INodeCacheItem</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::devfs::DevINode</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">FileSystem</span>, <span class="ident">FileSystemError</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span><span class="kw">super</span>::cache;
+<span class="kw">use </span><span class="kw">super</span>::cache::Cacheable;
+<span class="kw">use </span><span class="kw">super</span>::cache::CachedINode;
+<span class="kw">use </span><span class="kw">super</span>::cache::{DirCacheItem, INodeCacheItem};
+<span class="kw">use </span><span class="kw">super</span>::devfs::DevINode;
+<span class="kw">use super</span>::{FileSystem, FileSystemError, <span class="prelude-ty">Result</span>};
 
-<span class="kw">static</span> <span class="ident">DIR_CACHE_MARKER</span>: <span class="ident">AtomicUsize</span> <span class="op">=</span> <span class="ident">AtomicUsize::new</span>(<span class="number">0x00</span>);
+<span class="kw">static </span>DIR_CACHE_MARKER: AtomicUsize = AtomicUsize::new(<span class="number">0x00</span>);
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PollTable</span> {
-    <span class="kw">pub</span> <span class="ident">queues</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">UnsafeRef</span><span class="op">&lt;</span><span class="ident">BlockQueue</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">pub struct </span>PollTable {
+    <span class="kw">pub </span>queues: Vec&lt;UnsafeRef&lt;BlockQueue&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">PollTable</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">insert</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">queue</span>: <span class="kw-2">&amp;</span><span class="ident">BlockQueue</span>) {
-        <span class="ident">queue</span>.<span class="ident">insert</span>(<span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>());
-        <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">push</span>(<span class="ident">UnsafeRef::from_raw</span>(<span class="ident">queue</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>)) }
+<span class="kw">impl </span>PollTable {
+    <span class="kw">pub fn </span>insert(<span class="kw-2">&amp;mut </span><span class="self">self</span>, queue: <span class="kw-2">&amp;</span>BlockQueue) {
+        queue.insert(scheduler::get_scheduler().current_task());
+        <span class="kw">unsafe </span>{ <span class="self">self</span>.queues.push(UnsafeRef::from_raw(queue <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>)) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Drop</span> <span class="kw">for</span> <span class="ident">PollTable</span> {
-    <span class="kw">fn</span> <span class="ident">drop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">ctask</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-        <span class="kw">for</span> <span class="ident">queue</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">queues</span>.<span class="ident">iter</span>() {
-            <span class="ident">queue</span>.<span class="ident">remove</span>(<span class="ident">ctask</span>.<span class="ident">clone</span>());
+<span class="kw">impl </span>Drop <span class="kw">for </span>PollTable {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>ctask = scheduler::get_scheduler().current_task();
+        <span class="kw">for </span>queue <span class="kw">in </span><span class="self">self</span>.queues.iter() {
+            queue.remove(ctask.clone());
         }
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PollFlags</span>: <span class="ident">usize</span> {
-        <span class="doccomment">/// The associated file is available for read operations.</span>
-        <span class="kw">const</span> <span class="ident">IN</span>   <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="doccomment">/// The associated file is available for write operations.</span>
-        <span class="kw">const</span> <span class="ident">OUT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="doccomment">/// Error condition happened on the associated file descriptor.</span>
-        <span class="kw">const</span> <span class="ident">ERR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
+    <span class="kw">pub struct </span>PollFlags: usize {
+        <span class="doccomment">/// The associated file is available for read operations.
+        </span><span class="kw">const </span>IN   = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="doccomment">/// The associated file is available for write operations.
+        </span><span class="kw">const </span>OUT = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// Error condition happened on the associated file descriptor.
+        </span><span class="kw">const </span>ERR = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">EPollEventFlags</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">poll</span>: <span class="ident">PollFlags</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::empty</span>();
+<span class="kw">impl </span>From&lt;PollFlags&gt; <span class="kw">for </span>EPollEventFlags {
+    <span class="kw">fn </span>from(poll: PollFlags) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="self">Self</span>::empty();
 
-        <span class="kw">if</span> <span class="ident">poll</span>.<span class="ident">contains</span>(<span class="ident">PollFlags::IN</span>) {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::IN</span>;
+        <span class="kw">if </span>poll.contains(PollFlags::IN) {
+            flags |= <span class="self">Self</span>::IN;
         }
-        <span class="kw">if</span> <span class="ident">poll</span>.<span class="ident">contains</span>(<span class="ident">PollFlags::OUT</span>) {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::OUT</span>;
+        <span class="kw">if </span>poll.contains(PollFlags::OUT) {
+            flags |= <span class="self">Self</span>::OUT;
         }
-        <span class="kw">if</span> <span class="ident">poll</span>.<span class="ident">contains</span>(<span class="ident">PollFlags::ERR</span>) {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::ERR</span>;
+        <span class="kw">if </span>poll.contains(PollFlags::ERR) {
+            flags |= <span class="self">Self</span>::ERR;
         }
 
-        <span class="ident">flags</span>
+        flags
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PollEventFlags</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">poll</span>: <span class="ident">PollFlags</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::empty</span>();
+<span class="kw">impl </span>From&lt;PollFlags&gt; <span class="kw">for </span>PollEventFlags {
+    <span class="kw">fn </span>from(poll: PollFlags) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>flags = <span class="self">Self</span>::empty();
 
-        <span class="kw">if</span> <span class="ident">poll</span>.<span class="ident">contains</span>(<span class="ident">PollFlags::IN</span>) {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::IN</span>;
+        <span class="kw">if </span>poll.contains(PollFlags::IN) {
+            flags |= <span class="self">Self</span>::IN;
         }
-        <span class="kw">if</span> <span class="ident">poll</span>.<span class="ident">contains</span>(<span class="ident">PollFlags::OUT</span>) {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::OUT</span>;
+        <span class="kw">if </span>poll.contains(PollFlags::OUT) {
+            flags |= <span class="self">Self</span>::OUT;
         }
-        <span class="kw">if</span> <span class="ident">poll</span>.<span class="ident">contains</span>(<span class="ident">PollFlags::ERR</span>) {
-            <span class="ident">flags</span> <span class="op">|</span><span class="op">=</span> <span class="ident"><span class="self">Self</span>::ERR</span>;
+        <span class="kw">if </span>poll.contains(PollFlags::ERR) {
+            flags |= <span class="self">Self</span>::ERR;
         }
 
-        <span class="ident">flags</span>
+        flags
     }
 }
 
-<span class="doccomment">/// An inode describes a file. An inode structure holds metadata of the</span>
-<span class="doccomment">/// inode which includes its type, size, the number of links referring to it,</span>
-<span class="doccomment">/// and the list of blocks holding the file&#39;s content. For example device files,</span>
-<span class="doccomment">/// files on the disk, etc...</span>
-<span class="attribute">#[<span class="ident">downcastable</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">INodeInterface</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="doccomment">/// Returns the inode metadata of `this` inode.</span>
-    <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Metadata</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+<span class="doccomment">/// An inode describes a file. An inode structure holds metadata of the
+/// inode which includes its type, size, the number of links referring to it,
+/// and the list of blocks holding the file&#39;s content. For example device files,
+/// files on the disk, etc...
+</span><span class="attribute">#[downcastable]</span>
+<span class="kw">pub trait </span>INodeInterface: Send + Sync {
+    <span class="doccomment">/// Returns the inode metadata of `this` inode.
+    </span><span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Metadata&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Read at the provided `offset` to the given `buffer`.</span>
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">_buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// Read at the provided `offset` to the given `buffer`.
+    </span><span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Write at the provided `offset` with the given `buffer` as its contents.</span>
-    <span class="kw">fn</span> <span class="ident">write_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">_buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// Write at the provided `offset` with the given `buffer` as its contents.
+    </span><span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Creates a new directory with the provided `name` in the filesystem.</span>
-    <span class="kw">fn</span> <span class="ident">mkdir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// Creates a new directory with the provided `name` in the filesystem.
+    </span><span class="kw">fn </span>mkdir(<span class="kw-2">&amp;</span><span class="self">self</span>, _name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">rmdir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="kw">fn </span>rmdir(<span class="kw-2">&amp;</span><span class="self">self</span>, _name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Creates a new file with the provoded `name` in the filesystem.</span>
-    <span class="kw">fn</span> <span class="ident">touch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// Creates a new file with the provoded `name` in the filesystem.
+    </span><span class="kw">fn </span>touch(<span class="kw-2">&amp;</span><span class="self">self</span>, _parent: DirCacheItem, _name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">stat</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">aero_syscall::Stat</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="kw">fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;aero_syscall::Stat&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Creates a new dev inode with the provided `name` and the device `marker` in</span>
-    <span class="doccomment">/// the filesystem.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Overview</span>
-    <span class="doccomment">/// In the inner implementation this simply looks up for the device with the device</span>
-    <span class="doccomment">/// marker in the global devices b-tree map and adds it as a device inode in the children</span>
-    <span class="doccomment">/// array of itself.</span>
-    <span class="kw">fn</span> <span class="ident">make_dev_inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">_marker</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// Creates a new dev inode with the provided `name` and the device `marker` in
+    /// the filesystem.
+    ///
+    /// ## Overview
+    /// In the inner implementation this simply looks up for the device with the device
+    /// marker in the global devices b-tree map and adds it as a device inode in the children
+    /// array of itself.
+    </span><span class="kw">fn </span>make_dev_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, _name: <span class="kw-2">&amp;</span>str, _marker: usize) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">make_ramfs_inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">_buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="kw">fn </span>make_ramfs_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, _name: <span class="kw-2">&amp;</span>str, _buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">make_local_socket_inode</span>(
+    <span class="kw">fn </span>make_local_socket_inode(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">_inode</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+        _name: <span class="kw-2">&amp;</span>str,
+        _inode: Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Looks up the directory entry in the filesystem.</span>
-    <span class="kw">fn</span> <span class="ident">lookup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_dir</span>: <span class="ident">DirCacheItem</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// Looks up the directory entry in the filesystem.
+    </span><span class="kw">fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, _dir: DirCacheItem, _name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">open</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_flags</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
+    <span class="kw">fn </span>open(<span class="kw-2">&amp;</span><span class="self">self</span>, _flags: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">close</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_flags</span>: <span class="ident">OpenFlags</span>) {}
+    <span class="kw">fn </span>close(<span class="kw-2">&amp;</span><span class="self">self</span>, _flags: OpenFlags) {}
 
-    <span class="kw">fn</span> <span class="ident">dirent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="kw">fn </span>dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, _parent: DirCacheItem, _index: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// Returns a weak reference to the filesystem that this inode belongs to.</span>
-    <span class="kw">fn</span> <span class="ident">weak_filesystem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">None</span>
+    <span class="doccomment">/// Returns a weak reference to the filesystem that this inode belongs to.
+    </span><span class="kw">fn </span>weak_filesystem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Weak&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
+        <span class="prelude-val">None
+    </span>}
+
+    <span class="kw">fn </span>ioctl(<span class="kw-2">&amp;</span><span class="self">self</span>, _command: usize, _arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">ioctl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_command</span>: <span class="ident">usize</span>, <span class="ident">_arg</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="kw">fn </span>truncate(<span class="kw-2">&amp;</span><span class="self">self</span>, _size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">truncate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_size</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="doccomment">/// ## Saftey
+    ///
+    /// The caller is responsible for removing the inode from the cache.
+    </span><span class="kw">fn </span>unlink(<span class="kw-2">&amp;</span><span class="self">self</span>, _name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="doccomment">/// ## Saftey</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The caller is responsible for removing the inode from the cache.</span>
-    <span class="kw">fn</span> <span class="ident">unlink</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="kw">fn </span>mmap(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _size: usize, _flags: MMapFlags) -&gt; <span class="prelude-ty">Result</span>&lt;PhysFrame&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">mmap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">_size</span>: <span class="ident">usize</span>, <span class="ident">_flags</span>: <span class="ident">MMapFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PhysFrame</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
+    <span class="comment">// Socket operations:
+    </span><span class="kw">fn </span>bind(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: SocketAddr, _length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 
-    <span class="comment">// Socket operations:</span>
-    <span class="kw">fn</span> <span class="ident">bind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="ident">SocketAddr</span>, <span class="ident">_length</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
+    <span class="kw">fn </span>connect(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: SocketAddr, _length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 
-    <span class="kw">fn</span> <span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="ident">SocketAddr</span>, <span class="ident">_length</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
+    <span class="kw">fn </span>listen(<span class="kw-2">&amp;</span><span class="self">self</span>, _backlog: usize) -&gt; ::core::result::Result&lt;(), SyscallError&gt; {
+        <span class="prelude-val">Err</span>(SyscallError::ENOTSOCK)
     }
 
-    <span class="kw">fn</span> <span class="ident">listen</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_backlog</span>: <span class="ident">usize</span>) -&gt; <span class="ident">::core::result::Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTSOCK</span>)
+    <span class="kw">fn </span>accept(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>SocketAddr&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;UnixSocket&gt;&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 
-    <span class="kw">fn</span> <span class="ident">accept</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">SocketAddr</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
+    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>, _message_header: <span class="kw-2">&amp;mut </span>MessageHeader) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 
-    <span class="kw">fn</span> <span class="ident">recv</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_message_header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MessageHeader</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
+    <span class="doccomment">/// Returns the inner UNIX socket inode if bound to one.
+    </span><span class="kw">fn </span>as_unix_socket(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 
-    <span class="doccomment">/// Returns the inner UNIX socket inode if bound to one.</span>
-    <span class="kw">fn</span> <span class="ident">as_unix_socket</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>)
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, _table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PollFlags&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">PollTable</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
-    }
-
-    <span class="kw">fn</span> <span class="ident">link</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">_src</span>: <span class="ident">INodeCacheItem</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>)
-    }
-}
-
-<span class="doccomment">/// Structure representing the curcial, characteristics of an inode. The metadata</span>
-<span class="doccomment">/// of an inode can be retrieved by invoking the [INodeInterface::metadata] function.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Metadata</span> {
-    <span class="kw">pub</span> <span class="ident">id</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">file_type</span>: <span class="ident">FileType</span>,
-
-    <span class="doccomment">/// The total size of the content that the inode holds. Set to `0x00` if</span>
-    <span class="doccomment">/// the inode file type is *not* a file.</span>
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">usize</span>,
-
-    <span class="doccomment">/// The length of the children&#39;s map of the inode. Set to `0x00` if the inode</span>
-    <span class="doccomment">/// has no children and if the file type of the inode is *not* a directory.</span>
-    <span class="kw">pub</span> <span class="ident">children_len</span>: <span class="ident">usize</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">Metadata</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">id</span>
-    }
-
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">file_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">FileType</span> {
-        <span class="self">self</span>.<span class="ident">file_type</span>
-    }
-
-    <span class="doccomment">/// Returns [`true`] if the file type of the inode is a file.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_file</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">file_type</span> <span class="op">==</span> <span class="ident">FileType::File</span>
-    }
-
-    <span class="doccomment">/// Returns [`true`] if the file type of the inode is a directory.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_directory</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">file_type</span> <span class="op">==</span> <span class="ident">FileType::Directory</span>
-    }
-
-    <span class="doccomment">/// Returns [`true`] if the file type of the inode is a socket.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_socket</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">file_type</span> <span class="op">==</span> <span class="ident">FileType::Socket</span>
+    <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, _name: <span class="kw-2">&amp;</span>str, _src: INodeCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 }
 
-<span class="doccomment">/// Enum representing the inner contents of a file. The file contents depend on the</span>
-<span class="doccomment">/// file type of the inode.</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FileContents</span> {
-    <span class="doccomment">/// This variant expresses a *normal file* (akin: A file that actually stores data</span>
-    <span class="doccomment">/// in bytes) and is protected by a spin lock.</span>
-    <span class="ident">Content</span>(<span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>),
+<span class="doccomment">/// Structure representing the curcial, characteristics of an inode. The metadata
+/// of an inode can be retrieved by invoking the [INodeInterface::metadata] function.
+</span><span class="attribute">#[derive(Debug, Copy, Clone)]</span>
+<span class="kw">pub struct </span>Metadata {
+    <span class="kw">pub </span>id: usize,
+    <span class="kw">pub </span>file_type: FileType,
 
-    <span class="doccomment">/// This variant is similar to the one above, except it&#39;s read only</span>
-    <span class="doccomment">/// and is backed by a static byte buffer</span>
-    <span class="ident">StaticContent</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]),
+    <span class="doccomment">/// The total size of the content that the inode holds. Set to `0x00` if
+    /// the inode file type is *not* a file.
+    </span><span class="kw">pub </span>size: usize,
 
-    <span class="doccomment">/// If the file type of the inode is [FileType::Device], in that case this variant</span>
-    <span class="doccomment">/// is used.</span>
-    <span class="ident">Device</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">DevINode</span><span class="op">&gt;</span>),
-
-    <span class="doccomment">/// This variant is used to store the backing socket inode.</span>
-    <span class="ident">Socket</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span>),
-
-    <span class="doccomment">/// This file does *not* and *cannot* have any contents in bytes. This is useful</span>
-    <span class="doccomment">/// in the cases of directories.</span>
-    <span class="prelude-val">None</span>,
+    <span class="doccomment">/// The length of the children&#39;s map of the inode. Set to `0x00` if the inode
+    /// has no children and if the file type of the inode is *not* a directory.
+    </span><span class="kw">pub </span>children_len: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FileContents</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::Content</span>(<span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>()))
+<span class="kw">impl </span>Metadata {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.id
+    }
+
+    <span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>file_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; FileType {
+        <span class="self">self</span>.file_type
+    }
+
+    <span class="doccomment">/// Returns [`true`] if the file type of the inode is a file.
+    </span><span class="kw">pub fn </span>is_file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.file_type == FileType::File
+    }
+
+    <span class="doccomment">/// Returns [`true`] if the file type of the inode is a directory.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>is_directory(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.file_type == FileType::Directory
+    }
+
+    <span class="doccomment">/// Returns [`true`] if the file type of the inode is a socket.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>is_socket(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.file_type == FileType::Socket
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FileType</span> {
-    <span class="ident">File</span>,
-    <span class="ident">Directory</span>,
-    <span class="ident">Device</span>,
-    <span class="ident">Socket</span>,
+<span class="doccomment">/// Enum representing the inner contents of a file. The file contents depend on the
+/// file type of the inode.
+</span><span class="kw">pub enum </span>FileContents {
+    <span class="doccomment">/// This variant expresses a *normal file* (akin: A file that actually stores data
+    /// in bytes) and is protected by a spin lock.
+    </span>Content(Mutex&lt;Vec&lt;u8&gt;&gt;),
+
+    <span class="doccomment">/// This variant is similar to the one above, except it&#39;s read only
+    /// and is backed by a static byte buffer
+    </span>StaticContent(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]),
+
+    <span class="doccomment">/// If the file type of the inode is [FileType::Device], in that case this variant
+    /// is used.
+    </span>Device(Arc&lt;DevINode&gt;),
+
+    <span class="doccomment">/// This variant is used to store the backing socket inode.
+    </span>Socket(Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;),
+
+    <span class="doccomment">/// This file does *not* and *cannot* have any contents in bytes. This is useful
+    /// in the cases of directories.
+    </span><span class="prelude-val">None</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">FileType</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">aero_syscall::SysFileType</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">file</span>: <span class="ident">FileType</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">file</span> {
-            <span class="ident">FileType::File</span> =&gt; <span class="ident">aero_syscall::SysFileType::File</span>,
-            <span class="ident">FileType::Directory</span> =&gt; <span class="ident">aero_syscall::SysFileType::Directory</span>,
-            <span class="ident">FileType::Device</span> =&gt; <span class="ident">aero_syscall::SysFileType::Device</span>,
-            <span class="ident">FileType::Socket</span> =&gt; <span class="ident">aero_syscall::SysFileType::Socket</span>,
+<span class="kw">impl </span>Default <span class="kw">for </span>FileContents {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::Content(Mutex::new(Vec::new()))
+    }
+}
+
+<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]</span>
+<span class="kw">pub enum </span>FileType {
+    File,
+    Directory,
+    Device,
+    Socket,
+}
+
+<span class="kw">impl </span>From&lt;FileType&gt; <span class="kw">for </span>aero_syscall::SysFileType {
+    <span class="kw">fn </span>from(file: FileType) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>file {
+            FileType::File =&gt; aero_syscall::SysFileType::File,
+            FileType::Directory =&gt; aero_syscall::SysFileType::Directory,
+            FileType::Device =&gt; aero_syscall::SysFileType::Device,
+            FileType::Socket =&gt; aero_syscall::SysFileType::Socket,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FileType</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::File</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>FileType {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::File
     }
 }
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">DirProtectedData</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">name</span>: <span class="ident">String</span>,
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">parent</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>DirProtectedData {
+    <span class="kw">pub</span>(<span class="kw">super</span>) name: String,
+    <span class="kw">pub</span>(<span class="kw">super</span>) parent: <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;,
 
-    <span class="ident">inode</span>: <span class="ident">INodeCacheItem</span>,
+    inode: INodeCacheItem,
 }
 
-<span class="doccomment">/// A directory entry is basically the mapping of filename to its inode.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DirEntry</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">data</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">DirProtectedData</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">filesystem</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">cache_marker</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// A directory entry is basically the mapping of filename to its inode.
+</span><span class="kw">pub struct </span>DirEntry {
+    <span class="kw">pub</span>(<span class="kw">super</span>) data: Mutex&lt;DirProtectedData&gt;,
+    <span class="kw">pub</span>(<span class="kw">super</span>) filesystem: Once&lt;Weak&lt;<span class="kw">dyn </span>FileSystem&gt;&gt;,
+    <span class="kw">pub</span>(<span class="kw">super</span>) cache_marker: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">DirEntry</span> {
-    <span class="doccomment">/// Creates a new cached directory entry, where the entry has the provided `parent` and</span>
-    <span class="doccomment">/// uses the weak filesystem pointer that the provided `inode` holds.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">inode</span>: <span class="ident">INodeCacheItem</span>, <span class="ident">name</span>: <span class="ident">String</span>) -&gt; <span class="ident">DirCacheItem</span> {
-        <span class="kw">let</span> <span class="ident">dcache</span> <span class="op">=</span> <span class="ident">cache::dcache</span>();
+<span class="kw">impl </span>DirEntry {
+    <span class="doccomment">/// Creates a new cached directory entry, where the entry has the provided `parent` and
+    /// uses the weak filesystem pointer that the provided `inode` holds.
+    </span><span class="kw">pub fn </span>new(parent: DirCacheItem, inode: INodeCacheItem, name: String) -&gt; DirCacheItem {
+        <span class="kw">let </span>dcache = cache::dcache();
 
         <span class="comment">/*
          * Helper bool to avoid situations where the directory entry is already cached. The possible
@@ -874,127 +874,127 @@
          *
          * &quot;.&quot; (ie. we do not want to re-cache the current directory)
          * &quot;..&quot; (ie. we do not want to re-cache the current directory&#39;s, parent directory).
-         */</span>
-        <span class="kw">let</span> <span class="ident">cache_me</span> <span class="op">=</span> <span class="op">!</span>[<span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>.<span class="ident">as_str</span>());
+         */
+        </span><span class="kw">let </span>cache_me = ![<span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].contains(<span class="kw-2">&amp;</span>name.as_str());
 
-        <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">data</span>: <span class="ident">Mutex::new</span>(<span class="ident">DirProtectedData</span> {
-                <span class="ident">parent</span>: <span class="prelude-val">Some</span>(<span class="ident">parent</span>.<span class="ident">clone</span>()),
-                <span class="ident">inode</span>: <span class="ident">inode</span>.<span class="ident">clone</span>(),
-                <span class="ident">name</span>,
+        <span class="kw">let </span>entry = <span class="self">Self </span>{
+            data: Mutex::new(DirProtectedData {
+                parent: <span class="prelude-val">Some</span>(parent.clone()),
+                inode: inode.clone(),
+                name,
             }),
 
-            <span class="ident">cache_marker</span>: <span class="kw">if</span> <span class="ident">cache_me</span> {
-                <span class="ident">DIR_CACHE_MARKER</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>)
-            } <span class="kw">else</span> {
-                <span class="number">0x00</span>
-            },
+            cache_marker: <span class="kw">if </span>cache_me {
+                DIR_CACHE_MARKER.fetch_add(<span class="number">1</span>, Ordering::SeqCst)
+            } <span class="kw">else </span>{
+                <span class="number">0x00
+            </span>},
 
-            <span class="ident">filesystem</span>: <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">filesystem</span>) <span class="op">=</span> <span class="ident">inode</span>.<span class="ident">weak_filesystem</span>() {
-                <span class="ident">Once::initialized</span>(<span class="ident">filesystem</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">Once::new</span>()
+            filesystem: <span class="kw">if let </span><span class="prelude-val">Some</span>(filesystem) = inode.weak_filesystem() {
+                Once::initialized(filesystem)
+            } <span class="kw">else </span>{
+                Once::new()
             },
         };
 
-        <span class="kw">if</span> <span class="ident">cache_me</span> {
-            <span class="ident">dcache</span>.<span class="ident">make_item_cached</span>(<span class="ident">entry</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">dcache</span>.<span class="ident">make_item_no_cache</span>(<span class="ident">entry</span>)
+        <span class="kw">if </span>cache_me {
+            dcache.make_item_cached(entry)
+        } <span class="kw">else </span>{
+            dcache.make_item_no_cache(entry)
         }
     }
 
-    <span class="doccomment">/// Creates a new root cached directory entry where the there is no parent</span>
-    <span class="doccomment">/// of the cache item and no filesystem reference by default. The caller is responsible</span>
-    <span class="doccomment">/// for initializing the weak reference to the filesystem.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_root</span>(<span class="ident">inode</span>: <span class="ident">INodeCacheItem</span>, <span class="ident">name</span>: <span class="ident">String</span>) -&gt; <span class="ident">DirCacheItem</span> {
-        <span class="kw">let</span> <span class="ident">dcache</span> <span class="op">=</span> <span class="ident">cache::dcache</span>();
+    <span class="doccomment">/// Creates a new root cached directory entry where the there is no parent
+    /// of the cache item and no filesystem reference by default. The caller is responsible
+    /// for initializing the weak reference to the filesystem.
+    </span><span class="kw">pub fn </span>new_root(inode: INodeCacheItem, name: String) -&gt; DirCacheItem {
+        <span class="kw">let </span>dcache = cache::dcache();
 
-        <span class="ident">dcache</span>.<span class="ident">make_item_no_cache</span>(<span class="self">Self</span> {
-            <span class="ident">data</span>: <span class="ident">Mutex::new</span>(<span class="ident">DirProtectedData</span> {
-                <span class="ident">parent</span>: <span class="prelude-val">None</span>,
-                <span class="ident">inode</span>: <span class="ident">inode</span>.<span class="ident">clone</span>(),
-                <span class="ident">name</span>,
+        dcache.make_item_no_cache(<span class="self">Self </span>{
+            data: Mutex::new(DirProtectedData {
+                parent: <span class="prelude-val">None</span>,
+                inode: inode.clone(),
+                name,
             }),
 
-            <span class="ident">cache_marker</span>: <span class="ident">DIR_CACHE_MARKER</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>),
-            <span class="ident">filesystem</span>: <span class="ident">Once::new</span>(),
+            cache_marker: DIR_CACHE_MARKER.fetch_add(<span class="number">1</span>, Ordering::SeqCst),
+            filesystem: Once::new(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_inode</span>(<span class="ident">inode</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span>, <span class="ident">name</span>: <span class="ident">String</span>) -&gt; <span class="ident">DirCacheItem</span> {
-        <span class="kw">let</span> <span class="ident">icache</span> <span class="op">=</span> <span class="ident">cache::icache</span>();
-        <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">icache</span>.<span class="ident">make_item_no_cache</span>(<span class="ident">CachedINode::new</span>(<span class="ident">inode</span>));
+    <span class="kw">pub fn </span>from_inode(inode: Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;, name: String) -&gt; DirCacheItem {
+        <span class="kw">let </span>icache = cache::icache();
+        <span class="kw">let </span>inode = icache.make_item_no_cache(CachedINode::new(inode));
 
-        <span class="ident">cache::dcache</span>().<span class="ident">make_item_no_cache</span>(<span class="self">Self</span> {
-            <span class="ident">data</span>: <span class="ident">Mutex::new</span>(<span class="ident">DirProtectedData</span> {
-                <span class="ident">parent</span>: <span class="prelude-val">None</span>,
+        cache::dcache().make_item_no_cache(<span class="self">Self </span>{
+            data: Mutex::new(DirProtectedData {
+                parent: <span class="prelude-val">None</span>,
 
-                <span class="ident">name</span>,
-                <span class="ident">inode</span>: <span class="ident">inode</span>.<span class="ident">clone</span>(),
+                name,
+                inode: inode.clone(),
             }),
 
-            <span class="ident">filesystem</span>: <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">fs</span>) <span class="op">=</span> <span class="ident">inode</span>.<span class="ident">weak_filesystem</span>() {
-                <span class="ident">Once::initialized</span>(<span class="ident">fs</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">Once::new</span>()
+            filesystem: <span class="kw">if let </span><span class="prelude-val">Some</span>(fs) = inode.weak_filesystem() {
+                Once::initialized(fs)
+            } <span class="kw">else </span>{
+                Once::new()
             },
 
-            <span class="ident">cache_marker</span>: <span class="number">0</span>,
+            cache_marker: <span class="number">0</span>,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_socket_inode</span>(
-        <span class="ident">parent</span>: <span class="ident">DirCacheItem</span>,
-        <span class="ident">name</span>: <span class="ident">String</span>,
-        <span class="ident">inode</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">parent</span>
-            .<span class="ident">inode</span>()
-            .<span class="ident">make_local_socket_inode</span>(<span class="ident">name</span>.<span class="ident">as_str</span>(), <span class="ident">inode</span>)<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>from_socket_inode(
+        parent: DirCacheItem,
+        name: String,
+        inode: Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem&gt; {
+        <span class="kw">let </span>inode = parent
+            .inode()
+            .make_local_socket_inode(name.as_str(), inode)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">cache::dcache</span>().<span class="ident">make_item_no_cache</span>(<span class="self">Self</span> {
-            <span class="ident">data</span>: <span class="ident">Mutex::new</span>(<span class="ident">DirProtectedData</span> {
-                <span class="ident">parent</span>: <span class="prelude-val">Some</span>(<span class="ident">parent</span>),
-                <span class="ident">inode</span>: <span class="ident">inode</span>.<span class="ident">clone</span>(),
-                <span class="ident">name</span>,
+        <span class="prelude-val">Ok</span>(cache::dcache().make_item_no_cache(<span class="self">Self </span>{
+            data: Mutex::new(DirProtectedData {
+                parent: <span class="prelude-val">Some</span>(parent),
+                inode: inode.clone(),
+                name,
             }),
-            <span class="ident">filesystem</span>: <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">filesystem</span>) <span class="op">=</span> <span class="ident">inode</span>.<span class="ident">weak_filesystem</span>() {
-                <span class="ident">Once::initialized</span>(<span class="ident">filesystem</span>)
-            } <span class="kw">else</span> {
-                <span class="ident">Once::new</span>()
+            filesystem: <span class="kw">if let </span><span class="prelude-val">Some</span>(filesystem) = inode.weak_filesystem() {
+                Once::initialized(filesystem)
+            } <span class="kw">else </span>{
+                Once::new()
             },
-            <span class="ident">cache_marker</span>: <span class="number">0</span>,
+            cache_marker: <span class="number">0</span>,
         }))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">lock</span>().<span class="ident">name</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.data.lock().name.clone()
     }
 
-    <span class="doccomment">/// Returns the inner cached inode item of the directory entry.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">INodeCacheItem</span> {
-        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">lock</span>().<span class="ident">inode</span>.<span class="ident">clone</span>()
+    <span class="doccomment">/// Returns the inner cached inode item of the directory entry.
+    </span><span class="kw">pub fn </span>inode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; INodeCacheItem {
+        <span class="self">self</span>.data.lock().inode.clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">lock</span>().<span class="ident">parent</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>parent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt; {
+        <span class="self">self</span>.data.lock().parent.clone()
     }
 
-    <span class="doccomment">/// Drops the directory entry from the cache.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">drop_from_cache</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="ident">cache::dcache</span>().<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cache_key</span>());
-        <span class="ident">cache::icache</span>().<span class="ident">remove</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inode</span>().<span class="ident">cache_key</span>());
+    <span class="doccomment">/// Drops the directory entry from the cache.
+    </span><span class="kw">pub fn </span>drop_from_cache(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        cache::dcache().remove(<span class="kw-2">&amp;</span><span class="self">self</span>.cache_key());
+        cache::icache().remove(<span class="kw-2">&amp;</span><span class="self">self</span>.inode().cache_key());
     }
 }
 
-<span class="doccomment">/// Fetches a cached directory entry item from the directory cache. Returns if</span>
-<span class="doccomment">/// the provided entry exists in the given parent directory cache.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fetch_dir_entry</span>(<span class="ident">parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">name</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">dcache</span> <span class="op">=</span> <span class="ident">cache::dcache</span>();
-    <span class="kw">let</span> <span class="ident">cache_key</span> <span class="op">=</span> (<span class="ident">parent</span>.<span class="ident">cache_marker</span>, <span class="ident">name</span>);
+<span class="doccomment">/// Fetches a cached directory entry item from the directory cache. Returns if
+/// the provided entry exists in the given parent directory cache.
+</span><span class="kw">pub fn </span>fetch_dir_entry(parent: DirCacheItem, name: String) -&gt; <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt; {
+    <span class="kw">let </span>dcache = cache::dcache();
+    <span class="kw">let </span>cache_key = (parent.cache_marker, name);
 
-    <span class="ident">dcache</span>.<span class="ident">get</span>(<span class="ident">cache_key</span>)
+    dcache.get(cache_key)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

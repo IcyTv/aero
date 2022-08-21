@@ -29,36 +29,36 @@
 <span id="29">29</span>
 <span id="30">30</span>
 <span id="31">31</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2016 lazy-static.rs Developers</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0, &lt;LICENSE-APACHE or</span>
-<span class="comment">// http://apache.org/licenses/LICENSE-2.0&gt; or the MIT license &lt;LICENSE-MIT or</span>
-<span class="comment">// http://opensource.org/licenses/MIT&gt;, at your option. This file may not be</span>
-<span class="comment">// copied, modified, or distributed except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2016 lazy-static.rs Developers
+//
+// Licensed under the Apache License, Version 2.0, &lt;LICENSE-APACHE or
+// http://apache.org/licenses/LICENSE-2.0&gt; or the MIT license &lt;LICENSE-MIT or
+// http://opensource.org/licenses/MIT&gt;, at your option. This file may not be
+// copied, modified, or distributed except according to those terms.
 
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">spin</span>;
+</span><span class="kw">extern crate </span>spin;
 
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::spin::Once</span>;
+<span class="kw">use </span><span class="self">self</span>::spin::Once;
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Sync</span><span class="op">&gt;</span>(<span class="ident">Once</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>);
+<span class="kw">pub struct </span>Lazy&lt;T: Sync&gt;(Once&lt;T&gt;);
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">Sync</span><span class="op">&gt;</span> <span class="ident">Lazy</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">INIT</span>: <span class="self">Self</span> <span class="op">=</span> <span class="ident">Lazy</span>(<span class="ident">Once::INIT</span>);
+<span class="kw">impl</span>&lt;T: Sync&gt; Lazy&lt;T&gt; {
+    <span class="kw">pub const </span>INIT: <span class="self">Self </span>= Lazy(Once::INIT);
 
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get</span><span class="op">&lt;</span><span class="ident">F</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="self">self</span>, <span class="ident">builder</span>: <span class="ident">F</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T</span>
-        <span class="kw">where</span> <span class="ident">F</span>: <span class="ident">FnOnce</span>() -&gt; <span class="ident">T</span>
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">pub fn </span>get&lt;F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">self</span>, builder: F) -&gt; <span class="kw-2">&amp;</span>T
+        <span class="kw">where </span>F: FnOnce() -&gt; T
     {
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">call_once</span>(<span class="ident">builder</span>)
+        <span class="self">self</span>.<span class="number">0</span>.call_once(builder)
     }
 }
 
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">__lazy_static_create</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">NAME</span>:<span class="ident">ident</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span>:<span class="ident">ty</span>) =&gt; {
-        <span class="kw">static</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">NAME</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::lazy::Lazy</span><span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">crate::lazy::Lazy::INIT</span>;
+<span class="attribute">#[macro_export]</span>
+<span class="attribute">#[doc(hidden)]</span>
+<span class="macro">macro_rules!</span> __lazy_static_create {
+    (<span class="macro-nonterminal">$NAME</span>:ident, <span class="macro-nonterminal">$T</span>:ty) =&gt; {
+        <span class="kw">static </span><span class="macro-nonterminal">$NAME</span>: <span class="macro-nonterminal">$crate::lazy::Lazy</span>&lt;<span class="macro-nonterminal">$T</span>&gt; = <span class="macro-nonterminal">$crate::lazy::Lazy::INIT</span>;
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lazy_static" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lazy_static" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

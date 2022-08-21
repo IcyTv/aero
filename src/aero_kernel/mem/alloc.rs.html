@@ -374,347 +374,347 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::alloc</span>;
-<span class="kw">use</span> <span class="ident">core::alloc</span>::{<span class="ident">GlobalAlloc</span>, <span class="ident">Layout</span>};
+</span><span class="kw">use </span>core::alloc;
+<span class="kw">use </span>core::alloc::{GlobalAlloc, Layout};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::paging::FRAME_ALLOCATOR</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::vmalloc</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::paging::FRAME_ALLOCATOR;
+<span class="kw">use </span><span class="kw">super</span>::vmalloc;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">struct</span> <span class="ident">SlabHeader</span> {
-    <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">Slab</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">struct </span>SlabHeader {
+    ptr: <span class="kw-2">*mut </span>Slab,
 }
 
-<span class="doccomment">/// The slab is the primary unit of currency in the slab allocator.</span>
-<span class="kw">struct</span> <span class="ident">Slab</span> {
-    <span class="ident">size</span>: <span class="ident">usize</span>,
-    <span class="ident">first_free</span>: <span class="ident">usize</span>,
+<span class="doccomment">/// The slab is the primary unit of currency in the slab allocator.
+</span><span class="kw">struct </span>Slab {
+    size: usize,
+    first_free: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">Slab</span> {
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">size</span>,
-            <span class="ident">first_free</span>: <span class="number">0</span>,
+<span class="kw">impl </span>Slab {
+    <span class="kw">const fn </span>new(size: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            size,
+            first_free: <span class="number">0</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">init</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>
-            .<span class="ident">allocate_frame</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;slab_init: failed to allocate frame&quot;</span>);
+    <span class="kw">fn </span>init(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR
+            .allocate_frame()
+            .expect(<span class="string">&quot;slab_init: failed to allocate frame&quot;</span>);
 
-        <span class="self">self</span>.<span class="ident">first_free</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">start_address</span>().<span class="ident">as_hhdm_virt</span>().<span class="ident">as_u64</span>() <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="self">self</span>.first_free = frame.start_address().as_hhdm_virt().as_u64() <span class="kw">as </span>usize;
 
-        <span class="kw">let</span> <span class="ident">hdr_size</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">SlabHeader</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="kw">let</span> <span class="ident">aligned_hdr_size</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">hdr_size</span>, <span class="self">self</span>.<span class="ident">size</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="kw">let </span>hdr_size = core::mem::size_of::&lt;SlabHeader&gt;() <span class="kw">as </span>u64;
+        <span class="kw">let </span>aligned_hdr_size = align_up(hdr_size, <span class="self">self</span>.size <span class="kw">as </span>u64) <span class="kw">as </span>usize;
 
-        <span class="kw">let</span> <span class="ident">avl_size</span> <span class="op">=</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">-</span> <span class="ident">aligned_hdr_size</span>;
+        <span class="kw">let </span>avl_size = Size4KiB::SIZE <span class="kw">as </span>usize - aligned_hdr_size;
 
-        <span class="kw">let</span> <span class="ident">slab_ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">first_free</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">SlabHeader</span>) };
-        <span class="ident">slab_ptr</span>.<span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Slab</span>;
+        <span class="kw">let </span>slab_ptr = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(<span class="self">self</span>.first_free <span class="kw">as </span><span class="kw-2">*mut </span>SlabHeader) };
+        slab_ptr.ptr = <span class="self">self </span><span class="kw">as </span><span class="kw-2">*mut </span>Slab;
 
-        <span class="self">self</span>.<span class="ident">first_free</span> <span class="op">+</span><span class="op">=</span> <span class="ident">aligned_hdr_size</span>;
+        <span class="self">self</span>.first_free += aligned_hdr_size;
 
-        <span class="kw">let</span> <span class="ident">arr_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">first_free</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">usize</span>;
-        <span class="kw">let</span> <span class="ident">array</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="ident">arr_ptr</span>, <span class="ident">avl_size</span>) };
+        <span class="kw">let </span>arr_ptr = <span class="self">self</span>.first_free <span class="kw">as </span><span class="kw-2">*mut </span>usize;
+        <span class="kw">let </span>array = <span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(arr_ptr, avl_size) };
 
-        <span class="comment">// A slab is built by allocating a 4KiB page, placing the slab data at</span>
-        <span class="comment">// the end, and dividing the rest into equal-size buffers:</span>
-        <span class="comment">//</span>
-        <span class="comment">// ------------------------------------------------------</span>
-        <span class="comment">// | buffer | buffer | buffer | buffer | slab header</span>
-        <span class="comment">// ------------------------------------------------------</span>
-        <span class="comment">//                         one page</span>
-        <span class="kw">let</span> <span class="ident">max</span> <span class="op">=</span> <span class="ident">avl_size</span> <span class="op">/</span> <span class="self">self</span>.<span class="ident">size</span> <span class="op">-</span> <span class="number">1</span>;
-        <span class="kw">let</span> <span class="ident">fact</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">size</span> <span class="op">/</span> <span class="number">8</span>;
+        <span class="comment">// A slab is built by allocating a 4KiB page, placing the slab data at
+        // the end, and dividing the rest into equal-size buffers:
+        //
+        // ------------------------------------------------------
+        // | buffer | buffer | buffer | buffer | slab header
+        // ------------------------------------------------------
+        //                         one page
+        </span><span class="kw">let </span>max = avl_size / <span class="self">self</span>.size - <span class="number">1</span>;
+        <span class="kw">let </span>fact = <span class="self">self</span>.size / <span class="number">8</span>;
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">max</span> {
-            <span class="kw">unsafe</span> {
-                <span class="ident">array</span>[<span class="ident">i</span> <span class="op">*</span> <span class="ident">fact</span>] <span class="op">=</span> <span class="ident">array</span>.<span class="ident">as_ptr</span>().<span class="ident">add</span>((<span class="ident">i</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">fact</span>) <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..max {
+            <span class="kw">unsafe </span>{
+                array[i * fact] = array.as_ptr().add((i + <span class="number">1</span>) * fact) <span class="kw">as </span>usize;
             }
         }
 
-        <span class="ident">array</span>[<span class="ident">max</span> <span class="op">*</span> <span class="ident">fact</span>] <span class="op">=</span> <span class="number">0</span>;
+        array[max * fact] = <span class="number">0</span>;
     }
 
-    <span class="kw">fn</span> <span class="ident">alloc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">first_free</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">init</span>();
+    <span class="kw">fn </span>alloc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="kw">if </span><span class="self">self</span>.first_free == <span class="number">0 </span>{
+            <span class="self">self</span>.init();
         }
 
-        <span class="kw">let</span> <span class="ident">old_free</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">first_free</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">usize</span>;
+        <span class="kw">let </span>old_free = <span class="self">self</span>.first_free <span class="kw">as </span><span class="kw-2">*mut </span>usize;
 
-        <span class="kw">unsafe</span> {
-            <span class="self">self</span>.<span class="ident">first_free</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">old_free</span>;
+        <span class="kw">unsafe </span>{
+            <span class="self">self</span>.first_free = <span class="kw-2">*</span>old_free;
         }
 
-        <span class="ident">old_free</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>
+        old_free <span class="kw">as </span><span class="kw-2">*mut </span>u8
     }
 
-    <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>) {
-        <span class="kw">if</span> <span class="ident">ptr</span> <span class="op">==</span> <span class="ident">core::ptr::null_mut</span>() {
+    <span class="kw">fn </span>dealloc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8) {
+        <span class="kw">if </span>ptr == core::ptr::null_mut() {
             <span class="macro">panic!</span>(<span class="string">&quot;dealloc: attempted to free a nullptr&quot;</span>)
         }
 
-        <span class="kw">let</span> <span class="ident">new_head</span> <span class="op">=</span> <span class="ident">ptr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">usize</span>;
+        <span class="kw">let </span>new_head = ptr <span class="kw">as </span><span class="kw-2">*mut </span>usize;
 
-        <span class="kw">unsafe</span> {
-            <span class="kw-2">*</span><span class="ident">new_head</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">first_free</span>;
+        <span class="kw">unsafe </span>{
+            <span class="kw-2">*</span>new_head = <span class="self">self</span>.first_free;
         }
 
-        <span class="self">self</span>.<span class="ident">first_free</span> <span class="op">=</span> <span class="ident">new_head</span> <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="self">self</span>.first_free = new_head <span class="kw">as </span>usize;
     }
 }
 
-<span class="kw">struct</span> <span class="ident">ProtectedAllocator</span> {
-    <span class="ident">slabs</span>: [<span class="ident">Slab</span>; <span class="number">10</span>],
+<span class="kw">struct </span>ProtectedAllocator {
+    slabs: [Slab; <span class="number">10</span>],
 }
 
-<span class="kw">struct</span> <span class="ident">Allocator</span> {
-    <span class="ident">inner</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">ProtectedAllocator</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Allocator {
+    inner: Mutex&lt;ProtectedAllocator&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Allocator</span> {
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">Mutex::new</span>(<span class="ident">ProtectedAllocator</span> {
-                <span class="ident">slabs</span>: [
-                    <span class="ident">Slab::new</span>(<span class="number">8</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">16</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">24</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">32</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">48</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">64</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">128</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">256</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">512</span>),
-                    <span class="ident">Slab::new</span>(<span class="number">1024</span>),
+<span class="kw">impl </span>Allocator {
+    <span class="kw">const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: Mutex::new(ProtectedAllocator {
+                slabs: [
+                    Slab::new(<span class="number">8</span>),
+                    Slab::new(<span class="number">16</span>),
+                    Slab::new(<span class="number">24</span>),
+                    Slab::new(<span class="number">32</span>),
+                    Slab::new(<span class="number">48</span>),
+                    Slab::new(<span class="number">64</span>),
+                    Slab::new(<span class="number">128</span>),
+                    Slab::new(<span class="number">256</span>),
+                    Slab::new(<span class="number">512</span>),
+                    Slab::new(<span class="number">1024</span>),
                 ],
             }),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">alloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
+    <span class="kw">fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: Layout) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.lock_irq();
 
-        <span class="kw">let</span> <span class="ident">slab</span> <span class="op">=</span> <span class="ident">inner</span>
-            .<span class="ident">slabs</span>
-            .<span class="ident">iter_mut</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">slab</span><span class="op">|</span> <span class="ident">slab</span>.<span class="ident">size</span> <span class="op">&gt;</span><span class="op">=</span> (<span class="number">8</span> <span class="op">+</span> <span class="ident">layout</span>.<span class="ident">size</span>()));
+        <span class="kw">let </span>slab = inner
+            .slabs
+            .iter_mut()
+            .find(|slab| slab.size &gt;= (<span class="number">8 </span>+ layout.size()));
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">slab</span>) <span class="op">=</span> <span class="ident">slab</span> {
-            <span class="ident">slab</span>.<span class="ident">alloc</span>()
-        } <span class="kw">else</span> {
-            <span class="comment">// the vmalloc allocator may require reverse dependency</span>
-            <span class="ident">core::mem::drop</span>(<span class="ident">inner</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(slab) = slab {
+            slab.alloc()
+        } <span class="kw">else </span>{
+            <span class="comment">// the vmalloc allocator may require reverse dependency
+            </span>core::mem::drop(inner);
 
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">layout</span>.<span class="ident">size</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Size4KiB::SIZE</span>) <span class="op">/</span> <span class="ident">Size4KiB::SIZE</span>;
+            <span class="kw">let </span>size = align_up(layout.size() <span class="kw">as _</span>, Size4KiB::SIZE) / Size4KiB::SIZE;
 
-            <span class="ident">vmalloc::get_vmalloc</span>()
-                .<span class="ident">alloc</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>)
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="ident">addr</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>())
-                .<span class="ident">unwrap_or</span>(<span class="ident">core::ptr::null_mut</span>())
+            vmalloc::get_vmalloc()
+                .alloc(size <span class="kw">as </span>usize)
+                .map(|addr| addr.as_mut_ptr::&lt;u8&gt;())
+                .unwrap_or(core::ptr::null_mut())
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="kw">fn </span>dealloc(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, layout: Layout) {
+        <span class="kw">let </span>address = VirtAddr::new(ptr <span class="kw">as </span>u64);
 
-        <span class="kw">if</span> <span class="ident">address</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">vmalloc::VMALLOC_START</span> <span class="op">&amp;&amp;</span> <span class="ident">address</span> <span class="op">&lt;</span> <span class="ident">vmalloc::VMALLOC_END</span> {
-            <span class="ident">vmalloc::get_vmalloc</span>().<span class="ident">dealloc</span>(<span class="ident">address</span>, <span class="ident">layout</span>.<span class="ident">size</span>() <span class="op">/</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="kw">if </span>address &gt;= vmalloc::VMALLOC_START &amp;&amp; address &lt; vmalloc::VMALLOC_END {
+            vmalloc::get_vmalloc().dealloc(address, layout.size() / Size4KiB::SIZE <span class="kw">as </span>usize);
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">slab_header</span> <span class="op">=</span> (<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> <span class="op">!</span>(<span class="number">0xfff</span>)) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">SlabHeader</span>;
+        <span class="kw">let </span>slab_header = (ptr <span class="kw">as </span>usize &amp; !(<span class="number">0xfff</span>)) <span class="kw">as </span><span class="kw-2">*mut </span>SlabHeader;
 
-        <span class="kw">let</span> <span class="ident">slab_header</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">slab_header</span> };
-        <span class="kw">let</span> <span class="ident">slab</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">slab_header</span>.<span class="ident">ptr</span> };
+        <span class="kw">let </span>slab_header = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>slab_header };
+        <span class="kw">let </span>slab = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>slab_header.ptr };
 
-        <span class="ident">slab</span>.<span class="ident">dealloc</span>(<span class="ident">ptr</span>);
+        slab.dealloc(ptr);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LockedHeap</span>(<span class="ident">Allocator</span>);
+<span class="kw">pub struct </span>LockedHeap(Allocator);
 
-<span class="kw">impl</span> <span class="ident">LockedHeap</span> {
-    <span class="doccomment">/// Creates a new uninitialized instance of the kernel</span>
-    <span class="doccomment">/// global allocator.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new_uninit</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">Allocator::new</span>())
+<span class="kw">impl </span>LockedHeap {
+    <span class="doccomment">/// Creates a new uninitialized instance of the kernel
+    /// global allocator.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub const fn </span>new_uninit() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(Allocator::new())
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;kmemleak&quot;</span>)]</span>
-<span class="kw">mod</span> <span class="ident">kmemleak</span> {
-    <span class="kw">use</span> <span class="ident">core::alloc::Layout</span>;
-    <span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>};
+<span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]</span>
+<span class="kw">mod </span>kmemleak {
+    <span class="kw">use </span>core::alloc::Layout;
+    <span class="kw">use </span>core::sync::atomic::{AtomicBool, Ordering};
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
-    <span class="kw">use</span> <span class="ident">hashbrown::HashMap</span>;
-    <span class="kw">use</span> <span class="ident">spin::Once</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
+    <span class="kw">use </span>hashbrown::HashMap;
+    <span class="kw">use </span>spin::Once;
 
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="ident">MEM_LEAK_CATCHER</span>: <span class="ident">MemoryLeakCatcher</span> <span class="op">=</span> <span class="ident">MemoryLeakCatcher::new_uninit</span>();
+    <span class="kw">pub static </span>MEM_LEAK_CATCHER: MemoryLeakCatcher = MemoryLeakCatcher::new_uninit();
 
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MemoryLeakCatcher</span> {
-        <span class="ident">alloc</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">HashMap</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">Layout</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">initialized</span>: <span class="ident">AtomicBool</span>,
+    <span class="kw">pub struct </span>MemoryLeakCatcher {
+        alloc: Once&lt;Mutex&lt;HashMap&lt;usize, Layout&gt;&gt;&gt;,
+        initialized: AtomicBool,
     }
 
-    <span class="kw">impl</span> <span class="ident">MemoryLeakCatcher</span> {
-        <span class="doccomment">/// Creates a new uninitialized instance of the kernel memory</span>
-        <span class="doccomment">/// leak catcher.</span>
-        <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new_uninit</span>() -&gt; <span class="self">Self</span> {
-            <span class="self">Self</span> {
-                <span class="ident">alloc</span>: <span class="ident">Once::new</span>(),
-                <span class="ident">initialized</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
+    <span class="kw">impl </span>MemoryLeakCatcher {
+        <span class="doccomment">/// Creates a new uninitialized instance of the kernel memory
+        /// leak catcher.
+        </span><span class="kw">const fn </span>new_uninit() -&gt; <span class="self">Self </span>{
+            <span class="self">Self </span>{
+                alloc: Once::new(),
+                initialized: AtomicBool::new(<span class="bool-val">false</span>),
             }
         }
 
-        <span class="kw">fn</span> <span class="ident">disable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-            <span class="self">self</span>.<span class="ident">initialized</span>.<span class="ident">store</span>(<span class="bool-val">false</span>, <span class="ident">Ordering::SeqCst</span>);
+        <span class="kw">fn </span>disable(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+            <span class="self">self</span>.initialized.store(<span class="bool-val">false</span>, Ordering::SeqCst);
         }
 
-        <span class="kw">fn</span> <span class="ident">enable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-            <span class="self">self</span>.<span class="ident">initialized</span>.<span class="ident">store</span>(<span class="bool-val">true</span>, <span class="ident">Ordering::SeqCst</span>);
+        <span class="kw">fn </span>enable(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+            <span class="self">self</span>.initialized.store(<span class="bool-val">true</span>, Ordering::SeqCst);
         }
 
-        <span class="kw">fn</span> <span class="ident">is_initialized</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-            <span class="self">self</span>.<span class="ident">initialized</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+        <span class="kw">fn </span>is_initialized(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+            <span class="self">self</span>.initialized.load(Ordering::SeqCst)
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-            <span class="self">self</span>.<span class="ident">alloc</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">HashMap::new</span>()));
-            <span class="self">self</span>.<span class="ident">enable</span>();
+        <span class="kw">pub fn </span>init(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+            <span class="self">self</span>.alloc.call_once(|| Mutex::new(HashMap::new()));
+            <span class="self">self</span>.enable();
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">track_caller</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) {
-            <span class="kw">let</span> <span class="ident">init</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_initialized</span>();
+        <span class="kw">pub fn </span>track_caller(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, layout: Layout) {
+            <span class="kw">let </span>init = <span class="self">self</span>.is_initialized();
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">init</span> {
+            <span class="kw">if </span>!init {
                 <span class="kw">return</span>;
             }
 
-            <span class="self">self</span>.<span class="ident">disable</span>();
+            <span class="self">self</span>.disable();
 
-            <span class="self">self</span>.<span class="ident">alloc</span>
-                .<span class="ident">get</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;track_caller: leak catcher not initialized&quot;</span>)
-                .<span class="ident">lock</span>()
-                .<span class="ident">insert</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">layout</span>);
+            <span class="self">self</span>.alloc
+                .get()
+                .expect(<span class="string">&quot;track_caller: leak catcher not initialized&quot;</span>)
+                .lock()
+                .insert(ptr <span class="kw">as </span>usize, layout);
 
-            <span class="self">self</span>.<span class="ident">enable</span>();
+            <span class="self">self</span>.enable();
         }
 
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>) {
-            <span class="kw">let</span> <span class="ident">init</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">is_initialized</span>();
+        <span class="kw">pub fn </span>unref(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8) {
+            <span class="kw">let </span>init = <span class="self">self</span>.is_initialized();
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">init</span> {
+            <span class="kw">if </span>!init {
                 <span class="kw">return</span>;
             }
 
-            <span class="self">self</span>.<span class="ident">disable</span>();
+            <span class="self">self</span>.disable();
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">alloc</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">alloc</span>
-                .<span class="ident">get</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;unref: leak catcher not initialized&quot;</span>)
-                .<span class="ident">lock</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>alloc = <span class="self">self
+                </span>.alloc
+                .get()
+                .expect(<span class="string">&quot;unref: leak catcher not initialized&quot;</span>)
+                .lock();
 
-            <span class="kw">let</span> <span class="ident">double_free</span> <span class="op">=</span> <span class="ident">alloc</span>.<span class="ident">remove</span>(<span class="kw-2">&amp;</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>));
+            <span class="kw">let </span>double_free = alloc.remove(<span class="kw-2">&amp;</span>(ptr <span class="kw">as </span>usize));
 
-            <span class="comment">// If the allocation was not found, then we have a double free. Oh well!</span>
-            <span class="kw">if</span> <span class="ident">double_free</span>.<span class="ident">is_none</span>() {
+            <span class="comment">// If the allocation was not found, then we have a double free. Oh well!
+            </span><span class="kw">if </span>double_free.is_none() {
                 <span class="macro">panic!</span>(
                     <span class="string">&quot;attempted to double-free pointer at address: {:#x}&quot;</span>,
-                    <span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span>
+                    ptr <span class="kw">as </span>usize
                 );
             }
 
-            <span class="self">self</span>.<span class="ident">enable</span>();
+            <span class="self">self</span>.enable();
         }
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">GlobalAlloc</span> <span class="kw">for</span> <span class="ident">LockedHeap</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">alloc::Layout</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">layout</span>.<span class="ident">align</span>().<span class="ident">is_power_of_two</span>());
+<span class="kw">unsafe impl </span>GlobalAlloc <span class="kw">for </span>LockedHeap {
+    <span class="kw">unsafe fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: alloc::Layout) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="macro">debug_assert!</span>(layout.align().is_power_of_two());
 
-        <span class="comment">// Rounded up size is:</span>
-        <span class="comment">//   size_rounded_up = (size + align - 1) &amp; !(align - 1);</span>
-        <span class="comment">//</span>
-        <span class="comment">// We know from above that align != 0. If adding (align - 1)</span>
-        <span class="comment">// does not overflow, then rounding up will be fine.</span>
-        <span class="comment">//</span>
-        <span class="comment">// Conversely, &amp;-masking with !(align - 1) will subtract off</span>
-        <span class="comment">// only low-order-bits. Thus if overflow occurs with the sum,</span>
-        <span class="comment">// the &amp;-mask cannot subtract enough to undo that overflow.</span>
-        <span class="comment">//</span>
-        <span class="comment">// Above implies that checking for summation overflow is both</span>
-        <span class="comment">// necessary and sufficient.</span>
-        <span class="macro">debug_assert!</span>(<span class="ident">layout</span>.<span class="ident">size</span>() <span class="op">&lt;</span> <span class="ident">usize::MAX</span> <span class="op">-</span> (<span class="ident">layout</span>.<span class="ident">align</span>() <span class="op">-</span> <span class="number">1</span>));
+        <span class="comment">// Rounded up size is:
+        //   size_rounded_up = (size + align - 1) &amp; !(align - 1);
+        //
+        // We know from above that align != 0. If adding (align - 1)
+        // does not overflow, then rounding up will be fine.
+        //
+        // Conversely, &amp;-masking with !(align - 1) will subtract off
+        // only low-order-bits. Thus if overflow occurs with the sum,
+        // the &amp;-mask cannot subtract enough to undo that overflow.
+        //
+        // Above implies that checking for summation overflow is both
+        // necessary and sufficient.
+        </span><span class="macro">debug_assert!</span>(layout.size() &lt; usize::MAX - (layout.align() - <span class="number">1</span>));
 
-        <span class="comment">// SAFETY: We we need to be careful to not cause a deadlock as the interrupt</span>
-        <span class="comment">// handlers utilize the heap and might interrupt an in-progress allocation. So, we</span>
-        <span class="comment">// lock the interrupts during the allocation.</span>
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">alloc</span>(<span class="ident">layout</span>);
+        <span class="comment">// SAFETY: We we need to be careful to not cause a deadlock as the interrupt
+        // handlers utilize the heap and might interrupt an in-progress allocation. So, we
+        // lock the interrupts during the allocation.
+        </span><span class="kw">let </span>ptr = <span class="self">self</span>.<span class="number">0</span>.alloc(layout);
 
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;kmemleak&quot;</span>)]</span>
-        <span class="ident">kmemleak::MEM_LEAK_CATCHER</span>.<span class="ident">track_caller</span>(<span class="ident">ptr</span>, <span class="ident">layout</span>);
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]</span>
+        kmemleak::MEM_LEAK_CATCHER.track_caller(ptr, layout);
 
-        <span class="ident">ptr</span>
+        ptr
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) {
-        <span class="comment">// SAFETY: We we need to be careful to not cause a deadlock as the interrupt</span>
-        <span class="comment">// handlers utilize the heap and might interrupt an in-progress de-allocation. So, we</span>
-        <span class="comment">// lock the interrupts during the de-allocation.</span>
-        <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;kmemleak&quot;</span>)]</span>
-        <span class="ident">kmemleak::MEM_LEAK_CATCHER</span>.<span class="ident">unref</span>(<span class="ident">ptr</span>);
+    <span class="kw">unsafe fn </span>dealloc(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, layout: Layout) {
+        <span class="comment">// SAFETY: We we need to be careful to not cause a deadlock as the interrupt
+        // handlers utilize the heap and might interrupt an in-progress de-allocation. So, we
+        // lock the interrupts during the de-allocation.
+        </span><span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]</span>
+        kmemleak::MEM_LEAK_CATCHER.unref(ptr);
 
-        <span class="self">self</span>.<span class="number">0</span>.<span class="ident">dealloc</span>(<span class="ident">ptr</span>, <span class="ident">layout</span>)
+        <span class="self">self</span>.<span class="number">0</span>.dealloc(ptr, layout)
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">realloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>, <span class="ident">new_size</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="comment">// SAFETY: the caller must ensure that the `new_size` does not overflow.</span>
-        <span class="comment">// `layout.align()` comes from a `Layout` and is thus guaranteed to be valid.</span>
-        <span class="kw">let</span> <span class="ident">new_layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">new_size</span>, <span class="ident">layout</span>.<span class="ident">align</span>());
-        <span class="comment">// SAFETY: the caller must ensure that `new_layout` is greater than zero.</span>
-        <span class="kw">let</span> <span class="ident">new_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">alloc</span>(<span class="ident">new_layout</span>);
+    <span class="kw">unsafe fn </span>realloc(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, layout: Layout, new_size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="comment">// SAFETY: the caller must ensure that the `new_size` does not overflow.
+        // `layout.align()` comes from a `Layout` and is thus guaranteed to be valid.
+        </span><span class="kw">let </span>new_layout = Layout::from_size_align_unchecked(new_size, layout.align());
+        <span class="comment">// SAFETY: the caller must ensure that `new_layout` is greater than zero.
+        </span><span class="kw">let </span>new_ptr = <span class="self">self</span>.alloc(new_layout);
 
-        <span class="comment">// NOTE: It is fine to pass a NULL pointer to `realloc` so, we need to check for that.</span>
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">new_ptr</span>.<span class="ident">is_null</span>() <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">ptr</span>.<span class="ident">is_null</span>() {
-            <span class="comment">// SAFETY: the previously allocated block cannot overlap the newly allocated block.</span>
-            <span class="comment">// The safety contract for `dealloc` must be upheld by the caller.</span>
-            <span class="ident">core::ptr::copy_nonoverlapping</span>(<span class="ident">ptr</span>, <span class="ident">new_ptr</span>, <span class="ident">core::cmp::min</span>(<span class="ident">layout</span>.<span class="ident">size</span>(), <span class="ident">new_size</span>));
-            <span class="self">self</span>.<span class="ident">dealloc</span>(<span class="ident">ptr</span>, <span class="ident">layout</span>);
+        <span class="comment">// NOTE: It is fine to pass a NULL pointer to `realloc` so, we need to check for that.
+        </span><span class="kw">if </span>!new_ptr.is_null() &amp;&amp; !ptr.is_null() {
+            <span class="comment">// SAFETY: the previously allocated block cannot overlap the newly allocated block.
+            // The safety contract for `dealloc` must be upheld by the caller.
+            </span>core::ptr::copy_nonoverlapping(ptr, new_ptr, core::cmp::min(layout.size(), new_size));
+            <span class="self">self</span>.dealloc(ptr, layout);
         }
 
-        <span class="ident">new_ptr</span>
+        new_ptr
     }
 }
 
-<span class="attribute">#[<span class="ident">alloc_error_handler</span>]</span>
-<span class="kw">fn</span> <span class="ident">alloc_error_handler</span>(<span class="ident">layout</span>: <span class="ident">alloc::Layout</span>) -&gt; <span class="op">!</span> {
+<span class="attribute">#[alloc_error_handler]</span>
+<span class="kw">fn </span>alloc_error_handler(layout: alloc::Layout) -&gt; ! {
     <span class="macro">panic!</span>(
         <span class="string">&quot;Allocation error with size {} and layout {}&quot;</span>,
-        <span class="ident">layout</span>.<span class="ident">size</span>(),
-        <span class="ident">layout</span>.<span class="ident">align</span>()
+        layout.size(),
+        layout.align()
     )
 }
 
-<span class="doccomment">/// Initialize the heap at the [HEAP_START].</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_heap</span>() {
-    <span class="ident">vmalloc::init</span>();
+<span class="doccomment">/// Initialize the heap at the [HEAP_START].
+</span><span class="kw">pub fn </span>init_heap() {
+    vmalloc::init();
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;kmemleak&quot;</span>)]</span>
-    <span class="ident">kmemleak::MEM_LEAK_CATCHER</span>.<span class="ident">init</span>();
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]</span>
+    kmemleak::MEM_LEAK_CATCHER.init();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

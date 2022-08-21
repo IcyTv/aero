@@ -440,413 +440,413 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">alloc::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">spin::RwLock</span>;
+</span><span class="kw">use </span>alloc::sync::{Arc, Weak};
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>spin::RwLock;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::interrupts</span>::{<span class="self">self</span>, <span class="ident">InterruptStack</span>};
-<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">apic</span>, <span class="ident">fs</span>};
+<span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::{<span class="self">self</span>, InterruptStack};
+<span class="kw">use crate</span>::{apic, fs};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::devfs</span>::{<span class="self">self</span>, <span class="ident">Device</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode::INodeInterface</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::devfs::{<span class="self">self</span>, Device};
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::INodeInterface;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">KeyboardListener</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {
-    <span class="kw">fn</span> <span class="ident">on_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">key</span>: <span class="ident">KeyCode</span>, <span class="ident">released</span>: <span class="ident">bool</span>);
+<span class="kw">pub trait </span>KeyboardListener: Send + Sync {
+    <span class="kw">fn </span>on_key(<span class="kw-2">&amp;</span><span class="self">self</span>, key: KeyCode, released: bool);
 }
 
-<span class="kw">static</span> <span class="ident">PS2_KEYBOARD_STATE</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Ps2KeyboardState</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="ident">Ps2KeyboardState::new</span>());
-<span class="kw">static</span> <span class="ident">KEYBOARD_LISTNER</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">KeyboardListener</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">RwLock::new</span>(<span class="ident">Vec::new</span>());
+<span class="kw">static </span>PS2_KEYBOARD_STATE: Mutex&lt;Ps2KeyboardState&gt; = Mutex::new(Ps2KeyboardState::new());
+<span class="kw">static </span>KEYBOARD_LISTNER: RwLock&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>KeyboardListener&gt;&gt; = RwLock::new(Vec::new());
 
-<span class="kw">struct</span> <span class="ident">Ps2KeyboardState</span> {
-    <span class="ident">special</span>: <span class="ident">bool</span>,
-    <span class="ident">released</span>: <span class="ident">bool</span>,
+<span class="kw">struct </span>Ps2KeyboardState {
+    special: bool,
+    released: bool,
 }
 
-<span class="kw">impl</span> <span class="ident">Ps2KeyboardState</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">special</span>: <span class="bool-val">false</span>,
-            <span class="ident">released</span>: <span class="bool-val">false</span>,
+<span class="kw">impl </span>Ps2KeyboardState {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            special: <span class="bool-val">false</span>,
+            released: <span class="bool-val">false</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="kw">while</span> <span class="ident">io::inb</span>(<span class="number">0x64</span>) <span class="op">&amp;</span> <span class="number">1</span> <span class="op">==</span> <span class="number">1</span> {
-                <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="number">0x60</span>);
+    <span class="kw">fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">unsafe </span>{
+            <span class="kw">while </span>io::inb(<span class="number">0x64</span>) &amp; <span class="number">1 </span>== <span class="number">1 </span>{
+                <span class="kw">let _ </span>= io::inb(<span class="number">0x60</span>);
             }
         }
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">struct</span> <span class="ident">ConfigFlags</span>: <span class="ident">u8</span> {
-        <span class="kw">const</span> <span class="ident">FIRST_INTERRUPT</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">SECOND_INTERRUPT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">POST_PASSED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">CONFIG_RESERVED_3</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="kw">const</span> <span class="ident">FIRST_DISABLED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="kw">const</span> <span class="ident">SECOND_DISABLED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">FIRST_TRANSLATE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-        <span class="kw">const</span> <span class="ident">CONFIG_RESERVED_7</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
+    <span class="kw">struct </span>ConfigFlags: u8 {
+        <span class="kw">const </span>FIRST_INTERRUPT = <span class="number">1</span>;
+        <span class="kw">const </span>SECOND_INTERRUPT = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="kw">const </span>POST_PASSED = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="kw">const </span>CONFIG_RESERVED_3 = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="kw">const </span>FIRST_DISABLED = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="kw">const </span>SECOND_DISABLED = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="kw">const </span>FIRST_TRANSLATE = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+        <span class="kw">const </span>CONFIG_RESERVED_7 = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Eq</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">non_camel_case_types</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">KeyCode</span> {
-    <span class="ident">KEY_RESERVED</span> <span class="op">=</span> <span class="number">0</span>,
-    <span class="ident">KEY_ESC</span> <span class="op">=</span> <span class="number">1</span>,
-    <span class="ident">KEY_1</span> <span class="op">=</span> <span class="number">2</span>,
-    <span class="ident">KEY_2</span> <span class="op">=</span> <span class="number">3</span>,
-    <span class="ident">KEY_3</span> <span class="op">=</span> <span class="number">4</span>,
-    <span class="ident">KEY_4</span> <span class="op">=</span> <span class="number">5</span>,
-    <span class="ident">KEY_5</span> <span class="op">=</span> <span class="number">6</span>,
-    <span class="ident">KEY_6</span> <span class="op">=</span> <span class="number">7</span>,
-    <span class="ident">KEY_7</span> <span class="op">=</span> <span class="number">8</span>,
-    <span class="ident">KEY_8</span> <span class="op">=</span> <span class="number">9</span>,
-    <span class="ident">KEY_9</span> <span class="op">=</span> <span class="number">10</span>,
-    <span class="ident">KEY_0</span> <span class="op">=</span> <span class="number">11</span>,
-    <span class="ident">KEY_MINUS</span> <span class="op">=</span> <span class="number">12</span>,
-    <span class="ident">KEY_EQUAL</span> <span class="op">=</span> <span class="number">13</span>,
-    <span class="ident">KEY_BACKSPACE</span> <span class="op">=</span> <span class="number">14</span>,
-    <span class="ident">KEY_TAB</span> <span class="op">=</span> <span class="number">15</span>,
-    <span class="ident">KEY_Q</span> <span class="op">=</span> <span class="number">16</span>,
-    <span class="ident">KEY_W</span> <span class="op">=</span> <span class="number">17</span>,
-    <span class="ident">KEY_E</span> <span class="op">=</span> <span class="number">18</span>,
-    <span class="ident">KEY_R</span> <span class="op">=</span> <span class="number">19</span>,
-    <span class="ident">KEY_T</span> <span class="op">=</span> <span class="number">20</span>,
-    <span class="ident">KEY_Y</span> <span class="op">=</span> <span class="number">21</span>,
-    <span class="ident">KEY_U</span> <span class="op">=</span> <span class="number">22</span>,
-    <span class="ident">KEY_I</span> <span class="op">=</span> <span class="number">23</span>,
-    <span class="ident">KEY_O</span> <span class="op">=</span> <span class="number">24</span>,
-    <span class="ident">KEY_P</span> <span class="op">=</span> <span class="number">25</span>,
-    <span class="ident">KEY_LEFTBRACE</span> <span class="op">=</span> <span class="number">26</span>,
-    <span class="ident">KEY_RIGHTBRACE</span> <span class="op">=</span> <span class="number">27</span>,
-    <span class="ident">KEY_ENTER</span> <span class="op">=</span> <span class="number">28</span>,
-    <span class="ident">KEY_LEFTCTRL</span> <span class="op">=</span> <span class="number">29</span>,
-    <span class="ident">KEY_A</span> <span class="op">=</span> <span class="number">30</span>,
-    <span class="ident">KEY_S</span> <span class="op">=</span> <span class="number">31</span>,
-    <span class="ident">KEY_D</span> <span class="op">=</span> <span class="number">32</span>,
-    <span class="ident">KEY_F</span> <span class="op">=</span> <span class="number">33</span>,
-    <span class="ident">KEY_G</span> <span class="op">=</span> <span class="number">34</span>,
-    <span class="ident">KEY_H</span> <span class="op">=</span> <span class="number">35</span>,
-    <span class="ident">KEY_J</span> <span class="op">=</span> <span class="number">36</span>,
-    <span class="ident">KEY_K</span> <span class="op">=</span> <span class="number">37</span>,
-    <span class="ident">KEY_L</span> <span class="op">=</span> <span class="number">38</span>,
-    <span class="ident">KEY_SEMICOLON</span> <span class="op">=</span> <span class="number">39</span>,
-    <span class="ident">KEY_APOSTROPHE</span> <span class="op">=</span> <span class="number">40</span>,
-    <span class="ident">KEY_GRAVE</span> <span class="op">=</span> <span class="number">41</span>,
-    <span class="ident">KEY_LEFTSHIFT</span> <span class="op">=</span> <span class="number">42</span>,
-    <span class="ident">KEY_BACKSLASH</span> <span class="op">=</span> <span class="number">43</span>,
-    <span class="ident">KEY_Z</span> <span class="op">=</span> <span class="number">44</span>,
-    <span class="ident">KEY_X</span> <span class="op">=</span> <span class="number">45</span>,
-    <span class="ident">KEY_C</span> <span class="op">=</span> <span class="number">46</span>,
-    <span class="ident">KEY_V</span> <span class="op">=</span> <span class="number">47</span>,
-    <span class="ident">KEY_B</span> <span class="op">=</span> <span class="number">48</span>,
-    <span class="ident">KEY_N</span> <span class="op">=</span> <span class="number">49</span>,
-    <span class="ident">KEY_M</span> <span class="op">=</span> <span class="number">50</span>,
-    <span class="ident">KEY_COMMA</span> <span class="op">=</span> <span class="number">51</span>,
-    <span class="ident">KEY_DOT</span> <span class="op">=</span> <span class="number">52</span>,
-    <span class="ident">KEY_SLASH</span> <span class="op">=</span> <span class="number">53</span>,
-    <span class="ident">KEY_RIGHTSHIFT</span> <span class="op">=</span> <span class="number">54</span>,
-    <span class="ident">KEY_KPASTERISK</span> <span class="op">=</span> <span class="number">55</span>,
-    <span class="ident">KEY_LEFTALT</span> <span class="op">=</span> <span class="number">56</span>,
-    <span class="ident">KEY_SPACE</span> <span class="op">=</span> <span class="number">57</span>,
-    <span class="ident">KEY_CAPSLOCK</span> <span class="op">=</span> <span class="number">58</span>,
-    <span class="ident">KEY_F1</span> <span class="op">=</span> <span class="number">59</span>,
-    <span class="ident">KEY_F2</span> <span class="op">=</span> <span class="number">60</span>,
-    <span class="ident">KEY_F3</span> <span class="op">=</span> <span class="number">61</span>,
-    <span class="ident">KEY_F4</span> <span class="op">=</span> <span class="number">62</span>,
-    <span class="ident">KEY_F5</span> <span class="op">=</span> <span class="number">63</span>,
-    <span class="ident">KEY_F6</span> <span class="op">=</span> <span class="number">64</span>,
-    <span class="ident">KEY_F7</span> <span class="op">=</span> <span class="number">65</span>,
-    <span class="ident">KEY_F8</span> <span class="op">=</span> <span class="number">66</span>,
-    <span class="ident">KEY_F9</span> <span class="op">=</span> <span class="number">67</span>,
-    <span class="ident">KEY_F10</span> <span class="op">=</span> <span class="number">68</span>,
-    <span class="ident">KEY_NUMLOCK</span> <span class="op">=</span> <span class="number">69</span>,
-    <span class="ident">KEY_SCROLLLOCK</span> <span class="op">=</span> <span class="number">70</span>,
-    <span class="ident">KEY_KP7</span> <span class="op">=</span> <span class="number">71</span>,
-    <span class="ident">KEY_KP8</span> <span class="op">=</span> <span class="number">72</span>,
-    <span class="ident">KEY_KP9</span> <span class="op">=</span> <span class="number">73</span>,
-    <span class="ident">KEY_KPMINUS</span> <span class="op">=</span> <span class="number">74</span>,
-    <span class="ident">KEY_KP4</span> <span class="op">=</span> <span class="number">75</span>,
-    <span class="ident">KEY_KP5</span> <span class="op">=</span> <span class="number">76</span>,
-    <span class="ident">KEY_KP6</span> <span class="op">=</span> <span class="number">77</span>,
-    <span class="ident">KEY_KPPLUS</span> <span class="op">=</span> <span class="number">78</span>,
-    <span class="ident">KEY_KP1</span> <span class="op">=</span> <span class="number">79</span>,
-    <span class="ident">KEY_KP2</span> <span class="op">=</span> <span class="number">80</span>,
-    <span class="ident">KEY_KP3</span> <span class="op">=</span> <span class="number">81</span>,
-    <span class="ident">KEY_KP0</span> <span class="op">=</span> <span class="number">82</span>,
-    <span class="ident">KEY_KPDOT</span> <span class="op">=</span> <span class="number">83</span>,
+<span class="attribute">#[derive(Copy, Clone, Eq, PartialEq, Debug)]</span>
+<span class="attribute">#[allow(non_camel_case_types)]</span>
+<span class="kw">pub enum </span>KeyCode {
+    KEY_RESERVED = <span class="number">0</span>,
+    KEY_ESC = <span class="number">1</span>,
+    KEY_1 = <span class="number">2</span>,
+    KEY_2 = <span class="number">3</span>,
+    KEY_3 = <span class="number">4</span>,
+    KEY_4 = <span class="number">5</span>,
+    KEY_5 = <span class="number">6</span>,
+    KEY_6 = <span class="number">7</span>,
+    KEY_7 = <span class="number">8</span>,
+    KEY_8 = <span class="number">9</span>,
+    KEY_9 = <span class="number">10</span>,
+    KEY_0 = <span class="number">11</span>,
+    KEY_MINUS = <span class="number">12</span>,
+    KEY_EQUAL = <span class="number">13</span>,
+    KEY_BACKSPACE = <span class="number">14</span>,
+    KEY_TAB = <span class="number">15</span>,
+    KEY_Q = <span class="number">16</span>,
+    KEY_W = <span class="number">17</span>,
+    KEY_E = <span class="number">18</span>,
+    KEY_R = <span class="number">19</span>,
+    KEY_T = <span class="number">20</span>,
+    KEY_Y = <span class="number">21</span>,
+    KEY_U = <span class="number">22</span>,
+    KEY_I = <span class="number">23</span>,
+    KEY_O = <span class="number">24</span>,
+    KEY_P = <span class="number">25</span>,
+    KEY_LEFTBRACE = <span class="number">26</span>,
+    KEY_RIGHTBRACE = <span class="number">27</span>,
+    KEY_ENTER = <span class="number">28</span>,
+    KEY_LEFTCTRL = <span class="number">29</span>,
+    KEY_A = <span class="number">30</span>,
+    KEY_S = <span class="number">31</span>,
+    KEY_D = <span class="number">32</span>,
+    KEY_F = <span class="number">33</span>,
+    KEY_G = <span class="number">34</span>,
+    KEY_H = <span class="number">35</span>,
+    KEY_J = <span class="number">36</span>,
+    KEY_K = <span class="number">37</span>,
+    KEY_L = <span class="number">38</span>,
+    KEY_SEMICOLON = <span class="number">39</span>,
+    KEY_APOSTROPHE = <span class="number">40</span>,
+    KEY_GRAVE = <span class="number">41</span>,
+    KEY_LEFTSHIFT = <span class="number">42</span>,
+    KEY_BACKSLASH = <span class="number">43</span>,
+    KEY_Z = <span class="number">44</span>,
+    KEY_X = <span class="number">45</span>,
+    KEY_C = <span class="number">46</span>,
+    KEY_V = <span class="number">47</span>,
+    KEY_B = <span class="number">48</span>,
+    KEY_N = <span class="number">49</span>,
+    KEY_M = <span class="number">50</span>,
+    KEY_COMMA = <span class="number">51</span>,
+    KEY_DOT = <span class="number">52</span>,
+    KEY_SLASH = <span class="number">53</span>,
+    KEY_RIGHTSHIFT = <span class="number">54</span>,
+    KEY_KPASTERISK = <span class="number">55</span>,
+    KEY_LEFTALT = <span class="number">56</span>,
+    KEY_SPACE = <span class="number">57</span>,
+    KEY_CAPSLOCK = <span class="number">58</span>,
+    KEY_F1 = <span class="number">59</span>,
+    KEY_F2 = <span class="number">60</span>,
+    KEY_F3 = <span class="number">61</span>,
+    KEY_F4 = <span class="number">62</span>,
+    KEY_F5 = <span class="number">63</span>,
+    KEY_F6 = <span class="number">64</span>,
+    KEY_F7 = <span class="number">65</span>,
+    KEY_F8 = <span class="number">66</span>,
+    KEY_F9 = <span class="number">67</span>,
+    KEY_F10 = <span class="number">68</span>,
+    KEY_NUMLOCK = <span class="number">69</span>,
+    KEY_SCROLLLOCK = <span class="number">70</span>,
+    KEY_KP7 = <span class="number">71</span>,
+    KEY_KP8 = <span class="number">72</span>,
+    KEY_KP9 = <span class="number">73</span>,
+    KEY_KPMINUS = <span class="number">74</span>,
+    KEY_KP4 = <span class="number">75</span>,
+    KEY_KP5 = <span class="number">76</span>,
+    KEY_KP6 = <span class="number">77</span>,
+    KEY_KPPLUS = <span class="number">78</span>,
+    KEY_KP1 = <span class="number">79</span>,
+    KEY_KP2 = <span class="number">80</span>,
+    KEY_KP3 = <span class="number">81</span>,
+    KEY_KP0 = <span class="number">82</span>,
+    KEY_KPDOT = <span class="number">83</span>,
 
-    <span class="ident">KEY_F11</span> <span class="op">=</span> <span class="number">87</span>,
-    <span class="ident">KEY_F12</span> <span class="op">=</span> <span class="number">88</span>,
-    <span class="ident">KEY_KPENTER</span> <span class="op">=</span> <span class="number">96</span>,
-    <span class="ident">KEY_RIGHTCTRL</span> <span class="op">=</span> <span class="number">97</span>,
-    <span class="ident">KEY_KPSLASH</span> <span class="op">=</span> <span class="number">98</span>,
-    <span class="ident">KEY_RIGHTALT</span> <span class="op">=</span> <span class="number">100</span>,
-    <span class="ident">KEY_HOME</span> <span class="op">=</span> <span class="number">102</span>,
-    <span class="ident">KEY_UP</span> <span class="op">=</span> <span class="number">103</span>,
-    <span class="ident">KEY_PAGEUP</span> <span class="op">=</span> <span class="number">104</span>,
-    <span class="ident">KEY_LEFT</span> <span class="op">=</span> <span class="number">105</span>,
-    <span class="ident">KEY_RIGHT</span> <span class="op">=</span> <span class="number">106</span>,
-    <span class="ident">KEY_END</span> <span class="op">=</span> <span class="number">107</span>,
-    <span class="ident">KEY_DOWN</span> <span class="op">=</span> <span class="number">108</span>,
-    <span class="ident">KEY_PAGEDOWN</span> <span class="op">=</span> <span class="number">109</span>,
-    <span class="ident">KEY_INSERT</span> <span class="op">=</span> <span class="number">110</span>,
-    <span class="ident">KEY_DELETE</span> <span class="op">=</span> <span class="number">111</span>,
-    <span class="ident">KEY_LEFTMETA</span> <span class="op">=</span> <span class="number">125</span>,
-    <span class="ident">KEY_RIGHTMETA</span> <span class="op">=</span> <span class="number">126</span>,
-    <span class="ident">KEY_COMPOSE</span> <span class="op">=</span> <span class="number">127</span>,
+    KEY_F11 = <span class="number">87</span>,
+    KEY_F12 = <span class="number">88</span>,
+    KEY_KPENTER = <span class="number">96</span>,
+    KEY_RIGHTCTRL = <span class="number">97</span>,
+    KEY_KPSLASH = <span class="number">98</span>,
+    KEY_RIGHTALT = <span class="number">100</span>,
+    KEY_HOME = <span class="number">102</span>,
+    KEY_UP = <span class="number">103</span>,
+    KEY_PAGEUP = <span class="number">104</span>,
+    KEY_LEFT = <span class="number">105</span>,
+    KEY_RIGHT = <span class="number">106</span>,
+    KEY_END = <span class="number">107</span>,
+    KEY_DOWN = <span class="number">108</span>,
+    KEY_PAGEDOWN = <span class="number">109</span>,
+    KEY_INSERT = <span class="number">110</span>,
+    KEY_DELETE = <span class="number">111</span>,
+    KEY_LEFTMETA = <span class="number">125</span>,
+    KEY_RIGHTMETA = <span class="number">126</span>,
+    KEY_COMPOSE = <span class="number">127</span>,
 }
 
 <span class="macro">lazy_static::lazy_static!</span> {
-    <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">KEYBOARD</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">KeyboardDevice</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">KeyboardDevice::new</span>();
+    <span class="kw">static </span><span class="kw-2">ref </span>KEYBOARD: Arc&lt;KeyboardDevice&gt; = KeyboardDevice::new();
 }
 
-<span class="kw">struct</span> <span class="ident">KeyboardDevice</span> {
-    <span class="ident">marker</span>: <span class="ident">usize</span>,
-    <span class="ident">buffer</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">sref</span>: <span class="ident">Weak</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>KeyboardDevice {
+    marker: usize,
+    buffer: Mutex&lt;Vec&lt;u8&gt;&gt;,
+    sref: Weak&lt;<span class="self">Self</span>&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">KeyboardDevice</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">this</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">marker</span>: <span class="ident">devfs::alloc_device_marker</span>(),
-            <span class="ident">buffer</span>: <span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>()),
-            <span class="ident">sref</span>: <span class="ident">this</span>.<span class="ident">clone</span>(),
+<span class="kw">impl </span>KeyboardDevice {
+    <span class="kw">fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        Arc::new_cyclic(|this| <span class="self">Self </span>{
+            marker: devfs::alloc_device_marker(),
+            buffer: Mutex::new(Vec::new()),
+            sref: this.clone(),
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Device</span> <span class="kw">for</span> <span class="ident">KeyboardDevice</span> {
-    <span class="kw">fn</span> <span class="ident">device_marker</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">marker</span>
+<span class="kw">impl </span>Device <span class="kw">for </span>KeyboardDevice {
+    <span class="kw">fn </span>device_marker(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.marker
     }
 
-    <span class="kw">fn</span> <span class="ident">device_name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="ident">String::from</span>(<span class="string">&quot;kbd0&quot;</span>)
+    <span class="kw">fn </span>device_name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        String::from(<span class="string">&quot;kbd0&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>inode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;<span class="kw">dyn </span>INodeInterface&gt; {
+        <span class="self">self</span>.sref.upgrade().unwrap()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">KeyboardListener</span> <span class="kw">for</span> <span class="ident">KeyboardDevice</span> {
-    <span class="kw">fn</span> <span class="ident">on_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">keycode</span>: <span class="ident">KeyCode</span>, <span class="ident">released</span>: <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="ident">released</span> {
-            <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">lock_irq</span>().<span class="ident">push</span>(<span class="number">0x80</span> <span class="op">|</span> <span class="ident">keycode</span> <span class="kw">as</span> <span class="ident">u8</span>);
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">lock_irq</span>().<span class="ident">push</span>(<span class="ident">keycode</span> <span class="kw">as</span> <span class="ident">u8</span>);
+<span class="kw">impl </span>KeyboardListener <span class="kw">for </span>KeyboardDevice {
+    <span class="kw">fn </span>on_key(<span class="kw-2">&amp;</span><span class="self">self</span>, keycode: KeyCode, released: bool) {
+        <span class="kw">if </span>released {
+            <span class="self">self</span>.buffer.lock_irq().push(<span class="number">0x80 </span>| keycode <span class="kw">as </span>u8);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.buffer.lock_irq().push(keycode <span class="kw">as </span>u8);
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">KeyboardDevice</span> {
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sbuf</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">lock_irq</span>();
-        <span class="kw">let</span> <span class="ident">drainage</span> <span class="op">=</span> <span class="ident">core::cmp::min</span>(<span class="ident">buffer</span>.<span class="ident">len</span>(), <span class="ident">sbuf</span>.<span class="ident">len</span>());
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>KeyboardDevice {
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>sbuf = <span class="self">self</span>.buffer.lock_irq();
+        <span class="kw">let </span>drainage = core::cmp::min(buffer.len(), sbuf.len());
 
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">byte</span>) <span class="kw">in</span> <span class="ident">sbuf</span>.<span class="ident">drain</span>(..<span class="ident">drainage</span>).<span class="ident">enumerate</span>() {
-            <span class="ident">buffer</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">byte</span>;
+        <span class="kw">for </span>(i, byte) <span class="kw">in </span>sbuf.drain(..drainage).enumerate() {
+            buffer[i] = byte;
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">drainage</span>)
+        <span class="prelude-val">Ok</span>(drainage)
     }
 }
 
-<span class="doccomment">/// This function is responsible for initializing PS2 keyboard driver.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ps2_keyboard_init</span>() {
-    <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">PS2_KEYBOARD_STATE</span>.<span class="ident">lock_irq</span>();
+<span class="doccomment">/// This function is responsible for initializing PS2 keyboard driver.
+</span><span class="kw">pub fn </span>ps2_keyboard_init() {
+    <span class="kw">let </span>lock = PS2_KEYBOARD_STATE.lock_irq();
 
-    <span class="kw">unsafe</span> {
-        <span class="ident">io::outb</span>(<span class="number">0x60</span>, <span class="number">0xF5</span>); <span class="comment">// command: disable scanning</span>
+    <span class="kw">unsafe </span>{
+        io::outb(<span class="number">0x60</span>, <span class="number">0xF5</span>); <span class="comment">// command: disable scanning
 
-        <span class="kw">if</span> <span class="ident">io::inb</span>(<span class="number">0x60</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0xFA</span> {
+        </span><span class="kw">if </span>io::inb(<span class="number">0x60</span>) != <span class="number">0xFA </span>{
             <span class="macro">log::warn!</span>(<span class="string">&quot;ps2: disable scanning failed, no ACK&quot;</span>);
         }
 
-        <span class="ident">io::outb</span>(<span class="number">0x60</span>, <span class="number">0xF4</span>); <span class="comment">// command: enable reporting</span>
-        <span class="ident">lock</span>.<span class="ident">flush</span>();
+        io::outb(<span class="number">0x60</span>, <span class="number">0xF4</span>); <span class="comment">// command: enable reporting
+        </span>lock.flush();
 
-        <span class="kw">if</span> <span class="ident">io::inb</span>(<span class="number">0x60</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0xFA</span> {
+        <span class="kw">if </span>io::inb(<span class="number">0x60</span>) != <span class="number">0xFA </span>{
             <span class="macro">log::warn!</span>(<span class="string">&quot;ps2: failed to enable error reporting, no ACK&quot;</span>);
         }
 
-        <span class="ident">io::outb</span>(<span class="number">0x64</span>, <span class="number">0x20</span>); <span class="comment">// command: read</span>
-        <span class="ident">lock</span>.<span class="ident">flush</span>();
+        io::outb(<span class="number">0x64</span>, <span class="number">0x20</span>); <span class="comment">// command: read
+        </span>lock.flush();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">config</span> <span class="op">=</span> <span class="ident">ConfigFlags::from_bits_truncate</span>(<span class="ident">io::inb</span>(<span class="number">0x60</span>));
+        <span class="kw">let </span><span class="kw-2">mut </span>config = ConfigFlags::from_bits_truncate(io::inb(<span class="number">0x60</span>));
 
-        <span class="ident">config</span>.<span class="ident">remove</span>(<span class="ident">ConfigFlags::FIRST_DISABLED</span>);
-        <span class="ident">config</span>.<span class="ident">remove</span>(<span class="ident">ConfigFlags::FIRST_TRANSLATE</span>); <span class="comment">// Use scancode set 2</span>
-        <span class="ident">config</span>.<span class="ident">insert</span>(<span class="ident">ConfigFlags::FIRST_INTERRUPT</span>);
+        config.remove(ConfigFlags::FIRST_DISABLED);
+        config.remove(ConfigFlags::FIRST_TRANSLATE); <span class="comment">// Use scancode set 2
+        </span>config.insert(ConfigFlags::FIRST_INTERRUPT);
 
-        <span class="ident">io::outb</span>(<span class="number">0x64</span>, <span class="number">0x60</span>); <span class="comment">// command: write config</span>
-        <span class="ident">io::outb</span>(<span class="number">0x60</span>, <span class="ident">config</span>.<span class="ident">bits</span>());
+        io::outb(<span class="number">0x64</span>, <span class="number">0x60</span>); <span class="comment">// command: write config
+        </span>io::outb(<span class="number">0x60</span>, config.bits());
 
-        <span class="ident">lock</span>.<span class="ident">flush</span>();
+        lock.flush();
     }
 
-    <span class="kw">let</span> <span class="ident">keyboard_vector</span> <span class="op">=</span> <span class="ident">interrupts::allocate_vector</span>();
-    <span class="ident">interrupts::register_handler</span>(<span class="ident">keyboard_vector</span>, <span class="ident">keyboard_irq_handler</span>);
+    <span class="kw">let </span>keyboard_vector = interrupts::allocate_vector();
+    interrupts::register_handler(keyboard_vector, keyboard_irq_handler);
 
-    <span class="ident">apic::io_apic_setup_legacy_irq</span>(<span class="number">1</span>, <span class="ident">keyboard_vector</span>, <span class="number">1</span>);
+    apic::io_apic_setup_legacy_irq(<span class="number">1</span>, keyboard_vector, <span class="number">1</span>);
 
-    <span class="comment">// TODO: Move this into /dev/input instead</span>
-    <span class="comment">// TODO: Add support for multiple keyboards</span>
-    <span class="ident">register_keyboard_listener</span>(<span class="ident">KEYBOARD</span>.<span class="ident">as_ref</span>().<span class="ident">clone</span>());
-    <span class="ident">devfs::install_device</span>(<span class="ident">KEYBOARD</span>.<span class="ident">clone</span>()).<span class="ident">expect</span>(<span class="string">&quot;failed to install keyboard device&quot;</span>);
+    <span class="comment">// TODO: Move this into /dev/input instead
+    // TODO: Add support for multiple keyboards
+    </span>register_keyboard_listener(KEYBOARD.as_ref().clone());
+    devfs::install_device(KEYBOARD.clone()).expect(<span class="string">&quot;failed to install keyboard device&quot;</span>);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_keyboard_listener</span>(<span class="ident">listner</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">dyn</span> <span class="ident">KeyboardListener</span>) {
-    <span class="ident">KEYBOARD_LISTNER</span>.<span class="ident">write</span>().<span class="ident">push</span>(<span class="ident">listner</span>)
+<span class="kw">pub fn </span>register_keyboard_listener(listner: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>KeyboardListener) {
+    KEYBOARD_LISTNER.write().push(listner)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">keyboard_irq_handler</span>(<span class="ident">_stack</span>: <span class="kw-2">&amp;mut</span> <span class="ident">InterruptStack</span>) {
-    <span class="kw">let</span> <span class="ident">scancode</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">io::inb</span>(<span class="number">0x60</span>) };
+<span class="kw">pub fn </span>keyboard_irq_handler(_stack: <span class="kw-2">&amp;mut </span>InterruptStack) {
+    <span class="kw">let </span>scancode = <span class="kw">unsafe </span>{ io::inb(<span class="number">0x60</span>) };
 
-    <span class="kw">match</span> <span class="ident">scancode</span> {
-        <span class="number">0xE0</span> =&gt; <span class="ident">PS2_KEYBOARD_STATE</span>.<span class="ident">lock</span>().<span class="ident">special</span> <span class="op">=</span> <span class="bool-val">true</span>,
-        <span class="number">0xF0</span> =&gt; <span class="ident">PS2_KEYBOARD_STATE</span>.<span class="ident">lock</span>().<span class="ident">released</span> <span class="op">=</span> <span class="bool-val">true</span>,
+    <span class="kw">match </span>scancode {
+        <span class="number">0xE0 </span>=&gt; PS2_KEYBOARD_STATE.lock().special = <span class="bool-val">true</span>,
+        <span class="number">0xF0 </span>=&gt; PS2_KEYBOARD_STATE.lock().released = <span class="bool-val">true</span>,
 
-        <span class="kw">_</span> =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">PS2_KEYBOARD_STATE</span>.<span class="ident">lock</span>();
-            <span class="kw">let</span> <span class="ident">released</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">released</span>;
-            <span class="kw">let</span> <span class="ident">keycode</span> <span class="op">=</span> <span class="kw">if</span> <span class="op">!</span><span class="ident">lock</span>.<span class="ident">special</span> {
-                <span class="kw">match</span> <span class="ident">scancode</span> {
-                    <span class="number">0x1c</span> =&gt; <span class="ident">KeyCode::KEY_A</span>,
-                    <span class="number">0x32</span> =&gt; <span class="ident">KeyCode::KEY_B</span>,
-                    <span class="number">0x21</span> =&gt; <span class="ident">KeyCode::KEY_C</span>,
-                    <span class="number">0x23</span> =&gt; <span class="ident">KeyCode::KEY_D</span>,
-                    <span class="number">0x24</span> =&gt; <span class="ident">KeyCode::KEY_E</span>,
-                    <span class="number">0x2b</span> =&gt; <span class="ident">KeyCode::KEY_F</span>,
-                    <span class="number">0x34</span> =&gt; <span class="ident">KeyCode::KEY_G</span>,
-                    <span class="number">0x33</span> =&gt; <span class="ident">KeyCode::KEY_H</span>,
-                    <span class="number">0x43</span> =&gt; <span class="ident">KeyCode::KEY_I</span>,
-                    <span class="number">0x3b</span> =&gt; <span class="ident">KeyCode::KEY_J</span>,
-                    <span class="number">0x42</span> =&gt; <span class="ident">KeyCode::KEY_K</span>,
-                    <span class="number">0x4b</span> =&gt; <span class="ident">KeyCode::KEY_L</span>,
-                    <span class="number">0x3a</span> =&gt; <span class="ident">KeyCode::KEY_M</span>,
-                    <span class="number">0x31</span> =&gt; <span class="ident">KeyCode::KEY_N</span>,
-                    <span class="number">0x44</span> =&gt; <span class="ident">KeyCode::KEY_O</span>,
-                    <span class="number">0x4d</span> =&gt; <span class="ident">KeyCode::KEY_P</span>,
-                    <span class="number">0x15</span> =&gt; <span class="ident">KeyCode::KEY_Q</span>,
-                    <span class="number">0x2d</span> =&gt; <span class="ident">KeyCode::KEY_R</span>,
-                    <span class="number">0x1b</span> =&gt; <span class="ident">KeyCode::KEY_S</span>,
-                    <span class="number">0x2c</span> =&gt; <span class="ident">KeyCode::KEY_T</span>,
-                    <span class="number">0x3c</span> =&gt; <span class="ident">KeyCode::KEY_U</span>,
-                    <span class="number">0x2a</span> =&gt; <span class="ident">KeyCode::KEY_V</span>,
-                    <span class="number">0x1d</span> =&gt; <span class="ident">KeyCode::KEY_W</span>,
-                    <span class="number">0x22</span> =&gt; <span class="ident">KeyCode::KEY_X</span>,
-                    <span class="number">0x35</span> =&gt; <span class="ident">KeyCode::KEY_Y</span>,
-                    <span class="number">0x1a</span> =&gt; <span class="ident">KeyCode::KEY_Z</span>,
-                    <span class="number">0x45</span> =&gt; <span class="ident">KeyCode::KEY_0</span>,
-                    <span class="number">0x16</span> =&gt; <span class="ident">KeyCode::KEY_1</span>,
-                    <span class="number">0x1e</span> =&gt; <span class="ident">KeyCode::KEY_2</span>,
-                    <span class="number">0x26</span> =&gt; <span class="ident">KeyCode::KEY_3</span>,
-                    <span class="number">0x25</span> =&gt; <span class="ident">KeyCode::KEY_4</span>,
-                    <span class="number">0x2e</span> =&gt; <span class="ident">KeyCode::KEY_5</span>,
-                    <span class="number">0x36</span> =&gt; <span class="ident">KeyCode::KEY_6</span>,
-                    <span class="number">0x3d</span> =&gt; <span class="ident">KeyCode::KEY_7</span>,
-                    <span class="number">0x3e</span> =&gt; <span class="ident">KeyCode::KEY_8</span>,
-                    <span class="number">0x46</span> =&gt; <span class="ident">KeyCode::KEY_9</span>,
-                    <span class="number">0xe</span> =&gt; <span class="ident">KeyCode::KEY_GRAVE</span>,
-                    <span class="number">0x4e</span> =&gt; <span class="ident">KeyCode::KEY_MINUS</span>,
-                    <span class="number">0x55</span> =&gt; <span class="ident">KeyCode::KEY_EQUAL</span>,
-                    <span class="number">0x5d</span> =&gt; <span class="ident">KeyCode::KEY_BACKSLASH</span>,
-                    <span class="number">0x66</span> =&gt; <span class="ident">KeyCode::KEY_BACKSPACE</span>,
-                    <span class="number">0x29</span> =&gt; <span class="ident">KeyCode::KEY_SPACE</span>,
-                    <span class="number">0xd</span> =&gt; <span class="ident">KeyCode::KEY_TAB</span>,
-                    <span class="number">0x58</span> =&gt; <span class="ident">KeyCode::KEY_CAPSLOCK</span>,
-                    <span class="number">0x12</span> =&gt; <span class="ident">KeyCode::KEY_LEFTSHIFT</span>,
-                    <span class="number">0x14</span> =&gt; <span class="ident">KeyCode::KEY_LEFTCTRL</span>,
-                    <span class="number">0x11</span> =&gt; <span class="ident">KeyCode::KEY_LEFTALT</span>,
-                    <span class="number">0x59</span> =&gt; <span class="ident">KeyCode::KEY_RIGHTSHIFT</span>,
-                    <span class="number">0x5a</span> =&gt; <span class="ident">KeyCode::KEY_ENTER</span>,
-                    <span class="number">0x76</span> =&gt; <span class="ident">KeyCode::KEY_ESC</span>,
-                    <span class="number">0x5</span> =&gt; <span class="ident">KeyCode::KEY_F1</span>,
-                    <span class="number">0x6</span> =&gt; <span class="ident">KeyCode::KEY_F2</span>,
-                    <span class="number">0x4</span> =&gt; <span class="ident">KeyCode::KEY_F3</span>,
-                    <span class="number">0xc</span> =&gt; <span class="ident">KeyCode::KEY_F4</span>,
-                    <span class="number">0x3</span> =&gt; <span class="ident">KeyCode::KEY_F5</span>,
-                    <span class="number">0xb</span> =&gt; <span class="ident">KeyCode::KEY_F6</span>,
-                    <span class="number">0x83</span> =&gt; <span class="ident">KeyCode::KEY_F7</span>,
-                    <span class="number">0xa</span> =&gt; <span class="ident">KeyCode::KEY_F8</span>,
-                    <span class="number">0x1</span> =&gt; <span class="ident">KeyCode::KEY_F9</span>,
-                    <span class="number">0x9</span> =&gt; <span class="ident">KeyCode::KEY_F10</span>,
-                    <span class="number">0x78</span> =&gt; <span class="ident">KeyCode::KEY_F11</span>,
-                    <span class="number">0x7</span> =&gt; <span class="ident">KeyCode::KEY_F12</span>,
-                    <span class="number">0x7e</span> =&gt; <span class="ident">KeyCode::KEY_SCROLLLOCK</span>,
-                    <span class="number">0x54</span> =&gt; <span class="ident">KeyCode::KEY_LEFTBRACE</span>,
-                    <span class="number">0x77</span> =&gt; <span class="ident">KeyCode::KEY_NUMLOCK</span>,
-                    <span class="number">0x7c</span> =&gt; <span class="ident">KeyCode::KEY_KPASTERISK</span>,
-                    <span class="number">0x7b</span> =&gt; <span class="ident">KeyCode::KEY_KPMINUS</span>,
-                    <span class="number">0x79</span> =&gt; <span class="ident">KeyCode::KEY_KPPLUS</span>,
-                    <span class="number">0x71</span> =&gt; <span class="ident">KeyCode::KEY_KPDOT</span>,
-                    <span class="number">0x70</span> =&gt; <span class="ident">KeyCode::KEY_KP0</span>,
-                    <span class="number">0x69</span> =&gt; <span class="ident">KeyCode::KEY_KP1</span>,
-                    <span class="number">0x72</span> =&gt; <span class="ident">KeyCode::KEY_KP2</span>,
-                    <span class="number">0x7a</span> =&gt; <span class="ident">KeyCode::KEY_KP3</span>,
-                    <span class="number">0x6b</span> =&gt; <span class="ident">KeyCode::KEY_KP4</span>,
-                    <span class="number">0x73</span> =&gt; <span class="ident">KeyCode::KEY_KP5</span>,
-                    <span class="number">0x74</span> =&gt; <span class="ident">KeyCode::KEY_KP6</span>,
-                    <span class="number">0x6c</span> =&gt; <span class="ident">KeyCode::KEY_KP7</span>,
-                    <span class="number">0x75</span> =&gt; <span class="ident">KeyCode::KEY_KP8</span>,
-                    <span class="number">0x7d</span> =&gt; <span class="ident">KeyCode::KEY_KP9</span>,
-                    <span class="number">0x5b</span> =&gt; <span class="ident">KeyCode::KEY_RIGHTBRACE</span>,
-                    <span class="number">0x4c</span> =&gt; <span class="ident">KeyCode::KEY_SEMICOLON</span>,
-                    <span class="number">0x52</span> =&gt; <span class="ident">KeyCode::KEY_APOSTROPHE</span>,
-                    <span class="number">0x41</span> =&gt; <span class="ident">KeyCode::KEY_COMMA</span>,
-                    <span class="number">0x49</span> =&gt; <span class="ident">KeyCode::KEY_DOT</span>,
-                    <span class="number">0x4a</span> =&gt; <span class="ident">KeyCode::KEY_SLASH</span>,
-                    <span class="number">0x61</span> =&gt; <span class="ident">KeyCode::KEY_BACKSLASH</span>,
-                    <span class="kw">_</span> =&gt; <span class="ident">KeyCode::KEY_RESERVED</span>,
+        <span class="kw">_ </span>=&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>lock = PS2_KEYBOARD_STATE.lock();
+            <span class="kw">let </span>released = lock.released;
+            <span class="kw">let </span>keycode = <span class="kw">if </span>!lock.special {
+                <span class="kw">match </span>scancode {
+                    <span class="number">0x1c </span>=&gt; KeyCode::KEY_A,
+                    <span class="number">0x32 </span>=&gt; KeyCode::KEY_B,
+                    <span class="number">0x21 </span>=&gt; KeyCode::KEY_C,
+                    <span class="number">0x23 </span>=&gt; KeyCode::KEY_D,
+                    <span class="number">0x24 </span>=&gt; KeyCode::KEY_E,
+                    <span class="number">0x2b </span>=&gt; KeyCode::KEY_F,
+                    <span class="number">0x34 </span>=&gt; KeyCode::KEY_G,
+                    <span class="number">0x33 </span>=&gt; KeyCode::KEY_H,
+                    <span class="number">0x43 </span>=&gt; KeyCode::KEY_I,
+                    <span class="number">0x3b </span>=&gt; KeyCode::KEY_J,
+                    <span class="number">0x42 </span>=&gt; KeyCode::KEY_K,
+                    <span class="number">0x4b </span>=&gt; KeyCode::KEY_L,
+                    <span class="number">0x3a </span>=&gt; KeyCode::KEY_M,
+                    <span class="number">0x31 </span>=&gt; KeyCode::KEY_N,
+                    <span class="number">0x44 </span>=&gt; KeyCode::KEY_O,
+                    <span class="number">0x4d </span>=&gt; KeyCode::KEY_P,
+                    <span class="number">0x15 </span>=&gt; KeyCode::KEY_Q,
+                    <span class="number">0x2d </span>=&gt; KeyCode::KEY_R,
+                    <span class="number">0x1b </span>=&gt; KeyCode::KEY_S,
+                    <span class="number">0x2c </span>=&gt; KeyCode::KEY_T,
+                    <span class="number">0x3c </span>=&gt; KeyCode::KEY_U,
+                    <span class="number">0x2a </span>=&gt; KeyCode::KEY_V,
+                    <span class="number">0x1d </span>=&gt; KeyCode::KEY_W,
+                    <span class="number">0x22 </span>=&gt; KeyCode::KEY_X,
+                    <span class="number">0x35 </span>=&gt; KeyCode::KEY_Y,
+                    <span class="number">0x1a </span>=&gt; KeyCode::KEY_Z,
+                    <span class="number">0x45 </span>=&gt; KeyCode::KEY_0,
+                    <span class="number">0x16 </span>=&gt; KeyCode::KEY_1,
+                    <span class="number">0x1e </span>=&gt; KeyCode::KEY_2,
+                    <span class="number">0x26 </span>=&gt; KeyCode::KEY_3,
+                    <span class="number">0x25 </span>=&gt; KeyCode::KEY_4,
+                    <span class="number">0x2e </span>=&gt; KeyCode::KEY_5,
+                    <span class="number">0x36 </span>=&gt; KeyCode::KEY_6,
+                    <span class="number">0x3d </span>=&gt; KeyCode::KEY_7,
+                    <span class="number">0x3e </span>=&gt; KeyCode::KEY_8,
+                    <span class="number">0x46 </span>=&gt; KeyCode::KEY_9,
+                    <span class="number">0xe </span>=&gt; KeyCode::KEY_GRAVE,
+                    <span class="number">0x4e </span>=&gt; KeyCode::KEY_MINUS,
+                    <span class="number">0x55 </span>=&gt; KeyCode::KEY_EQUAL,
+                    <span class="number">0x5d </span>=&gt; KeyCode::KEY_BACKSLASH,
+                    <span class="number">0x66 </span>=&gt; KeyCode::KEY_BACKSPACE,
+                    <span class="number">0x29 </span>=&gt; KeyCode::KEY_SPACE,
+                    <span class="number">0xd </span>=&gt; KeyCode::KEY_TAB,
+                    <span class="number">0x58 </span>=&gt; KeyCode::KEY_CAPSLOCK,
+                    <span class="number">0x12 </span>=&gt; KeyCode::KEY_LEFTSHIFT,
+                    <span class="number">0x14 </span>=&gt; KeyCode::KEY_LEFTCTRL,
+                    <span class="number">0x11 </span>=&gt; KeyCode::KEY_LEFTALT,
+                    <span class="number">0x59 </span>=&gt; KeyCode::KEY_RIGHTSHIFT,
+                    <span class="number">0x5a </span>=&gt; KeyCode::KEY_ENTER,
+                    <span class="number">0x76 </span>=&gt; KeyCode::KEY_ESC,
+                    <span class="number">0x5 </span>=&gt; KeyCode::KEY_F1,
+                    <span class="number">0x6 </span>=&gt; KeyCode::KEY_F2,
+                    <span class="number">0x4 </span>=&gt; KeyCode::KEY_F3,
+                    <span class="number">0xc </span>=&gt; KeyCode::KEY_F4,
+                    <span class="number">0x3 </span>=&gt; KeyCode::KEY_F5,
+                    <span class="number">0xb </span>=&gt; KeyCode::KEY_F6,
+                    <span class="number">0x83 </span>=&gt; KeyCode::KEY_F7,
+                    <span class="number">0xa </span>=&gt; KeyCode::KEY_F8,
+                    <span class="number">0x1 </span>=&gt; KeyCode::KEY_F9,
+                    <span class="number">0x9 </span>=&gt; KeyCode::KEY_F10,
+                    <span class="number">0x78 </span>=&gt; KeyCode::KEY_F11,
+                    <span class="number">0x7 </span>=&gt; KeyCode::KEY_F12,
+                    <span class="number">0x7e </span>=&gt; KeyCode::KEY_SCROLLLOCK,
+                    <span class="number">0x54 </span>=&gt; KeyCode::KEY_LEFTBRACE,
+                    <span class="number">0x77 </span>=&gt; KeyCode::KEY_NUMLOCK,
+                    <span class="number">0x7c </span>=&gt; KeyCode::KEY_KPASTERISK,
+                    <span class="number">0x7b </span>=&gt; KeyCode::KEY_KPMINUS,
+                    <span class="number">0x79 </span>=&gt; KeyCode::KEY_KPPLUS,
+                    <span class="number">0x71 </span>=&gt; KeyCode::KEY_KPDOT,
+                    <span class="number">0x70 </span>=&gt; KeyCode::KEY_KP0,
+                    <span class="number">0x69 </span>=&gt; KeyCode::KEY_KP1,
+                    <span class="number">0x72 </span>=&gt; KeyCode::KEY_KP2,
+                    <span class="number">0x7a </span>=&gt; KeyCode::KEY_KP3,
+                    <span class="number">0x6b </span>=&gt; KeyCode::KEY_KP4,
+                    <span class="number">0x73 </span>=&gt; KeyCode::KEY_KP5,
+                    <span class="number">0x74 </span>=&gt; KeyCode::KEY_KP6,
+                    <span class="number">0x6c </span>=&gt; KeyCode::KEY_KP7,
+                    <span class="number">0x75 </span>=&gt; KeyCode::KEY_KP8,
+                    <span class="number">0x7d </span>=&gt; KeyCode::KEY_KP9,
+                    <span class="number">0x5b </span>=&gt; KeyCode::KEY_RIGHTBRACE,
+                    <span class="number">0x4c </span>=&gt; KeyCode::KEY_SEMICOLON,
+                    <span class="number">0x52 </span>=&gt; KeyCode::KEY_APOSTROPHE,
+                    <span class="number">0x41 </span>=&gt; KeyCode::KEY_COMMA,
+                    <span class="number">0x49 </span>=&gt; KeyCode::KEY_DOT,
+                    <span class="number">0x4a </span>=&gt; KeyCode::KEY_SLASH,
+                    <span class="number">0x61 </span>=&gt; KeyCode::KEY_BACKSLASH,
+                    <span class="kw">_ </span>=&gt; KeyCode::KEY_RESERVED,
                 }
-            } <span class="kw">else</span> {
-                <span class="kw">match</span> <span class="ident">scancode</span> {
-                    <span class="number">0x1f</span> =&gt; <span class="ident">KeyCode::KEY_LEFTMETA</span>,
-                    <span class="number">0x14</span> =&gt; <span class="ident">KeyCode::KEY_RIGHTCTRL</span>,
-                    <span class="number">0x27</span> =&gt; <span class="ident">KeyCode::KEY_RIGHTMETA</span>,
-                    <span class="number">0x11</span> =&gt; <span class="ident">KeyCode::KEY_RIGHTALT</span>,
-                    <span class="number">0x2f</span> =&gt; <span class="ident">KeyCode::KEY_COMPOSE</span>,
-                    <span class="number">0x70</span> =&gt; <span class="ident">KeyCode::KEY_INSERT</span>,
-                    <span class="number">0x6c</span> =&gt; <span class="ident">KeyCode::KEY_HOME</span>,
-                    <span class="number">0x7d</span> =&gt; <span class="ident">KeyCode::KEY_PAGEUP</span>,
-                    <span class="number">0x71</span> =&gt; <span class="ident">KeyCode::KEY_DELETE</span>,
-                    <span class="number">0x69</span> =&gt; <span class="ident">KeyCode::KEY_END</span>,
-                    <span class="number">0x7a</span> =&gt; <span class="ident">KeyCode::KEY_PAGEDOWN</span>,
-                    <span class="number">0x75</span> =&gt; <span class="ident">KeyCode::KEY_UP</span>,
-                    <span class="number">0x6b</span> =&gt; <span class="ident">KeyCode::KEY_LEFT</span>,
-                    <span class="number">0x72</span> =&gt; <span class="ident">KeyCode::KEY_DOWN</span>,
-                    <span class="number">0x74</span> =&gt; <span class="ident">KeyCode::KEY_RIGHT</span>,
-                    <span class="number">0x4a</span> =&gt; <span class="ident">KeyCode::KEY_KPSLASH</span>,
-                    <span class="number">0x5a</span> =&gt; <span class="ident">KeyCode::KEY_KPENTER</span>,
-                    <span class="kw">_</span> =&gt; <span class="ident">KeyCode::KEY_RESERVED</span>,
+            } <span class="kw">else </span>{
+                <span class="kw">match </span>scancode {
+                    <span class="number">0x1f </span>=&gt; KeyCode::KEY_LEFTMETA,
+                    <span class="number">0x14 </span>=&gt; KeyCode::KEY_RIGHTCTRL,
+                    <span class="number">0x27 </span>=&gt; KeyCode::KEY_RIGHTMETA,
+                    <span class="number">0x11 </span>=&gt; KeyCode::KEY_RIGHTALT,
+                    <span class="number">0x2f </span>=&gt; KeyCode::KEY_COMPOSE,
+                    <span class="number">0x70 </span>=&gt; KeyCode::KEY_INSERT,
+                    <span class="number">0x6c </span>=&gt; KeyCode::KEY_HOME,
+                    <span class="number">0x7d </span>=&gt; KeyCode::KEY_PAGEUP,
+                    <span class="number">0x71 </span>=&gt; KeyCode::KEY_DELETE,
+                    <span class="number">0x69 </span>=&gt; KeyCode::KEY_END,
+                    <span class="number">0x7a </span>=&gt; KeyCode::KEY_PAGEDOWN,
+                    <span class="number">0x75 </span>=&gt; KeyCode::KEY_UP,
+                    <span class="number">0x6b </span>=&gt; KeyCode::KEY_LEFT,
+                    <span class="number">0x72 </span>=&gt; KeyCode::KEY_DOWN,
+                    <span class="number">0x74 </span>=&gt; KeyCode::KEY_RIGHT,
+                    <span class="number">0x4a </span>=&gt; KeyCode::KEY_KPSLASH,
+                    <span class="number">0x5a </span>=&gt; KeyCode::KEY_KPENTER,
+                    <span class="kw">_ </span>=&gt; KeyCode::KEY_RESERVED,
                 }
             };
 
-            <span class="ident">lock</span>.<span class="ident">special</span> <span class="op">=</span> <span class="bool-val">false</span>;
-            <span class="ident">lock</span>.<span class="ident">released</span> <span class="op">=</span> <span class="bool-val">false</span>;
+            lock.special = <span class="bool-val">false</span>;
+            lock.released = <span class="bool-val">false</span>;
 
-            <span class="ident">core::mem::drop</span>(<span class="ident">lock</span>);
+            core::mem::drop(lock);
 
-            <span class="kw">let</span> <span class="ident">listners</span> <span class="op">=</span> <span class="ident">KEYBOARD_LISTNER</span>.<span class="ident">read</span>();
-            <span class="kw">for</span> <span class="ident">listener</span> <span class="kw">in</span> <span class="ident">listners</span>.<span class="ident">iter</span>() {
-                <span class="ident">listener</span>.<span class="ident">on_key</span>(<span class="ident">keycode</span>, <span class="ident">released</span>);
+            <span class="kw">let </span>listners = KEYBOARD_LISTNER.read();
+            <span class="kw">for </span>listener <span class="kw">in </span>listners.iter() {
+                listener.on_key(keycode, released);
             }
         }
     }
 }
 
-<span class="macro">crate::module_init!</span>(<span class="ident">ps2_keyboard_init</span>);
+<span class="macro">crate::module_init!</span>(ps2_keyboard_init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -558,565 +558,565 @@
 <span id="558">558</span>
 <span id="559">559</span>
 <span id="560">560</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>core::marker::PhantomData;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::header::StivaleSmpHeaderTagFlags</span>;
+<span class="kw">use </span><span class="kw">super</span>::header::StivaleSmpHeaderTagFlags;
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleTagHeader</span> {
-    <span class="kw">pub</span> <span class="ident">identifier</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">next</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleTagHeader {
+    <span class="kw">pub </span>identifier: u64,
+    <span class="kw">pub </span>next: u64,
 }
 
-<span class="doccomment">/// If the framebuffer tag was requested through the framebuffer tag header and its supported by the stivale</span>
-<span class="doccomment">/// bootloader, this tag is returned to the kernel. This tag provides an interface to the framebuffer.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleFramebufferTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// The address of the framebuffer.</span>
-    <span class="kw">pub</span> <span class="ident">framebuffer_addr</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// The total width of the framebuffer in pixels.</span>
-    <span class="kw">pub</span> <span class="ident">framebuffer_width</span>: <span class="ident">u16</span>,
-    <span class="doccomment">/// The total height of the framebuffer in pixels.</span>
-    <span class="kw">pub</span> <span class="ident">framebuffer_height</span>: <span class="ident">u16</span>,
-    <span class="doccomment">/// The pitch of the framebuffer in bytes.</span>
-    <span class="kw">pub</span> <span class="ident">framebuffer_pitch</span>: <span class="ident">u16</span>,
-    <span class="doccomment">/// The amount of bytes-per pixel.</span>
-    <span class="kw">pub</span> <span class="ident">framebuffer_bpp</span>: <span class="ident">u16</span>,
-    <span class="doccomment">/// Memory model of the framebuffer. If set to one, its RGB and all other values</span>
-    <span class="doccomment">/// are undefined.</span>
-    <span class="kw">pub</span> <span class="ident">memory_model</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Size of the red mask in RGB.</span>
-    <span class="kw">pub</span> <span class="ident">red_mask_size</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Shift of the red mask in RGB.</span>
-    <span class="kw">pub</span> <span class="ident">red_mask_shift</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Size of the green mask in RGB.</span>
-    <span class="kw">pub</span> <span class="ident">green_mask_size</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Shift of the green mask in RGB.</span>
-    <span class="kw">pub</span> <span class="ident">green_mask_shift</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Size of the blue mask in RGB.</span>
-    <span class="kw">pub</span> <span class="ident">blue_mask_size</span>: <span class="ident">u8</span>,
-    <span class="doccomment">/// Shift of the blue mask in RGB.</span>
-    <span class="kw">pub</span> <span class="ident">blue_mask_shift</span>: <span class="ident">u8</span>,
-    <span class="ident">_padding</span>: <span class="ident">u8</span>,
+<span class="doccomment">/// If the framebuffer tag was requested through the framebuffer tag header and its supported by the stivale
+/// bootloader, this tag is returned to the kernel. This tag provides an interface to the framebuffer.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleFramebufferTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// The address of the framebuffer.
+    </span><span class="kw">pub </span>framebuffer_addr: u64,
+    <span class="doccomment">/// The total width of the framebuffer in pixels.
+    </span><span class="kw">pub </span>framebuffer_width: u16,
+    <span class="doccomment">/// The total height of the framebuffer in pixels.
+    </span><span class="kw">pub </span>framebuffer_height: u16,
+    <span class="doccomment">/// The pitch of the framebuffer in bytes.
+    </span><span class="kw">pub </span>framebuffer_pitch: u16,
+    <span class="doccomment">/// The amount of bytes-per pixel.
+    </span><span class="kw">pub </span>framebuffer_bpp: u16,
+    <span class="doccomment">/// Memory model of the framebuffer. If set to one, its RGB and all other values
+    /// are undefined.
+    </span><span class="kw">pub </span>memory_model: u8,
+    <span class="doccomment">/// Size of the red mask in RGB.
+    </span><span class="kw">pub </span>red_mask_size: u8,
+    <span class="doccomment">/// Shift of the red mask in RGB.
+    </span><span class="kw">pub </span>red_mask_shift: u8,
+    <span class="doccomment">/// Size of the green mask in RGB.
+    </span><span class="kw">pub </span>green_mask_size: u8,
+    <span class="doccomment">/// Shift of the green mask in RGB.
+    </span><span class="kw">pub </span>green_mask_shift: u8,
+    <span class="doccomment">/// Size of the blue mask in RGB.
+    </span><span class="kw">pub </span>blue_mask_size: u8,
+    <span class="doccomment">/// Shift of the blue mask in RGB.
+    </span><span class="kw">pub </span>blue_mask_shift: u8,
+    _padding: u8,
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleFramebufferTag</span> {
-    <span class="doccomment">/// Returns the size of the framebuffer.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">framebuffer_pitch</span> <span class="kw">as</span> <span class="ident">usize</span>
-            <span class="op">*</span> <span class="self">self</span>.<span class="ident">framebuffer_height</span> <span class="kw">as</span> <span class="ident">usize</span>
-            <span class="op">*</span> (<span class="self">self</span>.<span class="ident">framebuffer_bpp</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">/</span> <span class="number">8</span>)
+<span class="kw">impl </span>StivaleFramebufferTag {
+    <span class="doccomment">/// Returns the size of the framebuffer.
+    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.framebuffer_pitch <span class="kw">as </span>usize
+            * <span class="self">self</span>.framebuffer_height <span class="kw">as </span>usize
+            * (<span class="self">self</span>.framebuffer_bpp <span class="kw">as </span>usize / <span class="number">8</span>)
     }
 }
 
-<span class="doccomment">/// If the terminal tag was requested through the terminal tag header and its supported by the stivale</span>
-<span class="doccomment">/// bootloader, this tag is returned to the kernel. This tag provides an interface to the stivale terminal.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleTerminalTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The amount of columns in the stivale terminal setup by the bootloader.</span>
-    <span class="kw">pub</span> <span class="ident">cols</span>: <span class="ident">u16</span>,
-    <span class="doccomment">/// The amount of rows in the stivale terminal setup by the bootloader.</span>
-    <span class="kw">pub</span> <span class="ident">rows</span>: <span class="ident">u16</span>,
-    <span class="doccomment">/// The virtual address of the `term_write` function, which is used to write to the stivale terminal. For</span>
-    <span class="doccomment">/// a more safer way use the [StivaleTerminalTag::term_write]</span>
-    <span class="kw">pub</span> <span class="ident">term_write_addr</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// If the terminal tag was requested through the terminal tag header and its supported by the stivale
+/// bootloader, this tag is returned to the kernel. This tag provides an interface to the stivale terminal.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleTerminalTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="kw">pub </span>flags: u32,
+    <span class="doccomment">/// The amount of columns in the stivale terminal setup by the bootloader.
+    </span><span class="kw">pub </span>cols: u16,
+    <span class="doccomment">/// The amount of rows in the stivale terminal setup by the bootloader.
+    </span><span class="kw">pub </span>rows: u16,
+    <span class="doccomment">/// The virtual address of the `term_write` function, which is used to write to the stivale terminal. For
+    /// a more safer way use the [StivaleTerminalTag::term_write]
+    </span><span class="kw">pub </span>term_write_addr: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleTerminalTag</span> {
-    <span class="doccomment">/// Returns the terminal write function provided by the terminal stivale tag. This function</span>
-    <span class="doccomment">/// returns the transmuted function for you to simplify the process of passing the string as a raw pointer</span>
-    <span class="doccomment">/// and passing the string length.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Example</span>
-    <span class="doccomment">/// ```rust,no_run</span>
-    <span class="doccomment">/// let terminal_tag = stivale_struct.terminal().expect(&quot;Terminal tag was provided by the stivale2 bootloader&quot;);</span>
-    <span class="doccomment">/// let term_write = terminal_tag.term_write();</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// term_write(&quot;Hello, Stivale!&quot;);</span>
-    <span class="doccomment">/// term_write(&quot;Hello, Rust!&quot;)</span>
-    <span class="doccomment">/// ```</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Safety</span>
-    <span class="doccomment">/// This function is **not** thread safe.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">term_write</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl</span> <span class="ident">Fn</span>(<span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="kw">let</span> <span class="ident">__fn_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">term_write_addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> ();
-        <span class="kw">let</span> <span class="ident">__term_func</span> <span class="op">=</span>
-            <span class="kw">unsafe</span> { <span class="ident">core::mem::transmute</span>::<span class="op">&lt;</span><span class="kw-2">*const</span> (), <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span>(<span class="kw-2">*const</span> <span class="ident">i8</span>, <span class="ident">u64</span>)<span class="op">&gt;</span>(<span class="ident">__fn_ptr</span>) };
+<span class="kw">impl </span>StivaleTerminalTag {
+    <span class="doccomment">/// Returns the terminal write function provided by the terminal stivale tag. This function
+    /// returns the transmuted function for you to simplify the process of passing the string as a raw pointer
+    /// and passing the string length.
+    ///
+    /// ## Example
+    /// ```rust,no_run
+    /// let terminal_tag = stivale_struct.terminal().expect(&quot;Terminal tag was provided by the stivale2 bootloader&quot;);
+    /// let term_write = terminal_tag.term_write();
+    ///
+    /// term_write(&quot;Hello, Stivale!&quot;);
+    /// term_write(&quot;Hello, Rust!&quot;)
+    /// ```
+    ///
+    /// ## Safety
+    /// This function is **not** thread safe.
+    </span><span class="kw">pub fn </span>term_write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>str) {
+        <span class="kw">let </span>__fn_ptr = <span class="self">self</span>.term_write_addr <span class="kw">as </span><span class="kw-2">*const </span>();
+        <span class="kw">let </span>__term_func =
+            <span class="kw">unsafe </span>{ core::mem::transmute::&lt;<span class="kw-2">*const </span>(), <span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(<span class="kw-2">*const </span>i8, u64)&gt;(__fn_ptr) };
 
-        <span class="kw">move</span> <span class="op">|</span><span class="ident">txt</span><span class="op">|</span> {
-            <span class="ident">__term_func</span>(<span class="ident">txt</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">i8</span>, <span class="ident">txt</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="ident">u64</span>);
+        <span class="kw">move </span>|txt| {
+            __term_func(txt.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>i8, txt.len() <span class="kw">as </span>u64);
         }
     }
 }
 
-<span class="doccomment">/// This tag is used to get the location of the ACPI RSDP structure in memory.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleRsdpTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Pointer to the ACPI RSDP structure.</span>
-    <span class="kw">pub</span> <span class="ident">rsdp</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag is used to get the location of the ACPI RSDP structure in memory.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleRsdpTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Pointer to the ACPI RSDP structure.
+    </span><span class="kw">pub </span>rsdp: u64,
 }
 
-<span class="doccomment">/// The type of a memory map entry. The entries are guaranteed to be sorted by base address,</span>
-<span class="doccomment">/// lowest to highest.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Alignment</span>
-<span class="doccomment">/// Usable and bootloader reclaimable entries are guaranteed to be 4096 byte aligned for both</span>
-<span class="doccomment">/// base and length. Usable and bootloader reclaimable entries are **guaranteed** not to overlap with</span>
-<span class="doccomment">/// any other entry.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">StivaleMemoryMapEntryType</span> {
-    <span class="doccomment">/// Usable memory.</span>
-    <span class="ident">Usable</span> <span class="op">=</span> <span class="number">1</span>,
-    <span class="doccomment">/// Memory reserved by the system.</span>
-    <span class="ident">Reserved</span> <span class="op">=</span> <span class="number">2</span>,
-    <span class="doccomment">/// ACPI memory that can be reclaimed.</span>
-    <span class="ident">AcpiReclaimable</span> <span class="op">=</span> <span class="number">3</span>,
-    <span class="doccomment">/// ACPI memory that cannot be reclaimed.</span>
-    <span class="ident">AcpiNvs</span> <span class="op">=</span> <span class="number">4</span>,
-    <span class="doccomment">/// Memory marked as defective (bad RAM).</span>
-    <span class="ident">BadMemory</span> <span class="op">=</span> <span class="number">5</span>,
-    <span class="doccomment">/// Memory used by the bootloader that can be reclaimed after it&#39;s not being used anymore.</span>
-    <span class="ident">BootloaderReclaimable</span> <span class="op">=</span> <span class="number">0x1000</span>,
-    <span class="doccomment">/// Memory containing the kernel and any modules.</span>
-    <span class="ident">Kernel</span> <span class="op">=</span> <span class="number">0x1001</span>,
-    <span class="doccomment">/// Memory containing the framebuffer.</span>
-    <span class="ident">Framebuffer</span> <span class="op">=</span> <span class="number">0x1002</span>,
+<span class="doccomment">/// The type of a memory map entry. The entries are guaranteed to be sorted by base address,
+/// lowest to highest.
+///
+/// ## Alignment
+/// Usable and bootloader reclaimable entries are guaranteed to be 4096 byte aligned for both
+/// base and length. Usable and bootloader reclaimable entries are **guaranteed** not to overlap with
+/// any other entry.
+</span><span class="attribute">#[repr(u32)]</span>
+<span class="attribute">#[derive(Clone, Copy, Debug, PartialEq)]</span>
+<span class="kw">pub enum </span>StivaleMemoryMapEntryType {
+    <span class="doccomment">/// Usable memory.
+    </span>Usable = <span class="number">1</span>,
+    <span class="doccomment">/// Memory reserved by the system.
+    </span>Reserved = <span class="number">2</span>,
+    <span class="doccomment">/// ACPI memory that can be reclaimed.
+    </span>AcpiReclaimable = <span class="number">3</span>,
+    <span class="doccomment">/// ACPI memory that cannot be reclaimed.
+    </span>AcpiNvs = <span class="number">4</span>,
+    <span class="doccomment">/// Memory marked as defective (bad RAM).
+    </span>BadMemory = <span class="number">5</span>,
+    <span class="doccomment">/// Memory used by the bootloader that can be reclaimed after it&#39;s not being used anymore.
+    </span>BootloaderReclaimable = <span class="number">0x1000</span>,
+    <span class="doccomment">/// Memory containing the kernel and any modules.
+    </span>Kernel = <span class="number">0x1001</span>,
+    <span class="doccomment">/// Memory containing the framebuffer.
+    </span>Framebuffer = <span class="number">0x1002</span>,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleMemoryMapEntry</span> {
-    <span class="doccomment">/// Physical address of base of the memory section.</span>
-    <span class="kw">pub</span> <span class="ident">base</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Length of this memory section.</span>
-    <span class="kw">pub</span> <span class="ident">length</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// The type of this memory map entry.</span>
-    <span class="kw">pub</span> <span class="ident">entry_type</span>: <span class="ident">StivaleMemoryMapEntryType</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Debug, Copy, Clone)]</span>
+<span class="kw">pub struct </span>StivaleMemoryMapEntry {
+    <span class="doccomment">/// Physical address of base of the memory section.
+    </span><span class="kw">pub </span>base: u64,
+    <span class="doccomment">/// Length of this memory section.
+    </span><span class="kw">pub </span>length: u64,
+    <span class="doccomment">/// The type of this memory map entry.
+    </span><span class="kw">pub </span>entry_type: StivaleMemoryMapEntryType,
 
-    <span class="ident">_padding</span>: <span class="ident">u32</span>,
+    _padding: u32,
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleMemoryMapEntry</span> {
-    <span class="doccomment">/// Returns the end address of this memory region.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">end_address</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">base</span> <span class="op">+</span> <span class="self">self</span>.<span class="ident">length</span>
+<span class="kw">impl </span>StivaleMemoryMapEntry {
+    <span class="doccomment">/// Returns the end address of this memory region.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>end_address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.base + <span class="self">self</span>.length
     }
 
-    <span class="doccomment">/// Returns the entry type of this memory region. External function is required</span>
-    <span class="doccomment">/// as reference the entry_type packed field is not aligned.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entry_type</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StivaleMemoryMapEntryType</span> {
-        <span class="self">self</span>.<span class="ident">entry_type</span>
+    <span class="doccomment">/// Returns the entry type of this memory region. External function is required
+    /// as reference the entry_type packed field is not aligned.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>entry_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StivaleMemoryMapEntryType {
+        <span class="self">self</span>.entry_type
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleMemoryMapTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Total length of the memory map entries.</span>
-    <span class="kw">pub</span> <span class="ident">entries_len</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Pointer to the memory map entries.</span>
-    <span class="kw">pub</span> <span class="ident">entry_array</span>: [<span class="ident">StivaleMemoryMapEntry</span>; <span class="number">0</span>],
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleMemoryMapTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Total length of the memory map entries.
+    </span><span class="kw">pub </span>entries_len: u64,
+    <span class="doccomment">/// Pointer to the memory map entries.
+    </span><span class="kw">pub </span>entry_array: [StivaleMemoryMapEntry; <span class="number">0</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleMemoryMapTag</span> {
-    <span class="doccomment">/// Return&#39;s memory map entries pointer as a rust slice.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">StivaleMemoryMapEntry</span>] {
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">entry_array</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">entries_len</span> <span class="kw">as</span> <span class="ident">usize</span>) }
+<span class="kw">impl </span>StivaleMemoryMapTag {
+    <span class="doccomment">/// Return&#39;s memory map entries pointer as a rust slice.
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[StivaleMemoryMapEntry] {
+        <span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.entry_array.as_ptr(), <span class="self">self</span>.entries_len <span class="kw">as </span>usize) }
     }
 
-    <span class="doccomment">/// Returns an iterator over all the memory regions.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StivaleMemoryMapIter</span> {
-        <span class="ident">StivaleMemoryMapIter</span> {
-            <span class="ident">sref</span>: <span class="self">self</span>,
-            <span class="ident">current</span>: <span class="number">0x00</span>,
-            <span class="ident">phantom</span>: <span class="ident">PhantomData::default</span>(),
+    <span class="doccomment">/// Returns an iterator over all the memory regions.
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StivaleMemoryMapIter {
+        StivaleMemoryMapIter {
+            sref: <span class="self">self</span>,
+            current: <span class="number">0x00</span>,
+            phantom: PhantomData::default(),
         }
     }
 }
 
-<span class="doccomment">/// Iterator over all the memory regions provided by the stivale bootloader.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleMemoryMapIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// A reference to the stivale memory map tag.</span>
-    <span class="ident">sref</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StivaleMemoryMapTag</span>,
-    <span class="doccomment">/// The index of the memory map entry that we are about to index.</span>
-    <span class="ident">current</span>: <span class="ident">u64</span>,
-    <span class="ident">phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StivaleMemoryMapEntry</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Iterator over all the memory regions provided by the stivale bootloader.
+</span><span class="attribute">#[derive(Clone)]</span>
+<span class="kw">pub struct </span>StivaleMemoryMapIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// A reference to the stivale memory map tag.
+    </span>sref: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StivaleMemoryMapTag,
+    <span class="doccomment">/// The index of the memory map entry that we are about to index.
+    </span>current: u64,
+    phantom: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StivaleMemoryMapEntry&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">StivaleMemoryMapIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StivaleMemoryMapEntry</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>StivaleMemoryMapIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StivaleMemoryMapEntry;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">entries_len</span> {
-            <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">as_slice</span>()[<span class="self">self</span>.<span class="ident">current</span> <span class="kw">as</span> <span class="ident">usize</span>];
-            <span class="self">self</span>.<span class="ident">current</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.current &lt; <span class="self">self</span>.sref.entries_len {
+            <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.sref.as_slice()[<span class="self">self</span>.current <span class="kw">as </span>usize];
+            <span class="self">self</span>.current += <span class="number">1</span>;
 
-            <span class="prelude-val">Some</span>(<span class="ident">entry</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+            <span class="prelude-val">Some</span>(entry)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 }
 
-<span class="doccomment">/// This tag is used to get the current UNIX epoch, as per RTC.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleEpochTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// UNIX epoch at boot, which is read from system RTC.</span>
-    <span class="kw">pub</span> <span class="ident">epoch</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag is used to get the current UNIX epoch, as per RTC.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleEpochTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// UNIX epoch at boot, which is read from system RTC.
+    </span><span class="kw">pub </span>epoch: u64,
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Bitfield representing the firmware and boot flags passed by the bootloader.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleFirmwareTagFlags</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// The kernel was booted in UEFI mode.</span>
-        <span class="kw">const</span> <span class="ident">UEFI</span> <span class="op">=</span> <span class="number">0x00</span>;
-        <span class="doccomment">/// The kernel was booted in a legacy BIOS mode.</span>
-        <span class="kw">const</span> <span class="ident">BIOS</span> <span class="op">=</span> <span class="number">0x01</span>;
+    <span class="doccomment">/// Bitfield representing the firmware and boot flags passed by the bootloader.
+    </span><span class="kw">pub struct </span>StivaleFirmwareTagFlags: u64 {
+        <span class="doccomment">/// The kernel was booted in UEFI mode.
+        </span><span class="kw">const </span>UEFI = <span class="number">0x00</span>;
+        <span class="doccomment">/// The kernel was booted in a legacy BIOS mode.
+        </span><span class="kw">const </span>BIOS = <span class="number">0x01</span>;
     }
 }
 
-<span class="doccomment">/// This tag is used to get the info about the firmware.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleFirmwareTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Flags telling about the firmware and boot flags passed by the bootloader.</span>
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">StivaleFirmwareTagFlags</span>,
+<span class="doccomment">/// This tag is used to get the info about the firmware.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleFirmwareTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Flags telling about the firmware and boot flags passed by the bootloader.
+    </span><span class="kw">pub </span>flags: StivaleFirmwareTagFlags,
 }
 
-<span class="doccomment">/// This tag is used to get a pointer to the EFI system table if available.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleEfiSystemTableTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Address of the EFI system table.</span>
-    <span class="kw">pub</span> <span class="ident">system_table_addr</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag is used to get a pointer to the EFI system table if available.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleEfiSystemTableTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Address of the EFI system table.
+    </span><span class="kw">pub </span>system_table_addr: u64,
 }
 
-<span class="doccomment">/// This tag is used to get the kernel with a pointer to a copy the raw executable</span>
-<span class="doccomment">/// file of the kernel that the bootloader loaded.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleKernelFileTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Address of the raw kernel file.</span>
-    <span class="kw">pub</span> <span class="ident">kernel_file_addr</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag is used to get the kernel with a pointer to a copy the raw executable
+/// file of the kernel that the bootloader loaded.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleKernelFileTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Address of the raw kernel file.
+    </span><span class="kw">pub </span>kernel_file_addr: u64,
 }
 
-<span class="doccomment">/// This tag is used to get the slide that the bootloader applied over the kernel&#39;s load</span>
-<span class="doccomment">/// address as a positive offset.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleKernelSlideTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// The kernel slide. See structure-level documentation for more information.</span>
-    <span class="kw">pub</span> <span class="ident">kernel_slide</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag is used to get the slide that the bootloader applied over the kernel&#39;s load
+/// address as a positive offset.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleKernelSlideTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// The kernel slide. See structure-level documentation for more information.
+    </span><span class="kw">pub </span>kernel_slide: u64,
 }
 
-<span class="doccomment">/// This tag is used to get the kernel the command line string that was passed to it by</span>
-<span class="doccomment">/// the bootloader.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleCommandLineTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Pointer to a null-terminated cmdline.</span>
-    <span class="kw">pub</span> <span class="ident">command_line</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag is used to get the kernel the command line string that was passed to it by
+/// the bootloader.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleCommandLineTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Pointer to a null-terminated cmdline.
+    </span><span class="kw">pub </span>command_line: u64,
 }
 
-<span class="doccomment">/// This tag is used to get the EDID information as acquired by the firmware.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleEdidInfoTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Length of the EDID information array.</span>
-    <span class="kw">pub</span> <span class="ident">edid_len</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Pointer to the EDID information array.</span>
-    <span class="kw">pub</span> <span class="ident">info_array</span>: [<span class="ident">u8</span>; <span class="number">0</span>],
+<span class="doccomment">/// This tag is used to get the EDID information as acquired by the firmware.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleEdidInfoTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Length of the EDID information array.
+    </span><span class="kw">pub </span>edid_len: u64,
+    <span class="doccomment">/// Pointer to the EDID information array.
+    </span><span class="kw">pub </span>info_array: [u8; <span class="number">0</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleEdidInfoTag</span> {
-    <span class="doccomment">/// Return&#39;s the EDID information pointer as a rust slice.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">u8</span>] {
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">info_array</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">edid_len</span> <span class="kw">as</span> <span class="ident">usize</span>) }
+<span class="kw">impl </span>StivaleEdidInfoTag {
+    <span class="doccomment">/// Return&#39;s the EDID information pointer as a rust slice.
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+        <span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.info_array.as_ptr(), <span class="self">self</span>.edid_len <span class="kw">as </span>usize) }
     }
 }
 
-<span class="doccomment">/// This tag exists if MTRR write-combining for the framebuffer was requested and successfully enabled. See</span>
-<span class="doccomment">/// the documentation of [crate::v2::header::StivaleMtrrHeaderTag] for more information.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Legacy</span>
-<span class="doccomment">/// This tag is deprecated and considered legacy. Use is discouraged and it may not be supported on newer bootloaders.</span>
-<span class="attribute">#[<span class="ident">deprecated</span>(
-    <span class="ident">note</span> <span class="op">=</span> <span class="string">&quot;This tag is deprecated and considered legacy. Use is discouraged and it may not be supported on newer bootloaders.&quot;</span>
-)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleMtrrTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
+<span class="doccomment">/// This tag exists if MTRR write-combining for the framebuffer was requested and successfully enabled. See
+/// the documentation of [crate::v2::header::StivaleMtrrHeaderTag] for more information.
+///
+/// ## Legacy
+/// This tag is deprecated and considered legacy. Use is discouraged and it may not be supported on newer bootloaders.
+</span><span class="attribute">#[deprecated(
+    note = <span class="string">&quot;This tag is deprecated and considered legacy. Use is discouraged and it may not be supported on newer bootloaders.&quot;
+</span>)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleMtrrTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
 }
 
-<span class="doccomment">/// Structure representing a module, containing the information of a module that</span>
-<span class="doccomment">/// the bootloader loaded alongside the kernel.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleModule</span> {
-    <span class="doccomment">/// Address where this module has been loaded.</span>
-    <span class="kw">pub</span> <span class="ident">start</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// End address of this module.</span>
-    <span class="kw">pub</span> <span class="ident">end</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// ASCII 0-terminated string passed to the module as specified in</span>
-    <span class="doccomment">/// the config file.</span>
-    <span class="kw">pub</span> <span class="ident">string</span>: [<span class="ident">u8</span>; <span class="number">128</span>],
+<span class="doccomment">/// Structure representing a module, containing the information of a module that
+/// the bootloader loaded alongside the kernel.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleModule {
+    <span class="doccomment">/// Address where this module has been loaded.
+    </span><span class="kw">pub </span>start: u64,
+    <span class="doccomment">/// End address of this module.
+    </span><span class="kw">pub </span>end: u64,
+    <span class="doccomment">/// ASCII 0-terminated string passed to the module as specified in
+    /// the config file.
+    </span><span class="kw">pub </span>string: [u8; <span class="number">128</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleModule</span> {
-    <span class="doccomment">/// Returns the size of this module.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">size</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">end</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">start</span>
+<span class="kw">impl </span>StivaleModule {
+    <span class="doccomment">/// Returns the size of this module.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.end - <span class="self">self</span>.start
     }
 
-    <span class="doccomment">/// Returns the ASCII 0-terminated string passed to the module as specified in the config file</span>
-    <span class="doccomment">/// as a rust string.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_str</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="ident"><span class="kw">super</span>::utils::string_from_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">string</span>)
+    <span class="doccomment">/// Returns the ASCII 0-terminated string passed to the module as specified in the config file
+    /// as a rust string.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>as_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">super</span>::utils::string_from_slice(<span class="kw-2">&amp;</span><span class="self">self</span>.string)
     }
 }
 
-<span class="doccomment">/// Iterator over all the modules that were loaded.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleModuleIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// A reference to the stivale module tag.</span>
-    <span class="ident">sref</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StivaleModuleTag</span>,
-    <span class="doccomment">/// The index of the module entry that we are about to index.</span>
-    <span class="ident">current</span>: <span class="ident">u64</span>,
-    <span class="ident">phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StivaleModule</span><span class="op">&gt;</span>,
+<span class="doccomment">/// Iterator over all the modules that were loaded.
+</span><span class="attribute">#[derive(Clone)]</span>
+<span class="kw">pub struct </span>StivaleModuleIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="doccomment">/// A reference to the stivale module tag.
+    </span>sref: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StivaleModuleTag,
+    <span class="doccomment">/// The index of the module entry that we are about to index.
+    </span>current: u64,
+    phantom: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StivaleModule&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">StivaleModuleIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">StivaleModule</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>StivaleModuleIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>StivaleModule;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">current</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">module_len</span> {
-            <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">as_slice</span>()[<span class="self">self</span>.<span class="ident">current</span> <span class="kw">as</span> <span class="ident">usize</span>];
-            <span class="self">self</span>.<span class="ident">current</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.current &lt; <span class="self">self</span>.sref.module_len {
+            <span class="kw">let </span>entry = <span class="kw-2">&amp;</span><span class="self">self</span>.sref.as_slice()[<span class="self">self</span>.current <span class="kw">as </span>usize];
+            <span class="self">self</span>.current += <span class="number">1</span>;
 
-            <span class="prelude-val">Some</span>(<span class="ident">entry</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
+            <span class="prelude-val">Some</span>(entry)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+}
+
+<span class="doccomment">/// This tag is used to get the modules that the bootloader loaded alongside the kernel, if any.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleModuleTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Length of the modules array.
+    </span><span class="kw">pub </span>module_len: u64,
+    <span class="doccomment">/// Pointer to the modules array.
+    </span><span class="kw">pub </span>modules_array: [StivaleModule; <span class="number">0</span>],
+}
+
+<span class="kw">impl </span>StivaleModuleTag {
+    <span class="doccomment">/// Returns an iterator over all the modules that were loaded.
+    </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StivaleModuleIter {
+        StivaleModuleIter {
+            sref: <span class="self">self</span>,
+            current: <span class="number">0</span>,
+            phantom: PhantomData::default(),
+        }
+    }
+
+    <span class="doccomment">/// Return&#39;s the modules array pointer as a rust slice.
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[StivaleModule] {
+        <span class="kw">unsafe </span>{
+            core::slice::from_raw_parts(<span class="self">self</span>.modules_array.as_ptr(), <span class="self">self</span>.module_len <span class="kw">as </span>usize)
         }
     }
 }
 
-<span class="doccomment">/// This tag is used to get the modules that the bootloader loaded alongside the kernel, if any.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleModuleTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Length of the modules array.</span>
-    <span class="kw">pub</span> <span class="ident">module_len</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Pointer to the modules array.</span>
-    <span class="kw">pub</span> <span class="ident">modules_array</span>: [<span class="ident">StivaleModule</span>; <span class="number">0</span>],
+<span class="doccomment">/// This tag is used to get the location of the SMBIOS entry points in memory.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleSmbiosTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Stivale specification says that the flags in this tag are for future use
+    /// and currently should be unused and **must** be 0.
+    </span><span class="kw">pub </span>flags: u64,
+    <span class="doccomment">/// 32-bit SMBIOS entry point address. Set to 0 if unavailable.
+    </span><span class="kw">pub </span>smbios_entry_32: u64,
+    <span class="doccomment">/// 64-bit SMBIOS entry point address. Set to 0 if unavailable.
+    </span><span class="kw">pub </span>smbios_entry_64: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleModuleTag</span> {
-    <span class="doccomment">/// Returns an iterator over all the modules that were loaded.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StivaleModuleIter</span> {
-        <span class="ident">StivaleModuleIter</span> {
-            <span class="ident">sref</span>: <span class="self">self</span>,
-            <span class="ident">current</span>: <span class="number">0</span>,
-            <span class="ident">phantom</span>: <span class="ident">PhantomData::default</span>(),
+<span class="doccomment">/// SMP imformation structure.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleSmpInfo {
+    <span class="doccomment">/// ACPI Processor UID as specified by MADT.
+    </span><span class="kw">pub </span>acpi_processor_uid: u32,
+    <span class="doccomment">/// LAPIC ID as specified by MADT.
+    </span><span class="kw">pub </span>lapic_id: u32,
+    <span class="doccomment">/// The stack that will be loaded in ESP/RSP once the goto_address field is loaded.
+    /// This MUST point to a valid stack of at least 256 bytes in size, and 16-byte aligned.
+    /// target_stack is an unused field for the struct describing the BSP.
+    </span><span class="kw">pub </span>target_stack: u64,
+    <span class="doccomment">/// This field is polled by the started APs until the kernel on another CPU performs an
+    /// atomic write to this field. When that happens, bootloader code will load up ESP/RSP with the stack
+    /// value as specified in target_stack. It will then proceed to load a pointer to this very structure into
+    /// either register RDI for 64-bit or on the stack for 32-bit, then, goto_address is called (a bogus return
+    /// address is pushed onto the stack) and execution is handed off.
+    /// The CPU state will be the same as describedin &quot;kernel entry machine state&quot;, with the exception
+    /// of ESP/RSP and RDI/stack arg being set up as above. goto_address is an unused field for the
+    /// struct describing the BSP.
+    </span><span class="kw">pub </span>goto_address: u64,
+    <span class="doccomment">/// This field is polled by the started APs until the kernel on another CPU performs an
+    /// atomic write to this field. When that happens, bootloader code will
+    /// load up ESP/RSP with the stack value as specified in target_stack.
+    /// It will then proceed to load a pointer to this very structure into either register
+    /// RDI for 64-bit or on the stack for 32-bit, then, goto_address is called (a bogus return
+    /// address is pushed onto the stack) and execution is handed off.
+    ///
+    /// The CPU state will be the same as described in &quot;kernel entry machine state&quot;, with the exception
+    /// of ESP/RSP and RDI/stack arg being set up as above. goto_address is an unused field for the
+    /// struct describing the BSP.
+    </span><span class="kw">pub </span>extra: u64,
+}
+
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleSmpTag {
+    header: StivaleTagHeader,
+    <span class="kw">pub </span>flags: StivaleSmpHeaderTagFlags,
+    <span class="doccomment">/// LAPIC ID of the BSP (bootstrap processor).
+    </span><span class="kw">pub </span>bsp_lapic_id: u32,
+    <span class="doccomment">/// Stivale specification says that this field is reserved for future use.
+    </span><span class="kw">pub </span>unused: u32,
+    <span class="doccomment">/// The total number of logical CPUs (including BSP).
+    </span>cpu_count: u64,
+    <span class="doccomment">/// Pointer to the SMP info array (including BSP).
+    </span><span class="kw">pub </span>smp_info_array: [StivaleSmpInfo; <span class="number">0</span>],
+}
+
+<span class="kw">impl </span>StivaleSmpTag {
+    <span class="doccomment">/// Return&#39;s the tag header
+    </span><span class="kw">pub fn </span>header(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>StivaleTagHeader {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.header
+    }
+
+    <span class="doccomment">/// Return&#39;s the total number of logical CPUs (including BSP).
+    </span><span class="kw">pub fn </span>cpu_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.cpu_count
+    }
+
+    <span class="doccomment">/// Return&#39;s the SMP info array pointer as a rust slice.
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[StivaleSmpInfo] {
+        <span class="kw">unsafe </span>{
+            core::slice::from_raw_parts(<span class="self">self</span>.smp_info_array.as_ptr(), <span class="self">self</span>.cpu_count <span class="kw">as </span>usize)
         }
     }
 
-    <span class="doccomment">/// Return&#39;s the modules array pointer as a rust slice.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">StivaleModule</span>] {
-        <span class="kw">unsafe</span> {
-            <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">modules_array</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">module_len</span> <span class="kw">as</span> <span class="ident">usize</span>)
-        }
+    <span class="doccomment">/// Return&#39;s the SMP info array pointer as a mutable rust slice.
+    ///
+    /// ## Safety
+    ///
+    /// If this tag was returned by a bootloader mutating the slice must conform to the following
+    /// rules in order to not trigger UB:
+    ///
+    /// - Writing to [`StivaleSmpInfo::goto_address`] will cause it to start executing at the
+    /// provided address as such a proper stack must have been set at
+    /// [`StivaleSmpInfo::target_stack`] already if a stack is needed.
+    /// - The stack pointer written to [`StivaleSmpInfo::target_stack`] must not alias already
+    /// mapped memory, this means that the memory area dedicated to the stack must be exclusively
+    /// used for the AP stack and stack overflows can trigger UB (consider using a guard page).
+    /// - The address pointed by [`StivaleSmpInfo::goto_address`] must be that of a
+    /// `extern &quot;C&quot; fn(&amp;&#39;static StivaleSmpInfo) -&gt; !`, this also means that once written this
+    /// struct must not be mutated any further.
+    </span><span class="kw">pub unsafe fn </span>as_slice_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[StivaleSmpInfo] {
+        core::slice::from_raw_parts_mut(<span class="self">self</span>.smp_info_array.as_mut_ptr(), <span class="self">self</span>.cpu_count <span class="kw">as </span>usize)
     }
 }
 
-<span class="doccomment">/// This tag is used to get the location of the SMBIOS entry points in memory.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleSmbiosTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Stivale specification says that the flags in this tag are for future use</span>
-    <span class="doccomment">/// and currently should be unused and **must** be 0.</span>
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// 32-bit SMBIOS entry point address. Set to 0 if unavailable.</span>
-    <span class="kw">pub</span> <span class="ident">smbios_entry_32</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// 64-bit SMBIOS entry point address. Set to 0 if unavailable.</span>
-    <span class="kw">pub</span> <span class="ident">smbios_entry_64</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag reports that the kernel has been booted via PXE, and reports the server ip that
+/// it was booted from.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivalePxeInfoTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Server IP in network byte order.
+    </span><span class="kw">pub </span>server_ip: u32,
 }
 
-<span class="doccomment">/// SMP imformation structure.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleSmpInfo</span> {
-    <span class="doccomment">/// ACPI Processor UID as specified by MADT.</span>
-    <span class="kw">pub</span> <span class="ident">acpi_processor_uid</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// LAPIC ID as specified by MADT.</span>
-    <span class="kw">pub</span> <span class="ident">lapic_id</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The stack that will be loaded in ESP/RSP once the goto_address field is loaded.</span>
-    <span class="doccomment">/// This MUST point to a valid stack of at least 256 bytes in size, and 16-byte aligned.</span>
-    <span class="doccomment">/// target_stack is an unused field for the struct describing the BSP.</span>
-    <span class="kw">pub</span> <span class="ident">target_stack</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// This field is polled by the started APs until the kernel on another CPU performs an</span>
-    <span class="doccomment">/// atomic write to this field. When that happens, bootloader code will load up ESP/RSP with the stack</span>
-    <span class="doccomment">/// value as specified in target_stack. It will then proceed to load a pointer to this very structure into</span>
-    <span class="doccomment">/// either register RDI for 64-bit or on the stack for 32-bit, then, goto_address is called (a bogus return</span>
-    <span class="doccomment">/// address is pushed onto the stack) and execution is handed off.</span>
-    <span class="doccomment">/// The CPU state will be the same as describedin &quot;kernel entry machine state&quot;, with the exception</span>
-    <span class="doccomment">/// of ESP/RSP and RDI/stack arg being set up as above. goto_address is an unused field for the</span>
-    <span class="doccomment">/// struct describing the BSP.</span>
-    <span class="kw">pub</span> <span class="ident">goto_address</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// This field is polled by the started APs until the kernel on another CPU performs an</span>
-    <span class="doccomment">/// atomic write to this field. When that happens, bootloader code will</span>
-    <span class="doccomment">/// load up ESP/RSP with the stack value as specified in target_stack.</span>
-    <span class="doccomment">/// It will then proceed to load a pointer to this very structure into either register</span>
-    <span class="doccomment">/// RDI for 64-bit or on the stack for 32-bit, then, goto_address is called (a bogus return</span>
-    <span class="doccomment">/// address is pushed onto the stack) and execution is handed off.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// The CPU state will be the same as described in &quot;kernel entry machine state&quot;, with the exception</span>
-    <span class="doccomment">/// of ESP/RSP and RDI/stack arg being set up as above. goto_address is an unused field for the</span>
-    <span class="doccomment">/// struct describing the BSP.</span>
-    <span class="kw">pub</span> <span class="ident">extra</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// This tag reports that there is a memory mapped UART port and its address.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleUartTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// The address of the UART port.
+    </span><span class="kw">pub </span>address: u64,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleSmpTag</span> {
-    <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">StivaleSmpHeaderTagFlags</span>,
-    <span class="doccomment">/// LAPIC ID of the BSP (bootstrap processor).</span>
-    <span class="kw">pub</span> <span class="ident">bsp_lapic_id</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// Stivale specification says that this field is reserved for future use.</span>
-    <span class="kw">pub</span> <span class="ident">unused</span>: <span class="ident">u32</span>,
-    <span class="doccomment">/// The total number of logical CPUs (including BSP).</span>
-    <span class="ident">cpu_count</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Pointer to the SMP info array (including BSP).</span>
-    <span class="kw">pub</span> <span class="ident">smp_info_array</span>: [<span class="ident">StivaleSmpInfo</span>; <span class="number">0</span>],
+<span class="doccomment">/// This tag describes a device tree blob for the platform.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleDeviceTreeTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// The address of the device tree blob.
+    </span><span class="kw">pub </span>address: u64,
+    <span class="doccomment">/// The size of the device tree blob.
+    </span><span class="kw">pub </span>size: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleSmpTag</span> {
-    <span class="doccomment">/// Return&#39;s the tag header</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">header</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">StivaleTagHeader</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">header</span>
-    }
-
-    <span class="doccomment">/// Return&#39;s the total number of logical CPUs (including BSP).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cpu_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">cpu_count</span>
-    }
-
-    <span class="doccomment">/// Return&#39;s the SMP info array pointer as a rust slice.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">StivaleSmpInfo</span>] {
-        <span class="kw">unsafe</span> {
-            <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">smp_info_array</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">cpu_count</span> <span class="kw">as</span> <span class="ident">usize</span>)
-        }
-    }
-
-    <span class="doccomment">/// Return&#39;s the SMP info array pointer as a mutable rust slice.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Safety</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If this tag was returned by a bootloader mutating the slice must conform to the following</span>
-    <span class="doccomment">/// rules in order to not trigger UB:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// - Writing to [`StivaleSmpInfo::goto_address`] will cause it to start executing at the</span>
-    <span class="doccomment">/// provided address as such a proper stack must have been set at</span>
-    <span class="doccomment">/// [`StivaleSmpInfo::target_stack`] already if a stack is needed.</span>
-    <span class="doccomment">/// - The stack pointer written to [`StivaleSmpInfo::target_stack`] must not alias already</span>
-    <span class="doccomment">/// mapped memory, this means that the memory area dedicated to the stack must be exclusively</span>
-    <span class="doccomment">/// used for the AP stack and stack overflows can trigger UB (consider using a guard page).</span>
-    <span class="doccomment">/// - The address pointed by [`StivaleSmpInfo::goto_address`] must be that of a</span>
-    <span class="doccomment">/// `extern &quot;C&quot; fn(&amp;&#39;static StivaleSmpInfo) -&gt; !`, this also means that once written this</span>
-    <span class="doccomment">/// struct must not be mutated any further.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">as_slice_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">StivaleSmpInfo</span>] {
-        <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="self">self</span>.<span class="ident">smp_info_array</span>.<span class="ident">as_mut_ptr</span>(), <span class="self">self</span>.<span class="ident">cpu_count</span> <span class="kw">as</span> <span class="ident">usize</span>)
-    }
+<span class="doccomment">/// This tag describes the high physical memory location.
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleVMapTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// VMAP_HIGH, where the physical memory is mapped in the higher half.
+    </span><span class="kw">pub </span>address: u64,
 }
 
-<span class="doccomment">/// This tag reports that the kernel has been booted via PXE, and reports the server ip that</span>
-<span class="doccomment">/// it was booted from.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivalePxeInfoTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Server IP in network byte order.</span>
-    <span class="kw">pub</span> <span class="ident">server_ip</span>: <span class="ident">u32</span>,
-}
-
-<span class="doccomment">/// This tag reports that there is a memory mapped UART port and its address.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleUartTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// The address of the UART port.</span>
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">u64</span>,
-}
-
-<span class="doccomment">/// This tag describes a device tree blob for the platform.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleDeviceTreeTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// The address of the device tree blob.</span>
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// The size of the device tree blob.</span>
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">u64</span>,
-}
-
-<span class="doccomment">/// This tag describes the high physical memory location.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleVMapTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// VMAP_HIGH, where the physical memory is mapped in the higher half.</span>
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">u64</span>,
-}
-
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleKernelFileV2Tag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Address of the raw kernel file.</span>
-    <span class="kw">pub</span> <span class="ident">kernel_start</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Size of the raw kernel file.</span>
-    <span class="kw">pub</span> <span class="ident">kernel_size</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleKernelFileV2Tag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Address of the raw kernel file.
+    </span><span class="kw">pub </span>kernel_start: u64,
+    <span class="doccomment">/// Size of the raw kernel file.
+    </span><span class="kw">pub </span>kernel_size: u64,
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivalePmrPermissionFlags</span>: <span class="ident">u64</span> {
-        <span class="kw">const</span> <span class="ident">EXECUTABLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
-        <span class="kw">const</span> <span class="ident">WRITABLE</span>   <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">READABLE</span>   <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
+    <span class="kw">pub struct </span>StivalePmrPermissionFlags: u64 {
+        <span class="kw">const </span>EXECUTABLE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+        <span class="kw">const </span>WRITABLE   = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="kw">const </span>READABLE   = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivalePmr</span> {
-    <span class="kw">pub</span> <span class="ident">base</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// The permissions field contains flgas to determine the range&#39;s permissions.</span>
-    <span class="kw">pub</span> <span class="ident">permissions</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivalePmr {
+    <span class="kw">pub </span>base: u64,
+    <span class="kw">pub </span>size: u64,
+    <span class="doccomment">/// The permissions field contains flgas to determine the range&#39;s permissions.
+    </span><span class="kw">pub </span>permissions: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">StivalePmr</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">permissions</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">StivalePmrPermissionFlags</span> {
-        <span class="ident">StivalePmrPermissionFlags::from_bits_truncate</span>(<span class="self">self</span>.<span class="ident">permissions</span>)
+<span class="kw">impl </span>StivalePmr {
+    <span class="kw">pub fn </span>permissions(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; StivalePmrPermissionFlags {
+        StivalePmrPermissionFlags::from_bits_truncate(<span class="self">self</span>.permissions)
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivalePmrsTag</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>,
-    <span class="doccomment">/// Count of PMRs in following array.</span>
-    <span class="kw">pub</span> <span class="ident">pmr_count</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Array of PMR structs.</span>
-    <span class="kw">pub</span> <span class="ident">pmrs</span>: [<span class="ident">StivalePmr</span>; <span class="number">0</span>],
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivalePmrsTag {
+    <span class="kw">pub </span>header: StivaleTagHeader,
+    <span class="doccomment">/// Count of PMRs in following array.
+    </span><span class="kw">pub </span>pmr_count: u64,
+    <span class="doccomment">/// Array of PMR structs.
+    </span><span class="kw">pub </span>pmrs: [StivalePmr; <span class="number">0</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">StivalePmrsTag</span> {
-    <span class="doccomment">/// Return&#39;s the PMRs array pointer as a rust slice.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[<span class="ident">StivalePmr</span>] {
-        <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="self">self</span>.<span class="ident">pmrs</span>.<span class="ident">as_ptr</span>(), <span class="self">self</span>.<span class="ident">pmr_count</span> <span class="kw">as</span> <span class="ident">usize</span>) }
+<span class="kw">impl </span>StivalePmrsTag {
+    <span class="doccomment">/// Return&#39;s the PMRs array pointer as a rust slice.
+    </span><span class="kw">pub fn </span>as_slice(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[StivalePmr] {
+        <span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.pmrs.as_ptr(), <span class="self">self</span>.pmr_count <span class="kw">as </span>usize) }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="stivale_boot" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="stivale_boot" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

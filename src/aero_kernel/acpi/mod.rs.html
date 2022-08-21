@@ -159,132 +159,132 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! The ACPI (Advanced Configuration and Power Interface) tables help to gather the</span>
-<span class="doccomment">//! CPU, interrupt, and timer informations.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! **Notes**: &lt;https://wiki.osdev.org/ACPI&gt;</span>
+</span><span class="doccomment">//! The ACPI (Advanced Configuration and Power Interface) tables help to gather the
+//! CPU, interrupt, and timer informations.
+//!
+//! **Notes**: &lt;https://wiki.osdev.org/ACPI&gt;
 
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+</span><span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="kw">crate</span>::{
-    <span class="ident">mem::paging</span>::{<span class="ident">PhysAddr</span>, <span class="ident">VirtAddr</span>},
-    <span class="ident">utils::sync</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>},
+<span class="kw">use crate</span>::{
+    mem::paging::{PhysAddr, VirtAddr},
+    utils::sync::{Mutex, MutexGuard},
 };
 
-<span class="kw">use</span> <span class="self">self</span>::{<span class="ident">hpet::Hpet</span>, <span class="ident">madt::Madt</span>, <span class="ident">mcfg::Mcfg</span>, <span class="ident">sdt::Sdt</span>};
+<span class="kw">use </span><span class="self">self</span>::{hpet::Hpet, madt::Madt, mcfg::Mcfg, sdt::Sdt};
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">aml</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">fadt</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">hpet</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">madt</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">mcfg</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rsdp</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">sdt</span>;
+<span class="kw">pub mod </span>aml;
+<span class="kw">pub mod </span>fadt;
+<span class="kw">pub mod </span>hpet;
+<span class="kw">pub mod </span>madt;
+<span class="kw">pub mod </span>mcfg;
+<span class="kw">pub mod </span>rsdp;
+<span class="kw">pub mod </span>sdt;
 
-<span class="kw">enum</span> <span class="ident">AcpiHeader</span> {
-    <span class="ident">Rsdt</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">rsdp::Rsdt</span><span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>),
-    <span class="ident">Xsdt</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">rsdp::Rsdt</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>),
+<span class="kw">enum </span>AcpiHeader {
+    Rsdt(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>rsdp::Rsdt&lt;u32&gt;),
+    Xsdt(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>rsdp::Rsdt&lt;u64&gt;),
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AcpiTable</span> {
-    <span class="ident">header</span>: <span class="ident">AcpiHeader</span>,
+<span class="kw">pub struct </span>AcpiTable {
+    header: AcpiHeader,
 }
 
-<span class="kw">impl</span> <span class="ident">AcpiTable</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">rsdp_address</span>: <span class="ident">VirtAddr</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">rsdp::find_rsdt_address</span>(<span class="ident">rsdp_address</span>) {
-            <span class="ident">rsdp::RsdtAddress::Xsdt</span>(<span class="ident">xsdt_addr</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">xsdt</span> <span class="op">=</span> <span class="ident">rsdp::Rsdt</span>::<span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">xsdt_addr</span>);
-                <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">AcpiHeader::Xsdt</span>(<span class="ident">xsdt</span>);
+<span class="kw">impl </span>AcpiTable {
+    <span class="kw">fn </span>new(rsdp_address: VirtAddr) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>rsdp::find_rsdt_address(rsdp_address) {
+            rsdp::RsdtAddress::Xsdt(xsdt_addr) =&gt; {
+                <span class="kw">let </span>xsdt = rsdp::Rsdt::&lt;u64&gt;::new(xsdt_addr);
+                <span class="kw">let </span>header = AcpiHeader::Xsdt(xsdt);
 
-                <span class="macro">log::debug!</span>(<span class="string">&quot;found XSDT at {:#x}&quot;</span>, <span class="ident">xsdt_addr</span>);
+                <span class="macro">log::debug!</span>(<span class="string">&quot;found XSDT at {:#x}&quot;</span>, xsdt_addr);
 
-                <span class="self">Self</span> { <span class="ident">header</span> }
+                <span class="self">Self </span>{ header }
             }
 
-            <span class="ident">rsdp::RsdtAddress::Rsdt</span>(<span class="ident">rsdt_addr</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">rsdt</span> <span class="op">=</span> <span class="ident">rsdp::Rsdt</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">rsdt_addr</span>);
-                <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">AcpiHeader::Rsdt</span>(<span class="ident">rsdt</span>);
+            rsdp::RsdtAddress::Rsdt(rsdt_addr) =&gt; {
+                <span class="kw">let </span>rsdt = rsdp::Rsdt::&lt;u32&gt;::new(rsdt_addr);
+                <span class="kw">let </span>header = AcpiHeader::Rsdt(rsdt);
 
-                <span class="macro">log::debug!</span>(<span class="string">&quot;found RSDT at {:#x}&quot;</span>, <span class="ident">rsdt_addr</span>);
+                <span class="macro">log::debug!</span>(<span class="string">&quot;found RSDT at {:#x}&quot;</span>, rsdt_addr);
 
-                <span class="self">Self</span> { <span class="ident">header</span> }
+                <span class="self">Self </span>{ header }
             }
         }
     }
 
-    <span class="doccomment">/// Lookup ACPI table entry with the provided signature.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">lookup_entry</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signature</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Sdt</span><span class="op">&gt;</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">header</span> {
-            <span class="ident">AcpiHeader::Rsdt</span>(<span class="ident">rsdt</span>) =&gt; <span class="ident">rsdt</span>.<span class="ident">lookup_entry</span>(<span class="ident">signature</span>),
-            <span class="ident">AcpiHeader::Xsdt</span>(<span class="ident">xsdt</span>) =&gt; <span class="ident">xsdt</span>.<span class="ident">lookup_entry</span>(<span class="ident">signature</span>),
+    <span class="doccomment">/// Lookup ACPI table entry with the provided signature.
+    </span><span class="kw">pub fn </span>lookup_entry(<span class="kw-2">&amp;</span><span class="self">self</span>, signature: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Sdt&gt; {
+        <span class="kw">match </span><span class="self">self</span>.header {
+            AcpiHeader::Rsdt(rsdt) =&gt; rsdt.lookup_entry(signature),
+            AcpiHeader::Xsdt(xsdt) =&gt; xsdt.lookup_entry(signature),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">revision</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u8</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">header</span> {
-            <span class="ident">AcpiHeader::Rsdt</span>(<span class="ident">rsdt</span>) =&gt; <span class="ident">rsdt</span>.<span class="ident">header</span>.<span class="ident">revision</span>,
-            <span class="ident">AcpiHeader::Xsdt</span>(<span class="ident">xsdt</span>) =&gt; <span class="ident">xsdt</span>.<span class="ident">header</span>.<span class="ident">revision</span>,
+    <span class="kw">pub fn </span>revision(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u8 {
+        <span class="kw">match </span><span class="self">self</span>.header {
+            AcpiHeader::Rsdt(rsdt) =&gt; rsdt.header.revision,
+            AcpiHeader::Xsdt(xsdt) =&gt; xsdt.header.revision,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">packed</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GenericAddressStructure</span> {
-    <span class="kw">pub</span> <span class="ident">address_space</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">bit_width</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">bit_offset</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">access_size</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">address</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(packed)]</span>
+<span class="attribute">#[derive(Clone, Copy, Debug)]</span>
+<span class="kw">pub struct </span>GenericAddressStructure {
+    <span class="kw">pub </span>address_space: u8,
+    <span class="kw">pub </span>bit_width: u8,
+    <span class="kw">pub </span>bit_offset: u8,
+    <span class="kw">pub </span>access_size: u8,
+    <span class="kw">pub </span>address: u64,
 }
 
-<span class="kw">static</span> <span class="ident">ACPI_TABLE</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">AcpiTable</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>ACPI_TABLE: Once&lt;Mutex&lt;AcpiTable&gt;&gt; = Once::new();
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_acpi_table</span>() -&gt; <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">AcpiTable</span><span class="op">&gt;</span> {
-    <span class="ident">ACPI_TABLE</span>.<span class="ident">get</span>().<span class="ident">unwrap</span>().<span class="ident">lock</span>()
+<span class="kw">pub fn </span>get_acpi_table() -&gt; MutexGuard&lt;<span class="lifetime">&#39;static</span>, AcpiTable&gt; {
+    ACPI_TABLE.get().unwrap().lock()
 }
 
-<span class="doccomment">/// Initialize the ACPI tables.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">rsdp_address</span>: <span class="ident">PhysAddr</span>) {
-    <span class="kw">let</span> <span class="ident">rsdp_address</span> <span class="op">=</span> <span class="ident">rsdp_address</span>.<span class="ident">as_hhdm_virt</span>();
-    <span class="kw">let</span> <span class="ident">acpi_table</span> <span class="op">=</span> <span class="ident">AcpiTable::new</span>(<span class="ident">rsdp_address</span>);
+<span class="doccomment">/// Initialize the ACPI tables.
+</span><span class="kw">pub fn </span>init(rsdp_address: PhysAddr) {
+    <span class="kw">let </span>rsdp_address = rsdp_address.as_hhdm_virt();
+    <span class="kw">let </span>acpi_table = AcpiTable::new(rsdp_address);
 
-    <span class="ident">ACPI_TABLE</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">acpi_table</span>));
+    ACPI_TABLE.call_once(|| Mutex::new(acpi_table));
 
-    <span class="kw">let</span> <span class="ident">acpi_table</span> <span class="op">=</span> <span class="ident">get_acpi_table</span>();
+    <span class="kw">let </span>acpi_table = get_acpi_table();
 
-    <span class="kw">macro</span> <span class="ident">init_table</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">sig</span>:<span class="ident">path</span> =&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span>:<span class="ident">ty</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">table</span>) <span class="op">=</span> <span class="ident">acpi_table</span>.<span class="ident">lookup_entry</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">sig</span>) {
-            <span class="op">&lt;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">ty</span><span class="op">&gt;</span><span class="ident">::new</span>(<span class="ident">table</span>);
+    <span class="kw">macro </span>init_table(<span class="macro-nonterminal">$sig</span>:path =&gt; <span class="macro-nonterminal">$ty</span>:ty) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(table) = acpi_table.lookup_entry(<span class="macro-nonterminal">$sig</span>) {
+            &lt;<span class="macro-nonterminal">$ty</span>&gt;::new(table);
         }
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">header</span>) <span class="op">=</span> <span class="ident">acpi_table</span>.<span class="ident">lookup_entry</span>(<span class="ident">mcfg::SIGNATURE</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">mcfg</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Mcfg</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">as_ref</span>();
-            <span class="ident">mcfg</span>.<span class="ident">init</span>();
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(header) = acpi_table.lookup_entry(mcfg::SIGNATURE) {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>mcfg: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Mcfg = header.as_ref();
+            mcfg.init();
         }
     }
 
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">header</span>) <span class="op">=</span> <span class="ident">acpi_table</span>.<span class="ident">lookup_entry</span>(<span class="ident">madt::SIGNATURE</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="comment">// Not a valid MADT table without the local apic address and the flags.</span>
-            <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">data_len</span>() <span class="op">&lt;</span> <span class="number">8</span> {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(header) = acpi_table.lookup_entry(madt::SIGNATURE) {
+        <span class="kw">unsafe </span>{
+            <span class="comment">// Not a valid MADT table without the local apic address and the flags.
+            </span><span class="kw">if </span>header.data_len() &lt; <span class="number">8 </span>{
                 <span class="macro">log::warn!</span>(
                     <span class="string">&quot;assertion failed: header.data_len() &lt; 8 =&gt; {}&quot;</span>,
-                    <span class="ident">header</span>.<span class="ident">data_len</span>()
+                    header.data_len()
                 );
-            } <span class="kw">else</span> {
-                <span class="kw">let</span> <span class="ident">madt</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Madt</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">as_ref</span>();
-                <span class="ident">madt</span>.<span class="ident">init</span>();
+            } <span class="kw">else </span>{
+                <span class="kw">let </span>madt: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Madt = header.as_ref();
+                madt.init();
             }
         }
     }
 
-    <span class="macro">init_table!</span>(<span class="ident">hpet::SIGNATURE</span> =&gt; <span class="ident">Hpet</span>);
+    <span class="macro">init_table!</span>(hpet::SIGNATURE =&gt; Hpet);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

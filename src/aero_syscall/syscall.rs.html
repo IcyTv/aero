@@ -64,37 +64,37 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::arch::asm</span>;
+</span><span class="kw">use </span>core::arch::asm;
 
-<span class="kw">macro</span> <span class="ident">define_syscall_fns</span>($(<span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">sys_fn</span>:<span class="ident">ident</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>:<span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>:<span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">c</span>:<span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">d</span>:<span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>:<span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>:<span class="ident">ident</span> $(,<span class="macro-nonterminal">$</span><span class="macro-nonterminal">g</span>:<span class="ident">ident</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>) -&gt; <span class="ident">usize</span>;)<span class="op">+</span>) {
+<span class="kw">macro </span>define_syscall_fns($(<span class="kw">pub fn </span><span class="macro-nonterminal">$sys_fn</span>:ident(<span class="macro-nonterminal">$a</span>:ident $(,<span class="macro-nonterminal">$b</span>:ident $(,<span class="macro-nonterminal">$c</span>:ident $(,<span class="macro-nonterminal">$d</span>:ident $(,<span class="macro-nonterminal">$e</span>:ident $(,<span class="macro-nonterminal">$f</span>:ident $(,<span class="macro-nonterminal">$g</span>:ident)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>) -&gt; usize;)+) {
     $(
-        <span class="kw">pub</span> <span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">sys_fn</span>(<span class="kw-2">mut</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>: <span class="ident">usize</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>: <span class="ident">usize</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">c</span>: <span class="ident">usize</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">d</span>: <span class="ident">usize</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>: <span class="ident">usize</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>: <span class="ident">usize</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">g</span>: <span class="ident">usize</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>) -&gt; <span class="ident">usize</span> {
-            <span class="kw">unsafe</span> {
+        <span class="kw">pub fn </span><span class="macro-nonterminal">$sys_fn</span>(<span class="kw-2">mut </span><span class="macro-nonterminal">$a</span>: usize, $(<span class="macro-nonterminal">$b</span>: usize, $(<span class="macro-nonterminal">$c</span>: usize, $(<span class="macro-nonterminal">$d</span>: usize, $(<span class="macro-nonterminal">$e</span>: usize, $(<span class="macro-nonterminal">$f</span>: usize, $(<span class="macro-nonterminal">$g</span>: usize)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>) -&gt; usize {
+            <span class="kw">unsafe </span>{
                 <span class="macro">asm!</span>(
                     <span class="string">&quot;syscall&quot;</span>,
-                    <span class="ident">inout</span>(<span class="string">&quot;rax&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>,
-                    $(<span class="kw">in</span>(<span class="string">&quot;rdi&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">b</span>, $(<span class="kw">in</span>(<span class="string">&quot;rsi&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">c</span>, $(<span class="kw">in</span>(<span class="string">&quot;rdx&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">d</span>, $(<span class="kw">in</span>(<span class="string">&quot;r10&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">e</span>, $(<span class="kw">in</span>(<span class="string">&quot;r8&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">f</span>, $(<span class="kw">in</span>(<span class="string">&quot;r9&quot;</span>) <span class="macro-nonterminal">$</span><span class="macro-nonterminal">g</span>,)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>
-                    <span class="ident">out</span>(<span class="string">&quot;rcx&quot;</span>) <span class="kw">_</span>,
-                    <span class="ident">out</span>(<span class="string">&quot;r11&quot;</span>) <span class="kw">_</span>,
-                    <span class="ident">options</span>(<span class="ident">nostack</span>),
+                    inout(<span class="string">&quot;rax&quot;</span>) <span class="macro-nonterminal">$a</span>,
+                    $(<span class="kw">in</span>(<span class="string">&quot;rdi&quot;</span>) <span class="macro-nonterminal">$b</span>, $(<span class="kw">in</span>(<span class="string">&quot;rsi&quot;</span>) <span class="macro-nonterminal">$c</span>, $(<span class="kw">in</span>(<span class="string">&quot;rdx&quot;</span>) <span class="macro-nonterminal">$d</span>, $(<span class="kw">in</span>(<span class="string">&quot;r10&quot;</span>) <span class="macro-nonterminal">$e</span>, $(<span class="kw">in</span>(<span class="string">&quot;r8&quot;</span>) <span class="macro-nonterminal">$f</span>, $(<span class="kw">in</span>(<span class="string">&quot;r9&quot;</span>) <span class="macro-nonterminal">$g</span>,)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?</span>)<span class="question-mark">?
+                    </span>out(<span class="string">&quot;rcx&quot;</span>) <span class="kw">_</span>,
+                    out(<span class="string">&quot;r11&quot;</span>) <span class="kw">_</span>,
+                    options(nostack),
                 );
             }
 
-            <span class="macro-nonterminal">$</span><span class="macro-nonterminal">a</span>
-        }
-    )<span class="op">+</span>
+            <span class="macro-nonterminal">$a
+        </span>}
+    )+
 }
 
 <span class="macro">define_syscall_fns!</span>(
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall0</span>(<span class="ident">a</span>) -&gt; <span class="ident">usize</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall1</span>(<span class="ident">a</span>, <span class="ident">b</span>) -&gt; <span class="ident">usize</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall2</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>) -&gt; <span class="ident">usize</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall3</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>) -&gt; <span class="ident">usize</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall4</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>) -&gt; <span class="ident">usize</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall5</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>) -&gt; <span class="ident">usize</span>;
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall6</span>(<span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>, <span class="ident">g</span>) -&gt; <span class="ident">usize</span>;
+    <span class="kw">pub fn </span>syscall0(a) -&gt; usize;
+    <span class="kw">pub fn </span>syscall1(a, b) -&gt; usize;
+    <span class="kw">pub fn </span>syscall2(a, b, c) -&gt; usize;
+    <span class="kw">pub fn </span>syscall3(a, b, c, d) -&gt; usize;
+    <span class="kw">pub fn </span>syscall4(a, b, c, d, e) -&gt; usize;
+    <span class="kw">pub fn </span>syscall5(a, b, c, d, e, f) -&gt; usize;
+    <span class="kw">pub fn </span>syscall6(a, b, c, d, e, f, g) -&gt; usize;
 );
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

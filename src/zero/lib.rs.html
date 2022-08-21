@@ -309,316 +309,316 @@
 <span id="309">309</span>
 <span id="310">310</span>
 <span id="311">311</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2016 Nicholas Cameron.</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or</span>
-<span class="comment">// http://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license</span>
-<span class="comment">// &lt;LICENSE-MIT or http://opensource.org/licenses/MIT&gt;, at your</span>
-<span class="comment">// option. This file may not be copied, modified, or distributed</span>
-<span class="comment">// except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2016 Nicholas Cameron.
+//
+// Licensed under the Apache License, Version 2.0 &lt;LICENSE-APACHE or
+// http://www.apache.org/licenses/LICENSE-2.0&gt; or the MIT license
+// &lt;LICENSE-MIT or http://opensource.org/licenses/MIT&gt;, at your
+// option. This file may not be copied, modified, or distributed
+// except according to those terms.
 
-<span class="doccomment">//! Functions for reading binary data into Rust data structures. All functions</span>
-<span class="doccomment">//! are zero-allocation.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! There are functions for reading a single value, an array of values, a single</span>
-<span class="doccomment">//! null-terminated utf8 string (which should also work with ascii strings), and</span>
-<span class="doccomment">//! an array of null-terminated strings terminated by another null byte.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Functions preserve the lifetime of the underlying data. These functions are</span>
-<span class="doccomment">//! memory safe, although this is in part based on the assumption that the</span>
-<span class="doccomment">//! client only implements the unsafe trait `Pod` where safe to do so.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Functions assert that the provided data is large enough. The string</span>
-<span class="doccomment">//! functions check that strings are valid utf8. There is no checking that the</span>
-<span class="doccomment">//! the privided input will produce a valid object (for example, an enum has a</span>
-<span class="doccomment">//! valid discriminant). The user must assert this by implementing the trait</span>
-<span class="doccomment">//! `Pod`.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! There are also unsafe versions of most functions which do not require the</span>
-<span class="doccomment">//! return type to implement `Pod` and which do no checking.</span>
+</span><span class="doccomment">//! Functions for reading binary data into Rust data structures. All functions
+//! are zero-allocation.
+//!
+//! There are functions for reading a single value, an array of values, a single
+//! null-terminated utf8 string (which should also work with ascii strings), and
+//! an array of null-terminated strings terminated by another null byte.
+//!
+//! Functions preserve the lifetime of the underlying data. These functions are
+//! memory safe, although this is in part based on the assumption that the
+//! client only implements the unsafe trait `Pod` where safe to do so.
+//!
+//! Functions assert that the provided data is large enough. The string
+//! functions check that strings are valid utf8. There is no checking that the
+//! the privided input will produce a valid object (for example, an enum has a
+//! valid discriminant). The user must assert this by implementing the trait
+//! `Pod`.
+//!
+//! There are also unsafe versions of most functions which do not require the
+//! return type to implement `Pod` and which do no checking.
 
-<span class="attribute">#![<span class="ident">no_std</span>]</span>
+</span><span class="attribute">#![no_std]</span>
 
-<span class="kw">use</span> <span class="ident">core::mem</span>;
-<span class="kw">use</span> <span class="ident">core::slice::from_raw_parts</span>;
-<span class="kw">use</span> <span class="ident">core::str</span>::{<span class="ident">from_utf8</span>, <span class="ident">from_utf8_unchecked</span>};
+<span class="kw">use </span>core::mem;
+<span class="kw">use </span>core::slice::from_raw_parts;
+<span class="kw">use </span>core::str::{from_utf8, from_utf8_unchecked};
 
-<span class="doccomment">/// Reads a single `T` from `input`.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `input` must be at least as large as `T`.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span> {
-    <span class="macro">assert!</span>(<span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">input</span>.<span class="ident">len</span>());
+<span class="doccomment">/// Reads a single `T` from `input`.
+///
+/// `input` must be at least as large as `T`.
+</span><span class="kw">pub fn </span>read&lt;<span class="lifetime">&#39;a</span>, T: Pod&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T {
+    <span class="macro">assert!</span>(mem::size_of::&lt;T&gt;() &lt;= input.len());
 
-    <span class="kw">unsafe</span> {
-        <span class="ident">read_unsafe</span>(<span class="ident">input</span>)
+    <span class="kw">unsafe </span>{
+        read_unsafe(input)
     }    
 }
 
-<span class="doccomment">/// Read an array of `T`s from input.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `input` must contain an exact number of `T`s, there must be no extra bytes</span>
-<span class="doccomment">/// after the last `T`. `T` may not be zero-sized.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_array</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">Pod</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>] {
-    <span class="kw">let</span> <span class="ident">t_size</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
-    <span class="macro">assert!</span>(<span class="ident">t_size</span> <span class="op">&gt;</span> <span class="number">0</span>, <span class="string">&quot;Can&#39;t read arrays of zero-sized types&quot;</span>);
-    <span class="macro">assert!</span>(<span class="ident">input</span>.<span class="ident">len</span>() <span class="op">%</span> <span class="ident">t_size</span> <span class="op">==</span> <span class="number">0</span>);
+<span class="doccomment">/// Read an array of `T`s from input.
+///
+/// `input` must contain an exact number of `T`s, there must be no extra bytes
+/// after the last `T`. `T` may not be zero-sized.
+</span><span class="kw">pub fn </span>read_array&lt;<span class="lifetime">&#39;a</span>, T: Pod&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[T] {
+    <span class="kw">let </span>t_size = mem::size_of::&lt;T&gt;();
+    <span class="macro">assert!</span>(t_size &gt; <span class="number">0</span>, <span class="string">&quot;Can&#39;t read arrays of zero-sized types&quot;</span>);
+    <span class="macro">assert!</span>(input.len() % t_size == <span class="number">0</span>);
 
-    <span class="kw">unsafe</span> {
-        <span class="ident">read_array_unsafe</span>(<span class="ident">input</span>)
+    <span class="kw">unsafe </span>{
+        read_array_unsafe(input)
     }
 }
 
-<span class="doccomment">/// Read a string from `input`. The string must be a null-termianted utf8 string.</span>
-<span class="doccomment">/// Note that an ascii C string fulfils this requirement.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_str</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
-    <span class="ident">from_utf8</span>(<span class="ident">read_str_bytes</span>(<span class="ident">input</span>)).<span class="ident">expect</span>(<span class="string">&quot;Non-utf8 string&quot;</span>)
+<span class="doccomment">/// Read a string from `input`. The string must be a null-termianted utf8 string.
+/// Note that an ascii C string fulfils this requirement.
+</span><span class="kw">pub fn </span>read_str&lt;<span class="lifetime">&#39;a</span>&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
+    from_utf8(read_str_bytes(input)).expect(<span class="string">&quot;Non-utf8 string&quot;</span>)
 }
 
-<span class="doccomment">/// Returns an iterator which will return a sequence of strings from `input`.</span>
-<span class="doccomment">/// Each string must be a null-terminated utf8 string. The sequence of strings</span>
-<span class="doccomment">/// is terminated either by a second null byte, or the end of input.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_strs_to_null</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">StrReaderIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">StrReaderIterator</span> {
-        <span class="ident">data</span>: <span class="ident">input</span>,
+<span class="doccomment">/// Returns an iterator which will return a sequence of strings from `input`.
+/// Each string must be a null-terminated utf8 string. The sequence of strings
+/// is terminated either by a second null byte, or the end of input.
+</span><span class="kw">pub fn </span>read_strs_to_null&lt;<span class="lifetime">&#39;a</span>&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; StrReaderIterator&lt;<span class="lifetime">&#39;a</span>&gt; {
+    StrReaderIterator {
+        data: input,
     }
 }
 
-<span class="doccomment">/// Implementing this trait means that the concrete type is plain old data (POD).</span>
-<span class="doccomment">/// Precisely, by implementing `Pod` the programmer asserts that it is safe to</span>
-<span class="doccomment">/// read the type from binary slices provided to `read`, etc.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Some guidelines for when `Pod` may be implemented (note that whether `Pod`</span>
-<span class="doccomment">/// should be implemented or not is a function of both the type and the input</span>
-<span class="doccomment">/// data. I.e., just because a type is `Pod` in one context does not mean it</span>
-<span class="doccomment">/// should be in another):</span>
-<span class="doccomment">/// * primitive numeric types (`u8`, `i64`, `f32`, etc.) are fine,</span>
-<span class="doccomment">/// * bools are fine, if the provided data ensures they may have only the values</span>
-<span class="doccomment">///   `0` or `1` (note that this is a stricter requirement that C),</span>
-<span class="doccomment">/// * structs containing only `Pod` data are fine,</span>
-<span class="doccomment">/// * structs must be `repr(C)` or `repr(packed)`, if the former, the supplied</span>
-<span class="doccomment">///   data must have the correct alignment,</span>
-<span class="doccomment">/// * enums must have valid discriminants in the supplied data, this is probably</span>
-<span class="doccomment">///   only feasible if they have a specified representation,</span>
-<span class="doccomment">/// * there must not be invalid enum variants in the data,</span>
-<span class="doccomment">/// * any kind of pointer is probably a bad idea. Theoretically one could make</span>
-<span class="doccomment">///   raw pointers work.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">trait</span> <span class="ident">Pod</span>: <span class="ident">Sized</span> {}
+<span class="doccomment">/// Implementing this trait means that the concrete type is plain old data (POD).
+/// Precisely, by implementing `Pod` the programmer asserts that it is safe to
+/// read the type from binary slices provided to `read`, etc.
+///
+/// Some guidelines for when `Pod` may be implemented (note that whether `Pod`
+/// should be implemented or not is a function of both the type and the input
+/// data. I.e., just because a type is `Pod` in one context does not mean it
+/// should be in another):
+/// * primitive numeric types (`u8`, `i64`, `f32`, etc.) are fine,
+/// * bools are fine, if the provided data ensures they may have only the values
+///   `0` or `1` (note that this is a stricter requirement that C),
+/// * structs containing only `Pod` data are fine,
+/// * structs must be `repr(C)` or `repr(packed)`, if the former, the supplied
+///   data must have the correct alignment,
+/// * enums must have valid discriminants in the supplied data, this is probably
+///   only feasible if they have a specified representation,
+/// * there must not be invalid enum variants in the data,
+/// * any kind of pointer is probably a bad idea. Theoretically one could make
+///   raw pointers work.
+</span><span class="kw">pub unsafe trait </span>Pod: Sized {}
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">u8</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">u16</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">u32</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">u64</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">i8</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">i16</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">i32</span> {}
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">i64</span> {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>u8 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>u16 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>u32 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>u64 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>i8 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>i16 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>i32 {}
+<span class="kw">unsafe impl </span>Pod <span class="kw">for </span>i64 {}
 
-<span class="doccomment">/// Reads a `T` from `input` with no checks.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">read_unsafe</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">T</span> {
-    <span class="ident">mem::transmute</span>(<span class="ident">input</span> <span class="kw">as</span> <span class="kw-2">*const</span> [<span class="ident">u8</span>] <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">T</span>)
+<span class="doccomment">/// Reads a `T` from `input` with no checks.
+</span><span class="kw">pub unsafe fn </span>read_unsafe&lt;<span class="lifetime">&#39;a</span>, T: Sized&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T {
+    mem::transmute(input <span class="kw">as </span><span class="kw-2">*const </span>[u8] <span class="kw">as </span><span class="kw-2">*const </span>u8 <span class="kw">as </span><span class="kw-2">*const </span>T)
 }
 
-<span class="doccomment">/// Reads an array of `T`s from `input` with no checks.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">read_array_unsafe</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">T</span>: <span class="ident">Sized</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">T</span>] {
-    <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">input</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">T</span>;
-    <span class="ident">from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">input</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
+<span class="doccomment">/// Reads an array of `T`s from `input` with no checks.
+</span><span class="kw">pub unsafe fn </span>read_array_unsafe&lt;<span class="lifetime">&#39;a</span>, T: Sized&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[T] {
+    <span class="kw">let </span>ptr = input.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>T;
+    from_raw_parts(ptr, input.len() / mem::size_of::&lt;T&gt;())
 }
 
-<span class="doccomment">/// Reads a null-terminated string from `input` with no checks.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">read_str_unsafe</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span> {
-    <span class="ident">from_utf8_unchecked</span>(<span class="ident">read_str_bytes</span>(<span class="ident">input</span>))
+<span class="doccomment">/// Reads a null-terminated string from `input` with no checks.
+</span><span class="kw">pub unsafe fn </span>read_str_unsafe&lt;<span class="lifetime">&#39;a</span>&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
+    from_utf8_unchecked(read_str_bytes(input))
 }
 
-<span class="doccomment">/// Iterates over `self.data`, yielding strings (null-terminated in `self.data`).</span>
-<span class="doccomment">/// See `read_strs_to_null`.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StrReaderIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">data</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]
+<span class="doccomment">/// Iterates over `self.data`, yielding strings (null-terminated in `self.data`).
+/// See `read_strs_to_null`.
+</span><span class="attribute">#[derive(Clone, Debug)]</span>
+<span class="kw">pub struct </span>StrReaderIterator&lt;<span class="lifetime">&#39;a</span>&gt; {
+    data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">StrReaderIterator</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>StrReaderIterator&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">str</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> <span class="op">|</span><span class="op">|</span> <span class="self">self</span>.<span class="ident">data</span>[<span class="number">0</span>] <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str&gt; {
+        <span class="kw">if </span><span class="self">self</span>.data.len() == <span class="number">0 </span>|| <span class="self">self</span>.data[<span class="number">0</span>] == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">read_str</span>(<span class="self">self</span>.<span class="ident">data</span>);
-        <span class="self">self</span>.<span class="ident">data</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">data</span>[<span class="ident">result</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span>..];
-        <span class="prelude-val">Some</span>(<span class="ident">result</span>)
+        <span class="kw">let </span>result = read_str(<span class="self">self</span>.data);
+        <span class="self">self</span>.data = <span class="kw-2">&amp;</span><span class="self">self</span>.data[result.len() + <span class="number">1</span>..];
+        <span class="prelude-val">Some</span>(result)
     }
 
-    <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="comment">// Potentially no strings here at all. Maximum number is if the whole</span>
-        <span class="comment">// data is filled with one char-long strings alternating with null bytes.</span>
-        (<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">/</span> <span class="number">2</span>))
+    <span class="kw">fn </span>size_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
+        <span class="comment">// Potentially no strings here at all. Maximum number is if the whole
+        // data is filled with one char-long strings alternating with null bytes.
+        </span>(<span class="number">0</span>, <span class="prelude-val">Some</span>(<span class="self">self</span>.data.len() / <span class="number">2</span>))
     }
 }
 
-<span class="comment">// Helper function for read_str and read_str_unsafe.</span>
-<span class="comment">// Finds the sub-slice of input which contains a string by searching for a null</span>
-<span class="comment">// byte.</span>
-<span class="kw">fn</span> <span class="ident">read_str_bytes</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">input</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u8</span>] {
-    <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">byte</span>) <span class="kw">in</span> <span class="ident">input</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">byte</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="kw-2">&amp;</span><span class="ident">input</span>[..<span class="ident">i</span>];
+<span class="comment">// Helper function for read_str and read_str_unsafe.
+// Finds the sub-slice of input which contains a string by searching for a null
+// byte.
+</span><span class="kw">fn </span>read_str_bytes&lt;<span class="lifetime">&#39;a</span>&gt;(input: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8] {
+    <span class="kw">for </span>(i, byte) <span class="kw">in </span>input.iter().enumerate() {
+        <span class="kw">if </span><span class="kw-2">*</span>byte == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="kw-2">&amp;</span>input[..i];
         }
     }
 
     <span class="macro">panic!</span>(<span class="string">&quot;No null byte in input&quot;</span>);
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">test</span> {
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]</span>
+<span class="kw">mod </span>test {
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-    <span class="kw">struct</span> <span class="ident">Zero</span>;
+    <span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]</span>
+    <span class="kw">struct </span>Zero;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">packed</span>)]</span>
-    <span class="kw">struct</span> <span class="ident">Foo</span> {
-        <span class="ident">a</span>: <span class="ident">u8</span>,
+    <span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]</span>
+    <span class="attribute">#[repr(packed)]</span>
+    <span class="kw">struct </span>Foo {
+        a: u8,
     }
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">packed</span>)]</span>
-    <span class="kw">struct</span> <span class="ident">Bar</span> {
-        <span class="ident">a</span>: <span class="ident">u32</span>,
-        <span class="ident">b</span>: <span class="ident">u64</span>,
-        <span class="ident">c</span>: <span class="ident">i8</span>,
+    <span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]</span>
+    <span class="attribute">#[repr(packed)]</span>
+    <span class="kw">struct </span>Bar {
+        a: u32,
+        b: u64,
+        c: i8,
     }
 
-    <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">Zero</span> {}
-    <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">Foo</span> {}
-    <span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Pod</span> <span class="kw">for</span> <span class="ident">Bar</span> {}
+    <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Zero {}
+    <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Foo {}
+    <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Bar {}
 
-    <span class="comment">// read</span>
+    <span class="comment">// read
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_read</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[];
-        <span class="macro">assert!</span>(<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">Zero</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">Zero</span>);
+    </span><span class="attribute">#[test]</span>
+    <span class="kw">fn </span>test_read() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[];
+        <span class="macro">assert!</span>(read::&lt;Zero&gt;(a) == <span class="kw-2">&amp;</span>Zero);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>];
-        <span class="macro">assert!</span>(<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">Foo</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">Foo</span> { <span class="ident">a</span>: <span class="number">42</span> });
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>];
+        <span class="macro">assert!</span>(read::&lt;Foo&gt;(a) == <span class="kw-2">&amp;</span>Foo { a: <span class="number">42 </span>});
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, <span class="op">-</span><span class="number">2i8</span> <span class="kw">as</span> <span class="ident">u8</span>];
-        <span class="macro">assert!</span>(<span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">Bar</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">Bar</span> { <span class="ident">a</span>: <span class="number">42</span>, <span class="ident">b</span>: <span class="number">0xf000425b_a262ff03</span>, <span class="ident">c</span>: <span class="op">-</span><span class="number">2</span> });
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, -<span class="number">2i8 </span><span class="kw">as </span>u8];
+        <span class="macro">assert!</span>(read::&lt;Bar&gt;(a) == <span class="kw-2">&amp;</span>Bar { a: <span class="number">42</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>});
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_too_small</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[];
-        <span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">Foo</span><span class="op">&gt;</span>(<span class="ident">a</span>);
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_too_small() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[];
+        read::&lt;Foo&gt;(a);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_too_small2</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>];
-        <span class="ident">read</span>::<span class="op">&lt;</span><span class="ident">Bar</span><span class="op">&gt;</span>(<span class="ident">a</span>);
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_too_small2() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>];
+        read::&lt;Bar&gt;(a);
     }
 
-    <span class="comment">// read_array</span>
+    <span class="comment">// read_array
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_read_array</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>];
-        <span class="macro">assert!</span>(<span class="ident">read_array</span>::<span class="op">&lt;</span><span class="ident">Foo</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span>[<span class="ident">Foo</span> { <span class="ident">a</span>: <span class="number">42</span> }]);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">43</span>, <span class="number">44</span>, <span class="number">45</span>];
-        <span class="macro">assert!</span>(<span class="ident">read_array</span>::<span class="op">&lt;</span><span class="ident">Foo</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span>[<span class="ident">Foo</span> { <span class="ident">a</span>: <span class="number">42</span> }, <span class="ident">Foo</span> { <span class="ident">a</span>: <span class="number">43</span> }, <span class="ident">Foo</span> { <span class="ident">a</span>: <span class="number">44</span> }, <span class="ident">Foo</span> { <span class="ident">a</span>: <span class="number">45</span> }]);
+    </span><span class="attribute">#[test]</span>
+    <span class="kw">fn </span>test_read_array() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>];
+        <span class="macro">assert!</span>(read_array::&lt;Foo&gt;(a) == <span class="kw-2">&amp;</span>[Foo { a: <span class="number">42 </span>}]);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">43</span>, <span class="number">44</span>, <span class="number">45</span>];
+        <span class="macro">assert!</span>(read_array::&lt;Foo&gt;(a) == <span class="kw-2">&amp;</span>[Foo { a: <span class="number">42 </span>}, Foo { a: <span class="number">43 </span>}, Foo { a: <span class="number">44 </span>}, Foo { a: <span class="number">45 </span>}]);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, <span class="op">-</span><span class="number">2i8</span> <span class="kw">as</span> <span class="ident">u8</span>];
-        <span class="macro">assert!</span>(<span class="ident">read_array</span>::<span class="op">&lt;</span><span class="ident">Bar</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span>[<span class="ident">Bar</span> { <span class="ident">a</span>: <span class="number">42</span>, <span class="ident">b</span>: <span class="number">0xf000425b_a262ff03</span>, <span class="ident">c</span>: <span class="op">-</span><span class="number">2</span> }]);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, <span class="op">-</span><span class="number">2i8</span> <span class="kw">as</span> <span class="ident">u8</span>,
-                  <span class="number">43</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, <span class="op">-</span><span class="number">2i8</span> <span class="kw">as</span> <span class="ident">u8</span>,
-                  <span class="number">44</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, <span class="op">-</span><span class="number">2i8</span> <span class="kw">as</span> <span class="ident">u8</span>];
-        <span class="macro">assert!</span>(<span class="ident">read_array</span>::<span class="op">&lt;</span><span class="ident">Bar</span><span class="op">&gt;</span>(<span class="ident">a</span>) <span class="op">==</span> <span class="kw-2">&amp;</span>[<span class="ident">Bar</span> { <span class="ident">a</span>: <span class="number">42</span>, <span class="ident">b</span>: <span class="number">0xf000425b_a262ff03</span>, <span class="ident">c</span>: <span class="op">-</span><span class="number">2</span> },
-                                          <span class="ident">Bar</span> { <span class="ident">a</span>: <span class="number">43</span>, <span class="ident">b</span>: <span class="number">0xf000425b_a262ff03</span>, <span class="ident">c</span>: <span class="op">-</span><span class="number">2</span> },
-                                          <span class="ident">Bar</span> { <span class="ident">a</span>: <span class="number">44</span>, <span class="ident">b</span>: <span class="number">0xf000425b_a262ff03</span>, <span class="ident">c</span>: <span class="op">-</span><span class="number">2</span> }]);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, -<span class="number">2i8 </span><span class="kw">as </span>u8];
+        <span class="macro">assert!</span>(read_array::&lt;Bar&gt;(a) == <span class="kw-2">&amp;</span>[Bar { a: <span class="number">42</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>}]);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, -<span class="number">2i8 </span><span class="kw">as </span>u8,
+                  <span class="number">43</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, -<span class="number">2i8 </span><span class="kw">as </span>u8,
+                  <span class="number">44</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>, -<span class="number">2i8 </span><span class="kw">as </span>u8];
+        <span class="macro">assert!</span>(read_array::&lt;Bar&gt;(a) == <span class="kw-2">&amp;</span>[Bar { a: <span class="number">42</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>},
+                                          Bar { a: <span class="number">43</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>},
+                                          Bar { a: <span class="number">44</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>}]);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_array_zero_sized</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>];
-        <span class="ident">read_array</span>::<span class="op">&lt;</span><span class="ident">Zero</span><span class="op">&gt;</span>(<span class="ident">a</span>);
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_array_zero_sized() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>];
+        read_array::&lt;Zero&gt;(a);
     }
 
-    <span class="comment">// read_str</span>
+    <span class="comment">// read_str
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_good_strs</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>];
-        <span class="macro">assert_eq!</span>(<span class="ident">read_str</span>(<span class="ident">a</span>), <span class="string">&quot;&quot;</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>];
-        <span class="macro">assert_eq!</span>(<span class="ident">read_str</span>(<span class="ident">a</span>), <span class="string">&quot;a&quot;</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>, <span class="number">0</span>, <span class="number">0x61</span>];
-        <span class="macro">assert_eq!</span>(<span class="ident">read_str</span>(<span class="ident">a</span>), <span class="string">&quot;aAz&quot;</span>);
+    </span><span class="attribute">#[test]</span>
+    <span class="kw">fn </span>test_good_strs() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>];
+        <span class="macro">assert_eq!</span>(read_str(a), <span class="string">&quot;&quot;</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>];
+        <span class="macro">assert_eq!</span>(read_str(a), <span class="string">&quot;a&quot;</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>, <span class="number">0</span>, <span class="number">0x61</span>];
+        <span class="macro">assert_eq!</span>(read_str(a), <span class="string">&quot;aAz&quot;</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_no_null</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[];
-        <span class="ident">read_str</span>(<span class="ident">a</span>);
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_no_null() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[];
+        read_str(a);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_no_null2</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>];
-        <span class="ident">read_str</span>(<span class="ident">a</span>);
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_no_null2() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>];
+        read_str(a);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_not_unicode</span>() {
-        <span class="comment">// TODO</span>
-        <span class="macro">panic!</span>();
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_not_unicode() {
+        <span class="comment">// TODO
+        </span><span class="macro">panic!</span>();
     }
 
-    <span class="comment">// read_strs_to_null</span>
+    <span class="comment">// read_strs_to_null
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_good_strs_to_null</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>];
-        <span class="macro">assert_eq!</span>(<span class="ident">read_strs_to_null</span>(<span class="ident">a</span>).<span class="ident">count</span>(), <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">0</span>];
-        <span class="macro">assert_eq!</span>(<span class="ident">read_strs_to_null</span>(<span class="ident">a</span>).<span class="ident">count</span>(), <span class="number">0</span>);
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>];
-        <span class="macro">assert_eq!</span>(<span class="ident">read_strs_to_null</span>(<span class="ident">a</span>).<span class="ident">count</span>(), <span class="number">0</span>);
+    </span><span class="attribute">#[test]</span>
+    <span class="kw">fn </span>test_good_strs_to_null() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>];
+        <span class="macro">assert_eq!</span>(read_strs_to_null(a).count(), <span class="number">0</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">0</span>];
+        <span class="macro">assert_eq!</span>(read_strs_to_null(a).count(), <span class="number">0</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>, <span class="number">1</span>];
+        <span class="macro">assert_eq!</span>(read_strs_to_null(a).count(), <span class="number">0</span>);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">read_strs_to_null</span>(<span class="ident">a</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = read_strs_to_null(a);
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">None</span>);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">read_strs_to_null</span>(<span class="ident">a</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;aAz&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = read_strs_to_null(a);
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;aAz&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">None</span>);
 
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x61</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">read_strs_to_null</span>(<span class="ident">a</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;aAz&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
-        <span class="macro">assert_eq!</span>(<span class="ident">iter</span>.<span class="ident">next</span>(), <span class="prelude-val">None</span>);
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>, <span class="number">0</span>, <span class="number">0x61</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x61</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = read_strs_to_null(a);
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;aAz&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">Some</span>(<span class="string">&quot;a&quot;</span>));
+        <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">None</span>);
     }
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="attribute">#[<span class="ident">should_panic</span>]</span>
-    <span class="kw">fn</span> <span class="ident">test_no_null_to_null</span>() {
-        <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="kw-2">&amp;</span>[<span class="number">0x61</span>];
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">read_strs_to_null</span>(<span class="ident">a</span>);
-        <span class="ident">iter</span>.<span class="ident">next</span>();
+    <span class="attribute">#[test]</span>
+    <span class="attribute">#[should_panic]</span>
+    <span class="kw">fn </span>test_no_null_to_null() {
+        <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>];
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = read_strs_to_null(a);
+        iter.next();
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="zero" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="zero" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

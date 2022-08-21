@@ -289,262 +289,262 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">controlregs</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">gdt</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">interrupts</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">signals</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">syscall</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">task</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">tls</span>;
+</span><span class="kw">pub mod </span>controlregs;
+<span class="kw">pub mod </span>gdt;
+<span class="kw">pub mod </span>interrupts;
+<span class="kw">pub mod </span>signals;
+<span class="kw">pub mod </span>syscall;
+<span class="kw">pub mod </span>task;
+<span class="kw">pub mod </span>tls;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::acpi</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::acpi::aml</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::apic</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::cmdline</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::alloc</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>;
+<span class="kw">use </span><span class="kw">crate</span>::acpi;
+<span class="kw">use </span><span class="kw">crate</span>::acpi::aml;
+<span class="kw">use </span><span class="kw">crate</span>::apic;
+<span class="kw">use </span><span class="kw">crate</span>::cmdline;
+<span class="kw">use </span><span class="kw">crate</span>::mem;
+<span class="kw">use </span><span class="kw">crate</span>::mem::alloc;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::{<span class="ident">PhysAddr</span>, <span class="ident">VirtAddr</span>};
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::{PhysAddr, VirtAddr};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::drivers</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::logger</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rendy</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
+<span class="kw">use </span><span class="kw">crate</span>::drivers;
+<span class="kw">use </span><span class="kw">crate</span>::logger;
+<span class="kw">use </span><span class="kw">crate</span>::rendy;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
 
-<span class="kw">use</span> <span class="ident">raw_cpuid::CpuId</span>;
-<span class="kw">use</span> <span class="ident">stivale_boot::v2</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>raw_cpuid::CpuId;
+<span class="kw">use </span>stivale_boot::v2::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::interrupts::INTERRUPT_CONTROLLER</span>;
+<span class="kw">use </span><span class="self">self</span>::interrupts::INTERRUPT_CONTROLLER;
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">align</span>(<span class="number">4096</span>))]</span>
-<span class="kw">struct</span> <span class="ident">P2Align12</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">T</span>);
+<span class="attribute">#[repr(C, align(<span class="number">4096</span>))]</span>
+<span class="kw">struct </span>P2Align12&lt;T&gt;(T);
 
-<span class="kw">const</span> <span class="ident">STACK_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4096</span> <span class="op">*</span> <span class="number">16</span>;
+<span class="kw">const </span>STACK_SIZE: usize = <span class="number">4096 </span>* <span class="number">16</span>;
 
-<span class="doccomment">/// We need to tell the stivale bootloader where we want our stack to be.</span>
-<span class="doccomment">/// We are going to allocate our stack as an uninitialised array in .bss.</span>
-<span class="kw">static</span> <span class="ident">STACK</span>: <span class="ident">P2Align12</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">STACK_SIZE</span>]<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">P2Align12</span>([<span class="number">0</span>; <span class="ident">STACK_SIZE</span>]);
+<span class="doccomment">/// We need to tell the stivale bootloader where we want our stack to be.
+/// We are going to allocate our stack as an uninitialised array in .bss.
+</span><span class="kw">static </span>STACK: P2Align12&lt;[u8; STACK_SIZE]&gt; = P2Align12([<span class="number">0</span>; STACK_SIZE]);
 
-<span class="doccomment">/// We are now going to define a framebuffer header tag. This tag tells the bootloader that</span>
-<span class="doccomment">/// we want a graphical framebuffer instead of a CGA-compatible text mode. Omitting this tag will</span>
-<span class="doccomment">/// make the bootloader default to text mode, if available.</span>
-<span class="kw">static</span> <span class="ident">FRAMEBUFFER_TAG</span>: <span class="ident">StivaleFramebufferHeaderTag</span> <span class="op">=</span> <span class="ident">StivaleFramebufferHeaderTag::new</span>()
-    .<span class="ident">framebuffer_bpp</span>(<span class="number">24</span>)
-    .<span class="ident">next</span>((<span class="kw-2">&amp;</span><span class="ident">PAGING_TAG</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">Stivale5LevelPagingHeaderTag</span>).<span class="ident">cast</span>());
+<span class="doccomment">/// We are now going to define a framebuffer header tag. This tag tells the bootloader that
+/// we want a graphical framebuffer instead of a CGA-compatible text mode. Omitting this tag will
+/// make the bootloader default to text mode, if available.
+</span><span class="kw">static </span>FRAMEBUFFER_TAG: StivaleFramebufferHeaderTag = StivaleFramebufferHeaderTag::new()
+    .framebuffer_bpp(<span class="number">24</span>)
+    .next((<span class="kw-2">&amp;</span>PAGING_TAG <span class="kw">as </span><span class="kw-2">*const </span>Stivale5LevelPagingHeaderTag).cast());
 
-<span class="doccomment">/// We are now going to define a unmap null header teg. This tells the bootloader to</span>
-<span class="doccomment">/// to unmap the first page of the virtual address space before passing control to the kernel.</span>
-<span class="kw">static</span> <span class="ident">UNMAP_NULL</span>: <span class="ident">StivaleUnmapNullHeaderTag</span> <span class="op">=</span> <span class="ident">StivaleUnmapNullHeaderTag::new</span>();
+<span class="doccomment">/// We are now going to define a unmap null header teg. This tells the bootloader to
+/// to unmap the first page of the virtual address space before passing control to the kernel.
+</span><span class="kw">static </span>UNMAP_NULL: StivaleUnmapNullHeaderTag = StivaleUnmapNullHeaderTag::new();
 
-<span class="doccomment">/// We are now going to define a level 5 paging header tag. This tag tells the bootloader to</span>
-<span class="doccomment">/// enable the LEVEL_5_PAGING bit in the Cr4 register. This is not possible to implement in the kernel</span>
-<span class="doccomment">/// as we can only enable it in protected mode.</span>
-<span class="kw">static</span> <span class="ident">PAGING_TAG</span>: <span class="ident">Stivale5LevelPagingHeaderTag</span> <span class="op">=</span> <span class="ident">Stivale5LevelPagingHeaderTag::new</span>()
-    .<span class="ident">next</span>((<span class="kw-2">&amp;</span><span class="ident">UNMAP_NULL</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleUnmapNullHeaderTag</span>).<span class="ident">cast</span>());
+<span class="doccomment">/// We are now going to define a level 5 paging header tag. This tag tells the bootloader to
+/// enable the LEVEL_5_PAGING bit in the Cr4 register. This is not possible to implement in the kernel
+/// as we can only enable it in protected mode.
+</span><span class="kw">static </span>PAGING_TAG: Stivale5LevelPagingHeaderTag = Stivale5LevelPagingHeaderTag::new()
+    .next((<span class="kw-2">&amp;</span>UNMAP_NULL <span class="kw">as </span><span class="kw-2">*const </span>StivaleUnmapNullHeaderTag).cast());
 
-<span class="doccomment">/// The stivale2 specification says we need to define a &quot;header structure&quot;.</span>
-<span class="doccomment">/// This structure needs to reside in the `.stivale2hdr` ELF section in order</span>
-<span class="doccomment">/// for the bootloader to find it. We use the `#[linker_section]` and `#[used]` macros to</span>
-<span class="doccomment">/// tell the compiler to put the following structure in said section.</span>
-<span class="attribute">#[<span class="ident">link_section</span> <span class="op">=</span> <span class="string">&quot;.stivale2hdr&quot;</span>]</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="attribute">#[<span class="ident">used</span>]</span>
-<span class="kw">static</span> <span class="ident">STIVALE_HDR</span>: <span class="ident">StivaleHeader</span> <span class="op">=</span> <span class="ident">StivaleHeader::new</span>()
-    .<span class="ident">stack</span>(<span class="ident">STACK</span>.<span class="number">0</span>.<span class="ident">as_ptr_range</span>().<span class="ident">end</span>)
-    .<span class="ident">tags</span>((<span class="kw-2">&amp;</span><span class="ident">FRAMEBUFFER_TAG</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleFramebufferHeaderTag</span>).<span class="ident">cast</span>());
+<span class="doccomment">/// The stivale2 specification says we need to define a &quot;header structure&quot;.
+/// This structure needs to reside in the `.stivale2hdr` ELF section in order
+/// for the bootloader to find it. We use the `#[linker_section]` and `#[used]` macros to
+/// tell the compiler to put the following structure in said section.
+</span><span class="attribute">#[link_section = <span class="string">&quot;.stivale2hdr&quot;</span>]</span>
+<span class="attribute">#[no_mangle]</span>
+<span class="attribute">#[used]</span>
+<span class="kw">static </span>STIVALE_HDR: StivaleHeader = StivaleHeader::new()
+    .stack(STACK.<span class="number">0</span>.as_ptr_range().end)
+    .tags((<span class="kw-2">&amp;</span>FRAMEBUFFER_TAG <span class="kw">as </span><span class="kw-2">*const </span>StivaleFramebufferHeaderTag).cast());
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">x86_64_aero_main</span>(<span class="ident">boot_info</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleStruct</span>) -&gt; <span class="op">!</span> {
-    <span class="kw">let</span> <span class="ident">mmap_tag</span> <span class="op">=</span> <span class="ident">boot_info</span>
-        .<span class="ident">memory_map</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;stivale2: aero requires the bootloader to provide a non-null memory map tag&quot;</span>);
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>x86_64_aero_main(boot_info: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleStruct) -&gt; ! {
+    <span class="kw">let </span>mmap_tag = boot_info
+        .memory_map()
+        .expect(<span class="string">&quot;stivale2: aero requires the bootloader to provide a non-null memory map tag&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">rsdp_tag</span> <span class="op">=</span> <span class="ident">boot_info</span>
-        .<span class="ident">rsdp</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;stivale2: aero requires the bootloader to provided a non-null rsdp tag&quot;</span>);
+    <span class="kw">let </span>rsdp_tag = boot_info
+        .rsdp()
+        .expect(<span class="string">&quot;stivale2: aero requires the bootloader to provided a non-null rsdp tag&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">framebuffer_tag</span> <span class="op">=</span> <span class="ident">boot_info</span>
-        .<span class="ident">framebuffer</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;stivale2: aero requires the bootloader to provide a non-null framebuffer tag&quot;</span>);
+    <span class="kw">let </span>framebuffer_tag = boot_info
+        .framebuffer()
+        .expect(<span class="string">&quot;stivale2: aero requires the bootloader to provide a non-null framebuffer tag&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">kernel_info</span> <span class="op">=</span> <span class="ident">boot_info</span>
-        .<span class="ident">kernel_file_v2</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;stivale2: aero requires the bootloader to provode a non-null kernel info V2 tag&quot;</span>);
+    <span class="kw">let </span>kernel_info = boot_info
+        .kernel_file_v2()
+        .expect(<span class="string">&quot;stivale2: aero requires the bootloader to provode a non-null kernel info V2 tag&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">modules</span> <span class="op">=</span> <span class="ident">boot_info</span>
-        .<span class="ident">modules</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;stivale2: aero requires the bootloader to provode a non-null kernel modules tag&quot;</span>);
+    <span class="kw">let </span>modules = boot_info
+        .modules()
+        .expect(<span class="string">&quot;stivale2: aero requires the bootloader to provode a non-null kernel modules tag&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="ident">boot_info</span>
-        .<span class="ident">epoch</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;stivale2: aero expects the bootloader to provide a non-null epoch tag&quot;</span>);
+    <span class="kw">let </span>epoch = boot_info
+        .epoch()
+        .expect(<span class="string">&quot;stivale2: aero expects the bootloader to provide a non-null epoch tag&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">rsdp_address</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">rsdp_tag</span>.<span class="ident">rsdp</span>);
+    <span class="kw">let </span>rsdp_address = PhysAddr::new(rsdp_tag.rsdp);
 
-    <span class="comment">// NOTE: STACK_SIZE - 1 points to the last u8 in the array, i.e. it is</span>
-    <span class="comment">// guaranteed to be at an address with its least significant bit being a 1</span>
-    <span class="comment">// and it never has an alignment greater than 1. STACK_SIZE - 4096 points</span>
-    <span class="comment">// to the last u8 in STACK, that is aligned to 4096.</span>
-    <span class="kw">let</span> <span class="ident">stack_top_addr</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>((<span class="kw-2">&amp;</span><span class="ident">STACK</span>.<span class="number">0</span>[<span class="ident">STACK_SIZE</span> <span class="op">-</span> <span class="number">4096</span>] <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u8</span>) <span class="kw">as</span> <span class="kw">_</span>);
+    <span class="comment">// NOTE: STACK_SIZE - 1 points to the last u8 in the array, i.e. it is
+    // guaranteed to be at an address with its least significant bit being a 1
+    // and it never has an alignment greater than 1. STACK_SIZE - 4096 points
+    // to the last u8 in STACK, that is aligned to 4096.
+    </span><span class="kw">let </span>stack_top_addr = VirtAddr::new((<span class="kw-2">&amp;</span>STACK.<span class="number">0</span>[STACK_SIZE - <span class="number">4096</span>] <span class="kw">as </span><span class="kw-2">*const </span>u8) <span class="kw">as _</span>);
 
-    <span class="kw">unsafe</span> {
-        <span class="ident">interrupts::disable_interrupts</span>();
+    <span class="kw">unsafe </span>{
+        interrupts::disable_interrupts();
     }
 
-    <span class="kw">if</span> <span class="ident">paging::level_5_paging_enabled</span>() {
-        <span class="kw">unsafe</span> {
-            <span class="ident"><span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="number">0xff00000000000000</span>);
+    <span class="kw">if </span>paging::level_5_paging_enabled() {
+        <span class="kw">unsafe </span>{
+            <span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET = VirtAddr::new(<span class="number">0xff00000000000000</span>);
         }
-    } <span class="kw">else</span> {
-        <span class="kw">unsafe</span> {
-            <span class="ident"><span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="number">0xffff800000000000</span>);
+    } <span class="kw">else </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET = VirtAddr::new(<span class="number">0xffff800000000000</span>);
         }
     }
 
-    <span class="ident"><span class="kw">crate</span>::UNWIND_INFO</span>.<span class="ident">call_once</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="kw">unsafe</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">PhysAddr::new</span>((<span class="ident">kernel_info</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleKernelFileV2Tag</span>) <span class="kw">as</span> <span class="ident">u64</span>)
-            .<span class="ident">as_hhdm_virt</span>()
-            .<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">StivaleKernelFileV2Tag</span><span class="op">&gt;</span>())
+    <span class="kw">crate</span>::UNWIND_INFO.call_once(<span class="kw">move </span>|| <span class="kw">unsafe </span>{
+        <span class="kw-2">&amp;*</span>(PhysAddr::new((kernel_info <span class="kw">as </span><span class="kw-2">*const </span>StivaleKernelFileV2Tag) <span class="kw">as </span>u64)
+            .as_hhdm_virt()
+            .as_mut_ptr::&lt;StivaleKernelFileV2Tag&gt;())
     });
 
-    <span class="ident"><span class="kw">crate</span>::time::EPOCH_TAG</span>.<span class="ident">call_once</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="kw">unsafe</span> {
-        <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">PhysAddr::new</span>((<span class="ident">epoch</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleEpochTag</span>) <span class="kw">as</span> <span class="ident">u64</span>)
-            .<span class="ident">as_hhdm_virt</span>()
-            .<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">StivaleEpochTag</span><span class="op">&gt;</span>())
+    <span class="kw">crate</span>::time::EPOCH_TAG.call_once(<span class="kw">move </span>|| <span class="kw">unsafe </span>{
+        <span class="kw-2">&amp;*</span>(PhysAddr::new((epoch <span class="kw">as </span><span class="kw-2">*const </span>StivaleEpochTag) <span class="kw">as </span>u64)
+            .as_hhdm_virt()
+            .as_mut_ptr::&lt;StivaleEpochTag&gt;())
     });
 
-    <span class="ident"><span class="kw">crate</span>::INITRD_MODULE</span>.<span class="ident">call_once</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">modules</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">module</span><span class="op">|</span> <span class="ident">module</span>.<span class="ident">as_str</span>() <span class="op">==</span> <span class="string">&quot;initramfs&quot;</span>)
-            .<span class="ident">unwrap</span>()
+    <span class="kw">crate</span>::INITRD_MODULE.call_once(<span class="kw">move </span>|| {
+        modules
+            .iter()
+            .find(|module| module.as_str() == <span class="string">&quot;initramfs&quot;</span>)
+            .unwrap()
     });
 
-    <span class="comment">// Initialize the CPU specific features.</span>
-    <span class="ident">init_cpu</span>();
+    <span class="comment">// Initialize the CPU specific features.
+    </span>init_cpu();
 
-    <span class="comment">// We initialize the COM ports before doing anything else.</span>
-    <span class="comment">//</span>
-    <span class="comment">// This will help printing panics and logs before or when the debug renderer</span>
-    <span class="comment">// is initialized and if serial output is avaliable.</span>
-    <span class="ident">drivers::uart_16550::init</span>();
-    <span class="ident">logger::init</span>();
+    <span class="comment">// We initialize the COM ports before doing anything else.
+    //
+    // This will help printing panics and logs before or when the debug renderer
+    // is initialized and if serial output is avaliable.
+    </span>drivers::uart_16550::init();
+    logger::init();
 
-    <span class="comment">// Parse the kernel command line.</span>
-    <span class="kw">let</span> <span class="ident">command_line</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw">_</span> <span class="op">=</span> <span class="ident">boot_info</span>.<span class="ident">command_line</span>().<span class="ident">map_or</span>(<span class="string">&quot;&quot;</span>, <span class="op">|</span><span class="ident">cmd</span><span class="op">|</span> <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">cmdline</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">cmd</span>.<span class="ident">command_line</span>).<span class="ident">as_hhdm_virt</span>();
+    <span class="comment">// Parse the kernel command line.
+    </span><span class="kw">let </span>command_line: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">_ </span>= boot_info.command_line().map_or(<span class="string">&quot;&quot;</span>, |cmd| <span class="kw">unsafe </span>{
+        <span class="kw">let </span>cmdline = PhysAddr::new(cmd.command_line).as_hhdm_virt();
 
-        <span class="comment">// SAFETY: The bootloader has provided a pointer that points to a valid C</span>
-        <span class="comment">// string with a NULL terminator of size less than `usize::MAX`, whose content</span>
-        <span class="comment">// remain valid and has a static lifetime.</span>
-        <span class="ident">mem::c_str_as_str</span>(<span class="ident">cmdline</span>.<span class="ident">as_ptr</span>())
+        <span class="comment">// SAFETY: The bootloader has provided a pointer that points to a valid C
+        // string with a NULL terminator of size less than `usize::MAX`, whose content
+        // remain valid and has a static lifetime.
+        </span>mem::c_str_as_str(cmdline.as_ptr())
     });
 
-    <span class="kw">let</span> <span class="ident">command_line</span> <span class="op">=</span> <span class="ident">cmdline::parse</span>(<span class="ident">command_line</span>, <span class="ident">modules</span>);
+    <span class="kw">let </span>command_line = cmdline::parse(command_line, modules);
 
-    <span class="ident">gdt::init_boot</span>();
+    gdt::init_boot();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded bootstrap GDT&quot;</span>);
 
-    <span class="ident">paging::init</span>(<span class="ident">mmap_tag</span>).<span class="ident">unwrap</span>();
+    paging::init(mmap_tag).unwrap();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded paging&quot;</span>);
 
-    <span class="ident">alloc::init_heap</span>();
+    alloc::init_heap();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded heap&quot;</span>);
 
-    <span class="ident">paging::init_vm_frames</span>();
+    paging::init_vm_frames();
 
-    <span class="ident">rendy::init</span>(<span class="ident">framebuffer_tag</span>, <span class="kw-2">&amp;</span><span class="ident">command_line</span>);
-    <span class="ident">logger::set_rendy_debug</span>(<span class="ident">command_line</span>.<span class="ident">rendy_debug</span>);
+    rendy::init(framebuffer_tag, <span class="kw-2">&amp;</span>command_line);
+    logger::set_rendy_debug(command_line.rendy_debug);
 
-    <span class="ident">interrupts::init</span>();
+    interrupts::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded IDT&quot;</span>);
 
-    <span class="ident">apic::init</span>();
+    apic::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded APIC&quot;</span>);
 
-    <span class="ident">acpi::init</span>(<span class="ident">rsdp_address</span>);
+    acpi::init(rsdp_address);
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded ACPI&quot;</span>);
 
-    <span class="ident">tls::init</span>(<span class="number">0</span>);
+    tls::init(<span class="number">0</span>);
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded TLS&quot;</span>);
 
-    <span class="ident"><span class="kw">crate</span>::unwind::set_panic_hook_ready</span>(<span class="bool-val">true</span>);
+    <span class="kw">crate</span>::unwind::set_panic_hook_ready(<span class="bool-val">true</span>);
 
-    <span class="ident">gdt::init</span>(<span class="ident">stack_top_addr</span>);
+    gdt::init(stack_top_addr);
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded GDT&quot;</span>);
 
-    <span class="ident">syscall::init</span>();
+    syscall::init();
 
-    <span class="comment">// Architecture init is done. Now we can initialize and start the init</span>
-    <span class="comment">// process in the non-architecture specific part of the kernel.</span>
-    <span class="ident"><span class="kw">crate</span>::aero_main</span>();
+    <span class="comment">// Architecture init is done. Now we can initialize and start the init
+    // process in the non-architecture specific part of the kernel.
+    </span><span class="kw">crate</span>::aero_main();
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">x86_64_aero_ap_main</span>(<span class="ident">ap_id</span>: <span class="ident">usize</span>, <span class="ident">stack_top_addr</span>: <span class="ident">VirtAddr</span>) {
-    <span class="macro">log::debug!</span>(<span class="string">&quot;booting CPU {}&quot;</span>, <span class="ident">ap_id</span>);
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>x86_64_aero_ap_main(ap_id: usize, stack_top_addr: VirtAddr) {
+    <span class="macro">log::debug!</span>(<span class="string">&quot;booting CPU {}&quot;</span>, ap_id);
 
-    <span class="ident">gdt::init_boot</span>();
-    <span class="macro">log::info!</span>(<span class="string">&quot;AP{}: loaded boot GDT&quot;</span>, <span class="ident">ap_id</span>);
+    gdt::init_boot();
+    <span class="macro">log::info!</span>(<span class="string">&quot;AP{}: loaded boot GDT&quot;</span>, ap_id);
 
-    <span class="ident">tls::init</span>(<span class="ident">ap_id</span>);
-    <span class="macro">log::info!</span>(<span class="string">&quot;AP{}: loaded TLS&quot;</span>, <span class="ident">ap_id</span>);
+    tls::init(ap_id);
+    <span class="macro">log::info!</span>(<span class="string">&quot;AP{}: loaded TLS&quot;</span>, ap_id);
 
-    <span class="ident">gdt::init</span>(<span class="ident">stack_top_addr</span>);
-    <span class="macro">log::info!</span>(<span class="string">&quot;AP{}: loaded GDT&quot;</span>, <span class="ident">ap_id</span>);
+    gdt::init(stack_top_addr);
+    <span class="macro">log::info!</span>(<span class="string">&quot;AP{}: loaded GDT&quot;</span>, ap_id);
 
-    <span class="ident">syscall::init</span>();
+    syscall::init();
 
-    <span class="ident">apic::mark_ap_ready</span>(<span class="bool-val">true</span>);
+    apic::mark_ap_ready(<span class="bool-val">true</span>);
 
-    <span class="comment">// Wait for the BSP to be ready (after the BSP has initialized</span>
-    <span class="comment">// the scheduler).</span>
-    <span class="kw">while</span> <span class="op">!</span><span class="ident">apic::is_bsp_ready</span>() {
-        <span class="ident">core::hint::spin_loop</span>();
+    <span class="comment">// Wait for the BSP to be ready (after the BSP has initialized
+    // the scheduler).
+    </span><span class="kw">while </span>!apic::is_bsp_ready() {
+        core::hint::spin_loop();
     }
 
-    <span class="comment">// Architecture init is done. Now move on to the non-architecture specific</span>
-    <span class="comment">// initialization of the AP.</span>
-    <span class="ident"><span class="kw">crate</span>::aero_ap_main</span>(<span class="ident">ap_id</span>);
+    <span class="comment">// Architecture init is done. Now move on to the non-architecture specific
+    // initialization of the AP.
+    </span><span class="kw">crate</span>::aero_ap_main(ap_id);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enable_acpi</span>() {
-    <span class="ident">aml::get_subsystem</span>().<span class="ident">enable_acpi</span>(<span class="ident">INTERRUPT_CONTROLLER</span>.<span class="ident">method</span>() <span class="kw">as</span> <span class="kw">_</span>);
+<span class="kw">pub fn </span>enable_acpi() {
+    aml::get_subsystem().enable_acpi(INTERRUPT_CONTROLLER.method() <span class="kw">as _</span>);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_cpu</span>() {
-    <span class="kw">unsafe</span> {
-        <span class="comment">// Enable the no-execute page protection feature.</span>
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_EFER</span>, <span class="ident">io::rdmsr</span>(<span class="ident">io::IA32_EFER</span>) <span class="op">|</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>);
+<span class="kw">pub fn </span>init_cpu() {
+    <span class="kw">unsafe </span>{
+        <span class="comment">// Enable the no-execute page protection feature.
+        </span>io::wrmsr(io::IA32_EFER, io::rdmsr(io::IA32_EFER) | <span class="number">1 </span>&lt;&lt; <span class="number">11</span>);
 
-        <span class="comment">// Check if SSE is supported. SSE support is a requirement for running Aero.</span>
-        <span class="kw">let</span> <span class="ident">has_sse</span> <span class="op">=</span> <span class="ident">CpuId::new</span>()
-            .<span class="ident">get_feature_info</span>()
-            .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">has_sse</span>());
+        <span class="comment">// Check if SSE is supported. SSE support is a requirement for running Aero.
+        </span><span class="kw">let </span>has_sse = CpuId::new()
+            .get_feature_info()
+            .map_or(<span class="bool-val">false</span>, |i| i.has_sse());
 
-        <span class="macro">assert!</span>(<span class="ident">has_sse</span>);
+        <span class="macro">assert!</span>(has_sse);
 
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cr0</span> <span class="op">=</span> <span class="ident">controlregs::read_cr0</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>cr0 = controlregs::read_cr0();
 
-            <span class="ident">cr0</span>.<span class="ident">remove</span>(<span class="ident">controlregs::Cr0Flags::EMULATE_COPROCESSOR</span>);
-            <span class="ident">cr0</span>.<span class="ident">insert</span>(<span class="ident">controlregs::Cr0Flags::MONITOR_COPROCESSOR</span>);
+            cr0.remove(controlregs::Cr0Flags::EMULATE_COPROCESSOR);
+            cr0.insert(controlregs::Cr0Flags::MONITOR_COPROCESSOR);
 
-            <span class="ident">controlregs::write_cr0</span>(<span class="ident">cr0</span>);
+            controlregs::write_cr0(cr0);
         }
 
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cr4</span> <span class="op">=</span> <span class="ident">controlregs::read_cr4</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>cr4 = controlregs::read_cr4();
 
-            <span class="ident">cr4</span>.<span class="ident">insert</span>(<span class="ident">controlregs::Cr4Flags::OSFXSR</span>);
-            <span class="ident">cr4</span>.<span class="ident">insert</span>(<span class="ident">controlregs::Cr4Flags::OSXMMEXCPT_ENABLE</span>);
+            cr4.insert(controlregs::Cr4Flags::OSFXSR);
+            cr4.insert(controlregs::Cr4Flags::OSXMMEXCPT_ENABLE);
 
-            <span class="ident">controlregs::write_cr4</span>(<span class="ident">cr4</span>);
+            controlregs::write_cr4(cr4);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

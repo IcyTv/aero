@@ -8,55 +8,55 @@ instead keep track of a set of <em>objects</em>. Such collections are called
 intrusive because they requires explicit support in objects to allow them to
 be inserted into a collection.</p>
 <h2 id="example"><a href="#example">Example</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">intrusive_collections::intrusive_adapter</span>;
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">LinkedList</span>, <span class="ident">LinkedListLink</span>};
-<span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>intrusive_collections::intrusive_adapter;
+<span class="kw">use </span>intrusive_collections::{LinkedList, LinkedListLink};
+<span class="kw">use </span>std::cell::Cell;
 
-<span class="comment">// A simple struct containing an instrusive link and a value</span>
-<span class="kw">struct</span> <span class="ident">Test</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink</span>,
-    <span class="ident">value</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
+<span class="comment">// A simple struct containing an instrusive link and a value
+</span><span class="kw">struct </span>Test {
+    link: LinkedListLink,
+    value: Cell&lt;i32&gt;,
 }
 
-<span class="comment">// The adapter describes how an object can be inserted into an intrusive</span>
-<span class="comment">// collection. This is automatically generated using a macro.</span>
-<span class="macro">intrusive_adapter!</span>(<span class="ident">TestAdapter</span> <span class="op">=</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>: <span class="ident">Test</span> { <span class="ident">link</span>: <span class="ident">LinkedListLink</span> });
+<span class="comment">// The adapter describes how an object can be inserted into an intrusive
+// collection. This is automatically generated using a macro.
+</span><span class="macro">intrusive_adapter!</span>(TestAdapter = Box&lt;Test&gt;: Test { link: LinkedListLink });
 
-<span class="comment">// Create a list and some objects</span>
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList::new</span>(<span class="ident">TestAdapter::new</span>());
-<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">Test</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">1</span>),
+<span class="comment">// Create a list and some objects
+</span><span class="kw">let </span><span class="kw-2">mut </span>list = LinkedList::new(TestAdapter::new());
+<span class="kw">let </span>a = Box::new(Test {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">1</span>),
 });
-<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">Test</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">2</span>),
+<span class="kw">let </span>b = Box::new(Test {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">2</span>),
 });
-<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">Box::new</span>(<span class="ident">Test</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">3</span>),
+<span class="kw">let </span>c = Box::new(Test {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">3</span>),
 });
 
-<span class="comment">// Insert the objects at the front of the list</span>
-<span class="ident">list</span>.<span class="ident">push_front</span>(<span class="ident">a</span>);
-<span class="ident">list</span>.<span class="ident">push_front</span>(<span class="ident">b</span>);
-<span class="ident">list</span>.<span class="ident">push_front</span>(<span class="ident">c</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">value</span>.<span class="ident">get</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(), [<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>]);
+<span class="comment">// Insert the objects at the front of the list
+</span>list.push_front(a);
+list.push_front(b);
+list.push_front(c);
+<span class="macro">assert_eq!</span>(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>]);
 
-<span class="comment">// At this point, the objects are owned by the list, and we can modify</span>
-<span class="comment">// them through the list.</span>
-<span class="ident">list</span>.<span class="ident">front</span>().<span class="ident">get</span>().<span class="ident">unwrap</span>().<span class="ident">value</span>.<span class="ident">set</span>(<span class="number">4</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">value</span>.<span class="ident">get</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(), [<span class="number">4</span>, <span class="number">2</span>, <span class="number">1</span>]);
+<span class="comment">// At this point, the objects are owned by the list, and we can modify
+// them through the list.
+</span>list.front().get().unwrap().value.set(<span class="number">4</span>);
+<span class="macro">assert_eq!</span>(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">4</span>, <span class="number">2</span>, <span class="number">1</span>]);
 
-<span class="comment">// Removing an object from an instrusive collection gives us back the</span>
-<span class="comment">// Box&lt;Test&gt; that we originally inserted into it.</span>
-<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">list</span>.<span class="ident">pop_front</span>().<span class="ident">unwrap</span>();
-<span class="macro">assert_eq!</span>(<span class="ident">a</span>.<span class="ident">value</span>.<span class="ident">get</span>(), <span class="number">4</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">value</span>.<span class="ident">get</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(), [<span class="number">2</span>, <span class="number">1</span>]);
+<span class="comment">// Removing an object from an instrusive collection gives us back the
+// Box&lt;Test&gt; that we originally inserted into it.
+</span><span class="kw">let </span>a = list.pop_front().unwrap();
+<span class="macro">assert_eq!</span>(a.value.get(), <span class="number">4</span>);
+<span class="macro">assert_eq!</span>(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">2</span>, <span class="number">1</span>]);
 
-<span class="comment">// Dropping the collection will automatically free b and c by</span>
-<span class="comment">// transforming them back into Box&lt;Test&gt; and dropping them.</span>
-<span class="ident">drop</span>(<span class="ident">list</span>);</code></pre></div>
+<span class="comment">// Dropping the collection will automatically free b and c by
+// transforming them back into Box&lt;Test&gt; and dropping them.
+</span>drop(list);</code></pre></div>
 <h2 id="links-and-adapters"><a href="#links-and-adapters">Links and adapters</a></h2>
 <p>Intrusive collections track objects through links which are embedded within
 the objects themselves. It also allows a single object to be part of
@@ -70,42 +70,42 @@ most cases you do not need to write an implementation manually: the
 which allows a key to be extracted from an object. This key is then used to
 keep all elements in the tree in ascending order.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">intrusive_collections::intrusive_adapter</span>;
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">SinglyLinkedListLink</span>, <span class="ident">SinglyLinkedList</span>};
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">LinkedListLink</span>, <span class="ident">LinkedList</span>};
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">XorLinkedList</span>, <span class="ident">XorLinkedListLink</span>};
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">RBTreeLink</span>, <span class="ident">RBTree</span>, <span class="ident">KeyAdapter</span>};
-<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>intrusive_collections::intrusive_adapter;
+<span class="kw">use </span>intrusive_collections::{SinglyLinkedListLink, SinglyLinkedList};
+<span class="kw">use </span>intrusive_collections::{LinkedListLink, LinkedList};
+<span class="kw">use </span>intrusive_collections::{XorLinkedList, XorLinkedListLink};
+<span class="kw">use </span>intrusive_collections::{RBTreeLink, RBTree, KeyAdapter};
+<span class="kw">use </span>std::rc::Rc;
 
-<span class="comment">// This struct can be inside three lists and one tree simultaneously</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Test</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink</span>,
-    <span class="ident">link2</span>: <span class="ident">SinglyLinkedListLink</span>,
-    <span class="ident">link3</span>: <span class="ident">XorLinkedListLink</span>,
-    <span class="ident">link4</span>: <span class="ident">RBTreeLink</span>,
-    <span class="ident">value</span>: <span class="ident">i32</span>,
+<span class="comment">// This struct can be inside three lists and one tree simultaneously
+</span><span class="attribute">#[derive(Default)]</span>
+<span class="kw">struct </span>Test {
+    link: LinkedListLink,
+    link2: SinglyLinkedListLink,
+    link3: XorLinkedListLink,
+    link4: RBTreeLink,
+    value: i32,
 }
 
-<span class="macro">intrusive_adapter!</span>(<span class="ident">MyAdapter</span> <span class="op">=</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>: <span class="ident">Test</span> { <span class="ident">link</span>: <span class="ident">LinkedListLink</span> });
-<span class="macro">intrusive_adapter!</span>(<span class="ident">MyAdapter2</span> <span class="op">=</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>: <span class="ident">Test</span> { <span class="ident">link2</span>: <span class="ident">SinglyLinkedListLink</span> });
-<span class="macro">intrusive_adapter!</span>(<span class="ident">MyAdapter3</span> <span class="op">=</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>: <span class="ident">Test</span> { <span class="ident">link3</span>: <span class="ident">XorLinkedListLink</span> });
-<span class="macro">intrusive_adapter!</span>(<span class="ident">MyAdapter4</span> <span class="op">=</span> <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Test</span><span class="op">&gt;</span>: <span class="ident">Test</span> { <span class="ident">link4</span>: <span class="ident">RBTreeLink</span> });
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">KeyAdapter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">MyAdapter4</span> {
-    <span class="kw">type</span> <span class="ident">Key</span> <span class="op">=</span> <span class="ident">i32</span>;
-    <span class="kw">fn</span> <span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">x</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Test</span>) -&gt; <span class="ident">i32</span> { <span class="ident">x</span>.<span class="ident">value</span> }
+<span class="macro">intrusive_adapter!</span>(MyAdapter = Rc&lt;Test&gt;: Test { link: LinkedListLink });
+<span class="macro">intrusive_adapter!</span>(MyAdapter2 = Rc&lt;Test&gt;: Test { link2: SinglyLinkedListLink });
+<span class="macro">intrusive_adapter!</span>(MyAdapter3 = Rc&lt;Test&gt;: Test { link3: XorLinkedListLink });
+<span class="macro">intrusive_adapter!</span>(MyAdapter4 = Rc&lt;Test&gt;: Test { link4: RBTreeLink });
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>MyAdapter4 {
+    <span class="kw">type </span>Key = i32;
+    <span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, x: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Test) -&gt; i32 { x.value }
 }
 
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">LinkedList::new</span>(<span class="ident">MyAdapter::new</span>());
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">SinglyLinkedList::new</span>(<span class="ident">MyAdapter2::new</span>());
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">XorLinkedList::new</span>(<span class="ident">MyAdapter3::new</span>());
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">RBTree::new</span>(<span class="ident">MyAdapter4::new</span>());
+<span class="kw">let </span><span class="kw-2">mut </span>a = LinkedList::new(MyAdapter::new());
+<span class="kw">let </span><span class="kw-2">mut </span>b = SinglyLinkedList::new(MyAdapter2::new());
+<span class="kw">let </span><span class="kw-2">mut </span>c = XorLinkedList::new(MyAdapter3::new());
+<span class="kw">let </span><span class="kw-2">mut </span>d = RBTree::new(MyAdapter4::new());
 
-<span class="kw">let</span> <span class="ident">test</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">Test::default</span>());
-<span class="ident">a</span>.<span class="ident">push_front</span>(<span class="ident">test</span>.<span class="ident">clone</span>());
-<span class="ident">b</span>.<span class="ident">push_front</span>(<span class="ident">test</span>.<span class="ident">clone</span>());
-<span class="ident">c</span>.<span class="ident">push_front</span>(<span class="ident">test</span>.<span class="ident">clone</span>());
-<span class="ident">d</span>.<span class="ident">insert</span>(<span class="ident">test</span>);</code></pre></div>
+<span class="kw">let </span>test = Rc::new(Test::default());
+a.push_front(test.clone());
+b.push_front(test.clone());
+c.push_front(test.clone());
+d.insert(test);</code></pre></div>
 <h2 id="cursors"><a href="#cursors">Cursors</a></h2>
 <p>Intrusive collections are manipulated using cursors. A cursor is similar to
 an iterator, except that it can freely seek back-and-forth, and can safely
@@ -124,30 +124,30 @@ of them at a time.</p>
 mutated safely while it is being iterated on. For example, here is a
 function which removes all values within a given range from a <code>RBTree</code>:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">intrusive_collections::intrusive_adapter</span>;
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">RBTreeLink</span>, <span class="ident">RBTree</span>, <span class="ident">KeyAdapter</span>, <span class="ident">Bound</span>};
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>intrusive_collections::intrusive_adapter;
+<span class="kw">use </span>intrusive_collections::{RBTreeLink, RBTree, KeyAdapter, Bound};
 
-<span class="kw">struct</span> <span class="ident">Element</span> {
-    <span class="ident">link</span>: <span class="ident">RBTreeLink</span>,
-    <span class="ident">value</span>: <span class="ident">i32</span>,
+<span class="kw">struct </span>Element {
+    link: RBTreeLink,
+    value: i32,
 }
 
-<span class="macro">intrusive_adapter!</span>(<span class="ident">ElementAdapter</span> <span class="op">=</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">Element</span><span class="op">&gt;</span>: <span class="ident">Element</span> { <span class="ident">link</span>: <span class="ident">RBTreeLink</span> });
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">KeyAdapter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">ElementAdapter</span> {
-    <span class="kw">type</span> <span class="ident">Key</span> <span class="op">=</span> <span class="ident">i32</span>;
-    <span class="kw">fn</span> <span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">e</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Element</span>) -&gt; <span class="ident">i32</span> { <span class="ident">e</span>.<span class="ident">value</span> }
+<span class="macro">intrusive_adapter!</span>(ElementAdapter = Box&lt;Element&gt;: Element { link: RBTreeLink });
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>ElementAdapter {
+    <span class="kw">type </span>Key = i32;
+    <span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, e: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Element) -&gt; i32 { e.value }
 }
 
-<span class="kw">fn</span> <span class="ident">remove_range</span>(<span class="ident">tree</span>: <span class="kw-2">&amp;mut</span> <span class="ident">RBTree</span><span class="op">&lt;</span><span class="ident">ElementAdapter</span><span class="op">&gt;</span>, <span class="ident">min</span>: <span class="ident">i32</span>, <span class="ident">max</span>: <span class="ident">i32</span>) {
-    <span class="comment">// Find the first element which is greater than or equal to min</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">tree</span>.<span class="ident">lower_bound_mut</span>(<span class="ident">Bound::Included</span>(<span class="kw-2">&amp;</span><span class="ident">min</span>));
+<span class="kw">fn </span>remove_range(tree: <span class="kw-2">&amp;mut </span>RBTree&lt;ElementAdapter&gt;, min: i32, max: i32) {
+    <span class="comment">// Find the first element which is greater than or equal to min
+    </span><span class="kw">let </span><span class="kw-2">mut </span>cursor = tree.lower_bound_mut(Bound::Included(<span class="kw-2">&amp;</span>min));
 
-    <span class="comment">// Iterate over all elements in the range [min, max]</span>
-    <span class="kw">while</span> <span class="ident">cursor</span>.<span class="ident">get</span>().<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">value</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">max</span>) {
-        <span class="comment">// CursorMut::remove will return a Some(&lt;Box&lt;Element&gt;), which we</span>
-        <span class="comment">// simply drop here. This will also advance the cursor to the next</span>
-        <span class="comment">// element.</span>
-        <span class="ident">cursor</span>.<span class="ident">remove</span>();
+    <span class="comment">// Iterate over all elements in the range [min, max]
+    </span><span class="kw">while </span>cursor.get().map_or(<span class="bool-val">false</span>, |e| e.value &lt;= max) {
+        <span class="comment">// CursorMut::remove will return a Some(&lt;Box&lt;Element&gt;), which we
+        // simply drop here. This will also advance the cursor to the next
+        // element.
+        </span>cursor.remove();
     }
 }</code></pre></div>
 <h2 id="scoped-collections"><a href="#scoped-collections">Scoped collections</a></h2>
@@ -156,65 +156,65 @@ collections can also work with borrowed values. This works by using
 lifetimes and the borrow checker to ensure that any objects inserted into an
 intrusive collection will outlive the collection itself.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">intrusive_collections::intrusive_adapter</span>;
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">LinkedListLink</span>, <span class="ident">LinkedList</span>};
-<span class="kw">use</span> <span class="ident">typed_arena::Arena</span>;
-<span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>intrusive_collections::intrusive_adapter;
+<span class="kw">use </span>intrusive_collections::{LinkedListLink, LinkedList};
+<span class="kw">use </span>typed_arena::Arena;
+<span class="kw">use </span>std::cell::Cell;
 
-<span class="kw">struct</span> <span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink</span>,
-    <span class="ident">value</span>: <span class="ident">Cell</span><span class="op">&lt;</span><span class="ident">i32</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Value {
+    link: LinkedListLink,
+    value: Cell&lt;i32&gt;,
 }
 
-<span class="comment">// Note that we use a plain reference as the pointer type for the collection.</span>
-<span class="macro">intrusive_adapter!</span>(<span class="ident">ValueAdapter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Value</span>: <span class="ident">Value</span> { <span class="ident">link</span>: <span class="ident">LinkedListLink</span> });
+<span class="comment">// Note that we use a plain reference as the pointer type for the collection.
+</span><span class="macro">intrusive_adapter!</span>(ValueAdapter&lt;<span class="lifetime">&#39;a</span>&gt; = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Value: Value { link: LinkedListLink });
 
-<span class="comment">// Create an arena and a list. Note that since stack objects are dropped in</span>
-<span class="comment">// reverse order, the Arena must be created before the LinkedList. This</span>
-<span class="comment">// ensures that the list is dropped before the values are freed by the</span>
-<span class="comment">// arena. This is enforced by the Rust lifetime system.</span>
-<span class="kw">let</span> <span class="ident">arena</span> <span class="op">=</span> <span class="ident">Arena::new</span>();
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="ident">LinkedList::new</span>(<span class="ident">ValueAdapter::new</span>());
+<span class="comment">// Create an arena and a list. Note that since stack objects are dropped in
+// reverse order, the Arena must be created before the LinkedList. This
+// ensures that the list is dropped before the values are freed by the
+// arena. This is enforced by the Rust lifetime system.
+</span><span class="kw">let </span>arena = Arena::new();
+<span class="kw">let </span><span class="kw-2">mut </span>list = LinkedList::new(ValueAdapter::new());
 
-<span class="comment">// We can now insert values allocated from the arena into the linked list</span>
-<span class="ident">list</span>.<span class="ident">push_back</span>(<span class="ident">arena</span>.<span class="ident">alloc</span>(<span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">1</span>),
+<span class="comment">// We can now insert values allocated from the arena into the linked list
+</span>list.push_back(arena.alloc(Value {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">1</span>),
 }));
-<span class="ident">list</span>.<span class="ident">push_back</span>(<span class="ident">arena</span>.<span class="ident">alloc</span>(<span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">2</span>),
+list.push_back(arena.alloc(Value {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">2</span>),
 }));
-<span class="ident">list</span>.<span class="ident">push_back</span>(<span class="ident">arena</span>.<span class="ident">alloc</span>(<span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">3</span>),
+list.push_back(arena.alloc(Value {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">3</span>),
 }));
-<span class="macro">assert_eq!</span>(<span class="ident">list</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">value</span>.<span class="ident">get</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(), [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
+<span class="macro">assert_eq!</span>(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
 
-<span class="comment">// We can also insert stack allocated values into an intrusive list.</span>
-<span class="comment">// Again, the values must outlive the LinkedList.</span>
-<span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">4</span>),
+<span class="comment">// We can also insert stack allocated values into an intrusive list.
+// Again, the values must outlive the LinkedList.
+</span><span class="kw">let </span>a = Value {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">4</span>),
 };
-<span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">5</span>),
+<span class="kw">let </span>b = Value {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">5</span>),
 };
-<span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">Value</span> {
-    <span class="ident">link</span>: <span class="ident">LinkedListLink::new</span>(),
-    <span class="ident">value</span>: <span class="ident">Cell::new</span>(<span class="number">6</span>),
+<span class="kw">let </span>c = Value {
+    link: LinkedListLink::new(),
+    value: Cell::new(<span class="number">6</span>),
 };
-<span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list2</span> <span class="op">=</span> <span class="ident">LinkedList::new</span>(<span class="ident">ValueAdapter::new</span>());
-<span class="ident">list2</span>.<span class="ident">push_back</span>(<span class="kw-2">&amp;</span><span class="ident">a</span>);
-<span class="ident">list2</span>.<span class="ident">push_back</span>(<span class="kw-2">&amp;</span><span class="ident">b</span>);
-<span class="ident">list2</span>.<span class="ident">push_back</span>(<span class="kw-2">&amp;</span><span class="ident">c</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">list2</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">value</span>.<span class="ident">get</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(), [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]);
+<span class="kw">let </span><span class="kw-2">mut </span>list2 = LinkedList::new(ValueAdapter::new());
+list2.push_back(<span class="kw-2">&amp;</span>a);
+list2.push_back(<span class="kw-2">&amp;</span>b);
+list2.push_back(<span class="kw-2">&amp;</span>c);
+<span class="macro">assert_eq!</span>(list2.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>]);
 
-<span class="comment">// Since these are shared references, any changes in the values are reflected in</span>
-<span class="comment">// the list.</span>
-<span class="ident">a</span>.<span class="ident">value</span>.<span class="ident">set</span>(<span class="number">7</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">list2</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span>.<span class="ident">value</span>.<span class="ident">get</span>()).<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>(), [<span class="number">7</span>, <span class="number">5</span>, <span class="number">6</span>]);</code></pre></div>
+<span class="comment">// Since these are shared references, any changes in the values are reflected in
+// the list.
+</span>a.value.set(<span class="number">7</span>);
+<span class="macro">assert_eq!</span>(list2.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">7</span>, <span class="number">5</span>, <span class="number">6</span>]);</code></pre></div>
 <h2 id="safety"><a href="#safety">Safety</a></h2>
 <p>While it is possible to use intrusive collections without any unsafe code,
 this crate also exposes a few unsafe features.</p>
@@ -249,4 +249,4 @@ an object. This key can then be used as an index in certain intrusive
 collections (currently only <code>RBTree</code> uses this).</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.LinkOps.html" title="intrusive_collections::LinkOps trait">LinkOps</a></div><div class="item-right docblock-short"><p>Base trait for link operations.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.PointerOps.html" title="intrusive_collections::PointerOps trait">PointerOps</a></div><div class="item-right docblock-short"><p>Trait for pointer conversion operations.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

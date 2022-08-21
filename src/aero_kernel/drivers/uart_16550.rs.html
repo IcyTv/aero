@@ -170,143 +170,143 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
-<span class="kw">use</span> <span class="ident">core::fmt::Write</span>;
+</span><span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::fmt::Write;
 
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+<span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">static</span> <span class="ident">COM_1</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">SerialPort</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>COM_1: Once&lt;Mutex&lt;SerialPort&gt;&gt; = Once::new();
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InterruptEnable</span>: <span class="ident">u8</span> {
-        <span class="kw">const</span> <span class="ident">RECEIVED</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">SENT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">ERRORED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">STATUS_CHANGE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
+    <span class="kw">pub struct </span>InterruptEnable: u8 {
+        <span class="kw">const </span>RECEIVED = <span class="number">1</span>;
+        <span class="kw">const </span>SENT = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="kw">const </span>ERRORED = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="kw">const </span>STATUS_CHANGE = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LineStatus</span>: <span class="ident">u8</span> {
-        <span class="kw">const</span> <span class="ident">INPUT_FULL</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">OUTPUT_EMPTY</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
+    <span class="kw">pub struct </span>LineStatus: u8 {
+        <span class="kw">const </span>INPUT_FULL = <span class="number">1</span>;
+        <span class="kw">const </span>OUTPUT_EMPTY = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
     }
 }
 
-<span class="doccomment">/// An interface to a serial port that allows sending out individual bytes.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SerialPort</span>(<span class="ident">u16</span>);
+<span class="doccomment">/// An interface to a serial port that allows sending out individual bytes.
+</span><span class="attribute">#[repr(transparent)]</span>
+<span class="kw">pub struct </span>SerialPort(u16);
 
-<span class="kw">impl</span> <span class="ident">SerialPort</span> {
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">port</span>)
+<span class="kw">impl </span>SerialPort {
+    <span class="attribute">#[inline(always)]</span>
+    <span class="kw">pub const fn </span>new(port: u16) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(port)
     }
 
-    <span class="doccomment">/// Initialize the serial port.</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// Disable interrupts.</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>, <span class="number">0x00</span>);
+    <span class="doccomment">/// Initialize the serial port.
+    </span><span class="kw">pub unsafe fn </span>init(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="comment">// Disable interrupts.
+        </span>io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">1</span>, <span class="number">0x00</span>);
 
-        <span class="comment">// Enable DLAB.</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">3</span>, <span class="number">0x80</span>);
+        <span class="comment">// Enable DLAB.
+        </span>io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">3</span>, <span class="number">0x80</span>);
 
-        <span class="comment">// Set maximum speed to 38400 bps by configuring DLL and DLM.</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="number">0x03</span>);
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>, <span class="number">0x00</span>);
+        <span class="comment">// Set maximum speed to 38400 bps by configuring DLL and DLM.
+        </span>io::outb(<span class="self">self</span>.<span class="number">0</span>, <span class="number">0x03</span>);
+        io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">1</span>, <span class="number">0x00</span>);
 
-        <span class="comment">// Disable DLAB and set data word length to 8 bits.</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">3</span>, <span class="number">0x03</span>);
+        <span class="comment">// Disable DLAB and set data word length to 8 bits.
+        </span>io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">3</span>, <span class="number">0x03</span>);
 
-        <span class="comment">// Enable FIFO, clear TX/RX queues and set interrupt watermark at 14 bytes.</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">2</span>, <span class="number">0xC7</span>);
+        <span class="comment">// Enable FIFO, clear TX/RX queues and set interrupt watermark at 14 bytes.
+        </span>io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">2</span>, <span class="number">0xC7</span>);
 
-        <span class="comment">// Mark data terminal ready, signal request to send and enable auxilliary</span>
-        <span class="comment">// output #2 (used as interrupt line for CPU).</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">4</span>, <span class="number">0x0B</span>);
+        <span class="comment">// Mark data terminal ready, signal request to send and enable auxilliary
+        // output #2 (used as interrupt line for CPU).
+        </span>io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">4</span>, <span class="number">0x0B</span>);
 
-        <span class="comment">// Enable interrupts.</span>
-        <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">1</span>, <span class="number">0x01</span>);
+        <span class="comment">// Enable interrupts.
+        </span>io::outb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">1</span>, <span class="number">0x01</span>);
 
-        <span class="self">self</span>
-    }
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">line_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">LineStatus</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">status</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="self">self</span>.<span class="number">0</span> <span class="op">+</span> <span class="number">5</span>);
+    <span class="kw">pub fn </span>line_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LineStatus {
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>status = io::inb(<span class="self">self</span>.<span class="number">0 </span>+ <span class="number">5</span>);
 
-            <span class="ident">LineStatus::from_bits_truncate</span>(<span class="ident">status</span>)
+            LineStatus::from_bits_truncate(status)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">wait_for_line_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">line_status</span>: <span class="ident">LineStatus</span>) {
-        <span class="kw">while</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">line_status</span>().<span class="ident">contains</span>(<span class="ident">line_status</span>) {
-            <span class="ident">core::hint::spin_loop</span>()
+    <span class="kw">fn </span>wait_for_line_status(<span class="kw-2">&amp;</span><span class="self">self</span>, line_status: LineStatus) {
+        <span class="kw">while </span>!<span class="self">self</span>.line_status().contains(line_status) {
+            core::hint::spin_loop()
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send_byte</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) {
-        <span class="kw">unsafe</span> {
-            <span class="kw">match</span> <span class="ident">byte</span> {
-                <span class="number">8</span> <span class="op">|</span> <span class="number">0x7F</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">wait_for_line_status</span>(<span class="ident">LineStatus::OUTPUT_EMPTY</span>);
-                    <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="number">8</span>);
+    <span class="kw">pub fn </span>send_byte(<span class="kw-2">&amp;mut </span><span class="self">self</span>, byte: u8) {
+        <span class="kw">unsafe </span>{
+            <span class="kw">match </span>byte {
+                <span class="number">8 </span>| <span class="number">0x7F </span>=&gt; {
+                    <span class="self">self</span>.wait_for_line_status(LineStatus::OUTPUT_EMPTY);
+                    io::outb(<span class="self">self</span>.<span class="number">0</span>, <span class="number">8</span>);
 
-                    <span class="self">self</span>.<span class="ident">wait_for_line_status</span>(<span class="ident">LineStatus::OUTPUT_EMPTY</span>);
-                    <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="string">b&#39; &#39;</span>);
+                    <span class="self">self</span>.wait_for_line_status(LineStatus::OUTPUT_EMPTY);
+                    io::outb(<span class="self">self</span>.<span class="number">0</span>, <span class="string">b&#39; &#39;</span>);
 
-                    <span class="self">self</span>.<span class="ident">wait_for_line_status</span>(<span class="ident">LineStatus::OUTPUT_EMPTY</span>);
-                    <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="number">8</span>);
+                    <span class="self">self</span>.wait_for_line_status(LineStatus::OUTPUT_EMPTY);
+                    io::outb(<span class="self">self</span>.<span class="number">0</span>, <span class="number">8</span>);
                 }
-                <span class="kw">_</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">wait_for_line_status</span>(<span class="ident">LineStatus::OUTPUT_EMPTY</span>);
-                    <span class="ident">io::outb</span>(<span class="self">self</span>.<span class="number">0</span>, <span class="ident">byte</span>)
+                <span class="kw">_ </span>=&gt; {
+                    <span class="self">self</span>.wait_for_line_status(LineStatus::OUTPUT_EMPTY);
+                    io::outb(<span class="self">self</span>.<span class="number">0</span>, byte)
                 }
             }
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Write</span> <span class="kw">for</span> <span class="ident">SerialPort</span> {
-    <span class="kw">fn</span> <span class="ident">write_str</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">string</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">for</span> <span class="ident">byte</span> <span class="kw">in</span> <span class="ident">string</span>.<span class="ident">bytes</span>() {
-            <span class="self">self</span>.<span class="ident">send_byte</span>(<span class="ident">byte</span>);
+<span class="kw">impl </span>fmt::Write <span class="kw">for </span>SerialPort {
+    <span class="kw">fn </span>write_str(<span class="kw-2">&amp;mut </span><span class="self">self</span>, string: <span class="kw-2">&amp;</span>str) -&gt; fmt::Result {
+        <span class="kw">for </span>byte <span class="kw">in </span>string.bytes() {
+            <span class="self">self</span>.send_byte(byte);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="doccomment">/// Initialize the serial ports if avaliable.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">com_1</span> <span class="op">=</span> <span class="ident">SerialPort::new</span>(<span class="number">0x3F8</span>).<span class="ident">init</span>();
+<span class="doccomment">/// Initialize the serial ports if avaliable.
+</span><span class="kw">pub fn </span>init() {
+    <span class="kw">unsafe </span>{
+        <span class="kw">let </span>com_1 = SerialPort::new(<span class="number">0x3F8</span>).init();
 
-        <span class="ident">COM_1</span>.<span class="ident">call_once</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">com_1</span>));
+        COM_1.call_once(<span class="kw">move </span>|| Mutex::new(com_1));
     }
 }
 
-<span class="kw">pub</span> <span class="kw">macro</span> <span class="ident">serial_print</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) {
-    <span class="ident"><span class="kw">crate</span>::drivers::uart_16550::_serial_print</span>(<span class="macro">format_args!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>))
+<span class="kw">pub macro </span>serial_print($(<span class="macro-nonterminal">$arg</span>:tt)<span class="kw-2">*</span>) {
+    <span class="kw">crate</span>::drivers::uart_16550::_serial_print(<span class="macro">format_args!</span>($(<span class="macro-nonterminal">$arg</span>)<span class="kw-2">*</span>))
 }
 
-<span class="kw">pub</span> <span class="kw">macro</span> <span class="ident">serial_println</span> {
+<span class="kw">pub macro </span>serial_println {
     () =&gt; (<span class="macro-nonterminal">$</span><span class="macro">crate::drivers::uart_16550::serial_print!</span>(<span class="string">&quot;\n&quot;</span>)),
-    ($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) =&gt; (<span class="macro-nonterminal">$</span><span class="macro">crate::drivers::uart_16550::serial_print!</span>(<span class="string">&quot;{}\n&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>)))
+    ($(<span class="macro-nonterminal">$arg</span>:tt)<span class="kw-2">*</span>) =&gt; (<span class="macro-nonterminal">$</span><span class="macro">crate::drivers::uart_16550::serial_print!</span>(<span class="string">&quot;{}\n&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$arg</span>)<span class="kw-2">*</span>)))
 }
 
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">_serial_print</span>(<span class="ident">args</span>: <span class="ident">fmt::Arguments</span>) {
-    <span class="ident">COM_1</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">c</span><span class="op">|</span> {
-        <span class="ident">c</span>.<span class="ident">lock_irq</span>()
-            .<span class="ident">write_fmt</span>(<span class="ident">args</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;failed to write to COM1&quot;</span>)
+<span class="attribute">#[doc(hidden)]</span>
+<span class="kw">pub fn </span>_serial_print(args: fmt::Arguments) {
+    COM_1.get().map(|c| {
+        c.lock_irq()
+            .write_fmt(args)
+            .expect(<span class="string">&quot;failed to write to COM1&quot;</span>)
     });
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

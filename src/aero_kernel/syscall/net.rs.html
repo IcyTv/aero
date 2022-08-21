@@ -134,141 +134,141 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">aero_syscall::socket::MessageHeader</span>;
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::<span class="kw-2">*</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>aero_syscall::socket::MessageHeader;
+<span class="kw">use </span>aero_syscall::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode::DirEntry</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::VirtAddr</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::DirEntry;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::socket::unix</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::socket::SocketAddr</span>;
+<span class="kw">use </span><span class="kw">crate</span>::socket::unix::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>;
+<span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
+<span class="kw">use </span><span class="kw">crate</span>::utils;
 
-<span class="doccomment">/// Creates a [`SocketAddr`] from the provided userland socket structure address. This</span>
-<span class="doccomment">/// is done by looking at the family field present in every socket address structure.</span>
-<span class="kw">fn</span> <span class="ident">socket_addr_from_addr</span><span class="op">&lt;</span><span class="lifetime">&#39;sys</span><span class="op">&gt;</span>(<span class="ident">address</span>: <span class="ident">VirtAddr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SocketAddr</span><span class="op">&lt;</span><span class="lifetime">&#39;sys</span><span class="op">&gt;</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">family</span> <span class="op">=</span> <span class="ident">address</span>
-        .<span class="ident">read_mut</span>::<span class="op">&lt;</span><span class="ident">u32</span><span class="op">&gt;</span>()
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>
-        .<span class="ident">clone</span>();
+<span class="doccomment">/// Creates a [`SocketAddr`] from the provided userland socket structure address. This
+/// is done by looking at the family field present in every socket address structure.
+</span><span class="kw">fn </span>socket_addr_from_addr&lt;<span class="lifetime">&#39;sys</span>&gt;(address: VirtAddr) -&gt; <span class="prelude-ty">Result</span>&lt;SocketAddr&lt;<span class="lifetime">&#39;sys</span>&gt;, SyscallError&gt; {
+    <span class="kw">let </span>family = address
+        .read_mut::&lt;u32&gt;()
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?
+        </span>.clone();
 
-    <span class="prelude-val">Ok</span>(<span class="ident">SocketAddr::from_family</span>(<span class="ident">address</span>, <span class="ident">family</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(SocketAddr::from_family(address, family).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>)
 }
 
-<span class="doccomment">/// Connects the socket to the specified address.</span>
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">connect</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">address</span>: <span class="ident">usize</span>, <span class="ident">length</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">socket_addr_from_addr</span>(<span class="ident">VirtAddr::new</span>(<span class="ident">address</span> <span class="kw">as</span> <span class="ident">u64</span>))<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// Connects the socket to the specified address.
+</span><span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>connect(fd: usize, address: usize, length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>address = socket_addr_from_addr(VirtAddr::new(address <span class="kw">as </span>u64))<span class="question-mark">?</span>;
+    <span class="kw">let </span>file = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="ident">file</span>.<span class="ident">inode</span>().<span class="ident">connect</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
+    file.inode().connect(address, length)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="doccomment">/// Accept a connection on a socket.</span>
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">accept</span>(
-    <span class="ident">fd</span>: <span class="ident">usize</span>,
-    <span class="ident">address</span>: <span class="ident">usize</span>,
-    <span class="ident">_length</span>: <span class="comment">/*&amp;mut u32*/</span> <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="comment">// TODO: In the syscall macro, handle Option&lt;NonNull&lt;T&gt;&gt; param.</span>
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">address</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">utils::validate_mut_ptr</span>(<span class="ident">address</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">SocketAddr</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>)
-    } <span class="kw">else</span> {
-        <span class="prelude-val">None</span>
-    };
+<span class="doccomment">/// Accept a connection on a socket.
+</span><span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>accept(
+    fd: usize,
+    address: usize,
+    _length: <span class="comment">/*&amp;mut u32*/ </span>usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="comment">// TODO: In the syscall macro, handle Option&lt;NonNull&lt;T&gt;&gt; param.
+    </span><span class="kw">let </span>address = <span class="kw">if </span>address != <span class="number">0 </span>{
+        <span class="prelude-val">Some</span>(utils::validate_mut_ptr(address <span class="kw">as </span><span class="kw-2">*mut </span>SocketAddr).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>};
 
-    <span class="kw">let</span> <span class="ident">file_table</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">file_table</span>.<span class="ident">clone</span>();
-    <span class="kw">let</span> <span class="ident">socket</span> <span class="op">=</span> <span class="ident">file_table</span>.<span class="ident">get_handle</span>(<span class="ident">fd</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>file_table = scheduler::get_scheduler().current_task().file_table.clone();
+    <span class="kw">let </span>socket = file_table.get_handle(fd).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">connection_sock</span> <span class="op">=</span> <span class="ident">socket</span>.<span class="ident">inode</span>().<span class="ident">accept</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">handle</span> <span class="op">=</span> <span class="ident">file_table</span>.<span class="ident">open_file</span>(
-        <span class="ident">DirEntry::from_inode</span>(<span class="ident">connection_sock</span>, <span class="ident">String::from</span>(<span class="string">&quot;&lt;socket&gt;&quot;</span>)),
-        <span class="ident">OpenFlags::O_RDWR</span>,
+    <span class="kw">let </span>connection_sock = socket.inode().accept(address)<span class="question-mark">?</span>;
+    <span class="kw">let </span>handle = file_table.open_file(
+        DirEntry::from_inode(connection_sock, String::from(<span class="string">&quot;&lt;socket&gt;&quot;</span>)),
+        OpenFlags::O_RDWR,
     )<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">handle</span>)
+    <span class="prelude-val">Ok</span>(handle)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sock_recv</span>(
-    <span class="ident">sockfd</span>: <span class="ident">usize</span>,
-    <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MessageHeader</span>,
-    <span class="ident">flags</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="macro">assert!</span>(<span class="ident">flags</span> <span class="op">==</span> <span class="number">0</span>, <span class="string">&quot;sock_recv: flags are not currently supported&quot;</span>);
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>sock_recv(
+    sockfd: usize,
+    header: <span class="kw-2">&amp;mut </span>MessageHeader,
+    flags: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="macro">assert!</span>(flags == <span class="number">0</span>, <span class="string">&quot;sock_recv: flags are not currently supported&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">socket</span> <span class="op">=</span> <span class="ident">current_task</span>
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">sockfd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>socket = current_task
+        .file_table
+        .get_handle(sockfd)
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">socket</span>.<span class="ident">inode</span>().<span class="ident">recv</span>(<span class="ident">header</span>)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(socket.inode().recv(header)<span class="question-mark">?</span>)
 }
 
-<span class="doccomment">/// Marks the socket as a passive socket (i.e. as a socket that will be used to accept incoming</span>
-<span class="doccomment">/// connection requests).</span>
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">listen</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">backlog</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>()
-        .<span class="ident">current_task</span>()
-        .<span class="ident">file_table</span>
-        .<span class="ident">get_handle</span>(<span class="ident">fd</span>)
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+<span class="doccomment">/// Marks the socket as a passive socket (i.e. as a socket that will be used to accept incoming
+/// connection requests).
+</span><span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>listen(fd: usize, backlog: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>file = scheduler::get_scheduler()
+        .current_task()
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="ident">file</span>.<span class="ident">inode</span>().<span class="ident">listen</span>(<span class="ident">backlog</span>)<span class="question-mark">?</span>;
+    file.inode().listen(backlog)<span class="question-mark">?</span>;
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">socket</span>(<span class="ident">domain</span>: <span class="ident">usize</span>, <span class="ident">socket_type</span>: <span class="ident">usize</span>, <span class="ident">protocol</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">socket</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">domain</span> <span class="kw">as</span> <span class="ident">u32</span> {
-        <span class="ident">AF_UNIX</span> =&gt; <span class="ident">UnixSocket::new</span>(),
-        <span class="kw">_</span> =&gt; {
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>socket(domain: usize, socket_type: usize, protocol: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>socket = <span class="kw">match </span>domain <span class="kw">as </span>u32 {
+        AF_UNIX =&gt; UnixSocket::new(),
+        <span class="kw">_ </span>=&gt; {
             <span class="macro">log::warn!</span>(
-                <span class="string">&quot;unsupported socket type: domain={domain}, socket_type={socket_type}, protocol={protocol}&quot;</span>
-            );
+                <span class="string">&quot;unsupported socket type: domain={domain}, socket_type={socket_type}, protocol={protocol}&quot;
+            </span>);
 
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EINVAL);
         }
     };
 
-    <span class="kw">let</span> <span class="ident">sockfd_flags</span> <span class="op">=</span> <span class="ident">SocketFlags::from_bits_truncate</span>(<span class="ident">socket_type</span>).<span class="ident">into</span>();
+    <span class="kw">let </span>sockfd_flags = SocketFlags::from_bits_truncate(socket_type).into();
 
-    <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">DirEntry::from_inode</span>(<span class="ident">socket</span>, <span class="ident">String::from</span>(<span class="string">&quot;&lt;socket&gt;&quot;</span>));
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">fd</span> <span class="op">=</span> <span class="ident">current_task</span>.<span class="ident">file_table</span>.<span class="ident">open_file</span>(<span class="ident">entry</span>, <span class="ident">sockfd_flags</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>entry = DirEntry::from_inode(socket, String::from(<span class="string">&quot;&lt;socket&gt;&quot;</span>));
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>fd = current_task.file_table.open_file(entry, sockfd_flags)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">fd</span>)
+    <span class="prelude-val">Ok</span>(fd)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bind</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">address</span>: <span class="ident">usize</span>, <span class="ident">length</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">socket_addr_from_addr</span>(<span class="ident">VirtAddr::new</span>(<span class="ident">address</span> <span class="kw">as</span> <span class="ident">u64</span>))<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>bind(fd: usize, address: usize, length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>address = socket_addr_from_addr(VirtAddr::new(address <span class="kw">as </span>u64))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">current_task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">current_task</span>.<span class="ident">file_table</span>.<span class="ident">get_handle</span>(<span class="ident">fd</span>);
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>file = current_task.file_table.get_handle(fd);
 
-    <span class="kw">match</span> <span class="ident">file</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">handle</span>) =&gt; {
-            <span class="kw">if</span> <span class="ident">handle</span>.<span class="ident">inode</span>().<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">is_socket</span>() {
-                <span class="ident">handle</span>.<span class="ident">inode</span>().<span class="ident">bind</span>(<span class="ident">address</span>, <span class="ident">length</span>)<span class="question-mark">?</span>;
+    <span class="kw">match </span>file {
+        <span class="prelude-val">Some</span>(handle) =&gt; {
+            <span class="kw">if </span>handle.inode().metadata()<span class="question-mark">?</span>.is_socket() {
+                handle.inode().bind(address, length)<span class="question-mark">?</span>;
 
                 <span class="prelude-val">Ok</span>(<span class="number">0</span>)
-            } <span class="kw">else</span> {
-                <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOTSOCK</span>)
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(SyscallError::ENOTSOCK)
             }
         }
-        <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOENT</span>),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(SyscallError::ENOENT),
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

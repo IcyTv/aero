@@ -623,596 +623,596 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">alloc::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
+</span><span class="kw">use </span>alloc::sync::{Arc, Weak};
 
-<span class="kw">use</span> <span class="ident">spin::RwLock</span>;
+<span class="kw">use </span>spin::RwLock;
 
-<span class="kw">use</span> <span class="ident">core::cell::UnsafeCell</span>;
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">AtomicIsize</span>, <span class="ident">AtomicU8</span>, <span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+<span class="kw">use </span>core::cell::UnsafeCell;
+<span class="kw">use </span>core::sync::atomic::{AtomicBool, AtomicIsize, AtomicU8, AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::cache</span>::{<span class="ident">DirCacheImpl</span>, <span class="ident">DirCacheItem</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>::{<span class="self">self</span>, <span class="ident">FileSystem</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::{DirCacheImpl, DirCacheItem};
+<span class="kw">use </span><span class="kw">crate</span>::fs::{<span class="self">self</span>, FileSystem};
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::task::ArchTask</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::file_table::FileTable</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syscall</span>::{<span class="ident">ExecArgs</span>, <span class="ident">MessageQueue</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">BlockQueue</span>, <span class="ident">Mutex</span>};
+<span class="kw">use </span><span class="kw">crate</span>::arch::task::ArchTask;
+<span class="kw">use </span><span class="kw">crate</span>::fs::file_table::FileTable;
+<span class="kw">use </span><span class="kw">crate</span>::syscall::{ExecArgs, MessageQueue};
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::signals::Signals</span>;
+<span class="kw">use </span><span class="kw">crate</span>::userland::signals::Signals;
 
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::{<span class="ident">intrusive_adapter</span>, <span class="ident">LinkedList</span>, <span class="ident">LinkedListLink</span>};
+<span class="kw">use </span>intrusive_collections::{intrusive_adapter, LinkedList, LinkedListLink};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::signals</span>::{<span class="ident">SignalResult</span>, <span class="ident">TriggerResult</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::vm::Vm</span>;
+<span class="kw">use </span><span class="kw">super</span>::scheduler;
+<span class="kw">use </span><span class="kw">super</span>::signals::{SignalResult, TriggerResult};
+<span class="kw">use </span><span class="kw">super</span>::vm::Vm;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">Hash</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TaskId</span>(<span class="ident">usize</span>);
+<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]</span>
+<span class="attribute">#[repr(transparent)]</span>
+<span class="kw">pub struct </span>TaskId(usize);
 
-<span class="kw">impl</span> <span class="ident">TaskId</span> {
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">pid</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">pid</span>)
+<span class="kw">impl </span>TaskId {
+    <span class="kw">pub const fn </span>new(pid: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(pid)
     }
 
-    <span class="doccomment">/// Allocates a new task ID.</span>
-    <span class="kw">fn</span> <span class="ident">allocate</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">static</span> <span class="ident">NEXT_PID</span>: <span class="ident">AtomicUsize</span> <span class="op">=</span> <span class="ident">AtomicUsize::new</span>(<span class="number">1</span>);
+    <span class="doccomment">/// Allocates a new task ID.
+    </span><span class="kw">fn </span>allocate() -&gt; <span class="self">Self </span>{
+        <span class="kw">static </span>NEXT_PID: AtomicUsize = AtomicUsize::new(<span class="number">1</span>);
 
-        <span class="ident"><span class="self">Self</span>::new</span>(<span class="ident">NEXT_PID</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::AcqRel</span>))
+        <span class="self">Self</span>::new(NEXT_PID.fetch_add(<span class="number">1</span>, Ordering::AcqRel))
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_usize</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="number">0</span>
-    }
+    <span class="kw">pub fn </span>as_usize(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.<span class="number">0
+    </span>}
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TaskState</span> {
-    <span class="ident">Runnable</span>,
-    <span class="ident">Zombie</span>,
-    <span class="ident">AwaitingIo</span>,
+<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]</span>
+<span class="kw">pub enum </span>TaskState {
+    Runnable,
+    Zombie,
+    AwaitingIo,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">TaskState</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">x</span> {
-            <span class="number">0</span> =&gt; <span class="ident">TaskState::Runnable</span>,
-            <span class="number">1</span> =&gt; <span class="ident">TaskState::Zombie</span>,
-            <span class="number">2</span> =&gt; <span class="ident">TaskState::AwaitingIo</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;invalid task state&quot;</span>),
+<span class="kw">impl </span>From&lt;u8&gt; <span class="kw">for </span>TaskState {
+    <span class="kw">fn </span>from(x: u8) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>x {
+            <span class="number">0 </span>=&gt; TaskState::Runnable,
+            <span class="number">1 </span>=&gt; TaskState::Zombie,
+            <span class="number">2 </span>=&gt; TaskState::AwaitingIo,
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;invalid task state&quot;</span>),
         }
     }
 }
 
-<span class="kw">struct</span> <span class="ident">Cwd</span> {
-    <span class="ident">inode</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">filesystem</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Cwd {
+    inode: DirCacheItem,
+    filesystem: Arc&lt;<span class="kw">dyn </span>FileSystem&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Cwd</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">RwLock</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">root</span> <span class="op">=</span> <span class="ident">fs::root_dir</span>().<span class="ident">clone</span>();
-        <span class="kw">let</span> <span class="ident">fs</span> <span class="op">=</span> <span class="ident">root</span>.<span class="ident">inode</span>().<span class="ident">weak_filesystem</span>().<span class="ident">unwrap</span>().<span class="ident">upgrade</span>().<span class="ident">unwrap</span>();
+<span class="kw">impl </span>Cwd {
+    <span class="kw">fn </span>new() -&gt; RwLock&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>root = fs::root_dir().clone();
+        <span class="kw">let </span>fs = root.inode().weak_filesystem().unwrap().upgrade().unwrap();
 
-        <span class="ident">RwLock::new</span>(<span class="self">Self</span> {
-            <span class="ident">inode</span>: <span class="ident">root</span>,
-            <span class="ident">filesystem</span>: <span class="ident">fs</span>,
+        RwLock::new(<span class="self">Self </span>{
+            inode: root,
+            filesystem: fs,
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">fork</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">RwLock</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">RwLock::new</span>(<span class="self">Self</span> {
-            <span class="ident">inode</span>: <span class="self">self</span>.<span class="ident">inode</span>.<span class="ident">clone</span>(),
-            <span class="ident">filesystem</span>: <span class="self">self</span>.<span class="ident">filesystem</span>.<span class="ident">clone</span>(),
+    <span class="kw">fn </span>fork(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RwLock&lt;<span class="self">Self</span>&gt; {
+        RwLock::new(<span class="self">Self </span>{
+            inode: <span class="self">self</span>.inode.clone(),
+            filesystem: <span class="self">self</span>.filesystem.clone(),
         })
     }
 }
 
-<span class="kw">struct</span> <span class="ident">Zombies</span> {
-    <span class="ident">list</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">SchedTaskAdapter</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">block</span>: <span class="ident">BlockQueue</span>,
+<span class="kw">struct </span>Zombies {
+    list: Mutex&lt;LinkedList&lt;SchedTaskAdapter&gt;&gt;,
+    block: BlockQueue,
 }
 
-<span class="kw">impl</span> <span class="ident">Zombies</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">list</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">block</span>: <span class="ident">BlockQueue::new</span>(),
+<span class="kw">impl </span>Zombies {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            list: Mutex::new(Default::default()),
+            block: BlockQueue::new(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">add_zombie</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">zombie</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span>) {
-        <span class="macro">assert_eq!</span>(<span class="ident">zombie</span>.<span class="ident">link</span>.<span class="ident">is_linked</span>(), <span class="bool-val">false</span>);
-        <span class="macro">assert_eq!</span>(<span class="ident">zombie</span>.<span class="ident">state</span>(), <span class="ident">TaskState::Zombie</span>);
+    <span class="kw">fn </span>add_zombie(<span class="kw-2">&amp;</span><span class="self">self</span>, zombie: Arc&lt;Task&gt;) {
+        <span class="macro">assert_eq!</span>(zombie.link.is_linked(), <span class="bool-val">false</span>);
+        <span class="macro">assert_eq!</span>(zombie.state(), TaskState::Zombie);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">list</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">list</span>.<span class="ident">lock</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>list = <span class="self">self</span>.list.lock();
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;making process a zombie: (pid={:?})&quot;</span>, <span class="ident">zombie</span>.<span class="ident">pid</span>());
+        <span class="macro">log::debug!</span>(<span class="string">&quot;making process a zombie: (pid={:?})&quot;</span>, zombie.pid());
 
-        <span class="ident">list</span>.<span class="ident">push_back</span>(<span class="ident">zombie</span>);
-        <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">notify_complete</span>();
+        list.push_back(zombie);
+        <span class="self">self</span>.block.notify_complete();
     }
 
-    <span class="kw">fn</span> <span class="ident">waitpid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pids</span>: <span class="kw-2">&amp;</span>[<span class="ident">usize</span>], <span class="ident">status</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u32</span>) -&gt; <span class="ident">SignalResult</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">captured</span> <span class="op">=</span> (<span class="ident">TaskId</span>(<span class="number">0</span>), <span class="number">0</span>);
+    <span class="kw">fn </span>waitpid(<span class="kw-2">&amp;</span><span class="self">self</span>, pids: <span class="kw-2">&amp;</span>[usize], status: <span class="kw-2">&amp;mut </span>u32) -&gt; SignalResult&lt;usize&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>captured = (TaskId(<span class="number">0</span>), <span class="number">0</span>);
 
-        <span class="self">self</span>.<span class="ident">block</span>.<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">list</span>, <span class="op">|</span><span class="ident">l</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">l</span>.<span class="ident">front_mut</span>();
+        <span class="self">self</span>.block.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.list, |l| {
+            <span class="kw">let </span><span class="kw-2">mut </span>cursor = l.front_mut();
 
-            <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">t</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">get</span>() {
-                <span class="kw">for</span> <span class="ident">pid</span> <span class="kw">in</span> <span class="ident">pids</span> {
-                    <span class="kw">if</span> <span class="ident">t</span>.<span class="ident">pid</span>().<span class="ident">as_usize</span>() <span class="op">==</span> <span class="kw-2">*</span><span class="ident">pid</span> {
-                        <span class="ident">captured</span> <span class="op">=</span> (<span class="ident">t</span>.<span class="ident">pid</span>(), <span class="ident">t</span>.<span class="ident">exit_status</span>());
-                        <span class="ident">cursor</span>.<span class="ident">remove</span>();
+            <span class="kw">while let </span><span class="prelude-val">Some</span>(t) = cursor.get() {
+                <span class="kw">for </span>pid <span class="kw">in </span>pids {
+                    <span class="kw">if </span>t.pid().as_usize() == <span class="kw-2">*</span>pid {
+                        captured = (t.pid(), t.exit_status());
+                        cursor.remove();
 
-                        <span class="kw">return</span> <span class="bool-val">true</span>;
+                        <span class="kw">return </span><span class="bool-val">true</span>;
                     }
                 }
 
-                <span class="ident">cursor</span>.<span class="ident">move_next</span>();
+                cursor.move_next();
             }
 
-            <span class="bool-val">false</span>
-        })<span class="question-mark">?</span>;
+            <span class="bool-val">false
+        </span>})<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> (<span class="ident">tid</span>, <span class="ident">st</span>) <span class="op">=</span> <span class="ident">captured</span>;
+        <span class="kw">let </span>(tid, st) = captured;
 
-        <span class="comment">// WIFEXITED: The child process has been terminated normally by</span>
-        <span class="comment">// either calling sys_exit() or returning from the main function.</span>
-        <span class="kw-2">*</span><span class="ident">status</span> <span class="op">=</span> <span class="number">0x200</span>;
-        <span class="comment">// The lower 8-bits are used to store the exit status.</span>
-        <span class="kw-2">*</span><span class="ident">status</span> <span class="op">|</span><span class="op">=</span> <span class="ident">st</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">&amp;</span> <span class="number">0xff</span>;
+        <span class="comment">// WIFEXITED: The child process has been terminated normally by
+        // either calling sys_exit() or returning from the main function.
+        </span><span class="kw-2">*</span>status = <span class="number">0x200</span>;
+        <span class="comment">// The lower 8-bits are used to store the exit status.
+        </span><span class="kw-2">*</span>status |= st <span class="kw">as </span>u32 &amp; <span class="number">0xff</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">tid</span>.<span class="ident">as_usize</span>())
+        <span class="prelude-val">Ok</span>(tid.as_usize())
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Task</span> {
-    <span class="ident">sref</span>: <span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>Task {
+    sref: Weak&lt;Task&gt;,
 
-    <span class="ident">arch_task</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">ArchTask</span><span class="op">&gt;</span>,
-    <span class="ident">state</span>: <span class="ident">AtomicU8</span>,
+    arch_task: UnsafeCell&lt;ArchTask&gt;,
+    state: AtomicU8,
 
-    <span class="comment">// Note: Aero implementes the threads and as standard processes. This</span>
-    <span class="comment">// means that when a new process is created its TID == PID and when a new</span>
-    <span class="comment">// thread is created then the PID of the thread will be the process leader&#39;s</span>
-    <span class="comment">// PID and the TID will be uniquely generated.</span>
-    <span class="ident">pid</span>: <span class="ident">TaskId</span>,
-    <span class="ident">tid</span>: <span class="ident">TaskId</span>,
+    <span class="comment">// Note: Aero implementes the threads and as standard processes. This
+    // means that when a new process is created its TID == PID and when a new
+    // thread is created then the PID of the thread will be the process leader&#39;s
+    // PID and the TID will be uniquely generated.
+    </span>pid: TaskId,
+    tid: TaskId,
 
-    <span class="ident">parent</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">children</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">intrusive_collections::LinkedList</span><span class="op">&lt;</span><span class="ident">TaskAdapter</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    parent: Mutex&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;Task&gt;&gt;&gt;,
+    children: Mutex&lt;intrusive_collections::LinkedList&lt;TaskAdapter&gt;&gt;,
 
-    <span class="ident">zombies</span>: <span class="ident">Zombies</span>,
+    zombies: Zombies,
 
-    <span class="ident">sleep_duration</span>: <span class="ident">AtomicUsize</span>,
-    <span class="ident">signals</span>: <span class="ident">Signals</span>,
+    sleep_duration: AtomicUsize,
+    signals: Signals,
 
-    <span class="ident">executable</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">pending_io</span>: <span class="ident">AtomicBool</span>,
+    executable: Mutex&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt;,
+    pending_io: AtomicBool,
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">link</span>: <span class="ident">intrusive_collections::LinkedListLink</span>,
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">clink</span>: <span class="ident">intrusive_collections::LinkedListLink</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) link: intrusive_collections::LinkedListLink,
+    <span class="kw">pub</span>(<span class="kw">super</span>) clink: intrusive_collections::LinkedListLink,
 
-    <span class="kw">pub</span> <span class="ident">vm</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vm</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">file_table</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">FileTable</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>vm: Arc&lt;Vm&gt;,
+    <span class="kw">pub </span>file_table: Arc&lt;FileTable&gt;,
 
-    <span class="kw">pub</span> <span class="ident">message_queue</span>: <span class="ident">MessageQueue</span>,
+    <span class="kw">pub </span>message_queue: MessageQueue,
 
-    <span class="ident">cwd</span>: <span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">Cwd</span><span class="op">&gt;</span>,
+    cwd: RwLock&lt;Cwd&gt;,
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">exit_status</span>: <span class="ident">AtomicIsize</span>,
+    <span class="kw">pub</span>(<span class="kw">super</span>) exit_status: AtomicIsize,
 }
 
-<span class="kw">impl</span> <span class="ident">Task</span> {
-    <span class="doccomment">/// Creates a per-cpu idle task. An idle task is a special *kernel* process</span>
-    <span class="doccomment">/// which is executed when there are no runnable taskes in the scheduler&#39;s</span>
-    <span class="doccomment">/// queue.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_idle</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="ident">TaskId::allocate</span>();
+<span class="kw">impl </span>Task {
+    <span class="doccomment">/// Creates a per-cpu idle task. An idle task is a special *kernel* process
+    /// which is executed when there are no runnable taskes in the scheduler&#39;s
+    /// queue.
+    </span><span class="kw">pub fn </span>new_idle() -&gt; Arc&lt;Task&gt; {
+        <span class="kw">let </span>pid = TaskId::allocate();
 
-        <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">sref</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">sref</span>: <span class="ident">sref</span>.<span class="ident">clone</span>(),
-            <span class="ident">zombies</span>: <span class="ident">Zombies::new</span>(),
+        Arc::new_cyclic(|sref| <span class="self">Self </span>{
+            sref: sref.clone(),
+            zombies: Zombies::new(),
 
-            <span class="ident">arch_task</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">ArchTask::new_idle</span>()),
-            <span class="ident">file_table</span>: <span class="ident">Arc::new</span>(<span class="ident">FileTable::new</span>()),
+            arch_task: UnsafeCell::new(ArchTask::new_idle()),
+            file_table: Arc::new(FileTable::new()),
 
-            <span class="ident">message_queue</span>: <span class="ident">MessageQueue::new</span>(),
+            message_queue: MessageQueue::new(),
 
-            <span class="ident">tid</span>: <span class="ident">pid</span>.<span class="ident">clone</span>(),
-            <span class="ident">pid</span>,
+            tid: pid.clone(),
+            pid,
 
-            <span class="ident">executable</span>: <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>),
+            executable: Mutex::new(<span class="prelude-val">None</span>),
 
-            <span class="ident">vm</span>: <span class="ident">Arc::new</span>(<span class="ident">Vm::new</span>()),
-            <span class="ident">state</span>: <span class="ident">AtomicU8::new</span>(<span class="ident">TaskState::Runnable</span> <span class="kw">as</span> <span class="kw">_</span>),
+            vm: Arc::new(Vm::new()),
+            state: AtomicU8::new(TaskState::Runnable <span class="kw">as _</span>),
 
-            <span class="ident">link</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">clink</span>: <span class="ident">Default::default</span>(),
+            link: Default::default(),
+            clink: Default::default(),
 
-            <span class="ident">pending_io</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
+            pending_io: AtomicBool::new(<span class="bool-val">false</span>),
 
-            <span class="ident">sleep_duration</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
-            <span class="ident">exit_status</span>: <span class="ident">AtomicIsize::new</span>(<span class="number">0</span>),
+            sleep_duration: AtomicUsize::new(<span class="number">0</span>),
+            exit_status: AtomicIsize::new(<span class="number">0</span>),
 
-            <span class="ident">children</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">parent</span>: <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>),
+            children: Mutex::new(Default::default()),
+            parent: Mutex::new(<span class="prelude-val">None</span>),
 
-            <span class="ident">signals</span>: <span class="ident">Signals::new</span>(),
-            <span class="ident">cwd</span>: <span class="ident">Cwd::new</span>(),
+            signals: Signals::new(),
+            cwd: Cwd::new(),
         })
     }
 
-    <span class="doccomment">/// Allocates a new kernel task pointing at the provided entry point function.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_kernel</span>(<span class="ident">entry_point</span>: <span class="kw">fn</span>(), <span class="ident">enable_interrupts</span>: <span class="ident">bool</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="ident">TaskId::allocate</span>();
+    <span class="doccomment">/// Allocates a new kernel task pointing at the provided entry point function.
+    </span><span class="kw">pub fn </span>new_kernel(entry_point: <span class="kw">fn</span>(), enable_interrupts: bool) -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>pid = TaskId::allocate();
 
-        <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">sref</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">sref</span>: <span class="ident">sref</span>.<span class="ident">clone</span>(),
-            <span class="ident">zombies</span>: <span class="ident">Zombies::new</span>(),
+        Arc::new_cyclic(|sref| <span class="self">Self </span>{
+            sref: sref.clone(),
+            zombies: Zombies::new(),
 
-            <span class="ident">arch_task</span>: <span class="ident">UnsafeCell::new</span>(<span class="ident">ArchTask::new_kernel</span>(
-                <span class="ident">VirtAddr::new</span>(<span class="ident">entry_point</span> <span class="kw">as</span> <span class="ident">u64</span>),
-                <span class="ident">enable_interrupts</span>,
+            arch_task: UnsafeCell::new(ArchTask::new_kernel(
+                VirtAddr::new(entry_point <span class="kw">as </span>u64),
+                enable_interrupts,
             )),
-            <span class="ident">file_table</span>: <span class="ident">Arc::new</span>(<span class="ident">FileTable::new</span>()),
-            <span class="ident">message_queue</span>: <span class="ident">MessageQueue::new</span>(),
-            <span class="ident">vm</span>: <span class="ident">Arc::new</span>(<span class="ident">Vm::new</span>()),
-            <span class="ident">state</span>: <span class="ident">AtomicU8::new</span>(<span class="ident">TaskState::Runnable</span> <span class="kw">as</span> <span class="kw">_</span>),
+            file_table: Arc::new(FileTable::new()),
+            message_queue: MessageQueue::new(),
+            vm: Arc::new(Vm::new()),
+            state: AtomicU8::new(TaskState::Runnable <span class="kw">as _</span>),
 
-            <span class="ident">tid</span>: <span class="ident">pid</span>.<span class="ident">clone</span>(),
-            <span class="ident">pid</span>,
+            tid: pid.clone(),
+            pid,
 
-            <span class="ident">link</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">clink</span>: <span class="ident">Default::default</span>(),
+            link: Default::default(),
+            clink: Default::default(),
 
-            <span class="ident">sleep_duration</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
-            <span class="ident">exit_status</span>: <span class="ident">AtomicIsize::new</span>(<span class="number">0</span>),
+            sleep_duration: AtomicUsize::new(<span class="number">0</span>),
+            exit_status: AtomicIsize::new(<span class="number">0</span>),
 
-            <span class="ident">executable</span>: <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>),
-            <span class="ident">pending_io</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
+            executable: Mutex::new(<span class="prelude-val">None</span>),
+            pending_io: AtomicBool::new(<span class="bool-val">false</span>),
 
-            <span class="ident">children</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">parent</span>: <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>),
+            children: Mutex::new(Default::default()),
+            parent: Mutex::new(<span class="prelude-val">None</span>),
 
-            <span class="ident">signals</span>: <span class="ident">Signals::new</span>(),
-            <span class="ident">cwd</span>: <span class="ident">Cwd::new</span>(),
+            signals: Signals::new(),
+            cwd: Cwd::new(),
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">make_child</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">arch_task</span>: <span class="ident">UnsafeCell</span><span class="op">&lt;</span><span class="ident">ArchTask</span><span class="op">&gt;</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="ident">TaskId::allocate</span>();
+    <span class="kw">fn </span>make_child(<span class="kw-2">&amp;</span><span class="self">self</span>, arch_task: UnsafeCell&lt;ArchTask&gt;) -&gt; Arc&lt;Task&gt; {
+        <span class="kw">let </span>pid = TaskId::allocate();
 
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">sref</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">sref</span>: <span class="ident">sref</span>.<span class="ident">clone</span>(),
-            <span class="ident">zombies</span>: <span class="ident">Zombies::new</span>(),
+        <span class="kw">let </span>this = Arc::new_cyclic(|sref| <span class="self">Self </span>{
+            sref: sref.clone(),
+            zombies: Zombies::new(),
 
-            <span class="ident">arch_task</span>,
-            <span class="ident">file_table</span>: <span class="ident">Arc::new</span>(<span class="self">self</span>.<span class="ident">file_table</span>.<span class="ident">deep_clone</span>()),
-            <span class="ident">message_queue</span>: <span class="ident">MessageQueue::new</span>(),
-            <span class="ident">vm</span>: <span class="ident">Arc::new</span>(<span class="ident">Vm::new</span>()),
-            <span class="ident">state</span>: <span class="ident">AtomicU8::new</span>(<span class="ident">TaskState::Runnable</span> <span class="kw">as</span> <span class="kw">_</span>),
+            arch_task,
+            file_table: Arc::new(<span class="self">self</span>.file_table.deep_clone()),
+            message_queue: MessageQueue::new(),
+            vm: Arc::new(Vm::new()),
+            state: AtomicU8::new(TaskState::Runnable <span class="kw">as _</span>),
 
-            <span class="ident">link</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">clink</span>: <span class="ident">Default::default</span>(),
+            link: Default::default(),
+            clink: Default::default(),
 
-            <span class="ident">sleep_duration</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
-            <span class="ident">exit_status</span>: <span class="ident">AtomicIsize::new</span>(<span class="number">0</span>),
+            sleep_duration: AtomicUsize::new(<span class="number">0</span>),
+            exit_status: AtomicIsize::new(<span class="number">0</span>),
 
-            <span class="ident">tid</span>: <span class="ident">pid</span>.<span class="ident">clone</span>(),
-            <span class="ident">pid</span>,
+            tid: pid.clone(),
+            pid,
 
-            <span class="ident">executable</span>: <span class="ident">Mutex::new</span>(<span class="self">self</span>.<span class="ident">executable</span>.<span class="ident">lock</span>().<span class="ident">clone</span>()),
-            <span class="ident">pending_io</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
+            executable: Mutex::new(<span class="self">self</span>.executable.lock().clone()),
+            pending_io: AtomicBool::new(<span class="bool-val">false</span>),
 
-            <span class="ident">children</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">parent</span>: <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>),
+            children: Mutex::new(Default::default()),
+            parent: Mutex::new(<span class="prelude-val">None</span>),
 
-            <span class="ident">cwd</span>: <span class="self">self</span>.<span class="ident">cwd</span>.<span class="ident">read</span>().<span class="ident">fork</span>(),
-            <span class="ident">signals</span>: <span class="ident">Signals::new</span>(),
+            cwd: <span class="self">self</span>.cwd.read().fork(),
+            signals: Signals::new(),
         });
 
-        <span class="self">self</span>.<span class="ident">add_child</span>(<span class="ident">this</span>.<span class="ident">clone</span>());
-        <span class="ident">this</span>.<span class="ident">signals</span>().<span class="ident">copy_from</span>(<span class="self">self</span>.<span class="ident">signals</span>());
+        <span class="self">self</span>.add_child(this.clone());
+        this.signals().copy_from(<span class="self">self</span>.signals());
 
-        <span class="ident">this</span>.<span class="ident">vm</span>.<span class="ident">fork_from</span>(<span class="self">self</span>.<span class="ident">vm</span>());
-        <span class="ident">this</span>.<span class="ident">vm</span>.<span class="ident">log</span>();
-        <span class="ident">this</span>
+        this.vm.fork_from(<span class="self">self</span>.vm());
+        this.vm.log();
+        this
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_pending_io</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">pending_io</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">pub fn </span>has_pending_io(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.pending_io.load(Ordering::SeqCst)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_pending_io</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">yes</span>: <span class="ident">bool</span>) {
-        <span class="self">self</span>.<span class="ident">pending_io</span>.<span class="ident">store</span>(<span class="ident">yes</span>, <span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">pub fn </span>set_pending_io(<span class="kw-2">&amp;</span><span class="self">self</span>, yes: bool) {
+        <span class="self">self</span>.pending_io.store(yes, Ordering::SeqCst)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signals</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Signals</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">signals</span>
+    <span class="kw">pub fn </span>signals(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Signals {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.signals
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clone_process</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">entry</span>: <span class="ident">usize</span>, <span class="ident">stack</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">arch_task</span> <span class="op">=</span> <span class="ident">UnsafeCell::new</span>(
-            <span class="self">self</span>.<span class="ident">arch_task_mut</span>()
-                .<span class="ident">clone_process</span>(<span class="ident">entry</span>, <span class="ident">stack</span>)
-                .<span class="ident">expect</span>(<span class="string">&quot;failed to fork arch task&quot;</span>),
+    <span class="kw">pub fn </span>clone_process(<span class="kw-2">&amp;</span><span class="self">self</span>, entry: usize, stack: usize) -&gt; Arc&lt;Task&gt; {
+        <span class="kw">let </span>arch_task = UnsafeCell::new(
+            <span class="self">self</span>.arch_task_mut()
+                .clone_process(entry, stack)
+                .expect(<span class="string">&quot;failed to fork arch task&quot;</span>),
         );
 
-        <span class="kw">let</span> <span class="ident">pid</span> <span class="op">=</span> <span class="ident">TaskId::allocate</span>();
+        <span class="kw">let </span>pid = TaskId::allocate();
 
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">sref</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">sref</span>: <span class="ident">sref</span>.<span class="ident">clone</span>(),
-            <span class="ident">zombies</span>: <span class="ident">Zombies::new</span>(),
+        <span class="kw">let </span>this = Arc::new_cyclic(|sref| <span class="self">Self </span>{
+            sref: sref.clone(),
+            zombies: Zombies::new(),
 
-            <span class="ident">arch_task</span>,
-            <span class="ident">file_table</span>: <span class="self">self</span>.<span class="ident">process_leader</span>().<span class="ident">file_table</span>.<span class="ident">clone</span>(),
-            <span class="ident">message_queue</span>: <span class="ident">MessageQueue::new</span>(),
-            <span class="ident">vm</span>: <span class="self">self</span>.<span class="ident">process_leader</span>().<span class="ident">vm</span>.<span class="ident">clone</span>(),
-            <span class="ident">state</span>: <span class="ident">AtomicU8::new</span>(<span class="ident">TaskState::Runnable</span> <span class="kw">as</span> <span class="kw">_</span>),
+            arch_task,
+            file_table: <span class="self">self</span>.process_leader().file_table.clone(),
+            message_queue: MessageQueue::new(),
+            vm: <span class="self">self</span>.process_leader().vm.clone(),
+            state: AtomicU8::new(TaskState::Runnable <span class="kw">as _</span>),
 
-            <span class="ident">link</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">clink</span>: <span class="ident">Default::default</span>(),
+            link: Default::default(),
+            clink: Default::default(),
 
-            <span class="ident">sleep_duration</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
-            <span class="ident">exit_status</span>: <span class="ident">AtomicIsize::new</span>(<span class="number">0</span>),
+            sleep_duration: AtomicUsize::new(<span class="number">0</span>),
+            exit_status: AtomicIsize::new(<span class="number">0</span>),
 
-            <span class="ident">tid</span>: <span class="ident">pid</span>.<span class="ident">clone</span>(),
-            <span class="ident">pid</span>,
+            tid: pid.clone(),
+            pid,
 
-            <span class="ident">executable</span>: <span class="ident">Mutex::new</span>(<span class="self">self</span>.<span class="ident">executable</span>.<span class="ident">lock</span>().<span class="ident">clone</span>()),
-            <span class="ident">pending_io</span>: <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>),
+            executable: Mutex::new(<span class="self">self</span>.executable.lock().clone()),
+            pending_io: AtomicBool::new(<span class="bool-val">false</span>),
 
-            <span class="ident">children</span>: <span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>()),
-            <span class="ident">parent</span>: <span class="ident">Mutex::new</span>(<span class="prelude-val">None</span>),
+            children: Mutex::new(Default::default()),
+            parent: Mutex::new(<span class="prelude-val">None</span>),
 
-            <span class="ident">cwd</span>: <span class="self">self</span>.<span class="ident">cwd</span>.<span class="ident">read</span>().<span class="ident">fork</span>(),
-            <span class="ident">signals</span>: <span class="ident">Signals::new</span>(),
+            cwd: <span class="self">self</span>.cwd.read().fork(),
+            signals: Signals::new(),
         });
 
-        <span class="self">self</span>.<span class="ident">add_child</span>(<span class="ident">this</span>.<span class="ident">clone</span>());
-        <span class="ident">this</span>.<span class="ident">signals</span>().<span class="ident">copy_from</span>(<span class="self">self</span>.<span class="ident">signals</span>());
+        <span class="self">self</span>.add_child(this.clone());
+        this.signals().copy_from(<span class="self">self</span>.signals());
 
-        <span class="ident">this</span>
+        this
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fork</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">arch_task</span> <span class="op">=</span> <span class="ident">UnsafeCell::new</span>(
-            <span class="self">self</span>.<span class="ident">arch_task_mut</span>()
-                .<span class="ident">fork</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;failed to fork arch task&quot;</span>),
+    <span class="kw">pub fn </span>fork(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;Task&gt; {
+        <span class="kw">let </span>arch_task = UnsafeCell::new(
+            <span class="self">self</span>.arch_task_mut()
+                .fork()
+                .expect(<span class="string">&quot;failed to fork arch task&quot;</span>),
         );
 
-        <span class="self">self</span>.<span class="ident">make_child</span>(<span class="ident">arch_task</span>)
+        <span class="self">self</span>.make_child(arch_task)
     }
 
-    <span class="kw">fn</span> <span class="ident">this</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">sref</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>()
+    <span class="kw">fn </span>this(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        <span class="self">self</span>.sref.upgrade().unwrap()
     }
 
-    <span class="kw">fn</span> <span class="ident">set_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span><span class="op">&gt;</span>) {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">parent</span>.<span class="ident">lock</span>() <span class="op">=</span> <span class="ident">parent</span>;
+    <span class="kw">fn </span>set_parent(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: <span class="prelude-ty">Option</span>&lt;Arc&lt;Task&gt;&gt;) {
+        <span class="kw-2">*</span><span class="self">self</span>.parent.lock() = parent;
     }
 
-    <span class="kw">fn</span> <span class="ident">remove_child</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">child</span>: <span class="kw-2">&amp;</span><span class="ident">Task</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">children</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">children</span>.<span class="ident">lock_irq</span>();
+    <span class="kw">fn </span>remove_child(<span class="kw-2">&amp;</span><span class="self">self</span>, child: <span class="kw-2">&amp;</span>Task) {
+        <span class="kw">let </span><span class="kw-2">mut </span>children = <span class="self">self</span>.children.lock_irq();
 
-        <span class="kw">if</span> <span class="ident">child</span>.<span class="ident">clink</span>.<span class="ident">is_linked</span>() {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">children</span>.<span class="ident">cursor_mut_from_ptr</span>(<span class="ident">child</span>) };
+        <span class="kw">if </span>child.clink.is_linked() {
+            <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="kw">unsafe </span>{ children.cursor_mut_from_ptr(child) };
 
-            <span class="ident">child</span>.<span class="ident">set_parent</span>(<span class="prelude-val">None</span>);
-            <span class="ident">cursor</span>.<span class="ident">remove</span>();
+            child.set_parent(<span class="prelude-val">None</span>);
+            cursor.remove();
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">add_child</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">child</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">children</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">children</span>.<span class="ident">lock_irq</span>();
+    <span class="kw">fn </span>add_child(<span class="kw-2">&amp;</span><span class="self">self</span>, child: Arc&lt;Task&gt;) {
+        <span class="kw">let </span><span class="kw-2">mut </span>children = <span class="self">self</span>.children.lock_irq();
 
-        <span class="ident">child</span>.<span class="ident">set_parent</span>(<span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">this</span>()));
-        <span class="ident">children</span>.<span class="ident">push_back</span>(<span class="ident">child</span>);
+        child.set_parent(<span class="prelude-val">Some</span>(<span class="self">self</span>.this()));
+        children.push_back(child);
     }
 
-    <span class="kw">fn</span> <span class="ident">exit_status</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">isize</span> {
-        <span class="self">self</span>.<span class="ident">exit_status</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">fn </span>exit_status(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; isize {
+        <span class="self">self</span>.exit_status.load(Ordering::SeqCst)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_sleep_duration</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">duration</span>: <span class="ident">usize</span>) {
-        <span class="self">self</span>.<span class="ident">sleep_duration</span>.<span class="ident">store</span>(<span class="ident">duration</span>, <span class="ident">Ordering::SeqCst</span>);
+    <span class="kw">pub fn </span>set_sleep_duration(<span class="kw-2">&amp;</span><span class="self">self</span>, duration: usize) {
+        <span class="self">self</span>.sleep_duration.store(duration, Ordering::SeqCst);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_sleep_duration</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">sleep_duration</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">pub fn </span>load_sleep_duration(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.sleep_duration.load(Ordering::SeqCst)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">waitpid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">pid</span>: <span class="ident">isize</span>, <span class="ident">status</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u32</span>) -&gt; <span class="ident">SignalResult</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">pid</span> <span class="op">==</span> <span class="op">-</span><span class="number">1</span> {
-            <span class="comment">// wait for any child process if no specific process is requested.</span>
-            <span class="comment">//</span>
-            <span class="comment">// NOTE: we collect all of the zombie list&#39;s process IDs with the children</span>
-            <span class="comment">// list since the child could have been removed from the children list and</span>
-            <span class="comment">// become a zombie before the parent had a chance to wait for it.</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pids</span> <span class="op">=</span> <span class="self">self</span>
-                .<span class="ident">zombies</span>
-                .<span class="ident">list</span>
-                .<span class="ident">lock_irq</span>()
-                .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">pid</span>().<span class="ident">as_usize</span>())
-                .<span class="ident">collect</span>::<span class="op">&lt;</span><span class="ident">alloc::vec::Vec</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">pub fn </span>waitpid(<span class="kw-2">&amp;</span><span class="self">self</span>, pid: isize, status: <span class="kw-2">&amp;mut </span>u32) -&gt; SignalResult&lt;usize&gt; {
+        <span class="kw">if </span>pid == -<span class="number">1 </span>{
+            <span class="comment">// wait for any child process if no specific process is requested.
+            //
+            // NOTE: we collect all of the zombie list&#39;s process IDs with the children
+            // list since the child could have been removed from the children list and
+            // become a zombie before the parent had a chance to wait for it.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>pids = <span class="self">self
+                </span>.zombies
+                .list
+                .lock_irq()
+                .iter()
+                .map(|e| e.pid().as_usize())
+                .collect::&lt;alloc::vec::Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
-            <span class="ident">pids</span>.<span class="ident">extend</span>(<span class="self">self</span>.<span class="ident">children</span>.<span class="ident">lock_irq</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">pid</span>().<span class="ident">as_usize</span>()));
-            <span class="self">self</span>.<span class="ident">zombies</span>.<span class="ident">waitpid</span>(<span class="kw-2">&amp;</span><span class="ident">pids</span>, <span class="ident">status</span>)
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">zombies</span>.<span class="ident">waitpid</span>(<span class="kw-2">&amp;</span>[<span class="ident">pid</span> <span class="kw">as</span> <span class="kw">_</span>], <span class="ident">status</span>)
+            pids.extend(<span class="self">self</span>.children.lock_irq().iter().map(|e| e.pid().as_usize()));
+            <span class="self">self</span>.zombies.waitpid(<span class="kw-2">&amp;</span>pids, status)
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.zombies.waitpid(<span class="kw-2">&amp;</span>[pid <span class="kw">as _</span>], status)
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">path</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">executable</span>
-            .<span class="ident">lock</span>()
-            .<span class="ident">as_ref</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">absolute_path_str</span>())
+    <span class="kw">pub fn </span>path(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
+        <span class="self">self</span>.executable
+            .lock()
+            .as_ref()
+            .map(|e| e.absolute_path_str())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec</span>(
+    <span class="kw">pub fn </span>exec(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">executable</span>: <span class="ident">DirCacheItem</span>,
+        executable: DirCacheItem,
 
-        <span class="ident">argv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-        <span class="ident">envv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">executable</span>.<span class="ident">lock</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">executable</span>.<span class="ident">clone</span>());
+        argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+        envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="kw-2">*</span><span class="self">self</span>.executable.lock() = <span class="prelude-val">Some</span>(executable.clone());
 
-        <span class="kw">let</span> <span class="ident">vm</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">vm</span>();
-        <span class="ident">vm</span>.<span class="ident">clear</span>();
+        <span class="kw">let </span>vm = <span class="self">self</span>.vm();
+        vm.clear();
 
-        <span class="comment">// Clear the signals that are pending for this task on exec.</span>
-        <span class="self">self</span>.<span class="ident">signals</span>().<span class="ident">clear</span>();
+        <span class="comment">// Clear the signals that are pending for this task on exec.
+        </span><span class="self">self</span>.signals().clear();
 
-        <span class="self">self</span>.<span class="ident">arch_task_mut</span>().<span class="ident">exec</span>(<span class="ident">vm</span>, <span class="ident">executable</span>, <span class="ident">argv</span>, <span class="ident">envv</span>)
+        <span class="self">self</span>.arch_task_mut().exec(vm, executable, argv, envv)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vm</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Vm</span><span class="op">&gt;</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">vm</span>
+    <span class="kw">pub fn </span>vm(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;Vm&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.vm
     }
 
-    <span class="doccomment">/// Returns a immutable reference to the inner [ArchTask] structure.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arch_task</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">ArchTask</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span>(<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">arch_task</span>.<span class="ident">get</span>()) }
+    <span class="doccomment">/// Returns a immutable reference to the inner [ArchTask] structure.
+    </span><span class="kw">pub fn </span>arch_task(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>ArchTask {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;</span>(<span class="kw-2">*</span><span class="self">self</span>.arch_task.get()) }
     }
 
-    <span class="doccomment">/// Returns a mutable reference to the inner [ArchTask] structure.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arch_task_mut</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">ArchTask</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> (<span class="kw-2">*</span><span class="self">self</span>.<span class="ident">arch_task</span>.<span class="ident">get</span>()) }
+    <span class="doccomment">/// Returns a mutable reference to the inner [ArchTask] structure.
+    </span><span class="kw">pub fn </span>arch_task_mut(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>ArchTask {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut </span>(<span class="kw-2">*</span><span class="self">self</span>.arch_task.get()) }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">update_state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">state</span>: <span class="ident">TaskState</span>) {
-        <span class="kw">if</span> <span class="ident">state</span> <span class="op">!</span><span class="op">=</span> <span class="ident">TaskState::Runnable</span> {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>update_state(<span class="kw-2">&amp;</span><span class="self">self</span>, state: TaskState) {
+        <span class="kw">if </span>state != TaskState::Runnable {
             <span class="macro">log::warn!</span>(
                 <span class="string">&quot;Task::update_state() updated the task state to {state:?}! (pid={:?}, tid={:?})&quot;</span>,
-                <span class="self">self</span>.<span class="ident">pid</span>,
-                <span class="self">self</span>.<span class="ident">tid</span>
+                <span class="self">self</span>.pid,
+                <span class="self">self</span>.tid
             );
 
-            <span class="ident"><span class="kw">crate</span>::unwind::unwind_stack_trace</span>();
+            <span class="kw">crate</span>::unwind::unwind_stack_trace();
         }
 
-        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">store</span>(<span class="ident">state</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Ordering::SeqCst</span>);
+        <span class="self">self</span>.state.store(state <span class="kw">as _</span>, Ordering::SeqCst);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">state</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TaskState</span> {
-        <span class="self">self</span>.<span class="ident">state</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>).<span class="ident">into</span>()
+    <span class="kw">pub fn </span>state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskState {
+        <span class="self">self</span>.state.load(Ordering::SeqCst).into()
     }
 
-    <span class="doccomment">/// Returns the PID ID that was allocated for this task.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TaskId</span> {
-        <span class="self">self</span>.<span class="ident">pid</span>
+    <span class="doccomment">/// Returns the PID ID that was allocated for this task.
+    </span><span class="kw">pub fn </span>pid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskId {
+        <span class="self">self</span>.pid
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tid</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">TaskId</span> {
-        <span class="self">self</span>.<span class="ident">tid</span>
+    <span class="kw">pub fn </span>tid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskId {
+        <span class="self">self</span>.tid
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_cwd_dirent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DirCacheItem</span> {
-        <span class="self">self</span>.<span class="ident">cwd</span>.<span class="ident">read</span>().<span class="ident">inode</span>.<span class="ident">clone</span>()
+    <span class="kw">pub fn </span>get_cwd_dirent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; DirCacheItem {
+        <span class="self">self</span>.cwd.read().inode.clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_cwd</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">String</span> {
-        <span class="self">self</span>.<span class="ident">cwd</span>.<span class="ident">read</span>().<span class="ident">inode</span>.<span class="ident">absolute_path_str</span>()
+    <span class="kw">pub fn </span>get_cwd(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
+        <span class="self">self</span>.cwd.read().inode.absolute_path_str()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_cwd</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">cwd</span>: <span class="ident">DirCacheItem</span>) {
-        <span class="kw">let</span> <span class="ident">filesystem</span> <span class="op">=</span> <span class="ident">cwd</span>.<span class="ident">inode</span>().<span class="ident">weak_filesystem</span>().<span class="ident">unwrap</span>().<span class="ident">upgrade</span>().<span class="ident">unwrap</span>();
+    <span class="kw">pub fn </span>set_cwd(<span class="kw-2">&amp;</span><span class="self">self</span>, cwd: DirCacheItem) {
+        <span class="kw">let </span>filesystem = cwd.inode().weak_filesystem().unwrap().upgrade().unwrap();
 
-        <span class="self">self</span>.<span class="ident">cwd</span>.<span class="ident">write</span>().<span class="ident">inode</span> <span class="op">=</span> <span class="ident">cwd</span>;
-        <span class="self">self</span>.<span class="ident">cwd</span>.<span class="ident">write</span>().<span class="ident">filesystem</span> <span class="op">=</span> <span class="ident">filesystem</span>;
+        <span class="self">self</span>.cwd.write().inode = cwd;
+        <span class="self">self</span>.cwd.write().filesystem = filesystem;
     }
 
-    <span class="kw">fn</span> <span class="ident">get_parent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">parent</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">parent</span>.<span class="ident">lock</span>();
-        <span class="ident">parent</span>.<span class="ident">clone</span>()
+    <span class="kw">fn </span>get_parent(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;Task&gt;&gt; {
+        <span class="kw">let </span>parent = <span class="self">self</span>.parent.lock();
+        parent.clone()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">wake_up</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="ident">scheduler::get_scheduler</span>().<span class="ident">inner</span>.<span class="ident">wake_up</span>(<span class="self">self</span>.<span class="ident">this</span>())
+    <span class="kw">pub fn </span>wake_up(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        scheduler::get_scheduler().inner.wake_up(<span class="self">self</span>.this())
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_process_leader</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">tid</span>() <span class="op">==</span> <span class="self">self</span>.<span class="ident">pid</span>()
+    <span class="kw">pub fn </span>is_process_leader(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.tid() == <span class="self">self</span>.pid()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">process_leader</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_process_leader</span>() {
-            <span class="self">self</span>.<span class="ident">this</span>()
-        } <span class="kw">else</span> {
-            <span class="kw">let</span> <span class="ident">parent</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_parent</span>().<span class="ident">unwrap</span>();
+    <span class="kw">pub fn </span>process_leader(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;Task&gt; {
+        <span class="kw">if </span><span class="self">self</span>.is_process_leader() {
+            <span class="self">self</span>.this()
+        } <span class="kw">else </span>{
+            <span class="kw">let </span>parent = <span class="self">self</span>.get_parent().unwrap();
 
-            <span class="macro">assert!</span>(<span class="ident">parent</span>.<span class="ident">is_process_leader</span>());
-            <span class="ident">parent</span>
+            <span class="macro">assert!</span>(parent.is_process_leader());
+            parent
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">signal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">signals</span>().<span class="ident">trigger</span>(<span class="ident">signal</span>, <span class="bool-val">false</span>) {
-            <span class="ident">TriggerResult::Triggered</span> =&gt; {
-                <span class="self">self</span>.<span class="ident">wake_up</span>();
-                <span class="bool-val">true</span>
-            }
+    <span class="kw">pub fn </span>signal(<span class="kw-2">&amp;</span><span class="self">self</span>, signal: usize) -&gt; bool {
+        <span class="kw">match </span><span class="self">self</span>.signals().trigger(signal, <span class="bool-val">false</span>) {
+            TriggerResult::Triggered =&gt; {
+                <span class="self">self</span>.wake_up();
+                <span class="bool-val">true
+            </span>}
 
-            <span class="ident">TriggerResult::Ignored</span> =&gt; <span class="bool-val">false</span>,
+            TriggerResult::Ignored =&gt; <span class="bool-val">false</span>,
 
-            <span class="ident">TriggerResult::Blocked</span> =&gt; {
-                <span class="comment">// Find other thread in process to notify</span>
-                <span class="kw">let</span> <span class="ident">process_leader</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">process_leader</span>();
+            TriggerResult::Blocked =&gt; {
+                <span class="comment">// Find other thread in process to notify
+                </span><span class="kw">let </span>process_leader = <span class="self">self</span>.process_leader();
 
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">process_leader</span>.<span class="ident">signals</span>().<span class="ident">is_blocked</span>(<span class="ident">signal</span>) {
-                    <span class="ident">process_leader</span>.<span class="ident">wake_up</span>();
+                <span class="kw">if </span>!process_leader.signals().is_blocked(signal) {
+                    process_leader.wake_up();
 
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
+                    <span class="kw">return </span><span class="bool-val">true</span>;
                 }
 
-                <span class="kw">for</span> <span class="ident">c</span> <span class="kw">in</span> <span class="ident">process_leader</span>
-                    .<span class="ident">children</span>
-                    .<span class="ident">lock</span>()
-                    .<span class="ident">iter</span>()
-                    .<span class="ident">filter</span>(<span class="op">|</span><span class="ident">t</span><span class="op">|</span> <span class="ident">t</span>.<span class="ident">pid</span>() <span class="op">==</span> <span class="self">self</span>.<span class="ident">pid</span>())
+                <span class="kw">for </span>c <span class="kw">in </span>process_leader
+                    .children
+                    .lock()
+                    .iter()
+                    .filter(|t| t.pid() == <span class="self">self</span>.pid())
                 {
-                    <span class="kw">if</span> <span class="op">!</span><span class="ident">c</span>.<span class="ident">signals</span>().<span class="ident">is_blocked</span>(<span class="ident">signal</span>) {
-                        <span class="ident">c</span>.<span class="ident">wake_up</span>();
+                    <span class="kw">if </span>!c.signals().is_blocked(signal) {
+                        c.wake_up();
 
-                        <span class="kw">return</span> <span class="bool-val">true</span>;
+                        <span class="kw">return </span><span class="bool-val">true</span>;
                     }
                 }
 
-                <span class="bool-val">false</span>
-            }
+                <span class="bool-val">false
+            </span>}
         }
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">into_zombie</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">arch_task_mut</span>().<span class="ident">dealloc</span>();
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>into_zombie(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.arch_task_mut().dealloc();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">parent</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_parent</span>() {
-            <span class="ident">parent</span>.<span class="ident">remove_child</span>(<span class="self">self</span>);
-            <span class="ident">parent</span>.<span class="ident">zombies</span>.<span class="ident">add_zombie</span>(<span class="self">self</span>.<span class="ident">this</span>());
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(parent) = <span class="self">self</span>.get_parent() {
+            parent.remove_child(<span class="self">self</span>);
+            parent.zombies.add_zombie(<span class="self">self</span>.this());
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_process_leader</span>() {
-                <span class="comment">// parent.signal(aero_syscall::signal::SIGCHLD);</span>
-            }
+            <span class="kw">if </span><span class="self">self</span>.is_process_leader() {
+                <span class="comment">// parent.signal(aero_syscall::signal::SIGCHLD);
+            </span>}
         }
     }
 }
 
-<span class="comment">// SAFETY: It&#39;s alright to access [`Task`] through references from other</span>
-<span class="comment">// threads because we&#39;re either accessing constant properties or properties</span>
-<span class="comment">// that are fully synchronized.</span>
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Sync</span> <span class="kw">for</span> <span class="ident">Task</span> {}
+<span class="comment">// SAFETY: It&#39;s alright to access [`Task`] through references from other
+// threads because we&#39;re either accessing constant properties or properties
+// that are fully synchronized.
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>Task {}
 
-<span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub</span> <span class="ident">SchedTaskAdapter</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> : <span class="ident">Task</span> { <span class="ident">link</span>: <span class="ident">LinkedListLink</span> });
-<span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub</span> <span class="ident">TaskAdapter</span> <span class="op">=</span> <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Task</span><span class="op">&gt;</span> : <span class="ident">Task</span> { <span class="ident">clink</span>: <span class="ident">LinkedListLink</span> });
+<span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub </span>SchedTaskAdapter = Arc&lt;Task&gt; : Task { link: LinkedListLink });
+<span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub </span>TaskAdapter = Arc&lt;Task&gt; : Task { clink: LinkedListLink });
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

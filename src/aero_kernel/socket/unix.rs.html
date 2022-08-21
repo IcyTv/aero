@@ -392,365 +392,365 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">SocketAddrUnix</span>, <span class="ident">SyscallError</span>};
+</span><span class="kw">use </span>aero_syscall::{SocketAddrUnix, SyscallError};
 
-<span class="kw">use</span> <span class="ident">aero_syscall::socket::MessageHeader</span>;
+<span class="kw">use </span>aero_syscall::socket::MessageHeader;
 
-<span class="kw">use</span> <span class="ident">alloc::collections::VecDeque</span>;
-<span class="kw">use</span> <span class="ident">alloc::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+<span class="kw">use </span>alloc::collections::VecDeque;
+<span class="kw">use </span>alloc::sync::{Arc, Weak};
+<span class="kw">use </span>alloc::vec::Vec;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs;
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>::{<span class="ident">FileSystemError</span>, <span class="ident">Path</span>};
+<span class="kw">use </span><span class="kw">crate</span>::fs::{FileSystemError, Path};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">BlockQueue</span>, <span class="ident">Mutex</span>};
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::SocketAddr</span>;
+<span class="kw">use </span><span class="kw">super</span>::SocketAddr;
 
-<span class="kw">fn</span> <span class="ident">path_from_unix_sock</span><span class="op">&lt;</span><span class="lifetime">&#39;sock</span><span class="op">&gt;</span>(<span class="ident">address</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;sock</span> <span class="ident">SocketAddrUnix</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;sock</span> <span class="ident">Path</span><span class="op">&gt;</span> {
-    <span class="comment">// The abstract namespace socket allows the creation of a socket</span>
-    <span class="comment">// connection which does not require a path to be created.</span>
-    <span class="kw">let</span> <span class="ident">abstrat_namespaced</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">path</span>[<span class="number">0</span>] <span class="op">==</span> <span class="number">0</span>;
-    <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">abstrat_namespaced</span>);
+<span class="kw">fn </span>path_from_unix_sock&lt;<span class="lifetime">&#39;sock</span>&gt;(address: <span class="kw-2">&amp;</span><span class="lifetime">&#39;sock </span>SocketAddrUnix) -&gt; fs::Result&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;sock </span>Path&gt; {
+    <span class="comment">// The abstract namespace socket allows the creation of a socket
+    // connection which does not require a path to be created.
+    </span><span class="kw">let </span>abstrat_namespaced = address.path[<span class="number">0</span>] == <span class="number">0</span>;
+    <span class="macro">assert!</span>(!abstrat_namespaced);
 
-    <span class="kw">let</span> <span class="ident">path_len</span> <span class="op">=</span> <span class="ident">address</span>
-        .<span class="ident">path</span>
-        .<span class="ident">iter</span>()
-        .<span class="ident">position</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">c</span><span class="op">|</span> <span class="ident">c</span> <span class="op">==</span> <span class="number">0</span>)
-        .<span class="ident">unwrap_or</span>(<span class="ident">address</span>.<span class="ident">path</span>.<span class="ident">len</span>());
+    <span class="kw">let </span>path_len = address
+        .path
+        .iter()
+        .position(|<span class="kw-2">&amp;</span>c| c == <span class="number">0</span>)
+        .unwrap_or(address.path.len());
 
-    <span class="kw">let</span> <span class="ident">path_str</span> <span class="op">=</span> <span class="ident">core::str::from_utf8</span>(<span class="kw-2">&amp;</span><span class="ident">address</span>.<span class="ident">path</span>[..<span class="ident">path_len</span>])
-        .<span class="ident">ok</span>()
-        .<span class="ident">ok_or</span>(<span class="ident">FileSystemError::InvalidPath</span>)<span class="question-mark">?</span>;
+    <span class="kw">let </span>path_str = core::str::from_utf8(<span class="kw-2">&amp;</span>address.path[..path_len])
+        .ok()
+        .ok_or(FileSystemError::InvalidPath)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">Path::new</span>(<span class="ident">path_str</span>))
+    <span class="prelude-val">Ok</span>(Path::new(path_str))
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Message</span> {
-    <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
-    <span class="comment">// TODO: Keep track of the sender of the message here?</span>
-}
+<span class="attribute">#[derive(Debug, Default)]</span>
+<span class="kw">pub struct </span>Message {
+    data: Vec&lt;u8&gt;,
+    <span class="comment">// TODO: Keep track of the sender of the message here?
+</span>}
 
-<span class="kw">impl</span> <span class="ident">Message</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">data</span> }
+<span class="kw">impl </span>Message {
+    <span class="kw">pub fn </span>new(data: Vec&lt;u8&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ data }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageQueue</span> {
-    <span class="ident">messages</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">pub struct </span>MessageQueue {
+    messages: VecDeque&lt;Message&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">MessageQueue</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">is_empty</span>()
+<span class="kw">impl </span>MessageQueue {
+    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.messages.is_empty()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">usize</span> {
-        <span class="macro">log::debug!</span>(<span class="string">&quot;MessageQueue::read(): {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">messages</span>);
+    <span class="kw">pub fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
+        <span class="macro">log::debug!</span>(<span class="string">&quot;MessageQueue::read(): {:?}&quot;</span>, <span class="self">self</span>.messages);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">message</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">pop_front</span>() {
-            <span class="kw">let</span> <span class="ident">message_len</span> <span class="op">=</span> <span class="ident">message</span>.<span class="ident">data</span>.<span class="ident">len</span>();
-            <span class="macro">assert!</span>(<span class="ident">buffer</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="ident">message_len</span>);
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(message) = <span class="self">self</span>.messages.pop_front() {
+            <span class="kw">let </span>message_len = message.data.len();
+            <span class="macro">assert!</span>(buffer.len() &gt;= message_len);
 
-            <span class="ident">buffer</span>[..<span class="ident">message_len</span>].<span class="ident">copy_from_slice</span>(<span class="ident">message</span>.<span class="ident">data</span>.<span class="ident">as_slice</span>());
-            <span class="ident">message_len</span>
-        } <span class="kw">else</span> {
+            buffer[..message_len].copy_from_slice(message.data.as_slice());
+            message_len
+        } <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(<span class="string">&quot;MessageQueue::read() called when queue is empty&quot;</span>);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="ident">Message::new</span>(<span class="ident">buffer</span>.<span class="ident">to_vec</span>());
-        <span class="self">self</span>.<span class="ident">messages</span>.<span class="ident">push_back</span>(<span class="ident">message</span>);
+    <span class="kw">pub fn </span>write(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="kw">let </span>message = Message::new(buffer.to_vec());
+        <span class="self">self</span>.messages.push_back(message);
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;MessageQueue::write(): {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">messages</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;MessageQueue::write(): {:?}&quot;</span>, <span class="self">self</span>.messages);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AcceptQueue</span> {
-    <span class="ident">sockets</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">backlog</span>: <span class="ident">usize</span>,
+<span class="kw">pub struct </span>AcceptQueue {
+    sockets: VecDeque&lt;Arc&lt;UnixSocket&gt;&gt;,
+    backlog: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">AcceptQueue</span> {
-    <span class="doccomment">/// # Parameters</span>
-    <span class="doccomment">/// * `backlog`: The maximum number of pending connections that the</span>
-    <span class="doccomment">///              queue can hold.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">backlog</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">sockets</span>: <span class="ident">VecDeque::with_capacity</span>(<span class="ident">backlog</span>),
-            <span class="ident">backlog</span>,
+<span class="kw">impl </span>AcceptQueue {
+    <span class="doccomment">/// # Parameters
+    /// * `backlog`: The maximum number of pending connections that the
+    ///              queue can hold.
+    </span><span class="kw">pub fn </span>new(backlog: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            sockets: VecDeque::with_capacity(backlog),
+            backlog,
         }
     }
 
-    <span class="doccomment">/// Returns the number of pending connections in the queue.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">sockets</span>.<span class="ident">len</span>()
+    <span class="doccomment">/// Returns the number of pending connections in the queue.
+    </span><span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.sockets.len()
     }
 
-    <span class="doccomment">/// Returns `true` if the queue contains no pending connections.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">sockets</span>.<span class="ident">is_empty</span>()
+    <span class="doccomment">/// Returns `true` if the queue contains no pending connections.
+    </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.sockets.is_empty()
     }
 
-    <span class="doccomment">/// Adds the given socket to the queue. Returns `EAGAIN` if the</span>
-    <span class="doccomment">/// queue is full.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">socket</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">backlog</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">sockets</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EAGAIN</span>);
+    <span class="doccomment">/// Adds the given socket to the queue. Returns `EAGAIN` if the
+    /// queue is full.
+    </span><span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, socket: Arc&lt;UnixSocket&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;(), SyscallError&gt; {
+        <span class="kw">if </span><span class="self">self</span>.backlog == <span class="self">self</span>.sockets.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EAGAIN);
         }
 
-        <span class="self">self</span>.<span class="ident">sockets</span>.<span class="ident">push_back</span>(<span class="ident">socket</span>);
+        <span class="self">self</span>.sockets.push_back(socket);
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Removes the first pending connection from the queue and</span>
-    <span class="doccomment">/// returns it, or [`None`] if it is empty.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pop</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">sockets</span>.<span class="ident">pop_front</span>()
+    <span class="doccomment">/// Removes the first pending connection from the queue and
+    /// returns it, or [`None`] if it is empty.
+    </span><span class="kw">pub fn </span>pop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;UnixSocket&gt;&gt; {
+        <span class="self">self</span>.sockets.pop_front()
     }
 
-    <span class="doccomment">/// Updates the maximum number of pending connections that the</span>
-    <span class="doccomment">/// queue can hold. Returns `EINVAL` if the new backlog is smaller</span>
-    <span class="doccomment">/// than the current number of pending connections.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_backlog</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">backlog</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="ident">backlog</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">sockets</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>);
+    <span class="doccomment">/// Updates the maximum number of pending connections that the
+    /// queue can hold. Returns `EINVAL` if the new backlog is smaller
+    /// than the current number of pending connections.
+    </span><span class="kw">pub fn </span>set_backlog(<span class="kw-2">&amp;mut </span><span class="self">self</span>, backlog: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), SyscallError&gt; {
+        <span class="kw">if </span>backlog &lt; <span class="self">self</span>.sockets.len() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EINVAL);
         }
 
-        <span class="self">self</span>.<span class="ident">backlog</span> <span class="op">=</span> <span class="ident">backlog</span>;
+        <span class="self">self</span>.backlog = backlog;
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">enum</span> <span class="ident">UnixSocketState</span> {
-    <span class="doccomment">/// The socket is not connected.</span>
-    <span class="attribute">#[<span class="ident">default</span>]</span>
-    <span class="ident">Disconnected</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">enum </span>UnixSocketState {
+    <span class="doccomment">/// The socket is not connected.
+    </span><span class="attribute">#[default]</span>
+    Disconnected,
 
-    <span class="doccomment">/// The socket is listening for new connections.</span>
-    <span class="ident">Listening</span>(<span class="ident">AcceptQueue</span>),
+    <span class="doccomment">/// The socket is listening for new connections.
+    </span>Listening(AcceptQueue),
 
-    <span class="doccomment">/// The socket has connected to a peer.</span>
-    <span class="ident">Connected</span>(<span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span>),
+    <span class="doccomment">/// The socket has connected to a peer.
+    </span>Connected(Arc&lt;UnixSocket&gt;),
 }
 
-<span class="kw">impl</span> <span class="ident">UnixSocketState</span> {
-    <span class="doccomment">/// Returns `true` if the socket is connected.</span>
-    <span class="kw">fn</span> <span class="ident">is_connected</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="ident"><span class="self">Self</span>::Connected</span>(<span class="kw">_</span>))
+<span class="kw">impl </span>UnixSocketState {
+    <span class="doccomment">/// Returns `true` if the socket is connected.
+    </span><span class="kw">fn </span>is_connected(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::Connected(<span class="kw">_</span>))
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">UnixSocketInner</span> {
-    <span class="doccomment">/// The address that the socket has been bound to.</span>
-    <span class="ident">address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SocketAddrUnix</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">struct </span>UnixSocketInner {
+    <span class="doccomment">/// The address that the socket has been bound to.
+    </span>address: <span class="prelude-ty">Option</span>&lt;SocketAddrUnix&gt;,
 
-    <span class="ident">state</span>: <span class="ident">UnixSocketState</span>,
+    state: UnixSocketState,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">UnixSocket</span> {
-    <span class="ident">inner</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">UnixSocketInner</span><span class="op">&gt;</span>,
-    <span class="ident">buffer</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">MessageQueue</span><span class="op">&gt;</span>,
-    <span class="ident">wq</span>: <span class="ident">BlockQueue</span>,
-    <span class="ident">weak</span>: <span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>UnixSocket {
+    inner: Mutex&lt;UnixSocketInner&gt;,
+    buffer: Mutex&lt;MessageQueue&gt;,
+    wq: BlockQueue,
+    weak: Weak&lt;UnixSocket&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">UnixSocket</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new_cyclic</span>(<span class="op">|</span><span class="ident">weak</span><span class="op">|</span> <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">Mutex::new</span>(<span class="ident">UnixSocketInner::default</span>()),
+<span class="kw">impl </span>UnixSocket {
+    <span class="kw">pub fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        Arc::new_cyclic(|weak| <span class="self">Self </span>{
+            inner: Mutex::new(UnixSocketInner::default()),
 
-            <span class="ident">buffer</span>: <span class="ident">Mutex::new</span>(<span class="ident">MessageQueue::default</span>()),
-            <span class="ident">wq</span>: <span class="ident">BlockQueue::new</span>(),
-            <span class="ident">weak</span>: <span class="ident">weak</span>.<span class="ident">clone</span>(),
+            buffer: Mutex::new(MessageQueue::default()),
+            wq: BlockQueue::new(),
+            weak: weak.clone(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sref</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">weak</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>()
+    <span class="kw">pub fn </span>sref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        <span class="self">self</span>.weak.upgrade().unwrap()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">UnixSocket</span> {
-    <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">Metadata</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">Metadata</span> {
-            <span class="ident">id</span>: <span class="number">0</span>,
-            <span class="ident">file_type</span>: <span class="ident">FileType::Socket</span>,
-            <span class="ident">size</span>: <span class="number">0</span>,
-            <span class="ident">children_len</span>: <span class="number">0</span>,
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>UnixSocket {
+    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; fs::Result&lt;Metadata&gt; {
+        <span class="prelude-val">Ok</span>(Metadata {
+            id: <span class="number">0</span>,
+            file_type: FileType::Socket,
+            size: <span class="number">0</span>,
+            children_len: <span class="number">0</span>,
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">user_buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">wq</span>.<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>, <span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="op">!</span><span class="ident">e</span>.<span class="ident">is_empty</span>())<span class="question-mark">?</span>;
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, user_buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = <span class="self">self</span>.wq.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer, |e| !e.is_empty())<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">read</span> <span class="op">=</span> <span class="ident">buffer</span>.<span class="ident">read</span>(<span class="ident">user_buffer</span>);
-        <span class="prelude-val">Ok</span>(<span class="ident">read</span>)
+        <span class="kw">let </span>read = buffer.read(user_buffer);
+        <span class="prelude-val">Ok</span>(read)
     }
 
-    <span class="kw">fn</span> <span class="ident">write_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
-        <span class="kw">let</span> <span class="ident">peer</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">inner</span>.<span class="ident">state</span> {
-            <span class="ident">UnixSocketState::Connected</span>(<span class="kw-2">ref</span> <span class="ident">peer</span>) =&gt; <span class="ident">peer</span>,
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotConnected</span>),
+    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">let </span>inner = <span class="self">self</span>.inner.lock_irq();
+        <span class="kw">let </span>peer = <span class="kw">match </span>inner.state {
+            UnixSocketState::Connected(<span class="kw-2">ref </span>peer) =&gt; peer,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotConnected),
         };
 
-        <span class="ident">peer</span>.<span class="ident">buffer</span>.<span class="ident">lock_irq</span>().<span class="ident">write</span>(<span class="ident">buffer</span>);
-        <span class="ident">peer</span>.<span class="ident">wq</span>.<span class="ident">notify_complete</span>();
+        peer.buffer.lock_irq().write(buffer);
+        peer.wq.notify_complete();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>.<span class="ident">len</span>())
+        <span class="prelude-val">Ok</span>(buffer.len())
     }
 
-    <span class="kw">fn</span> <span class="ident">listen</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">backlog</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
-        <span class="kw">let</span> <span class="ident">is_bound</span> <span class="op">=</span> <span class="ident">inner</span>.<span class="ident">address</span>.<span class="ident">is_some</span>();
+    <span class="kw">fn </span>listen(<span class="kw-2">&amp;</span><span class="self">self</span>, backlog: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), SyscallError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.lock_irq();
+        <span class="kw">let </span>is_bound = inner.address.is_some();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="ident">inner</span>.<span class="ident">state</span> {
-            <span class="comment">// We cannot listen on a socket that has not been bound.</span>
-            <span class="ident">UnixSocketState::Disconnected</span> <span class="kw">if</span> <span class="ident">is_bound</span> =&gt; {
-                <span class="ident">inner</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">UnixSocketState::Listening</span>(<span class="ident">AcceptQueue::new</span>(<span class="ident">backlog</span>));
+        <span class="kw">match </span><span class="kw-2">&amp;mut </span>inner.state {
+            <span class="comment">// We cannot listen on a socket that has not been bound.
+            </span>UnixSocketState::Disconnected <span class="kw">if </span>is_bound =&gt; {
+                inner.state = UnixSocketState::Listening(AcceptQueue::new(backlog));
                 <span class="prelude-val">Ok</span>(())
             }
 
-            <span class="ident">UnixSocketState::Listening</span>(<span class="ident">queue</span>) =&gt; {
-                <span class="ident">queue</span>.<span class="ident">set_backlog</span>(<span class="ident">backlog</span>)<span class="question-mark">?</span>;
+            UnixSocketState::Listening(queue) =&gt; {
+                queue.set_backlog(backlog)<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
             }
 
-            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">bind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">SocketAddr</span>, <span class="ident">_length</span>: <span class="ident">usize</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">as_unix</span>().<span class="ident">ok_or</span>(<span class="ident">FileSystemError::NotSupported</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path_from_unix_sock</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>bind(<span class="kw-2">&amp;</span><span class="self">self</span>, address: SocketAddr, _length: usize) -&gt; fs::Result&lt;()&gt; {
+        <span class="kw">let </span>address = address.as_unix().ok_or(FileSystemError::NotSupported)<span class="question-mark">?</span>;
+        <span class="kw">let </span>path = path_from_unix_sock(address)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">fs::lookup_path</span>(<span class="ident">path</span>).<span class="ident">is_ok</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::EntryExists</span>);
+        <span class="kw">if </span>fs::lookup_path(path).is_ok() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::EntryExists);
         }
 
-        <span class="kw">let</span> (<span class="ident">parent</span>, <span class="ident">name</span>) <span class="op">=</span> <span class="ident">path</span>.<span class="ident">parent_and_basename</span>();
-        <span class="ident">DirEntry::from_socket_inode</span>(<span class="ident">fs::lookup_path</span>(<span class="ident">parent</span>)<span class="question-mark">?</span>, <span class="ident">String::from</span>(<span class="ident">name</span>), <span class="self">self</span>.<span class="ident">sref</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span>(parent, name) = path.parent_and_basename();
+        DirEntry::from_socket_inode(fs::lookup_path(parent)<span class="question-mark">?</span>, String::from(name), <span class="self">self</span>.sref())<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
-        <span class="ident">inner</span>.<span class="ident">address</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">address</span>.<span class="ident">clone</span>());
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.lock_irq();
+        inner.address = <span class="prelude-val">Some</span>(address.clone());
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">connect</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">SocketAddr</span>, <span class="ident">_length</span>: <span class="ident">usize</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">as_unix</span>().<span class="ident">ok_or</span>(<span class="ident">FileSystemError::NotSupported</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">path_from_unix_sock</span>(<span class="ident">address</span>)<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">socket</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">path</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>connect(<span class="kw-2">&amp;</span><span class="self">self</span>, address: SocketAddr, _length: usize) -&gt; fs::Result&lt;()&gt; {
+        <span class="kw">let </span>address = address.as_unix().ok_or(FileSystemError::NotSupported)<span class="question-mark">?</span>;
+        <span class="kw">let </span>path = path_from_unix_sock(address)<span class="question-mark">?</span>;
+        <span class="kw">let </span>socket = fs::lookup_path(path)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">socket</span>
-            .<span class="ident">inode</span>()
-            .<span class="ident">as_unix_socket</span>()<span class="question-mark">?</span>
-            .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">FileSystemError::NotSocket</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>target = socket
+            .inode()
+            .as_unix_socket()<span class="question-mark">?
+            </span>.downcast_arc::&lt;UnixSocket&gt;()
+            .ok_or(FileSystemError::NotSocket)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">itarget</span> <span class="op">=</span> <span class="ident">target</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>itarget = target.inner.lock_irq();
 
-        <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="ident">itarget</span>.<span class="ident">state</span> {
-            <span class="ident">UnixSocketState::Listening</span>(<span class="ident">queue</span>) =&gt; <span class="ident">queue</span>,
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::ConnectionRefused</span>),
+        <span class="kw">let </span>queue = <span class="kw">match </span><span class="kw-2">&amp;mut </span>itarget.state {
+            UnixSocketState::Listening(queue) =&gt; queue,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::ConnectionRefused),
         };
 
-        <span class="ident">queue</span>.<span class="ident">push</span>(<span class="self">self</span>.<span class="ident">sref</span>()).<span class="ident">unwrap</span>();
-        <span class="ident">target</span>.<span class="ident">wq</span>.<span class="ident">notify_complete</span>();
-        <span class="ident">core::mem::drop</span>(<span class="ident">itarget</span>); <span class="comment">// release the lock</span>
+        queue.push(<span class="self">self</span>.sref()).unwrap();
+        target.wq.notify_complete();
+        core::mem::drop(itarget); <span class="comment">// release the lock
 
-        <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">wq</span>.<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">inner</span>, <span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">state</span>.<span class="ident">is_connected</span>());
+        </span><span class="kw">let _ </span>= <span class="self">self</span>.wq.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.inner, |e| e.state.is_connected());
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="kw">fn</span> <span class="ident">accept</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">SocketAddr</span><span class="op">&gt;</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">UnixSocket</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
+    <span class="kw">fn </span>accept(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>SocketAddr&gt;) -&gt; fs::Result&lt;Arc&lt;UnixSocket&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>inner = <span class="self">self</span>.inner.lock_irq();
 
-        <span class="kw">let</span> <span class="ident">queue</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;mut</span> <span class="ident">inner</span>.<span class="ident">state</span> {
-            <span class="ident">UnixSocketState::Listening</span>(<span class="ident">queue</span>) =&gt; <span class="ident">queue</span>,
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::ConnectionRefused</span>),
+        <span class="kw">let </span>queue = <span class="kw">match </span><span class="kw-2">&amp;mut </span>inner.state {
+            UnixSocketState::Listening(queue) =&gt; queue,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::ConnectionRefused),
         };
 
-        <span class="kw">if</span> <span class="ident">queue</span>.<span class="ident">len</span>() <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::WouldBlock</span>);
+        <span class="kw">if </span>queue.len() == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::WouldBlock);
         }
 
-        <span class="kw">let</span> <span class="ident">peer</span> <span class="op">=</span> <span class="ident">queue</span>.<span class="ident">pop</span>().<span class="ident">expect</span>(<span class="string">&quot;UnixSocket::accept(): backlog is empty&quot;</span>);
-        <span class="kw">let</span> <span class="ident">sock</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>();
+        <span class="kw">let </span>peer = queue.pop().expect(<span class="string">&quot;UnixSocket::accept(): backlog is empty&quot;</span>);
+        <span class="kw">let </span>sock = <span class="self">Self</span>::new();
 
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">sock_inner</span> <span class="op">=</span> <span class="ident">sock</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
-            <span class="ident">sock_inner</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">UnixSocketState::Connected</span>(<span class="ident">peer</span>.<span class="ident">clone</span>());
+            <span class="kw">let </span><span class="kw-2">mut </span>sock_inner = sock.inner.lock_irq();
+            sock_inner.state = UnixSocketState::Connected(peer.clone());
         }
 
         {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">peer_data</span> <span class="op">=</span> <span class="ident">peer</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
-            <span class="ident">peer_data</span>.<span class="ident">state</span> <span class="op">=</span> <span class="ident">UnixSocketState::Connected</span>(<span class="ident">sock</span>.<span class="ident">clone</span>());
+            <span class="kw">let </span><span class="kw-2">mut </span>peer_data = peer.inner.lock_irq();
+            peer_data.state = UnixSocketState::Connected(sock.clone());
         }
 
-        <span class="ident">peer</span>.<span class="ident">wq</span>.<span class="ident">notify_complete</span>();
-        <span class="prelude-val">Ok</span>(<span class="ident">sock</span>)
+        peer.wq.notify_complete();
+        <span class="prelude-val">Ok</span>(sock)
     }
 
-    <span class="kw">fn</span> <span class="ident">recv</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">header</span>: <span class="kw-2">&amp;mut</span> <span class="ident">MessageHeader</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
+    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>, header: <span class="kw-2">&amp;mut </span>MessageHeader) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">let </span>inner = <span class="self">self</span>.inner.lock_irq();
 
         <span class="macro">log::trace!</span>(
             <span class="string">&quot;UnixSocket::recv(): expecting a max of {} bytes&quot;</span>,
-            <span class="ident">header</span>.<span class="ident">iovecs</span>().<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">len</span>()).<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>(),
+            header.iovecs().iter().map(|e| e.len()).sum::&lt;usize&gt;(),
         );
 
-        <span class="kw">let</span> <span class="ident">peer</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">state</span> {
-            <span class="ident">UnixSocketState::Connected</span>(<span class="ident">peer</span>) =&gt; <span class="ident">peer</span>,
-            <span class="kw">_</span> =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotConnected</span>),
+        <span class="kw">let </span>peer = <span class="kw">match </span><span class="kw-2">&amp;</span>inner.state {
+            UnixSocketState::Connected(peer) =&gt; peer,
+            <span class="kw">_ </span>=&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotConnected),
         };
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buffer</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">wq</span>.<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buffer</span>, <span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="op">!</span><span class="ident">e</span>.<span class="ident">is_empty</span>())<span class="question-mark">?</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = <span class="self">self</span>.wq.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.buffer, |e| !e.is_empty())<span class="question-mark">?</span>;
 
-        <span class="ident">header</span>
-            .<span class="ident">name_mut</span>::<span class="op">&lt;</span><span class="ident">SocketAddrUnix</span><span class="op">&gt;</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">e</span> <span class="op">=</span> <span class="ident">peer</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>().<span class="ident">address</span>.<span class="ident">as_ref</span>().<span class="ident">cloned</span>().<span class="ident">unwrap</span>());
+        header
+            .name_mut::&lt;SocketAddrUnix&gt;()
+            .map(|e| <span class="kw-2">*</span>e = peer.inner.lock_irq().address.as_ref().cloned().unwrap());
 
-        <span class="prelude-val">Ok</span>(<span class="ident">header</span>
-            .<span class="ident">iovecs_mut</span>()
-            .<span class="ident">iter_mut</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">iovec</span><span class="op">|</span> <span class="ident">buffer</span>.<span class="ident">read</span>(<span class="ident">iovec</span>.<span class="ident">as_mut_slice</span>()))
-            .<span class="ident">sum</span>::<span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>())
+        <span class="prelude-val">Ok</span>(header
+            .iovecs_mut()
+            .iter_mut()
+            .map(|iovec| buffer.read(iovec.as_mut_slice()))
+            .sum::&lt;usize&gt;())
     }
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">PollTable</span><span class="op">&gt;</span>) -&gt; <span class="ident">fs::Result</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> {
-        <span class="ident">table</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">wq</span>));
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; fs::Result&lt;PollFlags&gt; {
+        table.map(|e| e.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.wq));
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">PollFlags::OUT</span>;
-        <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>events = PollFlags::OUT;
+        <span class="kw">let </span>inner = <span class="self">self</span>.inner.lock_irq();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">inner</span>.<span class="ident">state</span> {
-            <span class="ident">UnixSocketState::Listening</span>(<span class="ident">queue</span>) =&gt; {
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">queue</span>.<span class="ident">is_empty</span>() {
-                    <span class="ident">events</span>.<span class="ident">insert</span>(<span class="ident">PollFlags::IN</span>);
+        <span class="kw">match </span><span class="kw-2">&amp;</span>inner.state {
+            UnixSocketState::Listening(queue) =&gt; {
+                <span class="kw">if </span>!queue.is_empty() {
+                    events.insert(PollFlags::IN);
                 }
             }
 
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
 
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">buffer</span>.<span class="ident">lock_irq</span>().<span class="ident">is_empty</span>() {
-            <span class="ident">events</span>.<span class="ident">insert</span>(<span class="ident">PollFlags::IN</span>);
+        <span class="kw">if </span>!<span class="self">self</span>.buffer.lock_irq().is_empty() {
+            events.insert(PollFlags::IN);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">events</span>)
+        <span class="prelude-val">Ok</span>(events)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -152,125 +152,125 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
+</span><span class="kw">use </span>alloc::sync::Arc;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::devfs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::FileSystem</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::devfs;
+<span class="kw">use </span><span class="kw">crate</span>::fs::FileSystem;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rendy</span>;
+<span class="kw">use super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::rendy;
 
-<span class="kw">struct</span> <span class="ident">RawFramebuffer</span> {}
+<span class="kw">struct </span>RawFramebuffer {}
 
-<span class="kw">impl</span> <span class="ident">DrmDevice</span> <span class="kw">for</span> <span class="ident">RawFramebuffer</span> {
-    <span class="kw">fn</span> <span class="ident">can_dumb_create</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="bool-val">true</span>
-    }
+<span class="kw">impl </span>DrmDevice <span class="kw">for </span>RawFramebuffer {
+    <span class="kw">fn </span>can_dumb_create(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="bool-val">true
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">dumb_create</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">width</span>: <span class="ident">u32</span>, <span class="ident">height</span>: <span class="ident">u32</span>, <span class="ident">bpp</span>: <span class="ident">u32</span>) -&gt; (<span class="ident">BufferObject</span>, <span class="ident">u32</span>) {
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">align_up</span>((<span class="ident">width</span> <span class="op">*</span> <span class="ident">height</span> <span class="op">*</span> <span class="ident">bpp</span> <span class="op">/</span> <span class="number">8</span>) <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Size4KiB::SIZE</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">memory</span> <span class="op">=</span> <span class="macro">alloc::vec!</span>[];
+    <span class="kw">fn </span>dumb_create(<span class="kw-2">&amp;</span><span class="self">self</span>, width: u32, height: u32, bpp: u32) -&gt; (BufferObject, u32) {
+        <span class="kw">let </span>size = align_up((width * height * bpp / <span class="number">8</span>) <span class="kw">as _</span>, Size4KiB::SIZE);
+        <span class="kw">let </span><span class="kw-2">mut </span>memory = <span class="macro">alloc::vec!</span>[];
 
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="ident">size</span>).<span class="ident">step_by</span>(<span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>) {
-            <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
-            <span class="ident">memory</span>.<span class="ident">push</span>(<span class="ident">frame</span>);
+        <span class="kw">for _ in </span>(<span class="number">0</span>..size).step_by(Size4KiB::SIZE <span class="kw">as </span>usize) {
+            <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR.allocate_frame().unwrap();
+            memory.push(frame);
         }
 
-        (<span class="ident">BufferObject::new</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">memory</span>), <span class="ident">width</span> <span class="op">*</span> <span class="ident">bpp</span> <span class="op">/</span> <span class="number">8</span>)
+        (BufferObject::new(size <span class="kw">as </span>usize, memory), width * bpp / <span class="number">8</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">commit</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">buffer_obj</span>: <span class="kw-2">&amp;</span><span class="ident">BufferObject</span>) {
-        <span class="ident"><span class="kw">crate</span>::rendy::DEBUG_RENDY</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">lock_irq</span>();
-                <span class="kw">let</span> <span class="ident">fb</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">get_framebuffer</span>();
+    <span class="kw">fn </span>commit(<span class="kw-2">&amp;</span><span class="self">self</span>, buffer_obj: <span class="kw-2">&amp;</span>BufferObject) {
+        <span class="kw">crate</span>::rendy::DEBUG_RENDY
+            .get()
+            .map(|e| {
+                <span class="kw">let </span><span class="kw-2">mut </span>lock = e.lock_irq();
+                <span class="kw">let </span>fb = lock.get_framebuffer();
 
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">frame</span>) <span class="kw">in</span> <span class="ident">buffer_obj</span>.<span class="ident">memory</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="kw">unsafe</span> {
-                        <span class="ident">core::ptr::copy_nonoverlapping</span>(
-                            <span class="ident">frame</span>.<span class="ident">as_slice_mut</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>().<span class="ident">as_mut_ptr</span>(),
-                            (<span class="ident">fb</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u8</span>)
-                                .<span class="ident">offset</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">isize</span> <span class="op">*</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">isize</span>),
+                <span class="kw">for </span>(i, frame) <span class="kw">in </span>buffer_obj.memory.iter().enumerate() {
+                    <span class="kw">unsafe </span>{
+                        core::ptr::copy_nonoverlapping(
+                            frame.as_slice_mut::&lt;u8&gt;().as_mut_ptr(),
+                            (fb.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>u8)
+                                .offset(i <span class="kw">as </span>isize * Size4KiB::SIZE <span class="kw">as </span>isize),
                             <span class="number">4096</span>,
                         )
                     }
                 }
             })
-            .<span class="ident">unwrap</span>();
+            .unwrap();
     }
 
-    <span class="kw">fn</span> <span class="ident">framebuffer_create</span>(
+    <span class="kw">fn </span>framebuffer_create(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">buffer_object</span>: <span class="kw-2">&amp;</span><span class="ident">BufferObject</span>,
-        <span class="ident">_width</span>: <span class="ident">u32</span>,
-        <span class="ident">height</span>: <span class="ident">u32</span>,
-        <span class="ident">pitch</span>: <span class="ident">u32</span>,
+        buffer_object: <span class="kw-2">&amp;</span>BufferObject,
+        _width: u32,
+        height: u32,
+        pitch: u32,
     ) {
-        <span class="macro">assert!</span>(<span class="ident">pitch</span> <span class="op">%</span> <span class="number">4</span> <span class="op">==</span> <span class="number">0</span>);
-        <span class="macro">assert!</span>(<span class="ident">buffer_object</span>.<span class="ident">size</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">pitch</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">height</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="macro">assert!</span>(pitch % <span class="number">4 </span>== <span class="number">0</span>);
+        <span class="macro">assert!</span>(buffer_object.size &gt;= pitch <span class="kw">as </span>usize * height <span class="kw">as </span>usize);
     }
 
-    <span class="kw">fn</span> <span class="ident">driver_version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>, <span class="ident">usize</span>) {
+    <span class="kw">fn </span>driver_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, usize, usize) {
         (<span class="number">0</span>, <span class="number">0</span>, <span class="number">1</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">driver_info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) {
+    <span class="kw">fn </span>driver_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) {
         (<span class="string">&quot;rawfb_gpu&quot;</span>, <span class="string">&quot;rawfb gpu&quot;</span>, <span class="string">&quot;0&quot;</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">min_dim</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="comment">// NOTE: for rawfb drm device, the max and min dimensions are the same.</span>
-        <span class="self">self</span>.<span class="ident">max_dim</span>()
+    <span class="kw">fn </span>min_dim(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, usize) {
+        <span class="comment">// NOTE: for rawfb drm device, the max and min dimensions are the same.
+        </span><span class="self">self</span>.max_dim()
     }
 
-    <span class="kw">fn</span> <span class="ident">max_dim</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="ident">usize</span>) {
-        <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">rendy::get_rendy_info</span>();
-        (<span class="ident">info</span>.<span class="ident">horizontal_resolution</span>, <span class="ident">info</span>.<span class="ident">vertical_resolution</span>)
+    <span class="kw">fn </span>max_dim(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, usize) {
+        <span class="kw">let </span>info = rendy::get_rendy_info();
+        (info.horizontal_resolution, info.vertical_resolution)
     }
 }
 
-<span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="kw">let</span> <span class="ident">info</span> <span class="op">=</span> <span class="ident">rendy::get_rendy_info</span>();
+<span class="kw">fn </span>init() {
+    <span class="kw">let </span>info = rendy::get_rendy_info();
 
-    <span class="kw">let</span> <span class="ident">rfb</span> <span class="op">=</span> <span class="ident">Drm::new</span>(<span class="ident">Arc::new</span>(<span class="ident">RawFramebuffer</span> {}));
-    <span class="kw">let</span> <span class="ident">crtc</span> <span class="op">=</span> <span class="ident">Crtc::new</span>(<span class="kw-2">&amp;</span><span class="ident">rfb</span>, <span class="ident">rfb</span>.<span class="ident">allocate_object_id</span>());
+    <span class="kw">let </span>rfb = Drm::new(Arc::new(RawFramebuffer {}));
+    <span class="kw">let </span>crtc = Crtc::new(<span class="kw-2">&amp;</span>rfb, rfb.allocate_object_id());
 
-    <span class="kw">let</span> <span class="ident">encoder</span> <span class="op">=</span> <span class="ident">Encoder::new</span>(
-        <span class="kw-2">&amp;</span><span class="ident">rfb</span>,
-        <span class="ident">crtc</span>.<span class="ident">clone</span>(),
-        <span class="macro">alloc::vec!</span>[<span class="ident">crtc</span>.<span class="ident">clone</span>()],
-        <span class="ident">rfb</span>.<span class="ident">allocate_object_id</span>(),
+    <span class="kw">let </span>encoder = Encoder::new(
+        <span class="kw-2">&amp;</span>rfb,
+        crtc.clone(),
+        <span class="macro">alloc::vec!</span>[crtc.clone()],
+        rfb.allocate_object_id(),
     );
 
-    <span class="kw">let</span> <span class="ident">connector</span> <span class="op">=</span> <span class="ident">Connector::new</span>(
-        <span class="ident">encoder</span>.<span class="ident">clone</span>(),
-        <span class="macro">alloc::vec!</span>[<span class="ident">encoder</span>.<span class="ident">clone</span>()],
-        <span class="ident">make_dmt_modes</span>(
-            <span class="ident">info</span>.<span class="ident">horizontal_resolution</span> <span class="kw">as</span> <span class="ident">u16</span>,
-            <span class="ident">info</span>.<span class="ident">vertical_resolution</span> <span class="kw">as</span> <span class="ident">u16</span>,
+    <span class="kw">let </span>connector = Connector::new(
+        encoder.clone(),
+        <span class="macro">alloc::vec!</span>[encoder.clone()],
+        make_dmt_modes(
+            info.horizontal_resolution <span class="kw">as </span>u16,
+            info.vertical_resolution <span class="kw">as </span>u16,
         ),
-        <span class="ident">DrmModeConStatus::Connected</span>,
-        <span class="ident">rfb</span>.<span class="ident">allocate_object_id</span>(),
+        DrmModeConStatus::Connected,
+        rfb.allocate_object_id(),
     );
 
-    <span class="kw">let</span> <span class="ident">dri</span> <span class="op">=</span> <span class="ident">devfs::DEV_FILESYSTEM</span>
-        .<span class="ident">root_dir</span>()
-        .<span class="ident">inode</span>()
-        .<span class="ident">mkdir</span>(<span class="string">&quot;dri&quot;</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;devfs: failed to create DRM directory&quot;</span>);
+    <span class="kw">let </span>dri = devfs::DEV_FILESYSTEM
+        .root_dir()
+        .inode()
+        .mkdir(<span class="string">&quot;dri&quot;</span>)
+        .expect(<span class="string">&quot;devfs: failed to create DRM directory&quot;</span>);
 
-    <span class="ident">rfb</span>.<span class="ident">install_crtc</span>(<span class="ident">crtc</span>);
-    <span class="ident">rfb</span>.<span class="ident">install_connector</span>(<span class="ident">connector</span>);
-    <span class="ident">rfb</span>.<span class="ident">install_encoder</span>(<span class="ident">encoder</span>);
+    rfb.install_crtc(crtc);
+    rfb.install_connector(connector);
+    rfb.install_encoder(encoder);
 
-    <span class="ident">devfs::install_device_at</span>(<span class="ident">dri</span>, <span class="ident">rfb</span>).<span class="ident">expect</span>(<span class="string">&quot;ramfs: failed to install DRM device&quot;</span>);
+    devfs::install_device_at(dri, rfb).expect(<span class="string">&quot;ramfs: failed to install DRM device&quot;</span>);
 }
 
-<span class="macro">crate::module_init!</span>(<span class="ident">init</span>);
+<span class="macro">crate::module_init!</span>(init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

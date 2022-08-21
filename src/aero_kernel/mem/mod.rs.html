@@ -177,150 +177,150 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">alloc</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">paging</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pti</span>;
-<span class="kw">mod</span> <span class="ident">vmalloc</span>;
+</span><span class="kw">pub mod </span>alloc;
+<span class="kw">pub mod </span>paging;
+<span class="kw">pub mod </span>pti;
+<span class="kw">mod </span>vmalloc;
 
-<span class="kw">use</span> <span class="ident">core::alloc::Layout</span>;
+<span class="kw">use </span>core::alloc::Layout;
 
-<span class="kw">use</span> <span class="ident">::alloc::boxed::Box</span>;
+<span class="kw">use </span>::alloc::boxed::Box;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="self">self</span>::paging</span>::{<span class="ident">active_level_4_table</span>, <span class="ident">FRAME_ALLOCATOR</span>};
+<span class="kw">use </span><span class="self">self</span>::paging::{active_level_4_table, FRAME_ALLOCATOR};
 
-<span class="doccomment">/// Structure representing a *virtual* address space. The address space</span>
-<span class="doccomment">/// contains a reference of the page table allocated for this address space.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddressSpace</span> {
-    <span class="ident">cr3</span>: <span class="ident">PhysFrame</span>,
+<span class="doccomment">/// Structure representing a *virtual* address space. The address space
+/// contains a reference of the page table allocated for this address space.
+</span><span class="kw">pub struct </span>AddressSpace {
+    cr3: PhysFrame,
 }
 
-<span class="kw">impl</span> <span class="ident">AddressSpace</span> {
-    <span class="doccomment">/// Allocates a new *virtual* address space.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">cr3</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>
-                .<span class="ident">allocate_frame</span>()
-                .<span class="ident">ok_or</span>(<span class="ident">MapToError::FrameAllocationFailed</span>)<span class="question-mark">?</span>;
+<span class="kw">impl </span>AddressSpace {
+    <span class="doccomment">/// Allocates a new *virtual* address space.
+    </span><span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="kw">let </span>cr3 = <span class="kw">unsafe </span>{
+            <span class="kw">let </span>frame = FRAME_ALLOCATOR
+                .allocate_frame()
+                .ok_or(MapToError::FrameAllocationFailed)<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">phys_addr</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">start_address</span>();
-            <span class="kw">let</span> <span class="ident">virt_addr</span> <span class="op">=</span> <span class="ident">phys_addr</span>.<span class="ident">as_hhdm_virt</span>();
+            <span class="kw">let </span>phys_addr = frame.start_address();
+            <span class="kw">let </span>virt_addr = phys_addr.as_hhdm_virt();
 
-            <span class="ident">phys_addr</span>.<span class="ident">as_vm_frame</span>().<span class="ident">unwrap</span>().<span class="ident">inc_ref_count</span>();
+            phys_addr.as_vm_frame().unwrap().inc_ref_count();
 
-            <span class="kw">let</span> <span class="ident">page_table</span>: <span class="kw-2">*mut</span> <span class="ident">PageTable</span> <span class="op">=</span> <span class="ident">virt_addr</span>.<span class="ident">as_mut_ptr</span>();
-            <span class="kw">let</span> <span class="ident">page_table</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">page_table</span>;
+            <span class="kw">let </span>page_table: <span class="kw-2">*mut </span>PageTable = virt_addr.as_mut_ptr();
+            <span class="kw">let </span>page_table = <span class="kw-2">&amp;mut *</span>page_table;
 
-            <span class="kw">let</span> <span class="ident">current_table</span> <span class="op">=</span> <span class="ident">active_level_4_table</span>();
+            <span class="kw">let </span>current_table = active_level_4_table();
 
-            <span class="comment">// Zero out the page table entries from the range 0..256.</span>
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="number">256</span> {
-                <span class="ident">page_table</span>[<span class="ident">i</span>].<span class="ident">set_unused</span>();
+            <span class="comment">// Zero out the page table entries from the range 0..256.
+            </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..<span class="number">256 </span>{
+                page_table[i].set_unused();
             }
 
-            <span class="comment">// Map the higher half of the kernel&#39;s address space into this address</span>
-            <span class="comment">// space.</span>
-            <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">256</span>..<span class="number">512</span> {
-                <span class="ident">page_table</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">current_table</span>[<span class="ident">i</span>].<span class="ident">clone</span>();
+            <span class="comment">// Map the higher half of the kernel&#39;s address space into this address
+            // space.
+            </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">256</span>..<span class="number">512 </span>{
+                page_table[i] = current_table[i].clone();
             }
 
-            <span class="ident">frame</span>
+            frame
         };
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">cr3</span> })
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ cr3 })
     }
 
-    <span class="doccomment">/// Returns the current active address space.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">this</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">cr3</span> <span class="op">=</span> {
-            <span class="comment">// Get the value of the Cr3 register.</span>
-            <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span>;
+    <span class="doccomment">/// Returns the current active address space.
+    </span><span class="kw">pub fn </span>this() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>cr3 = {
+            <span class="comment">// Get the value of the Cr3 register.
+            </span><span class="kw">let </span>value: u64;
 
-            <span class="kw">unsafe</span> {
-                <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr3&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">value</span>, <span class="ident">options</span>(<span class="ident">nomem</span>));
+            <span class="kw">unsafe </span>{
+                <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr3&quot;</span>, out(reg) value, options(nomem));
             }
 
-            <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">value</span> <span class="op">&amp;</span> <span class="number">0x_000f_ffff_ffff_f000</span>);
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">PhysFrame::containing_address</span>(<span class="ident">addr</span>);
+            <span class="kw">let </span>addr = PhysAddr::new(value &amp; <span class="number">0x_000f_ffff_ffff_f000</span>);
+            <span class="kw">let </span>frame = PhysFrame::containing_address(addr);
 
-            <span class="ident">frame</span>
+            frame
         };
 
-        <span class="self">Self</span> { <span class="ident">cr3</span> }
+        <span class="self">Self </span>{ cr3 }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">switch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">cr3</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cr3</span>().<span class="ident">start_address</span>().<span class="ident">as_u64</span>();
+    <span class="kw">pub fn </span>switch(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>cr3 = <span class="self">self</span>.cr3().start_address().as_u64();
 
-        <span class="kw">unsafe</span> {
-            <span class="macro">asm!</span>(<span class="string">&quot;mov cr3, {}&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">cr3</span>, <span class="ident">options</span>(<span class="ident">nostack</span>)); <span class="comment">// Load the new address space</span>
-        }
+        <span class="kw">unsafe </span>{
+            <span class="macro">asm!</span>(<span class="string">&quot;mov cr3, {}&quot;</span>, <span class="kw">in</span>(reg) cr3, options(nostack)); <span class="comment">// Load the new address space
+        </span>}
     }
 
-    <span class="doccomment">/// Returns a reference to the page table frame allocated for this address</span>
-    <span class="doccomment">/// space.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">cr3</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PhysFrame</span> {
-        <span class="self">self</span>.<span class="ident">cr3</span>
+    <span class="doccomment">/// Returns a reference to the page table frame allocated for this address
+    /// space.
+    </span><span class="kw">pub fn </span>cr3(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PhysFrame {
+        <span class="self">self</span>.cr3
     }
 
-    <span class="doccomment">/// Returns a mutable reference to the page table allocated for this</span>
-    <span class="doccomment">/// address space.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">page_table</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> <span class="ident">PageTable</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="self">self</span>.<span class="ident">cr3</span>.<span class="ident">start_address</span>().<span class="ident">as_hhdm_virt</span>().<span class="ident">as_mut_ptr</span>()) }
+    <span class="doccomment">/// Returns a mutable reference to the page table allocated for this
+    /// address space.
+    </span><span class="kw">pub fn </span>page_table(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PageTable {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(<span class="self">self</span>.cr3.start_address().as_hhdm_virt().as_mut_ptr()) }
     }
 
-    <span class="doccomment">/// Returns a mutable refernce to the mapper pointing to the page table</span>
-    <span class="doccomment">/// allocated for this address space.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">offset_page_table</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="ident">OffsetPageTable</span> {
-        <span class="kw">unsafe</span> { <span class="ident">OffsetPageTable::new</span>(<span class="self">self</span>.<span class="ident">page_table</span>(), <span class="ident"><span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET</span>) }
+    <span class="doccomment">/// Returns a mutable refernce to the mapper pointing to the page table
+    /// allocated for this address space.
+    </span><span class="kw">pub fn </span>offset_page_table(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; OffsetPageTable {
+        <span class="kw">unsafe </span>{ OffsetPageTable::new(<span class="self">self</span>.page_table(), <span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET) }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">alloc_boxed_buffer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">T</span>]<span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">size</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="kw">return</span> <span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">T</span>]<span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
+<span class="kw">pub fn </span>alloc_boxed_buffer&lt;T&gt;(size: usize) -&gt; Box&lt;[T]&gt; {
+    <span class="kw">if </span>size == <span class="number">0 </span>{
+        <span class="kw">return </span>&lt;Box&lt;[T]&gt;&gt;::default();
     }
 
-    <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">size</span>, <span class="number">8</span>) };
-    <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">::alloc::alloc::alloc_zeroed</span>(<span class="ident">layout</span>) <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">T</span> };
-    <span class="kw">let</span> <span class="ident">slice_ptr</span> <span class="op">=</span> <span class="ident">core::ptr::slice_from_raw_parts_mut</span>(<span class="ident">ptr</span>, <span class="ident">size</span>);
+    <span class="kw">let </span>layout = <span class="kw">unsafe </span>{ Layout::from_size_align_unchecked(size, <span class="number">8</span>) };
+    <span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ ::alloc::alloc::alloc_zeroed(layout) <span class="kw">as </span><span class="kw-2">*mut </span>T };
+    <span class="kw">let </span>slice_ptr = core::ptr::slice_from_raw_parts_mut(ptr, size);
 
-    <span class="kw">unsafe</span> { <span class="ident">Box::from_raw</span>(<span class="ident">slice_ptr</span>) }
+    <span class="kw">unsafe </span>{ Box::from_raw(slice_ptr) }
 }
 
-<span class="doccomment">/// Creates a Rust string from the provided C string.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Safety</span>
-<span class="doccomment">/// - The provided pointer must be valid.</span>
-<span class="doccomment">/// - The provided pointer must point to a null-terminated C string.</span>
-<span class="doccomment">/// - The returned lifetime is not guaranteed to be the actual lifetime</span>
-<span class="doccomment">/// of `ptr`.</span>
-<span class="doccomment">/// - It is not guaranteed that the memory pointed by `ptr` won’t change</span>
-<span class="doccomment">/// before the Rust string has been destroyed.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">c_str_as_str</span><span class="op">&lt;</span><span class="lifetime">&#39;cstring</span><span class="op">&gt;</span>(<span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;cstring</span> <span class="ident">str</span> {
-    <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">c_strlen</span>(<span class="ident">ptr</span>);
-    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="ident">core::slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">length</span>);
+<span class="doccomment">/// Creates a Rust string from the provided C string.
+///
+/// ## Safety
+/// - The provided pointer must be valid.
+/// - The provided pointer must point to a null-terminated C string.
+/// - The returned lifetime is not guaranteed to be the actual lifetime
+/// of `ptr`.
+/// - It is not guaranteed that the memory pointed by `ptr` won’t change
+/// before the Rust string has been destroyed.
+</span><span class="kw">pub unsafe fn </span>c_str_as_str&lt;<span class="lifetime">&#39;cstring</span>&gt;(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;cstring </span>str {
+    <span class="kw">let </span>length = c_strlen(ptr);
+    <span class="kw">let </span>slice = core::slice::from_raw_parts(ptr, length);
 
-    <span class="ident">core::str::from_utf8_unchecked</span>(<span class="ident">slice</span>)
+    core::str::from_utf8_unchecked(slice)
 }
 
-<span class="doccomment">/// Determines the provided of the given C string.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Safety</span>
-<span class="doccomment">/// - The provided pointer must be valid.</span>
-<span class="doccomment">/// - The provided pointer must point to a null-terminated C string.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">c_strlen</span>(<span class="kw-2">mut</span> <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">length</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="doccomment">/// Determines the provided of the given C string.
+///
+/// ## Safety
+/// - The provided pointer must be valid.
+/// - The provided pointer must point to a null-terminated C string.
+</span><span class="kw">pub unsafe fn </span>c_strlen(<span class="kw-2">mut </span>ptr: <span class="kw-2">*const </span>u8) -&gt; usize {
+    <span class="kw">let </span><span class="kw-2">mut </span>length = <span class="number">0</span>;
 
-    <span class="kw">while</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="number">1</span>);
-        <span class="ident">length</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">while </span><span class="kw-2">*</span>ptr != <span class="number">0 </span>{
+        ptr = ptr.offset(<span class="number">1</span>);
+        length += <span class="number">1</span>;
     }
 
-    <span class="ident">length</span>
+    length
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

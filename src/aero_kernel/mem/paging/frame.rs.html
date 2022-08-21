@@ -686,222 +686,222 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::alloc</span>::{<span class="ident">AllocError</span>, <span class="ident">Allocator</span>, <span class="ident">Layout</span>};
-<span class="kw">use</span> <span class="ident">core::ptr::NonNull</span>;
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+</span><span class="kw">use </span>core::alloc::{AllocError, Allocator, Layout};
+<span class="kw">use </span>core::ptr::NonNull;
+<span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
-<span class="kw">use</span> <span class="ident">stivale_boot::v2::StivaleMemoryMapEntry</span>;
-<span class="kw">use</span> <span class="ident">stivale_boot::v2</span>::{<span class="ident">StivaleMemoryMapEntryType</span>, <span class="ident">StivaleMemoryMapIter</span>, <span class="ident">StivaleMemoryMapTag</span>};
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>spin::Once;
+<span class="kw">use </span>stivale_boot::v2::StivaleMemoryMapEntry;
+<span class="kw">use </span>stivale_boot::v2::{StivaleMemoryMapEntryType, StivaleMemoryMapIter, StivaleMemoryMapTag};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::mapper</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::page</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::mapper::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::page::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::addr::PhysAddr</span>;
+<span class="kw">use </span><span class="kw">super</span>::addr::PhysAddr;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::align_up</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::bitmap::Bitmap</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::align_up;
+<span class="kw">use </span><span class="kw">crate</span>::utils::bitmap::Bitmap;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">static</span> <span class="ident">BUDDY_SIZE</span>: [<span class="ident">u64</span>; <span class="number">3</span>] <span class="op">=</span> [<span class="ident">Size4KiB::SIZE</span>, <span class="ident">Size4KiB::SIZE</span> <span class="op">*</span> <span class="number">2</span>, <span class="ident">Size2MiB::SIZE</span>];
+<span class="kw">static </span>BUDDY_SIZE: [u64; <span class="number">3</span>] = [Size4KiB::SIZE, Size4KiB::SIZE * <span class="number">4</span>, Size2MiB::SIZE];
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LockedFrameAllocator</span>(<span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">GlobalFrameAllocator</span><span class="op">&gt;</span><span class="op">&gt;</span>);
+<span class="kw">pub struct </span>LockedFrameAllocator(Once&lt;Mutex&lt;GlobalFrameAllocator&gt;&gt;);
 
-<span class="kw">impl</span> <span class="ident">LockedFrameAllocator</span> {
-    <span class="doccomment">/// Constructs a new uninitialized and locked version of the global frame</span>
-    <span class="doccomment">/// allocator.</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new_uninit</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">Once::new</span>())
+<span class="kw">impl </span>LockedFrameAllocator {
+    <span class="doccomment">/// Constructs a new uninitialized and locked version of the global frame
+    /// allocator.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const fn </span>new_uninit() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(Once::new())
     }
 
-    <span class="doccomment">/// Initializes the inner locked global frame allocator.</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">init</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">memory_map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleMemoryMapTag</span>) {
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">GlobalFrameAllocator::new</span>(<span class="ident">memory_map</span>)));
-    }
-}
-
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">FrameAllocator</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">LockedFrameAllocator</span> {
-    <span class="attribute">#[<span class="ident">track_caller</span>]</span>
-    <span class="kw">fn</span> <span class="ident">allocate_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// let caller = core::panic::Location::caller();</span>
-        <span class="comment">// log::debug!(&quot;allocation request of 4KiB by {:?}&quot;, caller);</span>
-
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> {
-                <span class="ident">m</span>.<span class="ident">lock</span>()
-                    .<span class="ident">allocate_frame_inner</span>(<span class="number">0</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">PhysFrame::containing_address</span>(<span class="ident">f</span>))
-            })
-            .<span class="ident">unwrap_or</span>(<span class="prelude-val">None</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> {
-                <span class="ident">frame</span>.<span class="ident">as_slice_mut</span>().<span class="ident">fill</span>(<span class="number">0</span>);
-                <span class="ident">frame</span>
-            })
-    }
-
-    <span class="attribute">#[<span class="ident">track_caller</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deallocate_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span>) {
-        <span class="comment">// let caller = core::panic::Location::caller();</span>
-        <span class="comment">// log::debug!(&quot;deallocation request of 4KiB by {:?}&quot;, caller);</span>
-
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">lock</span>().<span class="ident">deallocate_frame_inner</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>(), <span class="number">0</span>))
-            .<span class="ident">unwrap_or</span>(());
+    <span class="doccomment">/// Initializes the inner locked global frame allocator.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>init(<span class="kw-2">&amp;</span><span class="self">self</span>, memory_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMemoryMapTag) {
+        <span class="self">self</span>.<span class="number">0
+            </span>.call_once(|| Mutex::new(GlobalFrameAllocator::new(memory_map)));
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">FrameAllocator</span><span class="op">&lt;</span><span class="ident">Size2MiB</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">LockedFrameAllocator</span> {
-    <span class="attribute">#[<span class="ident">track_caller</span>]</span>
-    <span class="kw">fn</span> <span class="ident">allocate_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size2MiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// let caller = core::panic::Location::caller();</span>
-        <span class="comment">// log::debug!(&quot;allocation request of 2MiB by {:?}&quot;, caller);</span>
+<span class="kw">unsafe impl </span>FrameAllocator&lt;Size4KiB&gt; <span class="kw">for </span>LockedFrameAllocator {
+    <span class="attribute">#[track_caller]</span>
+    <span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size4KiB&gt;&gt; {
+        <span class="comment">// let caller = core::panic::Location::caller();
+        // log::debug!(&quot;allocation request of 4KiB by {:?}&quot;, caller);
 
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> {
-                <span class="ident">m</span>.<span class="ident">lock</span>()
-                    .<span class="ident">allocate_frame_inner</span>(<span class="number">1</span>)
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">PhysFrame::containing_address</span>(<span class="ident">f</span>))
+        </span><span class="self">self</span>.<span class="number">0
+            </span>.get()
+            .map(|m| {
+                m.lock()
+                    .allocate_frame_inner(<span class="number">0</span>)
+                    .map(|f| PhysFrame::containing_address(f))
             })
-            .<span class="ident">unwrap_or</span>(<span class="prelude-val">None</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">frame</span><span class="op">|</span> {
-                <span class="ident">frame</span>.<span class="ident">as_slice_mut</span>().<span class="ident">fill</span>(<span class="number">0</span>);
-                <span class="ident">frame</span>
+            .unwrap_or(<span class="prelude-val">None</span>)
+            .map(|frame| {
+                frame.as_slice_mut().fill(<span class="number">0</span>);
+                frame
             })
     }
 
-    <span class="attribute">#[<span class="ident">track_caller</span>]</span>
-    <span class="kw">fn</span> <span class="ident">deallocate_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size2MiB</span><span class="op">&gt;</span>) {
-        <span class="comment">// let caller = core::panic::Location::caller();</span>
-        <span class="comment">// log::debug!(&quot;deallocation request of 2MiB by {:?}&quot;, caller);</span>
+    <span class="attribute">#[track_caller]</span>
+    <span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size4KiB&gt;) {
+        <span class="comment">// let caller = core::panic::Location::caller();
+        // log::debug!(&quot;deallocation request of 4KiB by {:?}&quot;, caller);
 
-        <span class="self">self</span>.<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">m</span><span class="op">|</span> <span class="ident">m</span>.<span class="ident">lock</span>().<span class="ident">deallocate_frame_inner</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>(), <span class="number">1</span>))
-            .<span class="ident">unwrap_or</span>(());
+        </span><span class="self">self</span>.<span class="number">0
+            </span>.get()
+            .map(|m| m.lock().deallocate_frame_inner(frame.start_address(), <span class="number">0</span>))
+            .unwrap_or(());
     }
 }
 
-<span class="kw">struct</span> <span class="ident">RangeMemoryIter</span> {
-    <span class="ident">iter</span>: <span class="ident">StivaleMemoryMapIter</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>,
+<span class="kw">unsafe impl </span>FrameAllocator&lt;Size2MiB&gt; <span class="kw">for </span>LockedFrameAllocator {
+    <span class="attribute">#[track_caller]</span>
+    <span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size2MiB&gt;&gt; {
+        <span class="comment">// let caller = core::panic::Location::caller();
+        // log::debug!(&quot;allocation request of 2MiB by {:?}&quot;, caller);
 
-    <span class="ident">cursor_base</span>: <span class="ident">PhysAddr</span>,
-    <span class="ident">cursor_end</span>: <span class="ident">PhysAddr</span>,
+        </span><span class="self">self</span>.<span class="number">0
+            </span>.get()
+            .map(|m| {
+                m.lock()
+                    .allocate_frame_inner(<span class="number">2</span>)
+                    .map(|f| PhysFrame::containing_address(f))
+            })
+            .unwrap_or(<span class="prelude-val">None</span>)
+            .map(|frame| {
+                frame.as_slice_mut().fill(<span class="number">0</span>);
+                frame
+            })
+    }
+
+    <span class="attribute">#[track_caller]</span>
+    <span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size2MiB&gt;) {
+        <span class="comment">// let caller = core::panic::Location::caller();
+        // log::debug!(&quot;deallocation request of 2MiB by {:?}&quot;, caller);
+
+        </span><span class="self">self</span>.<span class="number">0
+            </span>.get()
+            .map(|m| m.lock().deallocate_frame_inner(frame.start_address(), <span class="number">2</span>))
+            .unwrap_or(());
+    }
 }
 
-<span class="kw">impl</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">RangeMemoryIter</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">MemoryRange</span>;
+<span class="kw">struct </span>RangeMemoryIter {
+    iter: StivaleMemoryMapIter&lt;<span class="lifetime">&#39;static</span>&gt;,
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">cursor_base</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">cursor_end</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">entry</span>) <span class="op">=</span> <span class="kw">loop</span> {
-                <span class="comment">// We need to find out the next useable memory range from</span>
-                <span class="comment">// the memory map and set the cursor to the start of it.</span>
-                <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">iter</span>.<span class="ident">next</span>()<span class="question-mark">?</span>;
+    cursor_base: PhysAddr,
+    cursor_end: PhysAddr,
+}
 
-                <span class="kw">if</span> <span class="ident">next</span>.<span class="ident">entry_type</span> <span class="op">==</span> <span class="ident">StivaleMemoryMapEntryType::Usable</span> {
-                    <span class="kw">break</span> <span class="prelude-val">Some</span>(<span class="ident">next</span>);
+<span class="kw">impl </span>Iterator <span class="kw">for </span>RangeMemoryIter {
+    <span class="kw">type </span>Item = MemoryRange;
+
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.cursor_base &gt;= <span class="self">self</span>.cursor_end {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="kw">loop </span>{
+                <span class="comment">// We need to find out the next useable memory range from
+                // the memory map and set the cursor to the start of it.
+                </span><span class="kw">let </span>next = <span class="self">self</span>.iter.next()<span class="question-mark">?</span>;
+
+                <span class="kw">if </span>next.entry_type == StivaleMemoryMapEntryType::Usable {
+                    <span class="kw">break </span><span class="prelude-val">Some</span>(next);
                 }
             } {
-                <span class="self">self</span>.<span class="ident">cursor_base</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">entry</span>.<span class="ident">base</span>).<span class="ident">align_up</span>(<span class="ident">Size4KiB::SIZE</span>);
-                <span class="self">self</span>.<span class="ident">cursor_end</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">entry</span>.<span class="ident">base</span> <span class="op">+</span> <span class="ident">entry</span>.<span class="ident">length</span>);
-            } <span class="kw">else</span> {
-                <span class="comment">// We reached the end of the memory map.</span>
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="self">self</span>.cursor_base = PhysAddr::new(entry.base).align_up(Size4KiB::SIZE);
+                <span class="self">self</span>.cursor_end = PhysAddr::new(entry.base + entry.length);
+            } <span class="kw">else </span>{
+                <span class="comment">// We reached the end of the memory map.
+                </span><span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">typee</span> <span class="op">=</span> <span class="ident">MemoryRangeType::Usable</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>typee = MemoryRangeType::Usable;
 
-        <span class="kw">if</span> (<span class="ident">CONVENTIONAL_MEM_START</span>..<span class="ident">CONVENTIONAL_MEM_END</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">cursor_base</span>) {
-            <span class="self">self</span>.<span class="ident">cursor_base</span> <span class="op">=</span> <span class="ident">CONVENTIONAL_MEM_END</span>;
-            <span class="ident">typee</span> <span class="op">=</span> <span class="ident">MemoryRangeType::Conventional</span>;
+        <span class="kw">if </span>(CONVENTIONAL_MEM_START..CONVENTIONAL_MEM_END).contains(<span class="kw-2">&amp;</span><span class="self">self</span>.cursor_base) {
+            <span class="self">self</span>.cursor_base = CONVENTIONAL_MEM_END;
+            typee = MemoryRangeType::Conventional;
         }
 
-        <span class="kw">let</span> <span class="ident">range</span> <span class="op">=</span> <span class="ident">MemoryRange</span> {
-            <span class="ident">addr</span>: <span class="self">self</span>.<span class="ident">cursor_base</span>,
-            <span class="ident">size</span>: <span class="self">self</span>.<span class="ident">cursor_end</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">cursor_base</span>,
-            <span class="ident">typee</span>,
+        <span class="kw">let </span>range = MemoryRange {
+            addr: <span class="self">self</span>.cursor_base,
+            size: <span class="self">self</span>.cursor_end - <span class="self">self</span>.cursor_base,
+            typee,
         };
 
-        <span class="self">self</span>.<span class="ident">cursor_base</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">cursor_end</span>.<span class="ident">align_up</span>(<span class="ident">Size4KiB::SIZE</span>);
-        <span class="prelude-val">Some</span>(<span class="ident">range</span>)
+        <span class="self">self</span>.cursor_base = <span class="self">self</span>.cursor_end.align_up(Size4KiB::SIZE);
+        <span class="prelude-val">Some</span>(range)
     }
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">usize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">BuddyOrdering</span> {
-    <span class="ident">Size4KiB</span> <span class="op">=</span> <span class="number">0</span>,
-    <span class="ident">Size8KiB</span> <span class="op">=</span> <span class="number">1</span>,
+<span class="attribute">#[repr(usize)]</span>
+<span class="kw">pub enum </span>BuddyOrdering {
+    Size4KiB = <span class="number">0</span>,
+    Size8KiB = <span class="number">2</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pmm_alloc</span>(<span class="ident">order</span>: <span class="ident">BuddyOrdering</span>) -&gt; <span class="ident">PhysAddr</span> {
-    <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="ident">order</span> <span class="kw">as</span> <span class="ident">usize</span>;
-    <span class="macro">debug_assert!</span>(<span class="ident">order</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">BUDDY_SIZE</span>.<span class="ident">len</span>());
+<span class="kw">pub fn </span>pmm_alloc(order: BuddyOrdering) -&gt; PhysAddr {
+    <span class="kw">let </span>order = order <span class="kw">as </span>usize;
+    <span class="macro">debug_assert!</span>(order &lt;= BUDDY_SIZE.len());
 
-    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::FRAME_ALLOCATOR</span>
-        .<span class="number">0</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;pmm: frame allocator not initialized&quot;</span>)
-        .<span class="ident">lock</span>()
-        .<span class="ident">allocate_frame_inner</span>(<span class="ident">order</span>)
-        .<span class="ident">expect</span>(<span class="string">&quot;pmm: out of memory&quot;</span>);
+    <span class="kw">let </span>addr = <span class="kw">super</span>::FRAME_ALLOCATOR
+        .<span class="number">0
+        </span>.get()
+        .expect(<span class="string">&quot;pmm: frame allocator not initialized&quot;</span>)
+        .lock()
+        .allocate_frame_inner(order)
+        .expect(<span class="string">&quot;pmm: out of memory&quot;</span>);
 
-    <span class="kw">let</span> <span class="ident">virt</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">as_hhdm_virt</span>();
+    <span class="kw">let </span>virt = addr.as_hhdm_virt();
 
-    <span class="kw">let</span> <span class="ident">fill_size</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>] <span class="kw">as</span> <span class="ident">usize</span>;
-    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="ident">virt</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(), <span class="ident">fill_size</span>) };
+    <span class="kw">let </span>fill_size = BUDDY_SIZE[order] <span class="kw">as </span>usize;
+    <span class="kw">let </span>slice = <span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(virt.as_mut_ptr::&lt;u8&gt;(), fill_size) };
 
-    <span class="comment">// We always zero out memory for security reasons.</span>
-    <span class="ident">slice</span>.<span class="ident">fill</span>(<span class="number">0x00</span>);
+    <span class="comment">// We always zero out memory for security reasons.
+    </span>slice.fill(<span class="number">0x00</span>);
 
-    <span class="ident">addr</span>
+    addr
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">struct</span> <span class="ident">MemoryRange</span> {
-    <span class="ident">addr</span>: <span class="ident">PhysAddr</span>,
-    <span class="ident">size</span>: <span class="ident">u64</span>,
-    <span class="ident">typee</span>: <span class="ident">MemoryRangeType</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">struct </span>MemoryRange {
+    addr: PhysAddr,
+    size: u64,
+    typee: MemoryRangeType,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">enum</span> <span class="ident">MemoryRangeType</span> {
-    <span class="ident">Usable</span>,
-    <span class="ident">Conventional</span>,
+<span class="attribute">#[derive(Debug, PartialEq)]</span>
+<span class="kw">enum </span>MemoryRangeType {
+    Usable,
+    Conventional,
 }
 
-<span class="kw">struct</span> <span class="ident">BootAlloc</span> {
-    <span class="ident">memory_ranges</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> [<span class="ident">MemoryRange</span>]<span class="op">&gt;</span>,
+<span class="kw">struct </span>BootAlloc {
+    memory_ranges: Mutex&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>[MemoryRange]&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">BootAlloc</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">memory_ranges</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> [<span class="ident">MemoryRange</span>]) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">memory_ranges</span>: <span class="ident">Mutex::new</span>(<span class="ident">memory_ranges</span>),
+<span class="kw">impl </span>BootAlloc {
+    <span class="kw">fn </span>new(memory_ranges: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>[MemoryRange]) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            memory_ranges: Mutex::new(memory_ranges),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">allocate_inner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">Size4KiB::SIZE</span>);
-        <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">memory_ranges</span>.<span class="ident">lock</span>().<span class="ident">iter_mut</span>().<span class="ident">rev</span>() {
-            <span class="kw">if</span> <span class="ident">range</span>.<span class="ident">typee</span> <span class="op">==</span> <span class="ident">MemoryRangeType::Conventional</span> {
+    <span class="kw">fn </span>allocate_inner(<span class="kw-2">&amp;</span><span class="self">self</span>, size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="kw">let </span>size = align_up(size <span class="kw">as </span>u64, Size4KiB::SIZE);
+        <span class="kw">for </span>range <span class="kw">in </span><span class="self">self</span>.memory_ranges.lock().iter_mut().rev() {
+            <span class="kw">if </span>range.typee == MemoryRangeType::Conventional {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">if</span> <span class="ident">range</span>.<span class="ident">size</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span> {
-                <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">range</span>.<span class="ident">addr</span>;
+            <span class="kw">if </span>range.size &gt;= size {
+                <span class="kw">let </span>addr = range.addr;
 
-                <span class="ident">range</span>.<span class="ident">addr</span> <span class="op">+</span><span class="op">=</span> <span class="ident">size</span>;
-                <span class="ident">range</span>.<span class="ident">size</span> <span class="op">-</span><span class="op">=</span> <span class="ident">size</span>;
+                range.addr += size;
+                range.size -= size;
 
-                <span class="kw">return</span> <span class="ident">addr</span>.<span class="ident">as_hhdm_virt</span>().<span class="ident">as_mut_ptr</span>();
+                <span class="kw">return </span>addr.as_hhdm_virt().as_mut_ptr();
             }
         }
 
@@ -909,436 +909,436 @@
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">BootAllocRef</span> {
-    <span class="ident">inner</span>: <span class="kw-2">*const</span> <span class="ident">BootAlloc</span>,
+<span class="attribute">#[derive(Debug, Clone)]</span>
+<span class="kw">struct </span>BootAllocRef {
+    inner: <span class="kw-2">*const </span>BootAlloc,
 }
 
-<span class="kw">impl</span> <span class="ident">BootAllocRef</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">inner</span>: <span class="kw-2">&amp;</span><span class="ident">BootAlloc</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">inner</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>,
+<span class="kw">impl </span>BootAllocRef {
+    <span class="kw">fn </span>new(inner: <span class="kw-2">&amp;</span>BootAlloc) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: inner <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">get_inner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">BootAlloc</span> {
-        <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="self">self</span>.<span class="ident">inner</span> }
+    <span class="kw">fn </span>get_inner(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>BootAlloc {
+        <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.inner }
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Allocator</span> <span class="kw">for</span> <span class="ident">BootAllocRef</span> {
-    <span class="kw">fn</span> <span class="ident">allocate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">layout</span>: <span class="ident">Layout</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">NonNull</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>, <span class="ident">AllocError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_inner</span>();
+<span class="kw">unsafe impl </span>Allocator <span class="kw">for </span>BootAllocRef {
+    <span class="kw">fn </span>allocate(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;NonNull&lt;[u8]&gt;, AllocError&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.get_inner();
 
-        <span class="kw">let</span> <span class="ident">aligned_size</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">layout</span>.<span class="ident">size</span>() <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">layout</span>.<span class="ident">align</span>() <span class="kw">as</span> <span class="kw">_</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">allocate_inner</span>(<span class="ident">aligned_size</span>);
+        <span class="kw">let </span>aligned_size = align_up(layout.size() <span class="kw">as _</span>, layout.align() <span class="kw">as _</span>) <span class="kw">as </span>usize;
+        <span class="kw">let </span>ptr = this.allocate_inner(aligned_size);
 
-        <span class="comment">// SAFETY: `allocate_inner` is garunteed to return a valid, non-null pointer.</span>
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">NonNull::new_unchecked</span>(<span class="ident">ptr</span>) };
-        <span class="prelude-val">Ok</span>(<span class="ident">NonNull::slice_from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">aligned_size</span>))
+        <span class="comment">// SAFETY: `allocate_inner` is garunteed to return a valid, non-null pointer.
+        </span><span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ NonNull::new_unchecked(ptr) };
+        <span class="prelude-val">Ok</span>(NonNull::slice_from_raw_parts(ptr, aligned_size))
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">deallocate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_ptr</span>: <span class="ident">NonNull</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>, <span class="ident">_layout</span>: <span class="ident">Layout</span>) {
+    <span class="kw">unsafe fn </span>deallocate(<span class="kw-2">&amp;</span><span class="self">self</span>, _ptr: NonNull&lt;u8&gt;, _layout: Layout) {
         <span class="macro">unreachable!</span>(<span class="string">&quot;pmm: bootstrap allocator cannot deallocate&quot;</span>)
     }
 }
 
-<span class="kw">unsafe</span> <span class="kw">impl</span> <span class="ident">Send</span> <span class="kw">for</span> <span class="ident">BootAllocRef</span> {}
+<span class="kw">unsafe impl </span>Send <span class="kw">for </span>BootAllocRef {}
 
-<span class="kw">const</span> <span class="ident">CONVENTIONAL_MEM_START</span>: <span class="ident">PhysAddr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysAddr::new_unchecked</span>(<span class="number">0x00</span>) };
+<span class="kw">const </span>CONVENTIONAL_MEM_START: PhysAddr = <span class="kw">unsafe </span>{ PhysAddr::new_unchecked(<span class="number">0x00</span>) };
 
-<span class="comment">// NOTE: Even though conventional memory is till `0x100000` (which is 4KiB * 256), we only</span>
-<span class="comment">// reserve the first 4 4KiB pages (as conventional memory) which is mainly used to startup</span>
-<span class="comment">// the APs.</span>
-<span class="kw">const</span> <span class="ident">CONVENTIONAL_MEM_END</span>: <span class="ident">PhysAddr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">PhysAddr::new_unchecked</span>(<span class="ident">Size4KiB::SIZE</span> <span class="op">*</span> <span class="number">4</span>) };
+<span class="comment">// NOTE: Even though conventional memory is till `0x100000` (which is 4KiB * 256), we only
+// reserve the first 4 4KiB pages (as conventional memory) which is mainly used to startup
+// the APs.
+</span><span class="kw">const </span>CONVENTIONAL_MEM_END: PhysAddr = <span class="kw">unsafe </span>{ PhysAddr::new_unchecked(Size4KiB::SIZE * <span class="number">4</span>) };
 
-<span class="kw">static</span> <span class="ident">VM_FRAMES</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">VmFrame</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>VM_FRAMES: Once&lt;Vec&lt;VmFrame&gt;&gt; = Once::new();
 
-<span class="doccomment">/// Buddy allocator combines power-of-two allocator with free buffer</span>
-<span class="doccomment">/// coalescing.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Overview</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Overview of the buddy allocation algorithm:</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * Memory is broken up into large blocks of pages where each block</span>
-<span class="doccomment">///   is a power of two number of pages.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * If a block of the desired size is not available, a larger block is</span>
-<span class="doccomment">///   broken up in half and the two blocks are marked as buddies then one half</span>
-<span class="doccomment">///   is used for the allocation and the other half is marked free.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * The blocks are continuously halved as necessary until a block of the</span>
-<span class="doccomment">///   desired size is available.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * When a block is later freed, the buddy is examined and the two coalesced</span>
-<span class="doccomment">///   if it is free.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">GlobalFrameAllocator</span> {
-    <span class="ident">buddies</span>: [<span class="ident">Bitmap</span><span class="op">&lt;</span><span class="ident">BootAllocRef</span><span class="op">&gt;</span>; <span class="number">3</span>],
-    <span class="ident">free</span>: [<span class="ident">usize</span>; <span class="number">3</span>],
+<span class="doccomment">/// Buddy allocator combines power-of-two allocator with free buffer
+/// coalescing.
+///
+/// ## Overview
+///
+/// Overview of the buddy allocation algorithm:
+///
+/// * Memory is broken up into large blocks of pages where each block
+///   is a power of two number of pages.
+///
+/// * If a block of the desired size is not available, a larger block is
+///   broken up in half and the two blocks are marked as buddies then one half
+///   is used for the allocation and the other half is marked free.
+///
+/// * The blocks are continuously halved as necessary until a block of the
+///   desired size is available.
+///
+/// * When a block is later freed, the buddy is examined and the two coalesced
+///   if it is free.
+</span><span class="kw">pub struct </span>GlobalFrameAllocator {
+    buddies: [Bitmap&lt;BootAllocRef&gt;; <span class="number">3</span>],
+    free: [usize; <span class="number">3</span>],
 
-    <span class="ident">base</span>: <span class="ident">PhysAddr</span>,
-    <span class="ident">end</span>: <span class="ident">PhysAddr</span>,
+    base: PhysAddr,
+    end: PhysAddr,
 }
 
-<span class="kw">impl</span> <span class="ident">GlobalFrameAllocator</span> {
-    <span class="doccomment">/// Create a new global frame allocator from the memory map provided by the bootloader.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">memory_map</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleMemoryMapTag</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">iter</span> <span class="op">=</span> <span class="ident">memory_map</span>.<span class="ident">iter</span>();
-        <span class="kw">let</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="ident">iter</span>
-            .<span class="ident">next</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;stivale2: unexpected end of the memory map&quot;</span>);
+<span class="kw">impl </span>GlobalFrameAllocator {
+    <span class="doccomment">/// Create a new global frame allocator from the memory map provided by the bootloader.
+    </span><span class="kw">fn </span>new(memory_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMemoryMapTag) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = memory_map.iter();
+        <span class="kw">let </span>cursor = iter
+            .next()
+            .expect(<span class="string">&quot;stivale2: unexpected end of the memory map&quot;</span>);
 
-        <span class="comment">// Find a memory map entry that is big enough to fit all of the items in</span>
-        <span class="comment">// range memory iter.</span>
-        <span class="kw">let</span> <span class="ident">requested_size</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">MemoryRange</span><span class="op">&gt;</span>() <span class="kw">as</span> <span class="ident">u64</span> <span class="op">*</span> <span class="ident">memory_map</span>.<span class="ident">entries_len</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">region</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+        <span class="comment">// Find a memory map entry that is big enough to fit all of the items in
+        // range memory iter.
+        </span><span class="kw">let </span>requested_size = core::mem::size_of::&lt;MemoryRange&gt;() <span class="kw">as </span>u64 * memory_map.entries_len;
+        <span class="kw">let </span><span class="kw-2">mut </span>region = <span class="prelude-val">None</span>;
 
-        <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">memory_map</span>.<span class="ident">entries_len</span> {
-            <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">memory_map</span>.<span class="ident">as_slice</span>()[<span class="ident">i</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..memory_map.entries_len {
+            <span class="kw">let </span>entry = <span class="kw-2">&amp;</span>memory_map.as_slice()[i <span class="kw">as </span>usize];
 
-            <span class="comment">// Make sure that the memory map entry is marked as usable.</span>
-            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">entry_type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">StivaleMemoryMapEntryType::Usable</span> {
+            <span class="comment">// Make sure that the memory map entry is marked as usable.
+            </span><span class="kw">if </span>entry.entry_type != StivaleMemoryMapEntryType::Usable {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">if</span> <span class="ident">entry</span>.<span class="ident">length</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">requested_size</span> <span class="op">&amp;&amp;</span> <span class="ident">entry</span>.<span class="ident">base</span> <span class="op">&gt;</span> <span class="ident">CONVENTIONAL_MEM_END</span>.<span class="ident">as_u64</span>() {
-                <span class="comment">// Found a big enough memory map entry.</span>
-                <span class="comment">//</span>
-                <span class="comment">// SAFETY: Its safe for us to mutate the memory map entry &amp; life is ment to be</span>
-                <span class="comment">// unsafe. We use the power of holy transmutes here.</span>
-                <span class="kw">let</span> <span class="ident">entry_mut</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">entry</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">StivaleMemoryMapEntry</span>) };
-                <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">entry_mut</span>.<span class="ident">base</span>;
+            <span class="kw">if </span>entry.length &gt;= requested_size &amp;&amp; entry.base &gt; CONVENTIONAL_MEM_END.as_u64() {
+                <span class="comment">// Found a big enough memory map entry.
+                //
+                // SAFETY: Its safe for us to mutate the memory map entry &amp; life is ment to be
+                // unsafe. We use the power of holy transmutes here.
+                </span><span class="kw">let </span>entry_mut = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(entry <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*mut </span>StivaleMemoryMapEntry) };
+                <span class="kw">let </span>base = entry_mut.base;
 
-                <span class="ident">entry_mut</span>.<span class="ident">base</span> <span class="op">+</span><span class="op">=</span> <span class="ident">requested_size</span>;
-                <span class="ident">entry_mut</span>.<span class="ident">length</span> <span class="op">-</span><span class="op">=</span> <span class="ident">requested_size</span>;
+                entry_mut.base += requested_size;
+                entry_mut.length -= requested_size;
 
-                <span class="ident">region</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">PhysAddr::new</span>(<span class="ident">base</span>));
+                region = <span class="prelude-val">Some</span>(PhysAddr::new(base));
 
                 <span class="kw">break</span>;
             }
         }
 
-        <span class="kw">let</span> <span class="ident">ranges</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">virt_addr</span> <span class="op">=</span> <span class="ident">region</span>.<span class="ident">expect</span>(<span class="string">&quot;stivale2: out of memory&quot;</span>).<span class="ident">as_hhdm_virt</span>();
+        <span class="kw">let </span>ranges = <span class="kw">unsafe </span>{
+            <span class="kw">let </span>virt_addr = region.expect(<span class="string">&quot;stivale2: out of memory&quot;</span>).as_hhdm_virt();
 
-            <span class="ident">core::slice::from_raw_parts_mut</span>::<span class="op">&lt;</span><span class="ident">MemoryRange</span><span class="op">&gt;</span>(
-                <span class="ident">virt_addr</span>.<span class="ident">as_mut_ptr</span>(),
-                <span class="ident">requested_size</span> <span class="kw">as</span> <span class="ident">usize</span>,
+            core::slice::from_raw_parts_mut::&lt;MemoryRange&gt;(
+                virt_addr.as_mut_ptr(),
+                requested_size <span class="kw">as </span>usize,
             )
         };
 
-        <span class="kw">let</span> <span class="ident">range_iter</span> <span class="op">=</span> <span class="ident">RangeMemoryIter</span> {
-            <span class="ident">iter</span>,
+        <span class="kw">let </span>range_iter = RangeMemoryIter {
+            iter,
 
-            <span class="ident">cursor_base</span>: <span class="ident">PhysAddr::new</span>(<span class="ident">cursor</span>.<span class="ident">base</span>),
-            <span class="ident">cursor_end</span>: <span class="ident">PhysAddr::new</span>(<span class="ident">cursor</span>.<span class="ident">base</span> <span class="op">+</span> <span class="ident">cursor</span>.<span class="ident">length</span>),
+            cursor_base: PhysAddr::new(cursor.base),
+            cursor_end: PhysAddr::new(cursor.base + cursor.length),
         };
 
-        <span class="comment">// Lets goo! Now lets initialize the bootstrap allocator so we can initialize</span>
-        <span class="comment">// our efficient buddy allocator. We need a seperate allocator since some computers</span>
-        <span class="comment">// such as Macs have a shitload of memory map entries so, we cannt assume the amount</span>
-        <span class="comment">// of maximum mmap entries and allocate space for it on the stack instead. God damn it.</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">i</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="comment">// Lets goo! Now lets initialize the bootstrap allocator so we can initialize
+        // our efficient buddy allocator. We need a seperate allocator since some computers
+        // such as Macs have a shitload of memory map entries so, we cannt assume the amount
+        // of maximum mmap entries and allocate space for it on the stack instead. God damn it.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
 
-        <span class="kw">for</span> <span class="ident">range</span> <span class="kw">in</span> <span class="ident">range_iter</span> {
-            <span class="ident">ranges</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">range</span>;
-            <span class="ident">i</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">for </span>range <span class="kw">in </span>range_iter {
+            ranges[i] = range;
+            i += <span class="number">1</span>;
         }
 
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">ranges</span>[<span class="number">0</span>].<span class="ident">addr</span>;
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> <span class="ident">ranges</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">addr</span> <span class="op">+</span> <span class="ident">ranges</span>[<span class="ident">i</span> <span class="op">-</span> <span class="number">1</span>].<span class="ident">size</span>;
+        <span class="kw">let </span>base = ranges[<span class="number">0</span>].addr;
+        <span class="kw">let </span>end = ranges[i - <span class="number">1</span>].addr + ranges[i - <span class="number">1</span>].size;
 
-        <span class="kw">let</span> <span class="ident">bootstrapper</span> <span class="op">=</span> <span class="ident">BootAlloc::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">ranges</span>[..<span class="ident">i</span>]);
-        <span class="kw">let</span> <span class="ident">bref</span> <span class="op">=</span> <span class="ident">BootAllocRef::new</span>(<span class="kw-2">&amp;</span><span class="ident">bootstrapper</span>);
+        <span class="kw">let </span>bootstrapper = BootAlloc::new(<span class="kw-2">&amp;mut </span>ranges[..i]);
+        <span class="kw">let </span>bref = BootAllocRef::new(<span class="kw-2">&amp;</span>bootstrapper);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">base</span>,
-            <span class="ident">end</span>,
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self </span>{
+            base,
+            end,
 
-            <span class="ident">buddies</span>: [
-                <span class="ident">Bitmap::empty</span>(<span class="ident">bref</span>.<span class="ident">clone</span>()),
-                <span class="ident">Bitmap::empty</span>(<span class="ident">bref</span>.<span class="ident">clone</span>()),
-                <span class="ident">Bitmap::empty</span>(<span class="ident">bref</span>.<span class="ident">clone</span>()),
+            buddies: [
+                Bitmap::empty(bref.clone()),
+                Bitmap::empty(bref.clone()),
+                Bitmap::empty(bref.clone()),
             ],
-            <span class="ident">free</span>: [<span class="number">0</span>; <span class="number">3</span>],
+            free: [<span class="number">0</span>; <span class="number">3</span>],
         };
 
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">end</span> <span class="op">-</span> <span class="ident">this</span>.<span class="ident">base</span>;
+        <span class="kw">let </span>size = this.end - this.base;
 
-        <span class="comment">// Allocate the buddies using prealloc:</span>
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">bsize</span>) <span class="kw">in</span> <span class="ident">BUDDY_SIZE</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">let</span> <span class="ident">chunk</span> <span class="op">=</span> <span class="ident">size</span> <span class="op">/</span> <span class="ident">bsize</span>;
-            <span class="ident">this</span>.<span class="ident">buddies</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="ident">Bitmap::new_in</span>(<span class="ident">bref</span>.<span class="ident">clone</span>(), <span class="ident">chunk</span> <span class="kw">as</span> <span class="ident">usize</span>);
+        <span class="comment">// Allocate the buddies using prealloc:
+        </span><span class="kw">for </span>(i, bsize) <span class="kw">in </span>BUDDY_SIZE.iter().enumerate() {
+            <span class="kw">let </span>chunk = size / bsize;
+            this.buddies[i] = Bitmap::new_in(bref.clone(), chunk <span class="kw">as </span>usize);
         }
 
-        <span class="kw">for</span> <span class="ident">region</span> <span class="kw">in</span> <span class="ident">bref</span>.<span class="ident">get_inner</span>().<span class="ident">memory_ranges</span>.<span class="ident">lock</span>().<span class="ident">iter</span>() {
-            <span class="kw">if</span> <span class="ident">region</span>.<span class="ident">typee</span> <span class="op">==</span> <span class="ident">MemoryRangeType::Usable</span> {
-                <span class="ident">this</span>.<span class="ident">insert_range</span>(<span class="ident">region</span>.<span class="ident">addr</span>, <span class="ident">region</span>.<span class="ident">addr</span> <span class="op">+</span> <span class="ident">region</span>.<span class="ident">size</span>);
+        <span class="kw">for </span>region <span class="kw">in </span>bref.get_inner().memory_ranges.lock().iter() {
+            <span class="kw">if </span>region.typee == MemoryRangeType::Usable {
+                this.insert_range(region.addr, region.addr + region.size);
             }
         }
 
-        <span class="ident">this</span>
+        this
     }
 
-    <span class="kw">fn</span> <span class="ident">frame_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        (<span class="self">self</span>.<span class="ident">end</span>.<span class="ident">as_u64</span>() <span class="op">/</span> <span class="ident">Size4KiB::SIZE</span>) <span class="kw">as</span> <span class="ident">usize</span>
+    <span class="kw">fn </span>frame_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        (<span class="self">self</span>.end.as_u64() / Size4KiB::SIZE) <span class="kw">as </span>usize
     }
 
-    <span class="doccomment">/// Find the perfect buddy order for the provided address range.</span>
-    <span class="kw">fn</span> <span class="ident">find_order</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">PhysAddr</span>, <span class="ident">chunk_size</span>: <span class="ident">u64</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">for</span> <span class="ident">order</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="ident">BUDDY_SIZE</span>.<span class="ident">len</span>()).<span class="ident">rev</span>() {
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>];
+    <span class="doccomment">/// Find the perfect buddy order for the provided address range.
+    </span><span class="kw">fn </span>find_order(<span class="kw-2">&amp;</span><span class="self">self</span>, address: PhysAddr, chunk_size: u64) -&gt; usize {
+        <span class="kw">for </span>order <span class="kw">in </span>(<span class="number">0</span>..BUDDY_SIZE.len()).rev() {
+            <span class="kw">let </span>size = BUDDY_SIZE[order];
 
-            <span class="comment">// Too big...</span>
-            <span class="kw">if</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="ident">chunk_size</span> {
+            <span class="comment">// Too big...
+            </span><span class="kw">if </span>size &gt; chunk_size {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">let</span> <span class="ident">mask</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>] <span class="op">-</span> <span class="number">1</span>;
+            <span class="kw">let </span>mask = BUDDY_SIZE[order] - <span class="number">1</span>;
 
-            <span class="kw">if</span> <span class="ident">mask</span> <span class="op">&amp;</span> <span class="ident">address</span>.<span class="ident">as_u64</span>() <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
+            <span class="kw">if </span>mask &amp; address.as_u64() != <span class="number">0 </span>{
                 <span class="kw">continue</span>;
-            } <span class="kw">else</span> {
-                <span class="kw">return</span> <span class="ident">order</span>;
+            } <span class="kw">else </span>{
+                <span class="kw">return </span>order;
             }
         }
 
-        <span class="kw">return</span> <span class="number">0</span>;
+        <span class="kw">return </span><span class="number">0</span>;
     }
 
-    <span class="kw">fn</span> <span class="ident">get_bit_idx</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-        <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">addr</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">base</span>;
-        (<span class="ident">offset</span> <span class="op">/</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>]) <span class="kw">as</span> <span class="ident">usize</span>
+    <span class="kw">fn </span>get_bit_idx(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; usize {
+        <span class="kw">let </span>offset = addr - <span class="self">self</span>.base;
+        (offset / BUDDY_SIZE[order]) <span class="kw">as </span>usize
     }
 
-    <span class="kw">fn</span> <span class="ident">set_bit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_bit_idx</span>(<span class="ident">addr</span>, <span class="ident">order</span>);
+    <span class="kw">fn </span>set_bit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; bool {
+        <span class="kw">let </span>idx = <span class="self">self</span>.get_bit_idx(addr, order);
 
-        <span class="kw">let</span> <span class="ident">buddy</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">buddies</span>[<span class="ident">order</span>];
-        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="op">!</span><span class="ident">buddy</span>.<span class="ident">is_set</span>(<span class="ident">idx</span>);
+        <span class="kw">let </span>buddy = <span class="kw-2">&amp;mut </span><span class="self">self</span>.buddies[order];
+        <span class="kw">let </span>change = !buddy.is_set(idx);
 
-        <span class="kw">if</span> <span class="ident">change</span> {
-            <span class="ident">buddy</span>.<span class="ident">set</span>(<span class="ident">idx</span>, <span class="bool-val">true</span>);
-            <span class="self">self</span>.<span class="ident">free</span>[<span class="ident">order</span>] <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span>change {
+            buddy.set(idx, <span class="bool-val">true</span>);
+            <span class="self">self</span>.free[order] += <span class="number">1</span>;
         }
 
-        <span class="ident">change</span>
+        change
     }
 
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">is_free</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_bit_idx</span>(<span class="ident">addr</span>, <span class="ident">order</span>);
+    <span class="attribute">#[cfg(test)]</span>
+    <span class="kw">fn </span>is_free(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; bool {
+        <span class="kw">let </span>idx = <span class="self">self</span>.get_bit_idx(addr, order);
 
-        <span class="kw">let</span> <span class="ident">buddy</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">buddies</span>[<span class="ident">order</span>];
-        <span class="ident">buddy</span>.<span class="ident">is_set</span>(<span class="ident">idx</span>)
+        <span class="kw">let </span>buddy = <span class="kw-2">&amp;</span><span class="self">self</span>.buddies[order];
+        buddy.is_set(idx)
     }
 
-    <span class="doccomment">/// Inserts the provided memory range.</span>
-    <span class="kw">fn</span> <span class="ident">insert_range</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">base</span>: <span class="ident">PhysAddr</span>, <span class="ident">end</span>: <span class="ident">PhysAddr</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remaning</span> <span class="op">=</span> <span class="ident">end</span> <span class="op">-</span> <span class="ident">base</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current</span> <span class="op">=</span> <span class="ident">base</span>;
+    <span class="doccomment">/// Inserts the provided memory range.
+    </span><span class="kw">fn </span>insert_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, base: PhysAddr, end: PhysAddr) {
+        <span class="kw">let </span><span class="kw-2">mut </span>remaning = end - base;
+        <span class="kw">let </span><span class="kw-2">mut </span>current = base;
 
-        <span class="kw">while</span> <span class="ident">remaning</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="kw">let</span> <span class="ident">order</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_order</span>(<span class="ident">current</span>, <span class="ident">remaning</span>);
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>];
+        <span class="kw">while </span>remaning &gt; <span class="number">0 </span>{
+            <span class="kw">let </span>order = <span class="self">self</span>.find_order(current, remaning);
+            <span class="kw">let </span>size = BUDDY_SIZE[order];
 
-            <span class="self">self</span>.<span class="ident">set_bit</span>(<span class="ident">current</span>, <span class="ident">order</span>);
+            <span class="self">self</span>.set_bit(current, order);
 
-            <span class="ident">current</span> <span class="op">+</span><span class="op">=</span> <span class="ident">size</span>;
-            <span class="ident">remaning</span> <span class="op">-</span><span class="op">=</span> <span class="ident">size</span>;
-        }
-    }
-
-    <span class="doccomment">/// Finds a free chunk with the provided `order`.</span>
-    <span class="kw">fn</span> <span class="ident">find_free</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PhysAddr</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">buddy</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">buddies</span>[<span class="ident">order</span>];
-        <span class="kw">let</span> <span class="ident">first_free</span> <span class="op">=</span> <span class="ident">buddy</span>.<span class="ident">find_first_set</span>()<span class="question-mark">?</span>;
-
-        <span class="ident">buddy</span>.<span class="ident">set</span>(<span class="ident">first_free</span>, <span class="bool-val">false</span>);
-        <span class="self">self</span>.<span class="ident">free</span>[<span class="ident">order</span>] <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="ident">base</span>.<span class="ident">align_up</span>(<span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>]) <span class="op">+</span> (<span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>] <span class="op">*</span> <span class="ident">first_free</span> <span class="kw">as</span> <span class="ident">u64</span>))
-    }
-
-    <span class="kw">fn</span> <span class="ident">clear_bit</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">idx</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_bit_idx</span>(<span class="ident">addr</span>, <span class="ident">order</span>);
-
-        <span class="kw">let</span> <span class="ident">buddy</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">buddies</span>[<span class="ident">order</span>];
-        <span class="kw">let</span> <span class="ident">change</span> <span class="op">=</span> <span class="ident">buddy</span>.<span class="ident">is_set</span>(<span class="ident">idx</span>) <span class="op">==</span> <span class="bool-val">true</span>;
-
-        <span class="kw">if</span> <span class="ident">change</span> {
-            <span class="ident">buddy</span>.<span class="ident">set</span>(<span class="ident">idx</span>, <span class="bool-val">false</span>);
-            <span class="self">self</span>.<span class="ident">free</span>[<span class="ident">order</span>] <span class="op">-</span><span class="op">=</span> <span class="number">1</span>;
-        }
-
-        <span class="ident">change</span>
-    }
-
-    <span class="kw">fn</span> <span class="ident">get_buddy</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="ident">PhysAddr</span> {
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>];
-        <span class="kw">let</span> <span class="ident">base</span> <span class="op">=</span> <span class="ident">addr</span>.<span class="ident">align_down</span>(<span class="ident">size</span> <span class="op">*</span> <span class="number">2</span>);
-
-        <span class="kw">if</span> <span class="ident">base</span> <span class="op">==</span> <span class="ident">addr</span> {
-            <span class="ident">addr</span> <span class="op">+</span> <span class="ident">size</span>
-        } <span class="kw">else</span> {
-            <span class="ident">base</span>
+            current += size;
+            remaning -= size;
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">deallocate_frame_inner</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="kw-2">mut</span> <span class="ident">order</span>: <span class="ident">usize</span>) {
-        <span class="kw">while</span> <span class="ident">order</span> <span class="op">&lt;</span> <span class="ident">BUDDY_SIZE</span>.<span class="ident">len</span>() {
-            <span class="kw">if</span> <span class="ident">order</span> <span class="op">&lt;</span> <span class="ident">BUDDY_SIZE</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="number">1</span> {
-                <span class="kw">let</span> <span class="ident">buddy</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_buddy</span>(<span class="ident">addr</span>, <span class="ident">order</span>);
+    <span class="doccomment">/// Finds a free chunk with the provided `order`.
+    </span><span class="kw">fn </span>find_free(<span class="kw-2">&amp;mut </span><span class="self">self</span>, order: usize) -&gt; <span class="prelude-ty">Option</span>&lt;PhysAddr&gt; {
+        <span class="kw">let </span>buddy = <span class="kw-2">&amp;mut </span><span class="self">self</span>.buddies[order];
+        <span class="kw">let </span>first_free = buddy.find_first_set()<span class="question-mark">?</span>;
 
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">clear_bit</span>(<span class="ident">buddy</span>, <span class="ident">order</span>) {
-                    <span class="ident">addr</span> <span class="op">=</span> <span class="ident">core::cmp::min</span>(<span class="ident">addr</span>, <span class="ident">buddy</span>);
-                    <span class="ident">order</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-                } <span class="kw">else</span> {
-                    <span class="self">self</span>.<span class="ident">set_bit</span>(<span class="ident">addr</span>, <span class="ident">order</span>);
+        buddy.set(first_free, <span class="bool-val">false</span>);
+        <span class="self">self</span>.free[order] -= <span class="number">1</span>;
+
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.base.align_up(BUDDY_SIZE[order]) + (BUDDY_SIZE[order] * first_free <span class="kw">as </span>u64))
+    }
+
+    <span class="kw">fn </span>clear_bit(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; bool {
+        <span class="kw">let </span>idx = <span class="self">self</span>.get_bit_idx(addr, order);
+
+        <span class="kw">let </span>buddy = <span class="kw-2">&amp;mut </span><span class="self">self</span>.buddies[order];
+        <span class="kw">let </span>change = buddy.is_set(idx) == <span class="bool-val">true</span>;
+
+        <span class="kw">if </span>change {
+            buddy.set(idx, <span class="bool-val">false</span>);
+            <span class="self">self</span>.free[order] -= <span class="number">1</span>;
+        }
+
+        change
+    }
+
+    <span class="kw">fn </span>get_buddy(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; PhysAddr {
+        <span class="kw">let </span>size = BUDDY_SIZE[order];
+        <span class="kw">let </span>base = addr.align_down(size * <span class="number">2</span>);
+
+        <span class="kw">if </span>base == addr {
+            addr + size
+        } <span class="kw">else </span>{
+            base
+        }
+    }
+
+    <span class="kw">fn </span>deallocate_frame_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>addr: PhysAddr, <span class="kw-2">mut </span>order: usize) {
+        <span class="kw">while </span>order &lt; BUDDY_SIZE.len() {
+            <span class="kw">if </span>order &lt; BUDDY_SIZE.len() - <span class="number">1 </span>{
+                <span class="kw">let </span>buddy = <span class="self">self</span>.get_buddy(addr, order);
+
+                <span class="kw">if </span><span class="self">self</span>.clear_bit(buddy, order) {
+                    addr = core::cmp::min(addr, buddy);
+                    order += <span class="number">1</span>;
+                } <span class="kw">else </span>{
+                    <span class="self">self</span>.set_bit(addr, order);
                     <span class="kw">break</span>;
                 }
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">set_bit</span>(<span class="ident">addr</span>, <span class="ident">order</span>);
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.set_bit(addr, order);
                 <span class="kw">break</span>;
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">allocate_frame_inner</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">order</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">PhysAddr</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>];
+    <span class="kw">fn </span>allocate_frame_inner(<span class="kw-2">&amp;mut </span><span class="self">self</span>, order: usize) -&gt; <span class="prelude-ty">Option</span>&lt;PhysAddr&gt; {
+        <span class="kw">let </span>size = BUDDY_SIZE[order];
 
-        <span class="comment">// Loop through the list of buddies until we can find one that can give us</span>
-        <span class="comment">// the requested memory.</span>
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="kw-2">&amp;</span><span class="ident">bsize</span>) <span class="kw">in</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">order</span>..].<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">let</span> <span class="ident">i</span> <span class="op">=</span> <span class="ident">i</span> <span class="op">+</span> <span class="ident">order</span>;
+        <span class="comment">// Loop through the list of buddies until we can find one that can give us
+        // the requested memory.
+        </span><span class="kw">for </span>(i, <span class="kw-2">&amp;</span>bsize) <span class="kw">in </span>BUDDY_SIZE[order..].iter().enumerate() {
+            <span class="kw">let </span>i = i + order;
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">free</span>[<span class="ident">i</span>] <span class="op">&gt;</span> <span class="number">0</span> {
-                <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">find_free</span>(<span class="ident">i</span>)<span class="question-mark">?</span>;
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">remaning</span> <span class="op">=</span> <span class="ident">bsize</span> <span class="op">-</span> <span class="ident">size</span>;
+            <span class="kw">if </span><span class="self">self</span>.free[i] &gt; <span class="number">0 </span>{
+                <span class="kw">let </span>result = <span class="self">self</span>.find_free(i)<span class="question-mark">?</span>;
+                <span class="kw">let </span><span class="kw-2">mut </span>remaning = bsize - size;
 
-                <span class="kw">if</span> <span class="ident">remaning</span> <span class="op">&gt;</span> <span class="number">0</span> {
-                    <span class="kw">for</span> <span class="ident">j</span> <span class="kw">in</span> (<span class="number">0</span>..<span class="op">=</span><span class="ident">i</span>).<span class="ident">rev</span>() {
-                        <span class="kw">let</span> <span class="ident">sizee</span> <span class="op">=</span> <span class="ident">BUDDY_SIZE</span>[<span class="ident">j</span>];
+                <span class="kw">if </span>remaning &gt; <span class="number">0 </span>{
+                    <span class="kw">for </span>j <span class="kw">in </span>(<span class="number">0</span>..=i).rev() {
+                        <span class="kw">let </span>sizee = BUDDY_SIZE[j];
 
-                        <span class="kw">while</span> <span class="ident">remaning</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">sizee</span> {
-                            <span class="self">self</span>.<span class="ident">set_bit</span>(<span class="ident">result</span> <span class="op">+</span> (<span class="ident">remaning</span> <span class="op">-</span> <span class="ident">sizee</span>) <span class="op">+</span> <span class="ident">size</span>, <span class="ident">j</span>);
-                            <span class="ident">remaning</span> <span class="op">-</span><span class="op">=</span> <span class="ident">sizee</span>;
+                        <span class="kw">while </span>remaning &gt;= sizee {
+                            <span class="self">self</span>.set_bit(result + (remaning - sizee) + size, j);
+                            remaning -= sizee;
                         }
                     }
                 }
 
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">result</span>);
+                <span class="kw">return </span><span class="prelude-val">Some</span>(result);
             }
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init_vm_frames</span>() {
-    <span class="ident">VM_FRAMES</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">frame_count</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::FRAME_ALLOCATOR</span>
-            .<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">lock_irq</span>()
-            .<span class="ident">frame_count</span>();
+<span class="kw">pub fn </span>init_vm_frames() {
+    VM_FRAMES.call_once(|| {
+        <span class="kw">let </span>frame_count = <span class="kw">super</span>::FRAME_ALLOCATOR
+            .<span class="number">0
+            </span>.get()
+            .unwrap()
+            .lock_irq()
+            .frame_count();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">frames</span> <span class="op">=</span> <span class="ident">Vec</span>::<span class="op">&lt;</span><span class="ident">VmFrame</span><span class="op">&gt;</span><span class="ident">::new</span>();
-        <span class="ident">frames</span>.<span class="ident">resize_with</span>(<span class="ident">frame_count</span>, <span class="ident">VmFrame::new</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>frames = Vec::&lt;VmFrame&gt;::new();
+        frames.resize_with(frame_count, VmFrame::new);
 
-        <span class="ident">frames</span>
+        frames
     });
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_vm_frames</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">VmFrame</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="ident">VM_FRAMES</span>.<span class="ident">get</span>()
+<span class="kw">pub fn </span>get_vm_frames() -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>Vec&lt;VmFrame&gt;&gt; {
+    VM_FRAMES.get()
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">VmFrame</span> {
-    <span class="ident">ref_count</span>: <span class="ident">AtomicUsize</span>,
+<span class="kw">pub struct </span>VmFrame {
+    ref_count: AtomicUsize,
 }
 
-<span class="kw">impl</span> <span class="ident">VmFrame</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">ref_count</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
+<span class="kw">impl </span>VmFrame {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            ref_count: AtomicUsize::new(<span class="number">0</span>),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dec_ref_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">ref_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">ref_count</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>);
+    <span class="kw">pub fn </span>dec_ref_count(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>ref_count = <span class="self">self</span>.ref_count.load(Ordering::SeqCst);
 
-        <span class="kw">if</span> <span class="ident">ref_count</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="self">self</span>.<span class="ident">ref_count</span>.<span class="ident">store</span>(<span class="ident">ref_count</span> <span class="op">-</span> <span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
+        <span class="kw">if </span>ref_count != <span class="number">0 </span>{
+            <span class="self">self</span>.ref_count.store(ref_count - <span class="number">1</span>, Ordering::SeqCst);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inc_ref_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">ref_count</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>);
+    <span class="kw">pub fn </span>inc_ref_count(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.ref_count.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ref_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">ref_count</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">pub fn </span>ref_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.ref_count.load(Ordering::SeqCst)
     }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">mod</span> <span class="ident">tests</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::<span class="kw">super</span></span>::<span class="kw-2">*</span>;
-    <span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="attribute">#[cfg(test)]</span>
+<span class="kw">mod </span>tests {
+    <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::AddressSpace</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::mem::AddressSpace;
 
-    <span class="attribute">#[<span class="ident">test</span>]</span>
-    <span class="kw">fn</span> <span class="ident">vm_frame_ref_count</span>() {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset_table</span> <span class="op">=</span> <span class="ident">address_space</span>.<span class="ident">offset_page_table</span>();
+    <span class="attribute">#[test]</span>
+    <span class="kw">fn </span>vm_frame_ref_count() {
+        <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
+        <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
-        <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let </span>frame: PhysFrame = FRAME_ALLOCATOR.allocate_frame().unwrap();
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">FRAME_ALLOCATOR</span>
-            .<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">lock</span>()
-            .<span class="ident">is_free</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>(), <span class="number">0</span>));
+        <span class="macro">assert!</span>(!FRAME_ALLOCATOR
+            .<span class="number">0
+            </span>.get()
+            .unwrap()
+            .lock()
+            .is_free(frame.start_address(), <span class="number">0</span>));
 
-        <span class="kw">let</span> <span class="ident">page</span> <span class="op">=</span> <span class="ident">Page</span>::<span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="ident">::containing_address</span>(<span class="ident">VirtAddr::new</span>(<span class="number">0xcafebabedea</span>));
+        <span class="kw">let </span>page = Page::&lt;Size4KiB&gt;::containing_address(VirtAddr::new(<span class="number">0xcafebabedea</span>));
 
-        <span class="kw">let</span> <span class="ident">vm_frame</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">start_address</span>().<span class="ident">as_vm_frame</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let </span>vm_frame = frame.start_address().as_vm_frame().unwrap();
 
-        <span class="comment">// The frame is not mapped yet, so the ref count should be 0.</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">vm_frame</span>.<span class="ident">ref_count</span>(), <span class="number">0</span>);
+        <span class="comment">// The frame is not mapped yet, so the ref count should be 0.
+        </span><span class="macro">assert_eq!</span>(vm_frame.ref_count(), <span class="number">0</span>);
 
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">FRAME_ALLOCATOR</span>
-            .<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">lock</span>()
-            .<span class="ident">is_free</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>(), <span class="number">0</span>));
+        <span class="macro">assert!</span>(!FRAME_ALLOCATOR
+            .<span class="number">0
+            </span>.get()
+            .unwrap()
+            .lock()
+            .is_free(frame.start_address(), <span class="number">0</span>));
 
-        <span class="kw">unsafe</span> { <span class="ident">offset_table</span>.<span class="ident">map_to</span>(<span class="ident">page</span>, <span class="ident">frame</span>, <span class="ident">PageTableFlags::PRESENT</span>) }
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">flush</span>();
+        <span class="kw">unsafe </span>{ offset_table.map_to(page, frame, PageTableFlags::PRESENT) }
+            .unwrap()
+            .flush();
 
-        <span class="comment">// We just mapped the frame to `0xcafebabe` so the ref count should be 1.</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">vm_frame</span>.<span class="ident">ref_count</span>(), <span class="number">1</span>);
+        <span class="comment">// We just mapped the frame to `0xcafebabe` so the ref count should be 1.
+        </span><span class="macro">assert_eq!</span>(vm_frame.ref_count(), <span class="number">1</span>);
 
-        <span class="ident">offset_table</span>.<span class="ident">unmap</span>(<span class="ident">page</span>).<span class="ident">unwrap</span>().<span class="number">1</span>.<span class="ident">flush</span>();
+        offset_table.unmap(page).unwrap().<span class="number">1</span>.flush();
 
-        <span class="comment">// We just unmapped the frame from `0xcafebabe` so the ref count should be 0 and</span>
-        <span class="comment">// the frame should be deallocated.</span>
-        <span class="macro">assert_eq!</span>(<span class="ident">vm_frame</span>.<span class="ident">ref_count</span>(), <span class="number">0</span>);
+        <span class="comment">// We just unmapped the frame from `0xcafebabe` so the ref count should be 0 and
+        // the frame should be deallocated.
+        </span><span class="macro">assert_eq!</span>(vm_frame.ref_count(), <span class="number">0</span>);
 
-        <span class="macro">assert!</span>(<span class="ident">FRAME_ALLOCATOR</span>
-            .<span class="number">0</span>
-            .<span class="ident">get</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">lock</span>()
-            .<span class="ident">is_free</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>(), <span class="number">0</span>));
+        <span class="macro">assert!</span>(FRAME_ALLOCATOR
+            .<span class="number">0
+            </span>.get()
+            .unwrap()
+            .lock()
+            .is_free(frame.start_address(), <span class="number">0</span>));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -29,36 +29,36 @@
 <span id="29">29</span>
 <span id="30">30</span>
 <span id="31">31</span>
-</pre><pre class="rust"><code><span class="doccomment">/// Creates a Rust string from the provided C string.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Safety</span>
-<span class="doccomment">/// - The provided pointer must be valid.</span>
-<span class="doccomment">/// - The provided pointer must point to a null-terminated C string.</span>
-<span class="doccomment">/// - The returned lifetime is not guaranteed to be the actual lifetime</span>
-<span class="doccomment">/// of `ptr`.</span>
-<span class="doccomment">/// - It is not guaranteed that the memory pointed by `ptr` won’t change</span>
-<span class="doccomment">/// before the Rust string has been destroyed.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">c_str_as_str</span><span class="op">&lt;</span><span class="lifetime">&#39;cstring</span><span class="op">&gt;</span>(<span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;cstring</span> <span class="ident">str</span> {
-    <span class="kw">let</span> <span class="ident">length</span> <span class="op">=</span> <span class="ident">c_strlen</span>(<span class="ident">ptr</span>);
-    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="ident">core::slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">length</span>);
+</pre><pre class="rust"><code><span class="doccomment">/// Creates a Rust string from the provided C string.
+///
+/// ## Safety
+/// - The provided pointer must be valid.
+/// - The provided pointer must point to a null-terminated C string.
+/// - The returned lifetime is not guaranteed to be the actual lifetime
+/// of `ptr`.
+/// - It is not guaranteed that the memory pointed by `ptr` won’t change
+/// before the Rust string has been destroyed.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>c_str_as_str&lt;<span class="lifetime">&#39;cstring</span>&gt;(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;cstring </span>str {
+    <span class="kw">let </span>length = c_strlen(ptr);
+    <span class="kw">let </span>slice = core::slice::from_raw_parts(ptr, length);
 
-    <span class="ident">core::str::from_utf8_unchecked</span>(<span class="ident">slice</span>)
+    core::str::from_utf8_unchecked(slice)
 }
 
-<span class="doccomment">/// Determines the string length of the given C string.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Safety</span>
-<span class="doccomment">/// - The provided pointer must be valid.</span>
-<span class="doccomment">/// - The provided pointer must point to a null-terminated C string.</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">c_strlen</span>(<span class="kw-2">mut</span> <span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">length</span> <span class="op">=</span> <span class="number">0</span>;
+<span class="doccomment">/// Determines the string length of the given C string.
+///
+/// ## Safety
+/// - The provided pointer must be valid.
+/// - The provided pointer must point to a null-terminated C string.
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>c_strlen(<span class="kw-2">mut </span>ptr: <span class="kw-2">*const </span>u8) -&gt; usize {
+    <span class="kw">let </span><span class="kw-2">mut </span>length = <span class="number">0</span>;
 
-    <span class="kw">while</span> <span class="kw-2">*</span><span class="ident">ptr</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">ptr</span>.<span class="ident">offset</span>(<span class="number">1</span>);
-        <span class="ident">length</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="kw">while </span><span class="kw-2">*</span>ptr != <span class="number">0 </span>{
+        ptr = ptr.offset(<span class="number">1</span>);
+        length += <span class="number">1</span>;
     }
 
-    <span class="ident">length</span>
+    length
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

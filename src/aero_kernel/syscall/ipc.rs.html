@@ -154,127 +154,127 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler::get_scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::task::TaskId</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::userland::scheduler::get_scheduler;
+<span class="kw">use </span><span class="kw">crate</span>::userland::task::TaskId;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">BlockQueue</span>, <span class="ident">Mutex</span>};
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">use</span> <span class="ident">aero_syscall::SyscallError</span>;
-<span class="kw">use</span> <span class="ident">alloc</span>::{<span class="ident">collections::VecDeque</span>, <span class="ident">vec::Vec</span>};
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+<span class="kw">use </span>aero_syscall::SyscallError;
+<span class="kw">use </span>alloc::{collections::VecDeque, vec::Vec};
+<span class="kw">use </span>spin::Once;
 
-<span class="comment">// TODO: Make this reassignable in case we want to handle the root node&#39;s death, so</span>
-<span class="comment">// someone else can take over (e.g. system server but after it&#39;s restarted)</span>
-<span class="kw">static</span> <span class="ident">IPC_ROOT_NODE</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="comment">// TODO: Make this reassignable in case we want to handle the root node&#39;s death, so
+// someone else can take over (e.g. system server but after it&#39;s restarted)
+</span><span class="kw">static </span>IPC_ROOT_NODE: Once&lt;usize&gt; = Once::new();
 
-<span class="kw">struct</span> <span class="ident">Message</span> {
-    <span class="ident">from</span>: <span class="ident">usize</span>,
-    <span class="ident">data</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>Message {
+    from: usize,
+    data: Vec&lt;u8&gt;,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MessageQueue</span> {
-    <span class="ident">queue</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">blockqueue</span>: <span class="ident">BlockQueue</span>,
+<span class="kw">pub struct </span>MessageQueue {
+    queue: Mutex&lt;VecDeque&lt;Message&gt;&gt;,
+    blockqueue: BlockQueue,
 }
 
-<span class="kw">impl</span> <span class="ident">MessageQueue</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">MessageQueue</span> {
-        <span class="ident">MessageQueue</span> {
-            <span class="ident">queue</span>: <span class="ident">Mutex::new</span>(<span class="ident">VecDeque::new</span>()),
-            <span class="ident">blockqueue</span>: <span class="ident">BlockQueue::new</span>(),
+<span class="kw">impl </span>MessageQueue {
+    <span class="kw">pub fn </span>new() -&gt; MessageQueue {
+        MessageQueue {
+            queue: Mutex::new(VecDeque::new()),
+            blockqueue: BlockQueue::new(),
         }
     }
 }
 
-<span class="kw">fn</span> <span class="ident">handle_recieve</span>(
-    <span class="ident">pid_ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>,
-    <span class="ident">output</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>],
-    <span class="ident">msg</span>: <span class="ident">Message</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="ident">output</span>[<span class="number">0</span>..<span class="ident">msg</span>.<span class="ident">data</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">msg</span>.<span class="ident">data</span>);
+<span class="kw">fn </span>handle_recieve(
+    pid_ptr: <span class="kw-2">&amp;mut </span>usize,
+    output: <span class="kw-2">&amp;mut </span>[u8],
+    msg: Message,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    output[<span class="number">0</span>..msg.data.len()].copy_from_slice(<span class="kw-2">&amp;</span>msg.data);
 
-    <span class="kw-2">*</span><span class="ident">pid_ptr</span> <span class="op">=</span> <span class="ident">msg</span>.<span class="ident">from</span>;
+    <span class="kw-2">*</span>pid_ptr = msg.from;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">msg</span>.<span class="ident">data</span>.<span class="ident">len</span>())
+    <span class="prelude-val">Ok</span>(msg.data.len())
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">send</span>(<span class="ident">pid</span>: <span class="ident">usize</span>, <span class="ident">payload</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">target</span> <span class="op">=</span> <span class="ident">get_scheduler</span>()
-        .<span class="ident">find_task</span>(<span class="ident">TaskId::new</span>(<span class="ident">pid</span>))
-        .<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>;
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>send(pid: usize, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>target = get_scheduler()
+        .find_task(TaskId::new(pid))
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">message_queue</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">target</span>.<span class="ident">message_queue</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">queue</span> <span class="op">=</span> <span class="ident">message_queue</span>.<span class="ident">queue</span>.<span class="ident">lock</span>();
+    <span class="kw">let </span>message_queue = <span class="kw-2">&amp;</span>target.message_queue;
+    <span class="kw">let </span><span class="kw-2">mut </span>queue = message_queue.queue.lock();
 
-    <span class="comment">// Push the message to the message queue of the provided task.</span>
-    <span class="ident">queue</span>.<span class="ident">push_back</span>(<span class="ident">Message</span> {
-        <span class="ident">from</span>: <span class="ident">get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">pid</span>().<span class="ident">as_usize</span>(),
-        <span class="ident">data</span>: <span class="ident">payload</span>.<span class="ident">to_vec</span>(),
+    <span class="comment">// Push the message to the message queue of the provided task.
+    </span>queue.push_back(Message {
+        from: get_scheduler().current_task().pid().as_usize(),
+        data: payload.to_vec(),
     });
 
-    <span class="comment">// Notify the task that it has a new message if its awaiting for one!</span>
-    <span class="ident">message_queue</span>.<span class="ident">blockqueue</span>.<span class="ident">notify_complete</span>();
+    <span class="comment">// Notify the task that it has a new message if its awaiting for one!
+    </span>message_queue.blockqueue.notify_complete();
 
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">recv</span>(<span class="ident">pid_ptr</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>, <span class="ident">output</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>], <span class="ident">block</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">current</span> <span class="op">=</span> <span class="ident">get_scheduler</span>().<span class="ident">current_task</span>();
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>recv(pid_ptr: <span class="kw-2">&amp;mut </span>usize, output: <span class="kw-2">&amp;mut </span>[u8], block: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>current = get_scheduler().current_task();
 
-    <span class="kw">if</span> <span class="ident">block</span> <span class="op">==</span> <span class="number">0</span> {
-        <span class="comment">// nonblocking read</span>
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">msgqueue</span> <span class="op">=</span> <span class="ident">current</span>.<span class="ident">message_queue</span>.<span class="ident">queue</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="ident">item</span> <span class="op">=</span> <span class="ident">msgqueue</span>
-            .<span class="ident">pop_front</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;empty message queues should always be deleted!&quot;</span>);
+    <span class="kw">if </span>block == <span class="number">0 </span>{
+        <span class="comment">// nonblocking read
+        </span><span class="kw">let </span><span class="kw-2">mut </span>msgqueue = current.message_queue.queue.lock();
+        <span class="kw">let </span>item = msgqueue
+            .pop_front()
+            .expect(<span class="string">&quot;empty message queues should always be deleted!&quot;</span>);
 
-        <span class="kw">if</span> <span class="ident">item</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">output</span>.<span class="ident">len</span>() {
-            <span class="ident">msgqueue</span>.<span class="ident">push_front</span>(<span class="ident">item</span>);
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">SyscallError::E2BIG</span>);
+        <span class="kw">if </span>item.data.len() &gt; output.len() {
+            msgqueue.push_front(item);
+            <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::E2BIG);
         }
 
-        <span class="kw">return</span> <span class="ident">handle_recieve</span>(<span class="ident">pid_ptr</span>, <span class="ident">output</span>, <span class="ident">item</span>);
+        <span class="kw">return </span>handle_recieve(pid_ptr, output, item);
     }
 
-    <span class="kw">let</span> <span class="ident">mq</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">current</span>.<span class="ident">message_queue</span>;
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">our_queue</span> <span class="op">=</span> <span class="ident">mq</span>
-        .<span class="ident">blockqueue</span>
-        .<span class="ident">block_on</span>(<span class="kw-2">&amp;</span><span class="ident">mq</span>.<span class="ident">queue</span>, <span class="op">|</span><span class="ident">msg</span><span class="op">|</span> <span class="ident">msg</span>.<span class="ident">front</span>().<span class="ident">is_some</span>())
-        .<span class="ident">unwrap</span>();
+    <span class="kw">let </span>mq = <span class="kw-2">&amp;</span>current.message_queue;
+    <span class="kw">let </span><span class="kw-2">mut </span>our_queue = mq
+        .blockqueue
+        .block_on(<span class="kw-2">&amp;</span>mq.queue, |msg| msg.front().is_some())
+        .unwrap();
 
-    <span class="kw">let</span> <span class="ident">msg</span> <span class="op">=</span> <span class="ident">our_queue</span>
-        .<span class="ident">pop_front</span>()
-        .<span class="ident">expect</span>(<span class="string">&quot;ipc_recieve: someone else stole our message!&quot;</span>);
+    <span class="kw">let </span>msg = our_queue
+        .pop_front()
+        .expect(<span class="string">&quot;ipc_recieve: someone else stole our message!&quot;</span>);
 
-    <span class="kw">if</span> <span class="ident">msg</span>.<span class="ident">data</span>.<span class="ident">len</span>() <span class="op">&gt;</span> <span class="ident">output</span>.<span class="ident">len</span>() {
-        <span class="ident">our_queue</span>.<span class="ident">push_front</span>(<span class="ident">msg</span>);
-        <span class="prelude-val">Err</span>(<span class="ident">SyscallError::E2BIG</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">handle_recieve</span>(<span class="ident">pid_ptr</span>, <span class="ident">output</span>, <span class="ident">msg</span>)
-    }
-}
-
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">discover_root</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">IPC_ROOT_NODE</span>.<span class="ident">get</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">pid</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span><span class="ident">pid</span>),
-        <span class="prelude-val">None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>),
+    <span class="kw">if </span>msg.data.len() &gt; output.len() {
+        our_queue.push_front(msg);
+        <span class="prelude-val">Err</span>(SyscallError::E2BIG)
+    } <span class="kw">else </span>{
+        handle_recieve(pid_ptr, output, msg)
     }
 }
 
-<span class="attribute">#[<span class="ident">syscall</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">become_root</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">IPC_ROOT_NODE</span>.<span class="ident">is_completed</span>() {
-        <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>)
-    } <span class="kw">else</span> {
-        <span class="ident">IPC_ROOT_NODE</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">get_scheduler</span>().<span class="ident">current_task</span>().<span class="ident">pid</span>().<span class="ident">as_usize</span>());
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>discover_root() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">match </span>IPC_ROOT_NODE.get() {
+        <span class="prelude-val">Some</span>(pid) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>pid),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(SyscallError::EINVAL),
+    }
+}
+
+<span class="attribute">#[syscall]</span>
+<span class="kw">pub fn </span>become_root() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">if </span>IPC_ROOT_NODE.is_completed() {
+        <span class="prelude-val">Err</span>(SyscallError::EINVAL)
+    } <span class="kw">else </span>{
+        IPC_ROOT_NODE.call_once(|| get_scheduler().current_task().pid().as_usize());
 
         <span class="prelude-val">Ok</span>(<span class="number">0</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

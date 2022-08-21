@@ -38,45 +38,45 @@
 <span id="38">38</span>
 <span id="39">39</span>
 <span id="40">40</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2020 Amari Robinson</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0, &lt;LICENSE-APACHE or</span>
-<span class="comment">// http://apache.org/licenses/LICENSE-2.0&gt; or the MIT license &lt;LICENSE-MIT or</span>
-<span class="comment">// http://opensource.org/licenses/MIT&gt;, at your option. This file may not be</span>
-<span class="comment">// copied, modified, or distributed except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2020 Amari Robinson
+//
+// Licensed under the Apache License, Version 2.0, &lt;LICENSE-APACHE or
+// http://apache.org/licenses/LICENSE-2.0&gt; or the MIT license &lt;LICENSE-MIT or
+// http://opensource.org/licenses/MIT&gt;, at your option. This file may not be
+// copied, modified, or distributed except according to those terms.
 
-<span class="doccomment">/// Base trait for link operations.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// `LinkPtr` is the representation of a link pointer.</span>
-<span class="doccomment">/// Typically this is `NonNull`, but compact representations such</span>
-<span class="doccomment">/// as `u8` or `u16` are possible.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">trait</span> <span class="ident">LinkOps</span> {
-    <span class="doccomment">/// The link pointer type.</span>
-    <span class="kw">type</span> <span class="ident">LinkPtr</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Eq</span>;
+</span><span class="doccomment">/// Base trait for link operations.
+///
+/// `LinkPtr` is the representation of a link pointer.
+/// Typically this is `NonNull`, but compact representations such
+/// as `u8` or `u16` are possible.
+</span><span class="kw">pub unsafe trait </span>LinkOps {
+    <span class="doccomment">/// The link pointer type.
+    </span><span class="kw">type </span>LinkPtr: Copy + Eq;
 
-    <span class="doccomment">/// Attempts to acquire ownership of a link so that it can be used in an</span>
-    <span class="doccomment">/// intrusive collection.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// If this function succeeds then the intrusive collection will have</span>
-    <span class="doccomment">/// exclusive access to the link until `release_link` is called.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">acquire_link</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::LinkPtr</span>) -&gt; <span class="ident">bool</span>;
+    <span class="doccomment">/// Attempts to acquire ownership of a link so that it can be used in an
+    /// intrusive collection.
+    ///
+    /// If this function succeeds then the intrusive collection will have
+    /// exclusive access to the link until `release_link` is called.
+    </span><span class="kw">unsafe fn </span>acquire_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; bool;
 
-    <span class="doccomment">/// Releases ownership of a link that was previously acquired with `acquire_link`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// # Safety</span>
-    <span class="doccomment">/// An implementation of `release_link` must not panic.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">release_link</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">ptr</span>: <span class="ident"><span class="self">Self</span>::LinkPtr</span>);
+    <span class="doccomment">/// Releases ownership of a link that was previously acquired with `acquire_link`.
+    ///
+    /// # Safety
+    /// An implementation of `release_link` must not panic.
+    </span><span class="kw">unsafe fn </span>release_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr);
 }
 
-<span class="doccomment">/// The default implementation of `LinkOps` associated with a link type.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">DefaultLinkOps</span> {
-    <span class="doccomment">/// The default link operations.</span>
-    <span class="kw">type</span> <span class="ident">Ops</span>: <span class="ident">LinkOps</span> <span class="op">+</span> <span class="ident">Default</span>;
+<span class="doccomment">/// The default implementation of `LinkOps` associated with a link type.
+</span><span class="kw">pub trait </span>DefaultLinkOps {
+    <span class="doccomment">/// The default link operations.
+    </span><span class="kw">type </span>Ops: LinkOps + Default;
 
-    <span class="doccomment">/// The associated constant that represents `Ops::default()`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This exists because `Default::default()` is not a constant function.</span>
-    <span class="kw">const</span> <span class="ident">NEW</span>: <span class="ident"><span class="self">Self</span>::Ops</span>;
+    <span class="doccomment">/// The associated constant that represents `Ops::default()`.
+    ///
+    /// This exists because `Default::default()` is not a constant function.
+    </span><span class="kw">const </span>NEW: <span class="self">Self</span>::Ops;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -9,16 +9,16 @@
 <span id="9">9</span>
 <span id="10">10</span>
 <span id="11">11</span>
-</pre><pre class="rust"><code><span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TimeVal</span> {
-    <span class="kw">pub</span> <span class="ident">tv_sec</span>: <span class="ident">i64</span>,
-    <span class="kw">pub</span> <span class="ident">tv_usec</span>: <span class="ident">i64</span>,
+</pre><pre class="rust"><code><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>TimeVal {
+    <span class="kw">pub </span>tv_sec: i64,
+    <span class="kw">pub </span>tv_usec: i64,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ITimerVal</span> {
-    <span class="kw">pub</span> <span class="ident">it_interval</span>: <span class="ident">TimeVal</span>, <span class="comment">// Interval for periodic timer</span>
-    <span class="kw">pub</span> <span class="ident">it_value</span>: <span class="ident">TimeVal</span>,    <span class="comment">// Time until next expiration</span>
-}
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>ITimerVal {
+    <span class="kw">pub </span>it_interval: TimeVal, <span class="comment">// Interval for periodic timer
+    </span><span class="kw">pub </span>it_value: TimeVal,    <span class="comment">// Time until next expiration
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

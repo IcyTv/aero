@@ -140,147 +140,147 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
-</pre><pre class="rust"><code><span class="doccomment">//! Fixed size parameters list with optional subparameters.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Fixed size parameters list with optional subparameters.
 
-<span class="kw">use</span> <span class="ident">core::fmt</span>::{<span class="self">self</span>, <span class="ident">Debug</span>, <span class="ident">Formatter</span>};
+</span><span class="kw">use </span>core::fmt::{<span class="self">self</span>, Debug, Formatter};
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">MAX_PARAMS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>MAX_PARAMS: usize = <span class="number">32</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Params</span> {
-    <span class="doccomment">/// Number of subparameters for each parameter.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// For each entry in the `params` slice, this stores the length of the param as number of</span>
-    <span class="doccomment">/// subparams at the same index as the param in the `params` slice.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// At the subparam positions the length will always be `0`.</span>
-    <span class="ident">subparams</span>: [<span class="ident">u8</span>; <span class="ident">MAX_PARAMS</span>],
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">pub struct </span>Params {
+    <span class="doccomment">/// Number of subparameters for each parameter.
+    ///
+    /// For each entry in the `params` slice, this stores the length of the param as number of
+    /// subparams at the same index as the param in the `params` slice.
+    ///
+    /// At the subparam positions the length will always be `0`.
+    </span>subparams: [u8; MAX_PARAMS],
 
-    <span class="doccomment">/// All parameters and subparameters.</span>
-    <span class="ident">params</span>: [<span class="ident">u16</span>; <span class="ident">MAX_PARAMS</span>],
+    <span class="doccomment">/// All parameters and subparameters.
+    </span>params: [u16; MAX_PARAMS],
 
-    <span class="doccomment">/// Number of suparameters in the current parameter.</span>
-    <span class="ident">current_subparams</span>: <span class="ident">u8</span>,
+    <span class="doccomment">/// Number of suparameters in the current parameter.
+    </span>current_subparams: u8,
 
-    <span class="doccomment">/// Total number of parameters and subparameters.</span>
-    <span class="ident">len</span>: <span class="ident">usize</span>,
+    <span class="doccomment">/// Total number of parameters and subparameters.
+    </span>len: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">Params</span> {
-    <span class="doccomment">/// Returns the number of parameters.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">len</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">len</span>
+<span class="kw">impl </span>Params {
+    <span class="doccomment">/// Returns the number of parameters.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>len(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.len
     }
 
-    <span class="doccomment">/// Returns `true` if there are no parameters present.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_empty</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">len</span> <span class="op">==</span> <span class="number">0</span>
+    <span class="doccomment">/// Returns `true` if there are no parameters present.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.len == <span class="number">0
+    </span>}
+
+    <span class="doccomment">/// Returns an iterator over all parameters and subparameters.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ParamsIter&lt;<span class="lifetime">&#39;_</span>&gt; {
+        ParamsIter::new(<span class="self">self</span>)
     }
 
-    <span class="doccomment">/// Returns an iterator over all parameters and subparameters.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ParamsIter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span> {
-        <span class="ident">ParamsIter::new</span>(<span class="self">self</span>)
+    <span class="doccomment">/// Returns `true` if there is no more space for additional parameters.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>is_full(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.len == MAX_PARAMS
     }
 
-    <span class="doccomment">/// Returns `true` if there is no more space for additional parameters.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">is_full</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">len</span> <span class="op">==</span> <span class="ident">MAX_PARAMS</span>
+    <span class="doccomment">/// Clear all parameters.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.current_subparams = <span class="number">0</span>;
+        <span class="self">self</span>.len = <span class="number">0</span>;
     }
 
-    <span class="doccomment">/// Clear all parameters.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">current_subparams</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="self">self</span>.<span class="ident">len</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="doccomment">/// Add an additional parameter.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, item: u16) {
+        <span class="self">self</span>.subparams[<span class="self">self</span>.len - <span class="self">self</span>.current_subparams <span class="kw">as </span>usize] = <span class="self">self</span>.current_subparams + <span class="number">1</span>;
+        <span class="self">self</span>.params[<span class="self">self</span>.len] = item;
+        <span class="self">self</span>.current_subparams = <span class="number">0</span>;
+        <span class="self">self</span>.len += <span class="number">1</span>;
     }
 
-    <span class="doccomment">/// Add an additional parameter.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">item</span>: <span class="ident">u16</span>) {
-        <span class="self">self</span>.<span class="ident">subparams</span>[<span class="self">self</span>.<span class="ident">len</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">current_subparams</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_subparams</span> <span class="op">+</span> <span class="number">1</span>;
-        <span class="self">self</span>.<span class="ident">params</span>[<span class="self">self</span>.<span class="ident">len</span>] <span class="op">=</span> <span class="ident">item</span>;
-        <span class="self">self</span>.<span class="ident">current_subparams</span> <span class="op">=</span> <span class="number">0</span>;
-        <span class="self">self</span>.<span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
-
-    <span class="doccomment">/// Add an additional subparameter to the current parameter.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">extend</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">item</span>: <span class="ident">u16</span>) {
-        <span class="self">self</span>.<span class="ident">params</span>[<span class="self">self</span>.<span class="ident">len</span>] <span class="op">=</span> <span class="ident">item</span>;
-        <span class="self">self</span>.<span class="ident">current_subparams</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="self">self</span>.<span class="ident">len</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">IntoIterator</span> <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Params</span> {
-    <span class="kw">type</span> <span class="ident">IntoIter</span> <span class="op">=</span> <span class="ident">ParamsIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u16</span>];
-
-    <span class="kw">fn</span> <span class="ident">into_iter</span>(<span class="self">self</span>) -&gt; <span class="ident"><span class="self">Self</span>::IntoIter</span> {
-        <span class="self">self</span>.<span class="ident">iter</span>()
+    <span class="doccomment">/// Add an additional subparameter to the current parameter.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, item: u16) {
+        <span class="self">self</span>.params[<span class="self">self</span>.len] = item;
+        <span class="self">self</span>.current_subparams += <span class="number">1</span>;
+        <span class="self">self</span>.len += <span class="number">1</span>;
     }
 }
 
-<span class="doccomment">/// Immutable subparameter iterator.</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ParamsIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Params</span>,
-    <span class="ident">index</span>: <span class="ident">usize</span>,
-}
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; IntoIterator <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Params {
+    <span class="kw">type </span>IntoIter = ParamsIter&lt;<span class="lifetime">&#39;a</span>&gt;;
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u16];
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">ParamsIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">params</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">Params</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">params</span>, <span class="ident">index</span>: <span class="number">0</span> }
+    <span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; <span class="self">Self</span>::IntoIter {
+        <span class="self">self</span>.iter()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">ParamsIter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">u16</span>];
+<span class="doccomment">/// Immutable subparameter iterator.
+</span><span class="kw">pub struct </span>ParamsIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    params: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Params,
+    index: usize,
+}
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">params</span>.<span class="ident">len</span>() {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; ParamsIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">fn </span>new(params: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Params) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ params, index: <span class="number">0 </span>}
+    }
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>ParamsIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u16];
+
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.index &gt;= <span class="self">self</span>.params.len() {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="comment">// Get all subparameters for the current parameter.</span>
-        <span class="kw">let</span> <span class="ident">num_subparams</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">params</span>.<span class="ident">subparams</span>[<span class="self">self</span>.<span class="ident">index</span>];
-        <span class="kw">let</span> <span class="ident">param</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">params</span>.<span class="ident">params</span>[<span class="self">self</span>.<span class="ident">index</span>..<span class="self">self</span>.<span class="ident">index</span> <span class="op">+</span> <span class="ident">num_subparams</span> <span class="kw">as</span> <span class="ident">usize</span>];
+        <span class="comment">// Get all subparameters for the current parameter.
+        </span><span class="kw">let </span>num_subparams = <span class="self">self</span>.params.subparams[<span class="self">self</span>.index];
+        <span class="kw">let </span>param = <span class="kw-2">&amp;</span><span class="self">self</span>.params.params[<span class="self">self</span>.index..<span class="self">self</span>.index + num_subparams <span class="kw">as </span>usize];
 
-        <span class="comment">// Jump to the next parameter.</span>
-        <span class="self">self</span>.<span class="ident">index</span> <span class="op">+</span><span class="op">=</span> <span class="ident">num_subparams</span> <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="comment">// Jump to the next parameter.
+        </span><span class="self">self</span>.index += num_subparams <span class="kw">as </span>usize;
 
-        <span class="prelude-val">Some</span>(<span class="ident">param</span>)
+        <span class="prelude-val">Some</span>(param)
     }
 
-    <span class="kw">fn</span> <span class="ident">size_hint</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="ident">usize</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>) {
-        <span class="kw">let</span> <span class="ident">remaining</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">params</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="self">self</span>.<span class="ident">index</span>;
-        (<span class="ident">remaining</span>, <span class="prelude-val">Some</span>(<span class="ident">remaining</span>))
+    <span class="kw">fn </span>size_hint(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (usize, <span class="prelude-ty">Option</span>&lt;usize&gt;) {
+        <span class="kw">let </span>remaining = <span class="self">self</span>.params.len() - <span class="self">self</span>.index;
+        (remaining, <span class="prelude-val">Some</span>(remaining))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Debug</span> <span class="kw">for</span> <span class="ident">Params</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;[&quot;</span>)<span class="question-mark">?</span>;
+<span class="kw">impl </span>Debug <span class="kw">for </span>Params {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;[&quot;</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">param</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">i</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">for </span>(i, param) <span class="kw">in </span><span class="self">self</span>.iter().enumerate() {
+            <span class="kw">if </span>i != <span class="number">0 </span>{
+                <span class="macro">write!</span>(f, <span class="string">&quot;;&quot;</span>)<span class="question-mark">?</span>;
             }
 
-            <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">subparam</span>) <span class="kw">in</span> <span class="ident">param</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                <span class="kw">if</span> <span class="ident">i</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                    <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;:&quot;</span>)<span class="question-mark">?</span>;
+            <span class="kw">for </span>(i, subparam) <span class="kw">in </span>param.iter().enumerate() {
+                <span class="kw">if </span>i != <span class="number">0 </span>{
+                    <span class="macro">write!</span>(f, <span class="string">&quot;:&quot;</span>)<span class="question-mark">?</span>;
                 }
 
-                <span class="ident">subparam</span>.<span class="ident">fmt</span>(<span class="ident">f</span>)<span class="question-mark">?</span>;
+                subparam.fmt(f)<span class="question-mark">?</span>;
             }
         }
 
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;]&quot;</span>)
+        <span class="macro">write!</span>(f, <span class="string">&quot;]&quot;</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="vte" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="vte" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

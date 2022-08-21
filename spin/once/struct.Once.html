@@ -4,13 +4,13 @@ value to be stored by the <a href="struct.Once.html" title="Once"><code>Once</co
 <code>Once</code>).</p>
 <p>Because <a href="struct.Once.html#method.new" title="Once::new"><code>Once::new</code></a> is <code>const</code>, this primitive may be used to safely initialize statics.</p>
 <h2 id="examples"><a href="#examples">Examples</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin;
 
-<span class="kw">static</span> <span class="ident">START</span>: <span class="ident">spin::Once</span> <span class="op">=</span> <span class="ident">spin::Once::new</span>();
+<span class="kw">static </span>START: spin::Once = spin::Once::new();
 
-<span class="ident">START</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-    <span class="comment">// run initialization here</span>
-});</code></pre></div>
+START.call_once(|| {
+    <span class="comment">// run initialization here
+</span>});</code></pre></div>
 </div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><div id="implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Once%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/once.rs.html#124-300">source</a></span><a href="#impl-Once%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, R:&nbsp;<a class="trait" href="../relax/trait.RelaxStrategy.html" title="trait spin::relax::RelaxStrategy">RelaxStrategy</a>&gt; <a class="struct" href="struct.Once.html" title="struct spin::once::Once">Once</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.call_once" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/once.rs.html#159-257">source</a></span><h4 class="code-header">pub fn <a href="#method.call_once" class="fnname">call_once</a>&lt;F:&nbsp;FnOnce() -&gt; T&gt;(&amp;self, f: F) -&gt; &amp;T</h4></section></summary><div class="docblock"><p>Performs an initialization routine once and only once. The given closure
 will be executed if this is the first time <code>call_once</code> has been called,
 and otherwise the routine will <em>not</em> be invoked.</p>
@@ -25,17 +25,17 @@ run.</p>
 to initialize. This is similar to the poisoning behaviour of <code>std::sync</code>’s
 primitives.</p>
 <h5 id="examples-1"><a href="#examples-1">Examples</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin;
 
-<span class="kw">static</span> <span class="ident">INIT</span>: <span class="ident">spin::Once</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">spin::Once::new</span>();
+<span class="kw">static </span>INIT: spin::Once&lt;usize&gt; = spin::Once::new();
 
-<span class="kw">fn</span> <span class="ident">get_cached_val</span>() -&gt; <span class="ident">usize</span> {
-    <span class="kw-2">*</span><span class="ident">INIT</span>.<span class="ident">call_once</span>(<span class="ident">expensive_computation</span>)
+<span class="kw">fn </span>get_cached_val() -&gt; usize {
+    <span class="kw-2">*</span>INIT.call_once(expensive_computation)
 }
 
-<span class="kw">fn</span> <span class="ident">expensive_computation</span>() -&gt; <span class="ident">usize</span> {
-    <span class="comment">// ...</span>
-}</code></pre></div>
+<span class="kw">fn </span>expensive_computation() -&gt; usize {
+    <span class="comment">// ...
+</span>}</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.wait" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/once.rs.html#268-275">source</a></span><h4 class="code-header">pub fn <a href="#method.wait" class="fnname">wait</a>(&amp;self) -&gt; &amp;T</h4></section></summary><div class="docblock"><p>Spins until the <a href="struct.Once.html" title="Once"><code>Once</code></a> contains a value.</p>
 <p>Note that in releases prior to <code>0.7</code>, this function had the behaviour of <a href="struct.Once.html#method.poll" title="Once::poll"><code>Once::poll</code></a>.</p>
 <h5 id="panics-1"><a href="#panics-1">Panics</a></h5>
@@ -88,4 +88,4 @@ therefore it is safe to access the value directly via
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_from" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_from</a>(value: U) -&gt; Result&lt;T, &lt;T as TryFrom&lt;U&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-TryInto%3CU%3E-for-Once%3CT%2C%20R%3E" class="impl has-srclink"><a href="#impl-TryInto%3CU%3E-for-Once%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, U&gt; TryInto&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: TryFrom&lt;T&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle" open><summary><section id="associatedtype.Error-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Error-1" class="anchor"></a><h4 class="code-header">type <a class="associatedtype">Error</a> = &lt;U as TryFrom&lt;T&gt;&gt;::Error</h4></section></summary><div class='docblock'><p>The type returned in the event of a conversion error.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_into" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_into" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_into</a>(self) -&gt; Result&lt;U, &lt;U as TryFrom&lt;T&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
-</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -117,90 +117,90 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">mod</span> <span class="ident">addr</span>;
-<span class="kw">mod</span> <span class="ident">frame</span>;
-<span class="kw">mod</span> <span class="ident">mapper</span>;
-<span class="kw">mod</span> <span class="ident">page</span>;
-<span class="kw">mod</span> <span class="ident">page_table</span>;
+</span><span class="kw">mod </span>addr;
+<span class="kw">mod </span>frame;
+<span class="kw">mod </span>mapper;
+<span class="kw">mod </span>page;
+<span class="kw">mod </span>page_table;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::addr</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::frame</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::mapper::MapperFlush</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::mapper</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::page</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="self">self</span>::page_table</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="self">self</span>::addr::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="self">self</span>::frame::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="self">self</span>::mapper::MapperFlush;
+<span class="kw">pub use </span><span class="self">self</span>::mapper::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="self">self</span>::page::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="self">self</span>::page_table::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">stivale_boot::v2::StivaleMemoryMapTag</span>;
+<span class="kw">use </span>stivale_boot::v2::StivaleMemoryMapTag;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">frame::LockedFrameAllocator</span>;
+<span class="kw">pub use </span>frame::LockedFrameAllocator;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::controlregs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET</span>;
+<span class="kw">use </span><span class="kw">crate</span>::arch::controlregs;
+<span class="kw">use </span><span class="kw">crate</span>::PHYSICAL_MEMORY_OFFSET;
 
-<span class="kw">pub</span> <span class="kw">static</span> <span class="ident">FRAME_ALLOCATOR</span>: <span class="ident">LockedFrameAllocator</span> <span class="op">=</span> <span class="ident">LockedFrameAllocator::new_uninit</span>();
+<span class="kw">pub static </span>FRAME_ALLOCATOR: LockedFrameAllocator = LockedFrameAllocator::new_uninit();
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Describes an page fault error code.</span>
-    <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageFaultErrorCode</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// If this flag is set, the page fault was caused by a page-protection violation,</span>
-        <span class="doccomment">/// else the page fault was caused by a not-present page.</span>
-        <span class="kw">const</span> <span class="ident">PROTECTION_VIOLATION</span> <span class="op">=</span> <span class="number">1</span>;
+    <span class="doccomment">/// Describes an page fault error code.
+    </span><span class="attribute">#[repr(transparent)]</span>
+    <span class="kw">pub struct </span>PageFaultErrorCode: u64 {
+        <span class="doccomment">/// If this flag is set, the page fault was caused by a page-protection violation,
+        /// else the page fault was caused by a not-present page.
+        </span><span class="kw">const </span>PROTECTION_VIOLATION = <span class="number">1</span>;
 
-        <span class="doccomment">/// If this flag is set, the memory access that caused the page fault was a write.</span>
-        <span class="doccomment">/// Else the access that caused the page fault is a memory read. This bit does not</span>
-        <span class="doccomment">/// necessarily indicate the cause of the page fault was a read or write violation.</span>
-        <span class="kw">const</span> <span class="ident">CAUSED_BY_WRITE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
+        <span class="doccomment">/// If this flag is set, the memory access that caused the page fault was a write.
+        /// Else the access that caused the page fault is a memory read. This bit does not
+        /// necessarily indicate the cause of the page fault was a read or write violation.
+        </span><span class="kw">const </span>CAUSED_BY_WRITE = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
 
-        <span class="doccomment">/// If this flag is set, an access in user mode (CPL=3) caused the page fault. Else</span>
-        <span class="doccomment">/// an access in supervisor mode (CPL=0, 1, or 2) caused the page fault. This bit</span>
-        <span class="doccomment">/// does not necessarily indicate the cause of the page fault was a privilege violation.</span>
-        <span class="kw">const</span> <span class="ident">USER_MODE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
+        <span class="doccomment">/// If this flag is set, an access in user mode (CPL=3) caused the page fault. Else
+        /// an access in supervisor mode (CPL=0, 1, or 2) caused the page fault. This bit
+        /// does not necessarily indicate the cause of the page fault was a privilege violation.
+        </span><span class="kw">const </span>USER_MODE = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
 
-        <span class="doccomment">/// If this flag is set, the page fault is a result of the processor reading a 1 from</span>
-        <span class="doccomment">/// a reserved field within a page-translation-table entry.</span>
-        <span class="kw">const</span> <span class="ident">MALFORMED_TABLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
+        <span class="doccomment">/// If this flag is set, the page fault is a result of the processor reading a 1 from
+        /// a reserved field within a page-translation-table entry.
+        </span><span class="kw">const </span>MALFORMED_TABLE = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
 
-        <span class="doccomment">/// If this flag is set, it indicates that the access that caused the page fault was an</span>
-        <span class="doccomment">/// instruction fetch.</span>
-        <span class="kw">const</span> <span class="ident">INSTRUCTION_FETCH</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
+        <span class="doccomment">/// If this flag is set, it indicates that the access that caused the page fault was an
+        /// instruction fetch.
+        </span><span class="kw">const </span>INSTRUCTION_FETCH = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
     }
 }
 
-<span class="doccomment">/// Returns true if level 5 paging is supported by the CPU and is enabled in Cr4.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">level_5_paging_enabled</span>() -&gt; <span class="ident">bool</span> {
-    <span class="ident">controlregs::read_cr4</span>().<span class="ident">contains</span>(<span class="ident">controlregs::Cr4Flags::L5_PAGING</span>)
+<span class="doccomment">/// Returns true if level 5 paging is supported by the CPU and is enabled in Cr4.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>level_5_paging_enabled() -&gt; bool {
+    controlregs::read_cr4().contains(controlregs::Cr4Flags::L5_PAGING)
 }
 
-<span class="doccomment">/// Initialize paging.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(
-    <span class="ident">memory_regions</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleMemoryMapTag</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">OffsetPageTable</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span><span class="op">&gt;</span>, <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">memory_regions</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">memory_regions</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleMemoryMapTag</span>;
-        <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">u64</span>).<span class="ident">as_hhdm_virt</span>();
+<span class="doccomment">/// Initialize paging.
+</span><span class="kw">pub fn </span>init(
+    memory_regions: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMemoryMapTag,
+) -&gt; <span class="prelude-ty">Result</span>&lt;OffsetPageTable&lt;<span class="lifetime">&#39;static</span>&gt;, MapToError&lt;Size4KiB&gt;&gt; {
+    <span class="kw">let </span>memory_regions = <span class="kw">unsafe </span>{
+        <span class="kw">let </span>ptr = memory_regions <span class="kw">as </span><span class="kw-2">*const </span>StivaleMemoryMapTag;
+        <span class="kw">let </span>addr = PhysAddr::new(ptr <span class="kw">as </span>u64).as_hhdm_virt();
 
-        <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">addr</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">StivaleMemoryMapTag</span><span class="op">&gt;</span>()
+        <span class="kw-2">&amp;*</span>addr.as_mut_ptr::&lt;StivaleMemoryMapTag&gt;()
     };
 
-    <span class="kw">let</span> <span class="ident">active_level_4</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">active_level_4_table</span>() };
-    <span class="kw">let</span> <span class="ident">offset_table</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">OffsetPageTable::new</span>(<span class="ident">active_level_4</span>, <span class="ident">PHYSICAL_MEMORY_OFFSET</span>) };
+    <span class="kw">let </span>active_level_4 = <span class="kw">unsafe </span>{ active_level_4_table() };
+    <span class="kw">let </span>offset_table = <span class="kw">unsafe </span>{ OffsetPageTable::new(active_level_4, PHYSICAL_MEMORY_OFFSET) };
 
-    <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">init</span>(<span class="ident">memory_regions</span>);
-    <span class="prelude-val">Ok</span>(<span class="ident">offset_table</span>)
+    FRAME_ALLOCATOR.init(memory_regions);
+    <span class="prelude-val">Ok</span>(offset_table)
 }
 
-<span class="doccomment">/// Get a mutable reference to the active level 4 page table.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">active_level_4_table</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> <span class="ident">PageTable</span> {
-    <span class="kw">let</span> (<span class="ident">level_4_table_frame</span>, <span class="kw">_</span>) <span class="op">=</span> <span class="ident">controlregs::read_cr3</span>();
+<span class="doccomment">/// Get a mutable reference to the active level 4 page table.
+</span><span class="kw">pub unsafe fn </span>active_level_4_table() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PageTable {
+    <span class="kw">let </span>(level_4_table_frame, <span class="kw">_</span>) = controlregs::read_cr3();
 
-    <span class="kw">let</span> <span class="ident">virtual_address</span> <span class="op">=</span> <span class="ident">level_4_table_frame</span>.<span class="ident">start_address</span>().<span class="ident">as_hhdm_virt</span>();
-    <span class="kw">let</span> <span class="ident">page_table_ptr</span>: <span class="kw-2">*mut</span> <span class="ident">PageTable</span> <span class="op">=</span> <span class="ident">virtual_address</span>.<span class="ident">as_mut_ptr</span>();
+    <span class="kw">let </span>virtual_address = level_4_table_frame.start_address().as_hhdm_virt();
+    <span class="kw">let </span>page_table_ptr: <span class="kw-2">*mut </span>PageTable = virtual_address.as_mut_ptr();
 
-    <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">page_table_ptr</span>
+    <span class="kw-2">&amp;mut *</span>page_table_ptr
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

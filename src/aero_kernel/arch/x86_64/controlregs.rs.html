@@ -290,263 +290,263 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::{<span class="ident">PhysAddr</span>, <span class="ident">PhysFrame</span>, <span class="ident">VirtAddr</span>};
-
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Controls cache settings for the level 4 page table.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cr3Flags</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// Use a writethrough cache policy for the P4 table (else a writeback policy is used).</span>
-        <span class="kw">const</span> <span class="ident">PAGE_LEVEL_WRITETHROUGH</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="doccomment">/// Disable caching for the P4 table.</span>
-        <span class="kw">const</span> <span class="ident">PAGE_LEVEL_CACHE_DISABLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-    }
-}
+</span><span class="kw">use </span><span class="kw">crate</span>::mem::paging::{PhysAddr, PhysFrame, VirtAddr};
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Controls cache settings for the level 4 page table.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cr4Flags</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// Enables hardware-supported performance enhancements for software running in</span>
-        <span class="doccomment">/// virtual-8086 mode.</span>
-        <span class="kw">const</span> <span class="ident">VIRTUAL_8086_MODE_EXTENSIONS</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="doccomment">/// Enables support for protected-mode virtual interrupts.</span>
-        <span class="kw">const</span> <span class="ident">PROTECTED_MODE_VIRTUAL_INTERRUPTS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="doccomment">/// When set, only privilege-level 0 can execute the RDTSC or RDTSCP instructions.</span>
-        <span class="kw">const</span> <span class="ident">TIMESTAMP_DISABLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="doccomment">/// Enables I/O breakpoint capability and enforces treatment of DR4 and DR5 registers</span>
-        <span class="doccomment">/// as reserved.</span>
-        <span class="kw">const</span> <span class="ident">DEBUGGING_EXTENSIONS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="doccomment">/// Enables the use of 4MB physical frames; ignored in long mode.</span>
-        <span class="kw">const</span> <span class="ident">PAGE_SIZE_EXTENSION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="doccomment">/// Enables physical address extension and 2MB physical frames; required in long mode.</span>
-        <span class="kw">const</span> <span class="ident">PHYSICAL_ADDRESS_EXTENSION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="doccomment">/// Enables the machine-check exception mechanism.</span>
-        <span class="kw">const</span> <span class="ident">MACHINE_CHECK_EXCEPTION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-        <span class="doccomment">/// Enables the global-page mechanism, which allows to make page translations global</span>
-        <span class="doccomment">/// to all processes.</span>
-        <span class="kw">const</span> <span class="ident">PAGE_GLOBAL</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-        <span class="doccomment">/// Allows software running at any privilege level to use the RDPMC instruction.</span>
-        <span class="kw">const</span> <span class="ident">PERFORMANCE_MONITOR_COUNTER</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
-        <span class="doccomment">/// Enable the use of legacy SSE instructions; allows using FXSAVE/FXRSTOR for saving</span>
-        <span class="doccomment">/// processor state of 128-bit media instructions.</span>
-        <span class="kw">const</span> <span class="ident">OSFXSR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>;
-        <span class="doccomment">/// Enables the SIMD floating-point exception (#XF) for handling unmasked 256-bit and</span>
-        <span class="doccomment">/// 128-bit media floating-point errors.</span>
-        <span class="kw">const</span> <span class="ident">OSXMMEXCPT_ENABLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
-        <span class="doccomment">/// Prevents the execution of the SGDT, SIDT, SLDT, SMSW, and STR instructions by</span>
-        <span class="doccomment">/// user-mode software.</span>
-        <span class="kw">const</span> <span class="ident">USER_MODE_INSTRUCTION_PREVENTION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>;
-        <span class="doccomment">/// Enables 5-level paging on supported CPUs.</span>
-        <span class="kw">const</span> <span class="ident">L5_PAGING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>;
-        <span class="doccomment">/// Enables VMX insturctions.</span>
-        <span class="kw">const</span> <span class="ident">VIRTUAL_MACHINE_EXTENSIONS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">13</span>;
-        <span class="doccomment">/// Enables SMX instructions.</span>
-        <span class="kw">const</span> <span class="ident">SAFER_MODE_EXTENSIONS</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>;
-        <span class="doccomment">/// Enables software running in 64-bit mode at any privilege level to read and write</span>
-        <span class="doccomment">/// the FS.base and GS.base hidden segment register state.</span>
-        <span class="kw">const</span> <span class="ident">FSGSBASE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>;
-        <span class="doccomment">/// Enables process-context identifiers (PCIDs).</span>
-        <span class="kw">const</span> <span class="ident">PCID</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">17</span>;
-        <span class="doccomment">/// Enables extendet processor state management instructions, including XGETBV and XSAVE.</span>
-        <span class="kw">const</span> <span class="ident">OSXSAVE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">18</span>;
-        <span class="doccomment">/// Prevents the execution of instructions that reside in pages accessible by user-mode</span>
-        <span class="doccomment">/// software when the processor is in supervisor-mode.</span>
-        <span class="kw">const</span> <span class="ident">SUPERVISOR_MODE_EXECUTION_PROTECTION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>;
-        <span class="doccomment">/// Enables restrictions for supervisor-mode software when reading data from user-mode</span>
-        <span class="doccomment">/// pages.</span>
-        <span class="kw">const</span> <span class="ident">SUPERVISOR_MODE_ACCESS_PREVENTION</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">21</span>;
-        <span class="doccomment">/// Enables 4-level paging to associate each linear address with a protection key.</span>
-        <span class="kw">const</span> <span class="ident">PROTECTION_KEY</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">22</span>;
+    <span class="doccomment">/// Controls cache settings for the level 4 page table.
+    </span><span class="kw">pub struct </span>Cr3Flags: u64 {
+        <span class="doccomment">/// Use a writethrough cache policy for the P4 table (else a writeback policy is used).
+        </span><span class="kw">const </span>PAGE_LEVEL_WRITETHROUGH = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Disable caching for the P4 table.
+        </span><span class="kw">const </span>PAGE_LEVEL_CACHE_DISABLE = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// Configuration flags of the [`Cr0`] register.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Cr0Flags</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// Enables protected mode.</span>
-        <span class="kw">const</span> <span class="ident">PROTECTED_MODE_ENABLE</span> <span class="op">=</span> <span class="number">1</span>;
-        <span class="doccomment">/// Enables monitoring of the coprocessor, typical for x87 instructions.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Controls (together with the [`TASK_SWITCHED`](Cr0Flags::TASK_SWITCHED)</span>
-        <span class="doccomment">/// flag) whether a `wait` or `fwait` instruction should cause an `#NE` exception.</span>
-        <span class="kw">const</span> <span class="ident">MONITOR_COPROCESSOR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="doccomment">/// Force all x87 and MMX instructions to cause an `#NE` exception.</span>
-        <span class="kw">const</span> <span class="ident">EMULATE_COPROCESSOR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="doccomment">/// Automatically set to 1 on _hardware_ task switch.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// This flags allows lazily saving x87/MMX/SSE instructions on hardware context switches.</span>
-        <span class="kw">const</span> <span class="ident">TASK_SWITCHED</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="doccomment">/// Indicates support of 387DX math coprocessor instructions.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Always set on all recent x86 processors, cannot be cleared.</span>
-        <span class="kw">const</span> <span class="ident">EXTENSION_TYPE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="doccomment">/// Enables the native (internal) error reporting mechanism for x87 FPU errors.</span>
-        <span class="kw">const</span> <span class="ident">NUMERIC_ERROR</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="doccomment">/// Controls whether supervisor-level writes to read-only pages are inhibited.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// When set, it is not possible to write to read-only pages from ring 0.</span>
-        <span class="kw">const</span> <span class="ident">WRITE_PROTECT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>;
-        <span class="doccomment">/// Enables automatic usermode alignment checking if [`RFlags::ALIGNMENT_CHECK`] is also set.</span>
-        <span class="kw">const</span> <span class="ident">ALIGNMENT_MASK</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">18</span>;
-        <span class="doccomment">/// Ignored, should always be unset.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Must be unset if [`CACHE_DISABLE`](Cr0Flags::CACHE_DISABLE) is unset.</span>
-        <span class="doccomment">/// Older CPUs used this to control write-back/write-through cache strategy.</span>
-        <span class="kw">const</span> <span class="ident">NOT_WRITE_THROUGH</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">29</span>;
-        <span class="doccomment">/// Disables some processor caches, specifics are model-dependent.</span>
-        <span class="kw">const</span> <span class="ident">CACHE_DISABLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">30</span>;
-        <span class="doccomment">/// Enables paging.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// If this bit is set, [`PROTECTED_MODE_ENABLE`](Cr0Flags::PROTECTED_MODE_ENABLE) must be set.</span>
-        <span class="kw">const</span> <span class="ident">PAGING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">31</span>;
+    <span class="doccomment">/// Controls cache settings for the level 4 page table.
+    </span><span class="kw">pub struct </span>Cr4Flags: u64 {
+        <span class="doccomment">/// Enables hardware-supported performance enhancements for software running in
+        /// virtual-8086 mode.
+        </span><span class="kw">const </span>VIRTUAL_8086_MODE_EXTENSIONS = <span class="number">1</span>;
+        <span class="doccomment">/// Enables support for protected-mode virtual interrupts.
+        </span><span class="kw">const </span>PROTECTED_MODE_VIRTUAL_INTERRUPTS = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="doccomment">/// When set, only privilege-level 0 can execute the RDTSC or RDTSCP instructions.
+        </span><span class="kw">const </span>TIMESTAMP_DISABLE = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// Enables I/O breakpoint capability and enforces treatment of DR4 and DR5 registers
+        /// as reserved.
+        </span><span class="kw">const </span>DEBUGGING_EXTENSIONS = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Enables the use of 4MB physical frames; ignored in long mode.
+        </span><span class="kw">const </span>PAGE_SIZE_EXTENSION = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="doccomment">/// Enables physical address extension and 2MB physical frames; required in long mode.
+        </span><span class="kw">const </span>PHYSICAL_ADDRESS_EXTENSION = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="doccomment">/// Enables the machine-check exception mechanism.
+        </span><span class="kw">const </span>MACHINE_CHECK_EXCEPTION = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+        <span class="doccomment">/// Enables the global-page mechanism, which allows to make page translations global
+        /// to all processes.
+        </span><span class="kw">const </span>PAGE_GLOBAL = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="doccomment">/// Allows software running at any privilege level to use the RDPMC instruction.
+        </span><span class="kw">const </span>PERFORMANCE_MONITOR_COUNTER = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// Enable the use of legacy SSE instructions; allows using FXSAVE/FXRSTOR for saving
+        /// processor state of 128-bit media instructions.
+        </span><span class="kw">const </span>OSFXSR = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+        <span class="doccomment">/// Enables the SIMD floating-point exception (#XF) for handling unmasked 256-bit and
+        /// 128-bit media floating-point errors.
+        </span><span class="kw">const </span>OSXMMEXCPT_ENABLE = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
+        <span class="doccomment">/// Prevents the execution of the SGDT, SIDT, SLDT, SMSW, and STR instructions by
+        /// user-mode software.
+        </span><span class="kw">const </span>USER_MODE_INSTRUCTION_PREVENTION = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
+        <span class="doccomment">/// Enables 5-level paging on supported CPUs.
+        </span><span class="kw">const </span>L5_PAGING = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
+        <span class="doccomment">/// Enables VMX insturctions.
+        </span><span class="kw">const </span>VIRTUAL_MACHINE_EXTENSIONS = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
+        <span class="doccomment">/// Enables SMX instructions.
+        </span><span class="kw">const </span>SAFER_MODE_EXTENSIONS = <span class="number">1 </span>&lt;&lt; <span class="number">14</span>;
+        <span class="doccomment">/// Enables software running in 64-bit mode at any privilege level to read and write
+        /// the FS.base and GS.base hidden segment register state.
+        </span><span class="kw">const </span>FSGSBASE = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
+        <span class="doccomment">/// Enables process-context identifiers (PCIDs).
+        </span><span class="kw">const </span>PCID = <span class="number">1 </span>&lt;&lt; <span class="number">17</span>;
+        <span class="doccomment">/// Enables extendet processor state management instructions, including XGETBV and XSAVE.
+        </span><span class="kw">const </span>OSXSAVE = <span class="number">1 </span>&lt;&lt; <span class="number">18</span>;
+        <span class="doccomment">/// Prevents the execution of instructions that reside in pages accessible by user-mode
+        /// software when the processor is in supervisor-mode.
+        </span><span class="kw">const </span>SUPERVISOR_MODE_EXECUTION_PROTECTION = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
+        <span class="doccomment">/// Enables restrictions for supervisor-mode software when reading data from user-mode
+        /// pages.
+        </span><span class="kw">const </span>SUPERVISOR_MODE_ACCESS_PREVENTION = <span class="number">1 </span>&lt;&lt; <span class="number">21</span>;
+        <span class="doccomment">/// Enables 4-level paging to associate each linear address with a protection key.
+        </span><span class="kw">const </span>PROTECTION_KEY = <span class="number">1 </span>&lt;&lt; <span class="number">22</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="doccomment">/// The RFLAGS register.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RFlags</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// Processor feature identification flag.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// If this flag is modifiable, the CPU supports CPUID.</span>
-        <span class="kw">const</span> <span class="ident">ID</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">21</span>;
-        <span class="doccomment">/// Indicates that an external, maskable interrupt is pending.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Used when virtual-8086 mode extensions (CR4.VME) or protected-mode virtual</span>
-        <span class="doccomment">/// interrupts (CR4.PVI) are activated.</span>
-        <span class="kw">const</span> <span class="ident">VIRTUAL_INTERRUPT_PENDING</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">20</span>;
-        <span class="doccomment">/// Virtual image of the INTERRUPT_FLAG bit.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Used when virtual-8086 mode extensions (CR4.VME) or protected-mode virtual</span>
-        <span class="doccomment">/// interrupts (CR4.PVI) are activated.</span>
-        <span class="kw">const</span> <span class="ident">VIRTUAL_INTERRUPT</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">19</span>;
-        <span class="doccomment">/// Enable automatic alignment checking if CR0.AM is set. Only works if CPL is 3.</span>
-        <span class="kw">const</span> <span class="ident">ALIGNMENT_CHECK</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">18</span>;
-        <span class="doccomment">/// Enable the virtual-8086 mode.</span>
-        <span class="kw">const</span> <span class="ident">VIRTUAL_8086_MODE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">17</span>;
-        <span class="doccomment">/// Allows to restart an instruction following an instrucion breakpoint.</span>
-        <span class="kw">const</span> <span class="ident">RESUME_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>;
-        <span class="doccomment">/// Used by `iret` in hardware task switch mode to determine if current task is nested.</span>
-        <span class="kw">const</span> <span class="ident">NESTED_TASK</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">14</span>;
-        <span class="doccomment">/// The high bit of the I/O Privilege Level field.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Specifies the privilege level required for executing I/O address-space instructions.</span>
-        <span class="kw">const</span> <span class="ident">IOPL_HIGH</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">13</span>;
-        <span class="doccomment">/// The low bit of the I/O Privilege Level field.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Specifies the privilege level required for executing I/O address-space instructions.</span>
-        <span class="kw">const</span> <span class="ident">IOPL_LOW</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>;
-        <span class="doccomment">/// Set by hardware to indicate that the sign bit of the result of the last signed integer</span>
-        <span class="doccomment">/// operation differs from the source operands.</span>
-        <span class="kw">const</span> <span class="ident">OVERFLOW_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>;
-        <span class="doccomment">/// Determines the order in which strings are processed.</span>
-        <span class="kw">const</span> <span class="ident">DIRECTION_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
-        <span class="doccomment">/// Enable interrupts.</span>
-        <span class="kw">const</span> <span class="ident">INTERRUPT_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>;
-        <span class="doccomment">/// Enable single-step mode for debugging.</span>
-        <span class="kw">const</span> <span class="ident">TRAP_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
-        <span class="doccomment">/// Set by hardware if last arithmetic operation resulted in a negative value.</span>
-        <span class="kw">const</span> <span class="ident">SIGN_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-        <span class="doccomment">/// Set by hardware if last arithmetic operation resulted in a zero value.</span>
-        <span class="kw">const</span> <span class="ident">ZERO_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-        <span class="doccomment">/// Set by hardware if last arithmetic operation generated a carry ouf of bit 3 of the</span>
-        <span class="doccomment">/// result.</span>
-        <span class="kw">const</span> <span class="ident">AUXILIARY_CARRY_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="doccomment">/// Set by hardware if last result has an even number of 1 bits (only for some operations).</span>
-        <span class="kw">const</span> <span class="ident">PARITY_FLAG</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="doccomment">/// Set by hardware if last arithmetic operation generated a carry out of the</span>
-        <span class="doccomment">/// most-significant bit of the result.</span>
-        <span class="kw">const</span> <span class="ident">CARRY_FLAG</span> <span class="op">=</span> <span class="number">1</span>;
+    <span class="doccomment">/// Configuration flags of the [`Cr0`] register.
+    </span><span class="kw">pub struct </span>Cr0Flags: u64 {
+        <span class="doccomment">/// Enables protected mode.
+        </span><span class="kw">const </span>PROTECTED_MODE_ENABLE = <span class="number">1</span>;
+        <span class="doccomment">/// Enables monitoring of the coprocessor, typical for x87 instructions.
+        ///
+        /// Controls (together with the [`TASK_SWITCHED`](Cr0Flags::TASK_SWITCHED)
+        /// flag) whether a `wait` or `fwait` instruction should cause an `#NE` exception.
+        </span><span class="kw">const </span>MONITOR_COPROCESSOR = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="doccomment">/// Force all x87 and MMX instructions to cause an `#NE` exception.
+        </span><span class="kw">const </span>EMULATE_COPROCESSOR = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// Automatically set to 1 on _hardware_ task switch.
+        ///
+        /// This flags allows lazily saving x87/MMX/SSE instructions on hardware context switches.
+        </span><span class="kw">const </span>TASK_SWITCHED = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Indicates support of 387DX math coprocessor instructions.
+        ///
+        /// Always set on all recent x86 processors, cannot be cleared.
+        </span><span class="kw">const </span>EXTENSION_TYPE = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="doccomment">/// Enables the native (internal) error reporting mechanism for x87 FPU errors.
+        </span><span class="kw">const </span>NUMERIC_ERROR = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="doccomment">/// Controls whether supervisor-level writes to read-only pages are inhibited.
+        ///
+        /// When set, it is not possible to write to read-only pages from ring 0.
+        </span><span class="kw">const </span>WRITE_PROTECT = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
+        <span class="doccomment">/// Enables automatic usermode alignment checking if [`RFlags::ALIGNMENT_CHECK`] is also set.
+        </span><span class="kw">const </span>ALIGNMENT_MASK = <span class="number">1 </span>&lt;&lt; <span class="number">18</span>;
+        <span class="doccomment">/// Ignored, should always be unset.
+        ///
+        /// Must be unset if [`CACHE_DISABLE`](Cr0Flags::CACHE_DISABLE) is unset.
+        /// Older CPUs used this to control write-back/write-through cache strategy.
+        </span><span class="kw">const </span>NOT_WRITE_THROUGH = <span class="number">1 </span>&lt;&lt; <span class="number">29</span>;
+        <span class="doccomment">/// Disables some processor caches, specifics are model-dependent.
+        </span><span class="kw">const </span>CACHE_DISABLE = <span class="number">1 </span>&lt;&lt; <span class="number">30</span>;
+        <span class="doccomment">/// Enables paging.
+        ///
+        /// If this bit is set, [`PROTECTED_MODE_ENABLE`](Cr0Flags::PROTECTED_MODE_ENABLE) must be set.
+        </span><span class="kw">const </span>PAGING = <span class="number">1 </span>&lt;&lt; <span class="number">31</span>;
     }
 }
 
-<span class="doccomment">/// Returns the current value of the RFLAGS register.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_rflags</span>() -&gt; <span class="ident">RFlags</span> {
-    <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span>;
+<span class="macro">bitflags::bitflags!</span> {
+    <span class="doccomment">/// The RFLAGS register.
+    </span><span class="kw">pub struct </span>RFlags: u64 {
+        <span class="doccomment">/// Processor feature identification flag.
+        ///
+        /// If this flag is modifiable, the CPU supports CPUID.
+        </span><span class="kw">const </span>ID = <span class="number">1 </span>&lt;&lt; <span class="number">21</span>;
+        <span class="doccomment">/// Indicates that an external, maskable interrupt is pending.
+        ///
+        /// Used when virtual-8086 mode extensions (CR4.VME) or protected-mode virtual
+        /// interrupts (CR4.PVI) are activated.
+        </span><span class="kw">const </span>VIRTUAL_INTERRUPT_PENDING = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
+        <span class="doccomment">/// Virtual image of the INTERRUPT_FLAG bit.
+        ///
+        /// Used when virtual-8086 mode extensions (CR4.VME) or protected-mode virtual
+        /// interrupts (CR4.PVI) are activated.
+        </span><span class="kw">const </span>VIRTUAL_INTERRUPT = <span class="number">1 </span>&lt;&lt; <span class="number">19</span>;
+        <span class="doccomment">/// Enable automatic alignment checking if CR0.AM is set. Only works if CPL is 3.
+        </span><span class="kw">const </span>ALIGNMENT_CHECK = <span class="number">1 </span>&lt;&lt; <span class="number">18</span>;
+        <span class="doccomment">/// Enable the virtual-8086 mode.
+        </span><span class="kw">const </span>VIRTUAL_8086_MODE = <span class="number">1 </span>&lt;&lt; <span class="number">17</span>;
+        <span class="doccomment">/// Allows to restart an instruction following an instrucion breakpoint.
+        </span><span class="kw">const </span>RESUME_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">16</span>;
+        <span class="doccomment">/// Used by `iret` in hardware task switch mode to determine if current task is nested.
+        </span><span class="kw">const </span>NESTED_TASK = <span class="number">1 </span>&lt;&lt; <span class="number">14</span>;
+        <span class="doccomment">/// The high bit of the I/O Privilege Level field.
+        ///
+        /// Specifies the privilege level required for executing I/O address-space instructions.
+        </span><span class="kw">const </span>IOPL_HIGH = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
+        <span class="doccomment">/// The low bit of the I/O Privilege Level field.
+        ///
+        /// Specifies the privilege level required for executing I/O address-space instructions.
+        </span><span class="kw">const </span>IOPL_LOW = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
+        <span class="doccomment">/// Set by hardware to indicate that the sign bit of the result of the last signed integer
+        /// operation differs from the source operands.
+        </span><span class="kw">const </span>OVERFLOW_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
+        <span class="doccomment">/// Determines the order in which strings are processed.
+        </span><span class="kw">const </span>DIRECTION_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
+        <span class="doccomment">/// Enable interrupts.
+        </span><span class="kw">const </span>INTERRUPT_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+        <span class="doccomment">/// Enable single-step mode for debugging.
+        </span><span class="kw">const </span>TRAP_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// Set by hardware if last arithmetic operation resulted in a negative value.
+        </span><span class="kw">const </span>SIGN_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="doccomment">/// Set by hardware if last arithmetic operation resulted in a zero value.
+        </span><span class="kw">const </span>ZERO_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+        <span class="doccomment">/// Set by hardware if last arithmetic operation generated a carry ouf of bit 3 of the
+        /// result.
+        </span><span class="kw">const </span>AUXILIARY_CARRY_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="doccomment">/// Set by hardware if last result has an even number of 1 bits (only for some operations).
+        </span><span class="kw">const </span>PARITY_FLAG = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// Set by hardware if last arithmetic operation generated a carry out of the
+        /// most-significant bit of the result.
+        </span><span class="kw">const </span>CARRY_FLAG = <span class="number">1</span>;
+    }
+}
 
-    <span class="kw">unsafe</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;pushf; pop {}&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">value</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">preserves_flags</span>));
+<span class="doccomment">/// Returns the current value of the RFLAGS register.
+</span><span class="kw">pub fn </span>read_rflags() -&gt; RFlags {
+    <span class="kw">let </span>value: u64;
+
+    <span class="kw">unsafe </span>{
+        <span class="macro">asm!</span>(<span class="string">&quot;pushf; pop {}&quot;</span>, out(reg) value, options(nomem, preserves_flags));
     }
 
-    <span class="ident">RFlags::from_bits_truncate</span>(<span class="ident">value</span>)
+    RFlags::from_bits_truncate(value)
 }
 
-<span class="doccomment">/// Read the current set of CR4 flags.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_cr4</span>() -&gt; <span class="ident">Cr4Flags</span> {
-    <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span>;
+<span class="doccomment">/// Read the current set of CR4 flags.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>read_cr4() -&gt; Cr4Flags {
+    <span class="kw">let </span>value: u64;
 
-    <span class="kw">unsafe</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr4&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">value</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>, <span class="ident">preserves_flags</span>));
+    <span class="kw">unsafe </span>{
+        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr4&quot;</span>, out(reg) value, options(nomem, nostack, preserves_flags));
     }
 
-    <span class="ident">Cr4Flags::from_bits_truncate</span>(<span class="ident">value</span>) <span class="comment">// Get the flags from the bits.</span>
-}
+    Cr4Flags::from_bits_truncate(value) <span class="comment">// Get the flags from the bits.
+</span>}
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_cr3_raw</span>() -&gt; <span class="ident">u64</span> {
-    <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span>;
+<span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>read_cr3_raw() -&gt; u64 {
+    <span class="kw">let </span>value: u64;
 
-    <span class="kw">unsafe</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr3&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">value</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>, <span class="ident">preserves_flags</span>));
+    <span class="kw">unsafe </span>{
+        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr3&quot;</span>, out(reg) value, options(nomem, nostack, preserves_flags));
     }
 
-    <span class="ident">value</span>
+    value
 }
 
-<span class="doccomment">/// Read the current set of CR0 flags.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_cr0</span>() -&gt; <span class="ident">Cr0Flags</span> {
-    <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span>;
+<span class="doccomment">/// Read the current set of CR0 flags.
+</span><span class="kw">pub fn </span>read_cr0() -&gt; Cr0Flags {
+    <span class="kw">let </span>value: u64;
 
-    <span class="kw">unsafe</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr0&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">value</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>, <span class="ident">preserves_flags</span>));
+    <span class="kw">unsafe </span>{
+        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr0&quot;</span>, out(reg) value, options(nomem, nostack, preserves_flags));
     }
 
-    <span class="ident">Cr0Flags::from_bits_truncate</span>(<span class="ident">value</span>) <span class="comment">// Get the flags from the bits.</span>
+    Cr0Flags::from_bits_truncate(value) <span class="comment">// Get the flags from the bits.
+</span>}
+
+<span class="doccomment">/// Write the given set of CR4 flags.
+///
+/// ## Safety
+/// - This function does not preserve the current value of the CR4 flags and
+/// reserved fields.
+/// - Its possible to violate memory safety by swapping CR4 flags.
+</span><span class="kw">pub unsafe fn </span>write_cr4(value: Cr4Flags) {
+    <span class="macro">asm!</span>(<span class="string">&quot;mov cr4, {}&quot;</span>, <span class="kw">in</span>(reg) value.bits(), options(nostack, preserves_flags));
 }
 
-<span class="doccomment">/// Write the given set of CR4 flags.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Safety</span>
-<span class="doccomment">/// - This function does not preserve the current value of the CR4 flags and</span>
-<span class="doccomment">/// reserved fields.</span>
-<span class="doccomment">/// - Its possible to violate memory safety by swapping CR4 flags.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write_cr4</span>(<span class="ident">value</span>: <span class="ident">Cr4Flags</span>) {
-    <span class="macro">asm!</span>(<span class="string">&quot;mov cr4, {}&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">value</span>.<span class="ident">bits</span>(), <span class="ident">options</span>(<span class="ident">nostack</span>, <span class="ident">preserves_flags</span>));
+<span class="doccomment">/// Write the given set of CR0 flags.
+///
+/// ## Safety
+/// - This function does not preserve the current value of the CR0 flags and
+/// reserved fields.
+/// - Its possible to violate memory safety by swapping CR0 flags.
+</span><span class="kw">pub unsafe fn </span>write_cr0(value: Cr0Flags) {
+    <span class="macro">asm!</span>(<span class="string">&quot;mov cr0, {}&quot;</span>, <span class="kw">in</span>(reg) value.bits(), options(nostack, preserves_flags));
 }
 
-<span class="doccomment">/// Write the given set of CR0 flags.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Safety</span>
-<span class="doccomment">/// - This function does not preserve the current value of the CR0 flags and</span>
-<span class="doccomment">/// reserved fields.</span>
-<span class="doccomment">/// - Its possible to violate memory safety by swapping CR0 flags.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">write_cr0</span>(<span class="ident">value</span>: <span class="ident">Cr0Flags</span>) {
-    <span class="macro">asm!</span>(<span class="string">&quot;mov cr0, {}&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">value</span>.<span class="ident">bits</span>(), <span class="ident">options</span>(<span class="ident">nostack</span>, <span class="ident">preserves_flags</span>));
+<span class="doccomment">/// Read the current P4 table address from the CR3 register.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>read_cr3() -&gt; (PhysFrame, Cr3Flags) {
+    <span class="kw">let </span>value = read_cr3_raw();
+    <span class="kw">let </span>addr = PhysAddr::new(value &amp; <span class="number">0x_000f_ffff_ffff_f000</span>); <span class="comment">// Grab the frame address
+    </span><span class="kw">let </span>frame = PhysFrame::containing_address(addr); <span class="comment">// Get the frame containing the address
+
+    </span><span class="kw">let </span>flags = Cr3Flags::from_bits_truncate(value &amp; <span class="number">0xFFF</span>); <span class="comment">// Get the flags
+
+    </span>(frame, flags)
 }
 
-<span class="doccomment">/// Read the current P4 table address from the CR3 register.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_cr3</span>() -&gt; (<span class="ident">PhysFrame</span>, <span class="ident">Cr3Flags</span>) {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">read_cr3_raw</span>();
-    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="ident">value</span> <span class="op">&amp;</span> <span class="number">0x_000f_ffff_ffff_f000</span>); <span class="comment">// Grab the frame address</span>
-    <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">PhysFrame::containing_address</span>(<span class="ident">addr</span>); <span class="comment">// Get the frame containing the address</span>
+<span class="doccomment">/// Read the current page fault linear address from the CR2 register.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>read_cr2() -&gt; VirtAddr {
+    <span class="kw">let </span>value: u64;
 
-    <span class="kw">let</span> <span class="ident">flags</span> <span class="op">=</span> <span class="ident">Cr3Flags::from_bits_truncate</span>(<span class="ident">value</span> <span class="op">&amp;</span> <span class="number">0xFFF</span>); <span class="comment">// Get the flags</span>
+    <span class="kw">unsafe </span>{
+        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr2&quot;</span>, out(reg) value, options(nomem, nostack, preserves_flags));
 
-    (<span class="ident">frame</span>, <span class="ident">flags</span>)
-}
-
-<span class="doccomment">/// Read the current page fault linear address from the CR2 register.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_cr2</span>() -&gt; <span class="ident">VirtAddr</span> {
-    <span class="kw">let</span> <span class="ident">value</span>: <span class="ident">u64</span>;
-
-    <span class="kw">unsafe</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;mov {}, cr2&quot;</span>, <span class="ident">out</span>(<span class="ident">reg</span>) <span class="ident">value</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>, <span class="ident">preserves_flags</span>));
-
-        <span class="ident">VirtAddr::new</span>(<span class="ident">value</span>)
+        VirtAddr::new(value)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

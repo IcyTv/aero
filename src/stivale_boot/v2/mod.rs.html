@@ -176,183 +176,183 @@
 <span id="176">176</span>
 <span id="177">177</span>
 <span id="178">178</span>
-</pre><pre class="rust"><code><span class="doccomment">//! This module contains the definitions for stivale2 boot protocol. The stivale2 boot protocol is an</span>
-<span class="doccomment">//! modern version of the legacy stivale protocol which provides the kernel with most of the features</span>
-<span class="doccomment">//! one may need. The stivale2 protocol also supports 32-bit systems.</span>
+</pre><pre class="rust"><code><span class="doccomment">//! This module contains the definitions for stivale2 boot protocol. The stivale2 boot protocol is an
+//! modern version of the legacy stivale protocol which provides the kernel with most of the features
+//! one may need. The stivale2 protocol also supports 32-bit systems.
 
-<span class="kw">mod</span> <span class="ident">header</span>;
-<span class="kw">mod</span> <span class="ident">tag</span>;
-<span class="kw">mod</span> <span class="ident">utils</span>;
+</span><span class="kw">mod </span>header;
+<span class="kw">mod </span>tag;
+<span class="kw">mod </span>utils;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">header</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">tag</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>header::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>tag::<span class="kw-2">*</span>;
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">StivaleStruct</span> {
-    <span class="ident">bootloader_brand</span>: [<span class="ident">u8</span>; <span class="number">64</span>],
-    <span class="ident">bootloader_version</span>: [<span class="ident">u8</span>; <span class="number">64</span>],
-    <span class="ident">tags</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>StivaleStruct {
+    bootloader_brand: [u8; <span class="number">64</span>],
+    bootloader_version: [u8; <span class="number">64</span>],
+    tags: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">StivaleStruct</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">bootloader_brand</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">bootloader_version</span>: [<span class="number">0</span>; <span class="number">64</span>],
-            <span class="ident">tags</span>: <span class="number">0x00</span>,
+<span class="kw">impl </span>StivaleStruct {
+    <span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            bootloader_brand: [<span class="number">0</span>; <span class="number">64</span>],
+            bootloader_version: [<span class="number">0</span>; <span class="number">64</span>],
+            tags: <span class="number">0x00</span>,
         }
     }
 
-    <span class="comment">// SAFETY: Its allowed to update the tags, bootloader brand and bootloader version fields</span>
-    <span class="comment">// since the stivale header provides an immutable reference to the stivale struct</span>
-    <span class="comment">// and then the stivale struct is only allowed to be updated if its made by the user itself</span>
-    <span class="comment">// (its required to fill up these fields if you are making a stivale2 bootloader :^)).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_tag</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">header</span>: <span class="ident">StivaleTagHeader</span>) {
-        <span class="self">self</span>.<span class="ident">tags</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">header</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleTagHeader</span> <span class="kw">as</span> <span class="ident">u64</span>;
+    <span class="comment">// SAFETY: Its allowed to update the tags, bootloader brand and bootloader version fields
+    // since the stivale header provides an immutable reference to the stivale struct
+    // and then the stivale struct is only allowed to be updated if its made by the user itself
+    // (its required to fill up these fields if you are making a stivale2 bootloader :^)).
+    </span><span class="kw">pub fn </span>add_tag(<span class="kw-2">&amp;mut </span><span class="self">self</span>, header: StivaleTagHeader) {
+        <span class="self">self</span>.tags = <span class="kw-2">&amp;</span>header <span class="kw">as </span><span class="kw-2">*const </span>StivaleTagHeader <span class="kw">as </span>u64;
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_bootloader_brand</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">brand</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="self">self</span>.<span class="ident">bootloader_brand</span>[..<span class="ident">brand</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">brand</span>.<span class="ident">as_bytes</span>());
+    <span class="kw">pub fn </span>set_bootloader_brand(<span class="kw-2">&amp;mut </span><span class="self">self</span>, brand: <span class="kw-2">&amp;</span>str) {
+        <span class="self">self</span>.bootloader_brand[..brand.len()].copy_from_slice(brand.as_bytes());
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_bootloader_version</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">version</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) {
-        <span class="self">self</span>.<span class="ident">bootloader_version</span>[..<span class="ident">version</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">version</span>.<span class="ident">as_bytes</span>());
+    <span class="kw">pub fn </span>set_bootloader_version(<span class="kw-2">&amp;mut </span><span class="self">self</span>, version: <span class="kw-2">&amp;</span>str) {
+        <span class="self">self</span>.bootloader_version[..version.len()].copy_from_slice(version.as_bytes());
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bootloader_brand</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="ident">utils::string_from_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bootloader_brand</span>)
+    <span class="kw">pub fn </span>bootloader_brand(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        utils::string_from_slice(<span class="kw-2">&amp;</span><span class="self">self</span>.bootloader_brand)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">bootloader_version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="ident">utils::string_from_slice</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">bootloader_version</span>)
+    <span class="kw">pub fn </span>bootloader_version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        utils::string_from_slice(<span class="kw-2">&amp;</span><span class="self">self</span>.bootloader_version)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_tag</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">identifier</span>: <span class="ident">u64</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">current_tag</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">tags</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleTagHeader</span>;
+    <span class="kw">pub fn </span>get_tag(<span class="kw-2">&amp;</span><span class="self">self</span>, identifier: u64) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>current_tag = <span class="self">self</span>.tags <span class="kw">as </span><span class="kw-2">*const </span>StivaleTagHeader;
 
-        <span class="kw">while</span> <span class="op">!</span><span class="ident">current_tag</span>.<span class="ident">is_null</span>() {
-            <span class="kw">let</span> <span class="ident">tag</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">current_tag</span> };
+        <span class="kw">while </span>!current_tag.is_null() {
+            <span class="kw">let </span>tag = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>current_tag };
 
-            <span class="kw">if</span> <span class="ident">tag</span>.<span class="ident">identifier</span> <span class="op">==</span> <span class="ident">identifier</span> {
-                <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">current_tag</span> <span class="kw">as</span> <span class="ident">u64</span>);
+            <span class="kw">if </span>tag.identifier == identifier {
+                <span class="kw">return </span><span class="prelude-val">Some</span>(current_tag <span class="kw">as </span>u64);
             }
 
-            <span class="ident">current_tag</span> <span class="op">=</span> <span class="ident">tag</span>.<span class="ident">next</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleTagHeader</span>;
+            current_tag = tag.next <span class="kw">as </span><span class="kw-2">*const </span>StivaleTagHeader;
         }
 
-        <span class="prelude-val">None</span>
+        <span class="prelude-val">None
+    </span>}
+
+    <span class="kw">pub fn </span>command_line(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleCommandLineTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xe5e76a1b4597a781</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleCommandLineTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">command_line</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleCommandLineTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xe5e76a1b4597a781</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleCommandLineTag</span>) })
+    <span class="kw">pub fn </span>memory_map(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMemoryMapTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x2187f79e8612de07</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleMemoryMapTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">memory_map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleMemoryMapTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x2187f79e8612de07</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleMemoryMapTag</span>) })
+    <span class="kw">pub fn </span>framebuffer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleFramebufferTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x506461d2950408fa</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleFramebufferTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">framebuffer</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleFramebufferTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x506461d2950408fa</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleFramebufferTag</span>) })
+    <span class="kw">pub fn </span>edid_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleEdidInfoTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x968609d7af96b845</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleEdidInfoTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">edid_info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleEdidInfoTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x968609d7af96b845</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleEdidInfoTag</span>) })
+    <span class="attribute">#[allow(deprecated)]</span>
+    <span class="kw">pub fn </span>mtrr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMtrrTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x6bc1a78ebe871172</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleMtrrTag) })
     }
 
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">deprecated</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mtrr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleMtrrTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x6bc1a78ebe871172</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleMtrrTag</span>) })
+    <span class="kw">pub fn </span>terminal(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleTerminalTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xc2b3f4c3233b0974</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleTerminalTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">terminal</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleTerminalTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xc2b3f4c3233b0974</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleTerminalTag</span>) })
+    <span class="kw">pub fn </span>modules(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleModuleTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x4b6fe466aade04ce</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleModuleTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">modules</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleModuleTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x4b6fe466aade04ce</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleModuleTag</span>) })
+    <span class="kw">pub fn </span>rsdp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleRsdpTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x9e1786930a375e78</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleRsdpTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">rsdp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleRsdpTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x9e1786930a375e78</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleRsdpTag</span>) })
+    <span class="kw">pub fn </span>smbios(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleSmbiosTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x274bd246c62bf7d1</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleSmbiosTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">smbios</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleSmbiosTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x274bd246c62bf7d1</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleSmbiosTag</span>) })
+    <span class="kw">pub fn </span>epoch(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleEpochTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x566a7bed888e1407</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleEpochTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">epoch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleEpochTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x566a7bed888e1407</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleEpochTag</span>) })
+    <span class="kw">pub fn </span>firmware(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleFirmwareTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x359d837855e3858c</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleFirmwareTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">firmware</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleFirmwareTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x359d837855e3858c</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleFirmwareTag</span>) })
+    <span class="kw">pub fn </span>efi_system_table(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleEfiSystemTableTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x4bc5ec15845b558e</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleEfiSystemTableTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">efi_system_table</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleEfiSystemTableTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x4bc5ec15845b558e</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleEfiSystemTableTag</span>) })
+    <span class="kw">pub fn </span>kernel_file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleKernelFileTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xe599d90c2975584a</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleKernelFileTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kernel_file</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleKernelFileTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xe599d90c2975584a</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleKernelFileTag</span>) })
+    <span class="kw">pub fn </span>kernel_slide(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleKernelSlideTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xee80847d01506c57</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleKernelSlideTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kernel_slide</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleKernelSlideTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xee80847d01506c57</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleKernelSlideTag</span>) })
+    <span class="kw">pub fn </span>smp(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleSmpTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x34d1d96339647025</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleSmpTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">smp</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleSmpTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x34d1d96339647025</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleSmpTag</span>) })
+    <span class="kw">pub fn </span>smp_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>StivaleSmpTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x34d1d96339647025</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(addr <span class="kw">as </span><span class="kw-2">*mut </span>StivaleSmpTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">smp_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="kw-2">mut</span> <span class="ident">StivaleSmpTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x34d1d96339647025</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">StivaleSmpTag</span>) })
+    <span class="kw">pub fn </span>pxe_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivalePxeInfoTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x29d1e96239247032</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivalePxeInfoTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pxe_info</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivalePxeInfoTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x29d1e96239247032</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivalePxeInfoTag</span>) })
+    <span class="kw">pub fn </span>uart(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleUartTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xb813f9b8dbc78797</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleUartTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">uart</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleUartTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xb813f9b8dbc78797</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleUartTag</span>) })
+    <span class="kw">pub fn </span>dev_tree(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleDeviceTreeTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xabb29bd49a2833fa</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleDeviceTreeTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dev_tree</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleDeviceTreeTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xabb29bd49a2833fa</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleDeviceTreeTag</span>) })
+    <span class="kw">pub fn </span>vmap(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleVMapTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0xb0ed257db18cb58f</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleVMapTag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">vmap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleVMapTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0xb0ed257db18cb58f</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleVMapTag</span>) })
+    <span class="kw">pub fn </span>kernel_file_v2(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleKernelFileV2Tag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x37c13018a02c6ea2</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivaleKernelFileV2Tag) })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">kernel_file_v2</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivaleKernelFileV2Tag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x37c13018a02c6ea2</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivaleKernelFileV2Tag</span>) })
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pmrs</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">StivalePmrsTag</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">get_tag</span>(<span class="number">0x5df266a64047b6bd</span>)
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">addr</span><span class="op">|</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">addr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">StivalePmrsTag</span>) })
+    <span class="kw">pub fn </span>pmrs(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivalePmrsTag&gt; {
+        <span class="self">self</span>.get_tag(<span class="number">0x5df266a64047b6bd</span>)
+            .map(|addr| <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(addr <span class="kw">as </span><span class="kw-2">*const </span>StivalePmrsTag) })
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="stivale_boot" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="stivale_boot" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

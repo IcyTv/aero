@@ -12,23 +12,23 @@ the closure actually runs.</p>
 <p>The <code>Strategy</code> decides whether the scope guard’s closure should run.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.into_inner" class="method has-srclink"><span class="rightside"><a class="srclink" href="../src/scopeguard/lib.rs.html#348-361">source</a></span><h4 class="code-header">pub fn <a href="#method.into_inner" class="fnname">into_inner</a>(guard: Self) -&gt; T</h4></section></summary><div class="docblock"><p>“Defuse” the guard and extract the value without calling the closure.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">scopeguard</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">extern crate </span>scopeguard;
 
-<span class="kw">use</span> <span class="ident">scopeguard</span>::{<span class="ident">guard</span>, <span class="ident">ScopeGuard</span>};
+<span class="kw">use </span>scopeguard::{guard, ScopeGuard};
 
-<span class="kw">fn</span> <span class="ident">conditional</span>() -&gt; <span class="ident">bool</span> { <span class="bool-val">true</span> }
+<span class="kw">fn </span>conditional() -&gt; bool { <span class="bool-val">true </span>}
 
-<span class="kw">fn</span> <span class="ident">main</span>() {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">guard</span> <span class="op">=</span> <span class="ident">guard</span>(<span class="ident">Vec::new</span>(), <span class="op">|</span><span class="kw-2">mut</span> <span class="ident">v</span><span class="op">|</span> <span class="ident">v</span>.<span class="ident">clear</span>());
-    <span class="ident">guard</span>.<span class="ident">push</span>(<span class="number">1</span>);
+<span class="kw">fn </span>main() {
+    <span class="kw">let </span><span class="kw-2">mut </span>guard = guard(Vec::new(), |<span class="kw-2">mut </span>v| v.clear());
+    guard.push(<span class="number">1</span>);
      
-    <span class="kw">if</span> <span class="ident">conditional</span>() {
-        <span class="comment">// a condition maybe makes us decide to</span>
-        <span class="comment">// “defuse” the guard and get back its inner parts</span>
-        <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">ScopeGuard::into_inner</span>(<span class="ident">guard</span>);
-    } <span class="kw">else</span> {
-        <span class="comment">// guard still exists in this branch</span>
-    }
+    <span class="kw">if </span>conditional() {
+        <span class="comment">// a condition maybe makes us decide to
+        // “defuse” the guard and get back its inner parts
+        </span><span class="kw">let </span>value = ScopeGuard::into_inner(guard);
+    } <span class="kw">else </span>{
+        <span class="comment">// guard still exists in this branch
+    </span>}
 }</code></pre></div>
 </div></details></div></details></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor"></a></h2><div id="trait-implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Debug-for-ScopeGuard%3CT%2C%20F%2C%20S%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../src/scopeguard/lib.rs.html#464-474">source</a></span><a href="#impl-Debug-for-ScopeGuard%3CT%2C%20F%2C%20S%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, F, S&gt; Debug for <a class="struct" href="struct.ScopeGuard.html" title="struct scopeguard::ScopeGuard">ScopeGuard</a>&lt;T, F, S&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;T: Debug,<br>&nbsp;&nbsp;&nbsp;&nbsp;F: FnOnce(T),<br>&nbsp;&nbsp;&nbsp;&nbsp;S: <a class="trait" href="trait.Strategy.html" title="trait scopeguard::Strategy">Strategy</a>,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.fmt" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../src/scopeguard/lib.rs.html#469-473">source</a></span><a href="#method.fmt" class="anchor"></a><h4 class="code-header">fn <a class="fnname">fmt</a>(&amp;self, f: &amp;mut Formatter&lt;'_&gt;) -&gt; Result</h4></section></summary><div class='docblock'><p>Formats the value using the given formatter. <a>Read more</a></p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Deref-for-ScopeGuard%3CT%2C%20F%2C%20S%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../src/scopeguard/lib.rs.html#428-437">source</a></span><a href="#impl-Deref-for-ScopeGuard%3CT%2C%20F%2C%20S%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, F, S&gt; Deref for <a class="struct" href="struct.ScopeGuard.html" title="struct scopeguard::ScopeGuard">ScopeGuard</a>&lt;T, F, S&gt; <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;F: FnOnce(T),<br>&nbsp;&nbsp;&nbsp;&nbsp;S: <a class="trait" href="trait.Strategy.html" title="trait scopeguard::Strategy">Strategy</a>,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle" open><summary><section id="associatedtype.Target" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Target" class="anchor"></a><h4 class="code-header">type <a class="associatedtype">Target</a> = T</h4></section></summary><div class='docblock'><p>The resulting type after dereferencing.</p>
@@ -46,4 +46,4 @@ the closure actually runs.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_from" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_from</a>(value: U) -&gt; Result&lt;T, &lt;T as TryFrom&lt;U&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-TryInto%3CU%3E-for-ScopeGuard%3CT%2C%20F%2C%20S%3E" class="impl has-srclink"><a href="#impl-TryInto%3CU%3E-for-ScopeGuard%3CT%2C%20F%2C%20S%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, U&gt; TryInto&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: TryFrom&lt;T&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle" open><summary><section id="associatedtype.Error-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Error-1" class="anchor"></a><h4 class="code-header">type <a class="associatedtype">Error</a> = &lt;U as TryFrom&lt;T&gt;&gt;::Error</h4></section></summary><div class='docblock'><p>The type returned in the event of a conversion error.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_into" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_into" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_into</a>(self) -&gt; Result&lt;U, &lt;U as TryFrom&lt;T&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
-</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="scopeguard" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="scopeguard" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

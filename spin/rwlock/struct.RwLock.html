@@ -24,35 +24,35 @@ new readers are allowed when an upgradeable guard is held, but upgradeable guard
 when there are existing readers. However if the lock is that highly contended and writes are
 crucial then this implementation may be a poor choice.</p>
 <h2 id="examples"><a href="#examples">Examples</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin;
 
-<span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">5</span>);
+<span class="kw">let </span>lock = spin::RwLock::new(<span class="number">5</span>);
 
-<span class="comment">// many reader locks can be held at once</span>
-{
-    <span class="kw">let</span> <span class="ident">r1</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">read</span>();
-    <span class="kw">let</span> <span class="ident">r2</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">read</span>();
-    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">r1</span>, <span class="number">5</span>);
-    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">r2</span>, <span class="number">5</span>);
-} <span class="comment">// read locks are dropped at this point</span>
+<span class="comment">// many reader locks can be held at once
+</span>{
+    <span class="kw">let </span>r1 = lock.read();
+    <span class="kw">let </span>r2 = lock.read();
+    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>r1, <span class="number">5</span>);
+    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>r2, <span class="number">5</span>);
+} <span class="comment">// read locks are dropped at this point
 
-<span class="comment">// only one write lock may be held, however</span>
-{
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">w</span> <span class="op">=</span> <span class="ident">lock</span>.<span class="ident">write</span>();
-    <span class="kw-2">*</span><span class="ident">w</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">w</span>, <span class="number">6</span>);
+// only one write lock may be held, however
+</span>{
+    <span class="kw">let </span><span class="kw-2">mut </span>w = lock.write();
+    <span class="kw-2">*</span>w += <span class="number">1</span>;
+    <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>w, <span class="number">6</span>);
 } <span class="comment">// write lock is dropped here</span></code></pre></div>
 </div></details><h2 id="implementations" class="small-section-header">Implementations<a href="#implementations" class="anchor"></a></h2><div id="implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-RwLock%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#111-172">source</a></span><a href="#impl-RwLock%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, R&gt; <a class="struct" href="struct.RwLock.html" title="struct spin::rwlock::RwLock">RwLock</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.new" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#128-134">source</a></span><h4 class="code-header">pub const fn <a href="#method.new" class="fnname">new</a>(data: T) -&gt; Self</h4></section></summary><div class="docblock"><p>Creates a new spinlock wrapping the supplied data.</p>
 <p>May be used statically:</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">spin</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>spin;
 
-<span class="kw">static</span> <span class="ident">RW_LOCK</span>: <span class="ident">spin::RwLock</span><span class="op">&lt;</span>()<span class="op">&gt;</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(());
+<span class="kw">static </span>RW_LOCK: spin::RwLock&lt;()&gt; = spin::RwLock::new(());
 
-<span class="kw">fn</span> <span class="ident">demo</span>() {
-    <span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">RW_LOCK</span>.<span class="ident">read</span>();
-    <span class="comment">// do something with lock</span>
-    <span class="ident">drop</span>(<span class="ident">lock</span>);
+<span class="kw">fn </span>demo() {
+    <span class="kw">let </span>lock = RW_LOCK.read();
+    <span class="comment">// do something with lock
+    </span>drop(lock);
 }</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.into_inner" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#138-143">source</a></span><h4 class="code-header">pub fn <a href="#method.into_inner" class="fnname">into_inner</a>(self) -&gt; T</h4></section></summary><div class="docblock"><p>Consumes this <code>RwLock</code>, returning the underlying data.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.as_mut_ptr" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#169-171">source</a></span><h4 class="code-header">pub fn <a href="#method.as_mut_ptr" class="fnname">as_mut_ptr</a>(&amp;self) -&gt; *mut T</h4></section></summary><div class="docblock"><p>Returns a mutable pointer to the underying data.</p>
@@ -61,18 +61,18 @@ storing both the lock and the pointer to the inner data gets inefficient.</p>
 <p>While this is safe, writing to the data is undefined behavior unless the current thread has
 acquired a write lock, and reading requires either a read or write lock.</p>
 <h5 id="example"><a href="#example">Example</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">42</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>lock = spin::RwLock::new(<span class="number">42</span>);
 
-<span class="kw">unsafe</span> {
-    <span class="ident">core::mem::forget</span>(<span class="ident">lock</span>.<span class="ident">write</span>());
+<span class="kw">unsafe </span>{
+    core::mem::forget(lock.write());
      
-    <span class="macro">assert_eq!</span>(<span class="ident">lock</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">read</span>(), <span class="number">42</span>);
-    <span class="ident">lock</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">write</span>(<span class="number">58</span>);
+    <span class="macro">assert_eq!</span>(lock.as_mut_ptr().read(), <span class="number">42</span>);
+    lock.as_mut_ptr().write(<span class="number">58</span>);
 
-    <span class="ident">lock</span>.<span class="ident">force_write_unlock</span>();
+    lock.force_write_unlock();
 }
 
-<span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">read</span>(), <span class="number">58</span>);
+<span class="macro">assert_eq!</span>(<span class="kw-2">*</span>lock.read(), <span class="number">58</span>);
 </code></pre></div>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-RwLock%3CT%2C%20R%3E-1" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#174-245">source</a></span><a href="#impl-RwLock%3CT%2C%20R%3E-1" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized, R:&nbsp;<a class="trait" href="../relax/trait.RelaxStrategy.html" title="trait spin::relax::RelaxStrategy">RelaxStrategy</a>&gt; <a class="struct" href="struct.RwLock.html" title="struct spin::rwlock::RwLock">RwLock</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.read" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#197-204">source</a></span><h4 class="code-header">pub fn <a href="#method.read" class="fnname">read</a>(&amp;self) -&gt; <a class="struct" href="struct.RwLockReadGuard.html" title="struct spin::rwlock::RwLockReadGuard">RwLockReadGuard</a>&lt;'_, T&gt;</h4></section></summary><div class="docblock"><p>Locks this rwlock with shared read access, blocking the current thread
 until it can be acquired.</p>
@@ -84,13 +84,13 @@ acquire the lock first.</p>
 <p>Returns an RAII guard which will release this thread’s shared access
 once it is dropped.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">mylock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">0</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>mylock = spin::RwLock::new(<span class="number">0</span>);
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">mylock</span>.<span class="ident">read</span>();
-    <span class="comment">// The lock is now locked and the data can be read</span>
-    <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="kw-2">*</span><span class="ident">data</span>);
-    <span class="comment">// The lock is dropped</span>
-}</code></pre></div>
+    <span class="kw">let </span><span class="kw-2">mut </span>data = mylock.read();
+    <span class="comment">// The lock is now locked and the data can be read
+    </span><span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="kw-2">*</span>data);
+    <span class="comment">// The lock is dropped
+</span>}</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.write" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#225-232">source</a></span><h4 class="code-header">pub fn <a href="#method.write" class="fnname">write</a>(&amp;self) -&gt; <a class="struct" href="struct.RwLockWriteGuard.html" title="struct spin::rwlock::RwLockWriteGuard">RwLockWriteGuard</a>&lt;'_, T, R&gt;</h4></section></summary><div class="docblock"><p>Lock this rwlock with exclusive write access, blocking the current
 thread until it can be acquired.</p>
 <p>This function will not return while other writers or other readers
@@ -98,13 +98,13 @@ currently have access to the lock.</p>
 <p>Returns an RAII guard which will drop the write access of this rwlock
 when dropped.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">mylock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">0</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>mylock = spin::RwLock::new(<span class="number">0</span>);
 {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">mylock</span>.<span class="ident">write</span>();
-    <span class="comment">// The lock is now locked and the data can be written</span>
-    <span class="kw-2">*</span><span class="ident">data</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    <span class="comment">// The lock is dropped</span>
-}</code></pre></div>
+    <span class="kw">let </span><span class="kw-2">mut </span>data = mylock.write();
+    <span class="comment">// The lock is now locked and the data can be written
+    </span><span class="kw-2">*</span>data += <span class="number">1</span>;
+    <span class="comment">// The lock is dropped
+</span>}</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.upgradeable_read" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#237-244">source</a></span><h4 class="code-header">pub fn <a href="#method.upgradeable_read" class="fnname">upgradeable_read</a>(&amp;self) -&gt; <a class="struct" href="struct.RwLockUpgradableGuard.html" title="struct spin::rwlock::RwLockUpgradableGuard">RwLockUpgradableGuard</a>&lt;'_, T, R&gt;</h4></section></summary><div class="docblock"><p>Obtain a readable lock guard that can later be upgraded to a writable lock guard.
 Upgrades can be done through the <a href="struct.RwLockUpgradableGuard.html#method.upgrade"><code>RwLockUpgradableGuard::upgrade</code></a> method.</p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-RwLock%3CT%2C%20R%3E-2" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#247-418">source</a></span><a href="#impl-RwLock%3CT%2C%20R%3E-2" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized, R&gt; <a class="struct" href="struct.RwLock.html" title="struct spin::rwlock::RwLock">RwLock</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_read" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#271-286">source</a></span><h4 class="code-header">pub fn <a href="#method.try_read" class="fnname">try_read</a>(&amp;self) -&gt; Option&lt;<a class="struct" href="struct.RwLockReadGuard.html" title="struct spin::rwlock::RwLockReadGuard">RwLockReadGuard</a>&lt;'_, T&gt;&gt;</h4></section></summary><div class="docblock"><p>Attempt to acquire this lock with shared read access.</p>
@@ -115,16 +115,16 @@ access could not be granted. This method does not provide any
 guarantees with respect to the ordering of whether contentious readers
 or writers will acquire the lock first.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">mylock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">0</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>mylock = spin::RwLock::new(<span class="number">0</span>);
 {
-    <span class="kw">match</span> <span class="ident">mylock</span>.<span class="ident">try_read</span>() {
-        <span class="prelude-val">Some</span>(<span class="ident">data</span>) =&gt; {
-            <span class="comment">// The lock is now locked and the data can be read</span>
-            <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="kw-2">*</span><span class="ident">data</span>);
-            <span class="comment">// The lock is dropped</span>
-        },
-        <span class="prelude-val">None</span> =&gt; (), <span class="comment">// no cigar</span>
-    };
+    <span class="kw">match </span>mylock.try_read() {
+        <span class="prelude-val">Some</span>(data) =&gt; {
+            <span class="comment">// The lock is now locked and the data can be read
+            </span><span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="kw-2">*</span>data);
+            <span class="comment">// The lock is dropped
+        </span>},
+        <span class="prelude-val">None </span>=&gt; (), <span class="comment">// no cigar
+    </span>};
 }</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.reader_count" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#294-297">source</a></span><h4 class="code-header">pub fn <a href="#method.reader_count" class="fnname">reader_count</a>(&amp;self) -&gt; usize</h4></section></summary><div class="docblock"><p>Return the number of readers that currently hold the lock (including upgradable readers).</p>
 <h5 id="safety"><a href="#safety">Safety</a></h5>
@@ -152,25 +152,25 @@ underlying atomic operation uses <code>Ordering::Release</code>.</p>
 to <code>write</code> would otherwise block. If successful, an RAII guard is
 returned.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">mylock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">0</span>);
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span>mylock = spin::RwLock::new(<span class="number">0</span>);
 {
-    <span class="kw">match</span> <span class="ident">mylock</span>.<span class="ident">try_write</span>() {
-        <span class="prelude-val">Some</span>(<span class="kw-2">mut</span> <span class="ident">data</span>) =&gt; {
-            <span class="comment">// The lock is now locked and the data can be written</span>
-            <span class="kw-2">*</span><span class="ident">data</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="comment">// The lock is implicitly dropped</span>
-        },
-        <span class="prelude-val">None</span> =&gt; (), <span class="comment">// no cigar</span>
-    };
+    <span class="kw">match </span>mylock.try_write() {
+        <span class="prelude-val">Some</span>(<span class="kw-2">mut </span>data) =&gt; {
+            <span class="comment">// The lock is now locked and the data can be written
+            </span><span class="kw-2">*</span>data += <span class="number">1</span>;
+            <span class="comment">// The lock is implicitly dropped
+        </span>},
+        <span class="prelude-val">None </span>=&gt; (), <span class="comment">// no cigar
+    </span>};
 }</code></pre></div>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_upgradeable_read" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#387-399">source</a></span><h4 class="code-header">pub fn <a href="#method.try_upgradeable_read" class="fnname">try_upgradeable_read</a>(&amp;self) -&gt; Option&lt;<a class="struct" href="struct.RwLockUpgradableGuard.html" title="struct spin::rwlock::RwLockUpgradableGuard">RwLockUpgradableGuard</a>&lt;'_, T, R&gt;&gt;</h4></section></summary><div class="docblock"><p>Tries to obtain an upgradeable lock guard.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.get_mut" class="method has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#413-417">source</a></span><h4 class="code-header">pub fn <a href="#method.get_mut" class="fnname">get_mut</a>(&amp;mut self) -&gt; &amp;mut T</h4></section></summary><div class="docblock"><p>Returns a mutable reference to the underlying data.</p>
 <p>Since this call borrows the <code>RwLock</code> mutably, no actual locking needs to
 take place – the mutable borrow statically guarantees no locks exist.</p>
 <h5 id="examples-1"><a href="#examples-1">Examples</a></h5>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">lock</span> <span class="op">=</span> <span class="ident">spin::RwLock::new</span>(<span class="number">0</span>);
-<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">get_mut</span>() <span class="op">=</span> <span class="number">10</span>;
-<span class="macro">assert_eq!</span>(<span class="kw-2">*</span><span class="ident">lock</span>.<span class="ident">read</span>(), <span class="number">10</span>);</code></pre></div>
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let </span><span class="kw-2">mut </span>lock = spin::RwLock::new(<span class="number">0</span>);
+<span class="kw-2">*</span>lock.get_mut() = <span class="number">10</span>;
+<span class="macro">assert_eq!</span>(<span class="kw-2">*</span>lock.read(), <span class="number">10</span>);</code></pre></div>
 </div></details></div></details></div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor"></a></h2><div id="trait-implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Debug-for-RwLock%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#420-429">source</a></span><a href="#impl-Debug-for-RwLock%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized + Debug, R&gt; Debug for <a class="struct" href="struct.RwLock.html" title="struct spin::rwlock::RwLock">RwLock</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.fmt" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#421-428">source</a></span><a href="#method.fmt" class="anchor"></a><h4 class="code-header">fn <a class="fnname">fmt</a>(&amp;self, f: &amp;mut Formatter&lt;'_&gt;) -&gt; Result</h4></section></summary><div class='docblock'><p>Formats the value using the given formatter. <a>Read more</a></p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-Default-for-RwLock%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#431-435">source</a></span><a href="#impl-Default-for-RwLock%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T:&nbsp;?Sized + Default, R&gt; Default for <a class="struct" href="struct.RwLock.html" title="struct spin::rwlock::RwLock">RwLock</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.default" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#432-434">source</a></span><a href="#method.default" class="anchor"></a><h4 class="code-header">fn <a class="fnname">default</a>() -&gt; Self</h4></section></summary><div class='docblock'><p>Returns the “default value” for a type. <a>Read more</a></p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle" open><summary><section id="impl-From%3CT%3E-for-RwLock%3CT%2C%20R%3E" class="impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#437-441">source</a></span><a href="#impl-From%3CT%3E-for-RwLock%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, R&gt; From&lt;T&gt; for <a class="struct" href="struct.RwLock.html" title="struct spin::rwlock::RwLock">RwLock</a>&lt;T, R&gt;</h3></section></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><section id="method.from" class="method trait-impl has-srclink"><span class="rightside"><a class="srclink" href="../../src/spin/rwlock.rs.html#438-440">source</a></span><a href="#method.from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">from</a>(data: T) -&gt; Self</h4></section></summary><div class='docblock'><p>Converts to this type from the input type.</p>
@@ -204,4 +204,4 @@ blocking. <a href="../../lock_api/rwlock/trait.RawRwLockUpgrade.html#tymethod.tr
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_from" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_from" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_from</a>(value: U) -&gt; Result&lt;T, &lt;T as TryFrom&lt;U&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
 </div></details></div></details><details class="rustdoc-toggle implementors-toggle"><summary><section id="impl-TryInto%3CU%3E-for-RwLock%3CT%2C%20R%3E" class="impl has-srclink"><a href="#impl-TryInto%3CU%3E-for-RwLock%3CT%2C%20R%3E" class="anchor"></a><h3 class="code-header in-band">impl&lt;T, U&gt; TryInto&lt;U&gt; for T <span class="where fmt-newline">where<br>&nbsp;&nbsp;&nbsp;&nbsp;U: TryFrom&lt;T&gt;,&nbsp;</span></h3></section></summary><div class="impl-items"><details class="rustdoc-toggle" open><summary><section id="associatedtype.Error-1" class="associatedtype trait-impl has-srclink"><a href="#associatedtype.Error-1" class="anchor"></a><h4 class="code-header">type <a class="associatedtype">Error</a> = &lt;U as TryFrom&lt;T&gt;&gt;::Error</h4></section></summary><div class='docblock'><p>The type returned in the event of a conversion error.</p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><section id="method.try_into" class="method trait-impl has-srclink"><span class="rightside"><span class="since" title="const unstable">const: <a href="https://github.com/rust-lang/rust/issues/88674" title="Tracking issue for const_convert">unstable</a></span></span><a href="#method.try_into" class="anchor"></a><h4 class="code-header">fn <a class="fnname">try_into</a>(self) -&gt; Result&lt;U, &lt;U as TryFrom&lt;T&gt;&gt;::Error&gt;</h4></section></summary><div class='docblock'><p>Performs the conversion.</p>
-</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</div></details></div></details></div></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -7,14 +7,14 @@
 <span id="7">7</span>
 <span id="8">8</span>
 <span id="9">9</span>
-</pre><pre class="rust"><code><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const</span> <span class="ident">LAI_SUCCESS</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">0</span>;
+</pre><pre class="rust"><code><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>LAI_SUCCESS: i32 = <span class="number">0</span>;
 
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">lai_set_acpi_revision</span>(<span class="ident">revison</span>: <span class="ident">i32</span>);
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">lai_create_namespace</span>();
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">lai_enable_acpi</span>(<span class="ident">mode</span>: <span class="ident">u32</span>) -&gt; <span class="ident">i32</span>;
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">lai_enter_sleep</span>(<span class="ident">sleep_state</span>: <span class="ident">u8</span>) -&gt; <span class="ident">i32</span>;
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">lai_acpi_reset</span>() -&gt; <span class="ident">i32</span>;
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lai_set_acpi_revision(revison: i32);
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lai_create_namespace();
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lai_enable_acpi(mode: u32) -&gt; i32;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lai_enter_sleep(sleep_state: u8) -&gt; i32;
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>lai_acpi_reset() -&gt; i32;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

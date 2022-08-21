@@ -56,25 +56,25 @@
  * bits are indeed used as a type field, so we might just as well make
  * this explicit here. Please be sure to use the decoding functions
  * below from now on.
- */</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_NRBITS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_TYPEBITS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_SIZEBITS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">14</span>;
+ */
+</span><span class="kw">pub const </span>IOC_NRBITS: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>IOC_TYPEBITS: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>IOC_SIZEBITS: usize = <span class="number">14</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_NRSHIFT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_TYPESHIFT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">IOC_NRSHIFT</span> <span class="op">+</span> <span class="ident">IOC_NRBITS</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_SIZESHIFT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">IOC_TYPESHIFT</span> <span class="op">+</span> <span class="ident">IOC_TYPEBITS</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_DIRSHIFT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">IOC_SIZESHIFT</span> <span class="op">+</span> <span class="ident">IOC_SIZEBITS</span>;
+<span class="kw">pub const </span>IOC_NRSHIFT: usize = <span class="number">0</span>;
+<span class="kw">pub const </span>IOC_TYPESHIFT: usize = IOC_NRSHIFT + IOC_NRBITS;
+<span class="kw">pub const </span>IOC_SIZESHIFT: usize = IOC_TYPESHIFT + IOC_TYPEBITS;
+<span class="kw">pub const </span>IOC_DIRSHIFT: usize = IOC_SIZESHIFT + IOC_SIZEBITS;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_NONE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_WRITE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IOC_READ</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="kw">pub const </span>IOC_NONE: usize = <span class="number">0</span>;
+<span class="kw">pub const </span>IOC_WRITE: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>IOC_READ: usize = <span class="number">2</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">ioc</span>(<span class="ident">dir</span>: <span class="ident">usize</span>, <span class="ident">ty</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    ((<span class="ident">dir</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">IOC_DIRSHIFT</span>)
-        <span class="op">|</span> ((<span class="ident">ty</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">IOC_TYPESHIFT</span>)
-        <span class="op">|</span> ((<span class="ident">nr</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">IOC_NRSHIFT</span>)
-        <span class="op">|</span> ((<span class="ident">size</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">IOC_SIZESHIFT</span>)
+<span class="kw">pub const fn </span>ioc(dir: usize, ty: usize, nr: usize, size: usize) -&gt; usize {
+    ((dir) &lt;&lt; IOC_DIRSHIFT)
+        | ((ty) &lt;&lt; IOC_TYPESHIFT)
+        | ((nr) &lt;&lt; IOC_NRSHIFT)
+        | ((size) &lt;&lt; IOC_SIZESHIFT)
 }
 
 <span class="comment">/*
@@ -82,25 +82,25 @@
  *
  * NOTE: `iow` means userland is writing and kernel is reading. `ior`
  * means userland is reading and kernel is writing.
- */</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">io</span>(<span class="ident">typ</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioc</span>(<span class="ident">IOC_NONE</span>, <span class="ident">typ</span>, <span class="ident">nr</span>, <span class="number">0</span>)
+ */
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>io(typ: usize, nr: usize) -&gt; usize {
+    ioc(IOC_NONE, typ, nr, <span class="number">0</span>)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">ior</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">typ</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioc</span>(<span class="ident">IOC_READ</span>, <span class="ident">typ</span>, <span class="ident">nr</span>, <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
+<span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>ior&lt;T&gt;(typ: usize, nr: usize) -&gt; usize {
+    ioc(IOC_READ, typ, nr, core::mem::size_of::&lt;T&gt;())
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">iow</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">typ</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioc</span>(<span class="ident">IOC_WRITE</span>, <span class="ident">typ</span>, <span class="ident">nr</span>, <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
+<span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>iow&lt;T&gt;(typ: usize, nr: usize) -&gt; usize {
+    ioc(IOC_WRITE, typ, nr, core::mem::size_of::&lt;T&gt;())
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">iowr</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">typ</span>: <span class="ident">usize</span>, <span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioc</span>(<span class="ident">IOC_READ</span> <span class="op">|</span> <span class="ident">IOC_WRITE</span>, <span class="ident">typ</span>, <span class="ident">nr</span>, <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
+<span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>iowr&lt;T&gt;(typ: usize, nr: usize) -&gt; usize {
+    ioc(IOC_READ | IOC_WRITE, typ, nr, core::mem::size_of::&lt;T&gt;())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

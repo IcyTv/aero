@@ -90,97 +90,97 @@
 <span id="90">90</span>
 <span id="91">91</span>
 <span id="92">92</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2017 Gilad Naaman</span>
-<span class="comment">//</span>
-<span class="comment">// Permission is hereby granted, free of charge, to any person obtaining a copy</span>
-<span class="comment">// of this software and associated documentation files (the &quot;Software&quot;), to deal</span>
-<span class="comment">// in the Software without restriction, including without limitation the rights</span>
-<span class="comment">// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
-<span class="comment">// copies of the Software, and to permit persons to whom the Software is</span>
-<span class="comment">// furnished to do so, subject to the following conditions:</span>
-<span class="comment">//</span>
-<span class="comment">// The above copyright notice and this permission notice shall be included in all</span>
-<span class="comment">// copies or substantial portions of the Software.</span>
-<span class="comment">//</span>
-<span class="comment">// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
-<span class="comment">// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
-<span class="comment">// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
-<span class="comment">// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
-<span class="comment">// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
-<span class="comment">// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
-<span class="comment">// SOFTWARE.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2017 Gilad Naaman
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the &quot;Software&quot;), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
-<span class="doccomment">//! A crate used for calculating offsets of struct members and their spans.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This functionality currently can not be used in compile time code such as `const` or `const fn` definitions.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ## Examples</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//! #[macro_use]</span>
-<span class="doccomment">//! extern crate memoffset;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! #[repr(C, packed)]</span>
-<span class="doccomment">//! struct HelpMeIAmTrappedInAStructFactory {</span>
-<span class="doccomment">//!     help_me_before_they_: [u8; 15],</span>
-<span class="doccomment">//!     a: u32</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! fn main() {</span>
-<span class="doccomment">//!     assert_eq!(offset_of!(HelpMeIAmTrappedInAStructFactory, a), 15);</span>
-<span class="doccomment">//!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, a), 15..19);</span>
-<span class="doccomment">//!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, help_me_before_they_ .. a), 0..15);</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This functionality can be useful, for example, for checksum calculations:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```ignore</span>
-<span class="doccomment">//! #[repr(C, packed)]</span>
-<span class="doccomment">//! struct Message {</span>
-<span class="doccomment">//!     header: MessageHeader,</span>
-<span class="doccomment">//!     fragment_index: u32,</span>
-<span class="doccomment">//!     fragment_count: u32,</span>
-<span class="doccomment">//!     payload: [u8; 1024],</span>
-<span class="doccomment">//!     checksum: u16</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! let checksum_range = &amp;raw[span_of!(Message, header..checksum)];</span>
-<span class="doccomment">//! let checksum = crc16(checksum_range);</span>
-<span class="doccomment">//! ```</span>
+</span><span class="doccomment">//! A crate used for calculating offsets of struct members and their spans.
+//!
+//! This functionality currently can not be used in compile time code such as `const` or `const fn` definitions.
+//!
+//! ## Examples
+//! ```
+//! #[macro_use]
+//! extern crate memoffset;
+//!
+//! #[repr(C, packed)]
+//! struct HelpMeIAmTrappedInAStructFactory {
+//!     help_me_before_they_: [u8; 15],
+//!     a: u32
+//! }
+//!
+//! fn main() {
+//!     assert_eq!(offset_of!(HelpMeIAmTrappedInAStructFactory, a), 15);
+//!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, a), 15..19);
+//!     assert_eq!(span_of!(HelpMeIAmTrappedInAStructFactory, help_me_before_they_ .. a), 0..15);
+//! }
+//! ```
+//!
+//! This functionality can be useful, for example, for checksum calculations:
+//!
+//! ```ignore
+//! #[repr(C, packed)]
+//! struct Message {
+//!     header: MessageHeader,
+//!     fragment_index: u32,
+//!     fragment_count: u32,
+//!     payload: [u8; 1024],
+//!     checksum: u16
+//! }
+//!
+//! let checksum_range = &amp;raw[span_of!(Message, header..checksum)];
+//! let checksum = crc16(checksum_range);
+//! ```
 
-<span class="attribute">#![<span class="ident">no_std</span>]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(
-    <span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;unstable_const&quot;</span>,
-    <span class="ident">feature</span>(
-        <span class="ident">ptr_offset_from</span>,
-        <span class="ident">const_fn</span>,
-        <span class="ident">const_ptr_offset_from</span>,
-        <span class="ident">const_maybe_uninit_as_ptr</span>,
-        <span class="ident">const_raw_ptr_deref</span>,
+</span><span class="attribute">#![no_std]</span>
+<span class="attribute">#![cfg_attr(
+    feature = <span class="string">&quot;unstable_const&quot;</span>,
+    feature(
+        ptr_offset_from,
+        const_fn,
+        const_ptr_offset_from,
+        const_maybe_uninit_as_ptr,
+        const_raw_ptr_deref,
     )
 )]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;unstable_raw&quot;</span>, <span class="ident">feature</span>(<span class="ident">raw_ref_macros</span>))]</span>
+<span class="attribute">#![cfg_attr(feature = <span class="string">&quot;unstable_raw&quot;</span>, feature(raw_ref_macros))]</span>
 
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doctests</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doctest</span>)]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">doc_comment</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doctests</span>)]</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">doctest</span>)]</span>
+<span class="attribute">#[macro_use]</span>
+<span class="attribute">#[cfg(doctests)]</span>
+<span class="attribute">#[cfg(doctest)]</span>
+<span class="kw">extern crate </span>doc_comment;
+<span class="attribute">#[cfg(doctests)]</span>
+<span class="attribute">#[cfg(doctest)]</span>
 <span class="macro">doctest!</span>(<span class="string">&quot;../README.md&quot;</span>);
 
-<span class="comment">// This `use` statement enables the macros to use `$crate::mem`.</span>
-<span class="comment">// Doing this enables this crate to function under both std and no-std crates.</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::mem</span>;
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">core::ptr</span>;
+<span class="comment">// This `use` statement enables the macros to use `$crate::mem`.
+// Doing this enables this crate to function under both std and no-std crates.
+</span><span class="attribute">#[doc(hidden)]</span>
+<span class="kw">pub use </span>core::mem;
+<span class="attribute">#[doc(hidden)]</span>
+<span class="kw">pub use </span>core::ptr;
 
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">mod</span> <span class="ident">raw_field</span>;
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">mod</span> <span class="ident">offset_of</span>;
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">mod</span> <span class="ident">span_of</span>;
+<span class="attribute">#[macro_use]</span>
+<span class="kw">mod </span>raw_field;
+<span class="attribute">#[macro_use]</span>
+<span class="kw">mod </span>offset_of;
+<span class="attribute">#[macro_use]</span>
+<span class="kw">mod </span>span_of;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

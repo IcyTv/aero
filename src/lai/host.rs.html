@@ -169,176 +169,176 @@
 <span id="169">169</span>
 <span id="170">170</span>
 <span id="171">171</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::alloc::Layout</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>core::alloc::Layout;
 
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
+<span class="kw">use </span>alloc::sync::Arc;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::helper</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::helper::<span class="kw-2">*</span>;
 
-<span class="kw">static</span> <span class="kw-2">mut</span> <span class="ident">LAI_HOST</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Host</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="prelude-val">None</span>;
+<span class="kw">static </span><span class="kw-2">mut </span>LAI_HOST: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>Host&gt;&gt; = <span class="prelude-val">None</span>;
 
-<span class="kw">fn</span> <span class="ident">get_laihost</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Host</span><span class="op">&gt;</span> {
-    <span class="kw">unsafe</span> {
-        <span class="ident">LAI_HOST</span>
-            .<span class="ident">as_ref</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;lai: host not initialized&quot;</span>)
-            .<span class="ident">clone</span>()
+<span class="kw">fn </span>get_laihost() -&gt; Arc&lt;<span class="kw">dyn </span>Host&gt; {
+    <span class="kw">unsafe </span>{
+        LAI_HOST
+            .as_ref()
+            .expect(<span class="string">&quot;lai: host not initialized&quot;</span>)
+            .clone()
     }
 }
 
-<span class="macro">macro_rules!</span> <span class="ident">marker</span> {
-    ($(<span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>:<span class="ident">tt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pname</span>:<span class="ident">tt</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ptyp</span>:<span class="ident">ty</span>),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret</span>:<span class="ident">ty</span>);<span class="kw-2">*</span>;) =&gt; {
-        $(<span class="kw">fn</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, $(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">pname</span>: <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ptyp</span>),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$</span><span class="macro-nonterminal">ret</span> { <span class="macro">unimplemented!</span>() })<span class="op">*</span>
+<span class="macro">macro_rules!</span> marker {
+    ($(<span class="kw">fn </span><span class="macro-nonterminal">$name</span>:tt(<span class="kw-2">&amp;</span><span class="self">self</span>, $(<span class="macro-nonterminal">$pname</span>:tt: <span class="macro-nonterminal">$ptyp</span>:ty),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$ret</span>:ty);<span class="kw-2">*</span>;) =&gt; {
+        $(<span class="kw">fn </span><span class="macro-nonterminal">$name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, $(<span class="macro-nonterminal">$pname</span>: <span class="macro-nonterminal">$ptyp</span>),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$ret </span>{ <span class="macro">unimplemented!</span>() })*
     };
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Host</span> {
+<span class="kw">pub trait </span>Host {
     <span class="macro">marker!</span>(
-        <span class="kw">fn</span> <span class="ident">scan</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_signature</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">_index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">u8</span>;
-        <span class="kw">fn</span> <span class="ident">sleep</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_ms</span>: <span class="ident">u64</span>) -&gt; ();
+        <span class="kw">fn </span>scan(<span class="kw-2">&amp;</span><span class="self">self</span>, _signature: <span class="kw-2">&amp;</span>str, _index: usize) -&gt; <span class="kw-2">*const </span>u8;
+        <span class="kw">fn </span>sleep(<span class="kw-2">&amp;</span><span class="self">self</span>, _ms: u64) -&gt; ();
 
-        <span class="comment">// Port I/O functions:</span>
-        <span class="kw">fn</span> <span class="ident">outb</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_port</span>: <span class="ident">u16</span>, <span class="ident">_value</span>: <span class="ident">u8</span>) -&gt; ();
-        <span class="kw">fn</span> <span class="ident">outw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_port</span>: <span class="ident">u16</span>, <span class="ident">_value</span>: <span class="ident">u16</span>) -&gt; ();
-        <span class="kw">fn</span> <span class="ident">outd</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_port</span>: <span class="ident">u16</span>, <span class="ident">_value</span>: <span class="ident">u32</span>) -&gt; ();
+        <span class="comment">// Port I/O functions:
+        </span><span class="kw">fn </span>outb(<span class="kw-2">&amp;</span><span class="self">self</span>, _port: u16, _value: u8) -&gt; ();
+        <span class="kw">fn </span>outw(<span class="kw-2">&amp;</span><span class="self">self</span>, _port: u16, _value: u16) -&gt; ();
+        <span class="kw">fn </span>outd(<span class="kw-2">&amp;</span><span class="self">self</span>, _port: u16, _value: u32) -&gt; ();
 
-        <span class="kw">fn</span> <span class="ident">inb</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u8</span>;
-        <span class="kw">fn</span> <span class="ident">inw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span>;
-        <span class="kw">fn</span> <span class="ident">ind</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span>;
+        <span class="kw">fn </span>inb(<span class="kw-2">&amp;</span><span class="self">self</span>, _port: u16) -&gt; u8;
+        <span class="kw">fn </span>inw(<span class="kw-2">&amp;</span><span class="self">self</span>, _port: u16) -&gt; u16;
+        <span class="kw">fn </span>ind(<span class="kw-2">&amp;</span><span class="self">self</span>, _port: u16) -&gt; u32;
 
-        <span class="comment">// PCI read functions:</span>
-        <span class="kw">fn</span> <span class="ident">pci_readb</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_seg</span>: <span class="ident">u16</span>, <span class="ident">_bus</span>: <span class="ident">u8</span>, <span class="ident">_slot</span>: <span class="ident">u8</span>, <span class="ident">_fun</span>: <span class="ident">u8</span>, <span class="ident">_offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u8</span>;
-        <span class="kw">fn</span> <span class="ident">pci_readw</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_seg</span>: <span class="ident">u16</span>, <span class="ident">_bus</span>: <span class="ident">u8</span>, <span class="ident">_slot</span>: <span class="ident">u8</span>, <span class="ident">_fun</span>: <span class="ident">u8</span>, <span class="ident">_offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span>;
-        <span class="kw">fn</span> <span class="ident">pci_readd</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_seg</span>: <span class="ident">u16</span>, <span class="ident">_bus</span>: <span class="ident">u8</span>, <span class="ident">_slot</span>: <span class="ident">u8</span>, <span class="ident">_fun</span>: <span class="ident">u8</span>, <span class="ident">_offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span>;
+        <span class="comment">// PCI read functions:
+        </span><span class="kw">fn </span>pci_readb(<span class="kw-2">&amp;</span><span class="self">self</span>, _seg: u16, _bus: u8, _slot: u8, _fun: u8, _offset: u16) -&gt; u8;
+        <span class="kw">fn </span>pci_readw(<span class="kw-2">&amp;</span><span class="self">self</span>, _seg: u16, _bus: u8, _slot: u8, _fun: u8, _offset: u16) -&gt; u16;
+        <span class="kw">fn </span>pci_readd(<span class="kw-2">&amp;</span><span class="self">self</span>, _seg: u16, _bus: u8, _slot: u8, _fun: u8, _offset: u16) -&gt; u32;
 
-        <span class="comment">// Maps count bytes from the given physical address and returns</span>
-        <span class="comment">// a pointer that can be used to access the memory.</span>
-        <span class="kw">fn</span> <span class="ident">map</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_address</span>: <span class="ident">usize</span>, <span class="ident">_count</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span>;
+        <span class="comment">// Maps count bytes from the given physical address and returns
+        // a pointer that can be used to access the memory.
+        </span><span class="kw">fn </span>map(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: usize, _count: usize) -&gt; <span class="kw-2">*mut </span>u8;
     );
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">alloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">size</span>, <span class="number">16</span>);
-        <span class="ident">alloc::alloc::alloc_zeroed</span>(<span class="ident">layout</span>)
+    <span class="kw">unsafe fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>, size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="kw">let </span>layout = Layout::from_size_align_unchecked(size, <span class="number">16</span>);
+        alloc::alloc::alloc_zeroed(layout)
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">size</span>: <span class="ident">usize</span>) {
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">size</span>, <span class="number">16</span>);
-        <span class="ident">alloc::alloc::dealloc</span>(<span class="ident">ptr</span>, <span class="ident">layout</span>);
+    <span class="kw">unsafe fn </span>dealloc(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, size: usize) {
+        <span class="kw">let </span>layout = Layout::from_size_align_unchecked(size, <span class="number">16</span>);
+        alloc::alloc::dealloc(ptr, layout);
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">realloc</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">old_size</span>: <span class="ident">usize</span>, <span class="ident">new_size</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-        <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="ident">old_size</span>, <span class="number">16</span>);
-        <span class="ident">alloc::alloc::realloc</span>(<span class="ident">ptr</span>, <span class="ident">layout</span>, <span class="ident">new_size</span>)
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>(<span class="ident">host</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Host</span><span class="op">&gt;</span>) {
-    <span class="kw">unsafe</span> {
-        <span class="macro">assert!</span>(<span class="ident">LAI_HOST</span>.<span class="ident">is_none</span>());
-        <span class="ident">LAI_HOST</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">host</span>);
+    <span class="kw">unsafe fn </span>realloc(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8, old_size: usize, new_size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+        <span class="kw">let </span>layout = Layout::from_size_align_unchecked(old_size, <span class="number">16</span>);
+        alloc::alloc::realloc(ptr, layout, new_size)
     }
 }
 
-<span class="comment">// lai/include/lai/host.h</span>
-<span class="kw">const</span> <span class="ident">LAI_DEBUG_LOG</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">const</span> <span class="ident">LAI_WARN_LOG</span>: <span class="ident">i32</span> <span class="op">=</span> <span class="number">2</span>;
+<span class="kw">pub fn </span>init(host: Arc&lt;<span class="kw">dyn </span>Host&gt;) {
+    <span class="kw">unsafe </span>{
+        <span class="macro">assert!</span>(LAI_HOST.is_none());
+        LAI_HOST = <span class="prelude-val">Some</span>(host);
+    }
+}
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_log</span>(<span class="ident">level</span>: <span class="ident">i32</span>, <span class="ident">message</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) {
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">c_str_as_str</span>(<span class="ident">message</span>) };
+<span class="comment">// lai/include/lai/host.h
+</span><span class="kw">const </span>LAI_DEBUG_LOG: i32 = <span class="number">1</span>;
+<span class="kw">const </span>LAI_WARN_LOG: i32 = <span class="number">2</span>;
 
-    <span class="kw">match</span> <span class="ident">level</span> {
-        <span class="ident">LAI_DEBUG_LOG</span> =&gt; <span class="macro">log::debug!</span>(<span class="string">&quot;{message}&quot;</span>),
-        <span class="ident">LAI_WARN_LOG</span> =&gt; <span class="macro">log::warn!</span>(<span class="string">&quot;{message}&quot;</span>),
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_log(level: i32, message: <span class="kw-2">*const </span>u8) {
+    <span class="kw">let </span>message = <span class="kw">unsafe </span>{ c_str_as_str(message) };
 
-        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;undefined log level: (message={message}, level={level})&quot;</span>),
+    <span class="kw">match </span>level {
+        LAI_DEBUG_LOG =&gt; <span class="macro">log::debug!</span>(<span class="string">&quot;{message}&quot;</span>),
+        LAI_WARN_LOG =&gt; <span class="macro">log::warn!</span>(<span class="string">&quot;{message}&quot;</span>),
+
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;undefined log level: (message={message}, level={level})&quot;</span>),
     };
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_panic</span>(<span class="ident">message</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="op">!</span> {
-    <span class="kw">let</span> <span class="ident">message</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">c_str_as_str</span>(<span class="ident">message</span>) };
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_panic(message: <span class="kw-2">*const </span>u8) -&gt; ! {
+    <span class="kw">let </span>message = <span class="kw">unsafe </span>{ c_str_as_str(message) };
     <span class="macro">panic!</span>(<span class="string">&quot;{message}&quot;</span>);
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_malloc</span>(<span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">alloc</span>(<span class="ident">size</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_malloc(size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+    get_laihost().alloc(size)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_free</span>(<span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">size</span>: <span class="ident">usize</span>) {
-    <span class="ident">get_laihost</span>().<span class="ident">dealloc</span>(<span class="ident">ptr</span>, <span class="ident">size</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_free(ptr: <span class="kw-2">*mut </span>u8, size: usize) {
+    get_laihost().dealloc(ptr, size)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_realloc</span>(<span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="ident">old_size</span>: <span class="ident">usize</span>, <span class="ident">new_size</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">realloc</span>(<span class="ident">ptr</span>, <span class="ident">old_size</span>, <span class="ident">new_size</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_realloc(ptr: <span class="kw-2">*mut </span>u8, old_size: usize, new_size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+    get_laihost().realloc(ptr, old_size, new_size)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_scan</span>(<span class="ident">signature</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*const</span> <span class="ident">u8</span> {
-    <span class="kw">let</span> <span class="ident">signature</span> <span class="op">=</span> <span class="ident">c_str_as_str</span>(<span class="ident">signature</span>);
-    <span class="ident">get_laihost</span>().<span class="ident">scan</span>(<span class="ident">signature</span>, <span class="ident">index</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_scan(signature: <span class="kw-2">*const </span>u8, index: usize) -&gt; <span class="kw-2">*const </span>u8 {
+    <span class="kw">let </span>signature = c_str_as_str(signature);
+    get_laihost().scan(signature, index)
 }
 
-<span class="comment">// Port I/O functions:</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_outb</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u8</span>) {
-    <span class="ident">get_laihost</span>().<span class="ident">outb</span>(<span class="ident">port</span>, <span class="ident">value</span>)
+<span class="comment">// Port I/O functions:
+</span><span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outb(port: u16, value: u8) {
+    get_laihost().outb(port, value)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_outw</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u16</span>) {
-    <span class="ident">get_laihost</span>().<span class="ident">outw</span>(<span class="ident">port</span>, <span class="ident">value</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outw(port: u16, value: u16) {
+    get_laihost().outw(port, value)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_outd</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u32</span>) {
-    <span class="ident">get_laihost</span>().<span class="ident">outd</span>(<span class="ident">port</span>, <span class="ident">value</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outd(port: u16, value: u32) {
+    get_laihost().outd(port, value)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_inb</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u8</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">inb</span>(<span class="ident">port</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inb(port: u16) -&gt; u8 {
+    get_laihost().inb(port)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_inw</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">inw</span>(<span class="ident">port</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inw(port: u16) -&gt; u16 {
+    get_laihost().inw(port)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_ind</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">ind</span>(<span class="ident">port</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_ind(port: u16) -&gt; u32 {
+    get_laihost().ind(port)
 }
 
-<span class="comment">// Thread functions:</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_sleep</span>(<span class="ident">ms</span>: <span class="ident">u64</span>) {
-    <span class="ident">get_laihost</span>().<span class="ident">sleep</span>(<span class="ident">ms</span>)
+<span class="comment">// Thread functions:
+</span><span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_sleep(ms: u64) {
+    get_laihost().sleep(ms)
 }
 
-<span class="comment">// PCI read functions:</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_pci_readb</span>(<span class="ident">seg</span>: <span class="ident">u16</span>, <span class="ident">bus</span>: <span class="ident">u8</span>, <span class="ident">slot</span>: <span class="ident">u8</span>, <span class="ident">fun</span>: <span class="ident">u8</span>, <span class="ident">offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u8</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">pci_readb</span>(<span class="ident">seg</span>, <span class="ident">bus</span>, <span class="ident">slot</span>, <span class="ident">fun</span>, <span class="ident">offset</span>)
+<span class="comment">// PCI read functions:
+</span><span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readb(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u8 {
+    get_laihost().pci_readb(seg, bus, slot, fun, offset)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_pci_readw</span>(<span class="ident">seg</span>: <span class="ident">u16</span>, <span class="ident">bus</span>: <span class="ident">u8</span>, <span class="ident">slot</span>: <span class="ident">u8</span>, <span class="ident">fun</span>: <span class="ident">u8</span>, <span class="ident">offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">pci_readw</span>(<span class="ident">seg</span>, <span class="ident">bus</span>, <span class="ident">slot</span>, <span class="ident">fun</span>, <span class="ident">offset</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readw(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u16 {
+    get_laihost().pci_readw(seg, bus, slot, fun, offset)
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_pci_readd</span>(<span class="ident">seg</span>: <span class="ident">u16</span>, <span class="ident">bus</span>: <span class="ident">u8</span>, <span class="ident">slot</span>: <span class="ident">u8</span>, <span class="ident">fun</span>: <span class="ident">u8</span>, <span class="ident">offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">pci_readd</span>(<span class="ident">seg</span>, <span class="ident">bus</span>, <span class="ident">slot</span>, <span class="ident">fun</span>, <span class="ident">offset</span>)
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readd(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u32 {
+    get_laihost().pci_readd(seg, bus, slot, fun, offset)
 }
 
-<span class="comment">// Memory functions:</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">unsafe</span> <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">laihost_map</span>(<span class="ident">address</span>: <span class="ident">usize</span>, <span class="ident">count</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">*mut</span> <span class="ident">u8</span> {
-    <span class="ident">get_laihost</span>().<span class="ident">map</span>(<span class="ident">address</span>, <span class="ident">count</span>)
+<span class="comment">// Memory functions:
+</span><span class="attribute">#[no_mangle]</span>
+<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_map(address: usize, count: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+    get_laihost().map(address, count)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

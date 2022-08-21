@@ -82,89 +82,89 @@
 <span id="82">82</span>
 <span id="83">83</span>
 <span id="84">84</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2020 Gilad Naaman, Ralf Jung</span>
-<span class="comment">//</span>
-<span class="comment">// Permission is hereby granted, free of charge, to any person obtaining a copy</span>
-<span class="comment">// of this software and associated documentation files (the &quot;Software&quot;), to deal</span>
-<span class="comment">// in the Software without restriction, including without limitation the rights</span>
-<span class="comment">// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell</span>
-<span class="comment">// copies of the Software, and to permit persons to whom the Software is</span>
-<span class="comment">// furnished to do so, subject to the following conditions:</span>
-<span class="comment">//</span>
-<span class="comment">// The above copyright notice and this permission notice shall be included in all</span>
-<span class="comment">// copies or substantial portions of the Software.</span>
-<span class="comment">//</span>
-<span class="comment">// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR</span>
-<span class="comment">// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,</span>
-<span class="comment">// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE</span>
-<span class="comment">// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER</span>
-<span class="comment">// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,</span>
-<span class="comment">// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE</span>
-<span class="comment">// SOFTWARE.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright (c) 2020 Gilad Naaman, Ralf Jung
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the &quot;Software&quot;), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
 
-<span class="doccomment">/// `raw_const!`, or just ref-then-cast when that is not available.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;unstable_raw&quot;</span>)]</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">_memoffset__raw_const</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>:<span class="ident">expr</span>) =&gt; {{
-        <span class="macro-nonterminal">$</span><span class="macro">crate::ptr::raw_const!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>)
+</span><span class="doccomment">/// `raw_const!`, or just ref-then-cast when that is not available.
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;unstable_raw&quot;</span>)]</span>
+<span class="attribute">#[macro_export]</span>
+<span class="attribute">#[doc(hidden)]</span>
+<span class="macro">macro_rules!</span> _memoffset__raw_const {
+    (<span class="macro-nonterminal">$path</span>:expr) =&gt; {{
+        <span class="macro-nonterminal">$</span><span class="macro">crate::ptr::raw_const!</span>(<span class="macro-nonterminal">$path</span>)
     }};
 }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;unstable_raw&quot;</span>))]</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">_memoffset__raw_const</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span>:<span class="ident">expr</span>) =&gt; {{
-        <span class="comment">// This is UB because we create an intermediate reference to uninitialized memory.</span>
-        <span class="comment">// Nothing we can do about that without `raw_const!` though.</span>
-        <span class="kw-2">&amp;</span><span class="macro-nonterminal">$</span><span class="macro-nonterminal">path</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span>
-    }};
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;unstable_raw&quot;</span>))]</span>
+<span class="attribute">#[macro_export]</span>
+<span class="attribute">#[doc(hidden)]</span>
+<span class="macro">macro_rules!</span> _memoffset__raw_const {
+    (<span class="macro-nonterminal">$path</span>:expr) =&gt; {{
+        <span class="comment">// This is UB because we create an intermediate reference to uninitialized memory.
+        // Nothing we can do about that without `raw_const!` though.
+        </span><span class="kw-2">&amp;</span><span class="macro-nonterminal">$path </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_
+    </span>}};
 }
 
-<span class="doccomment">/// Deref-coercion protection macro.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">allow_clippy</span>)]</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">_memoffset__field_check</span> {
-    (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">path</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>:<span class="ident">tt</span>) =&gt; {
-        <span class="comment">// Make sure the field actually exists. This line ensures that a</span>
-        <span class="comment">// compile-time error is generated if $field is accessed through a</span>
-        <span class="comment">// Deref impl.</span>
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::unneeded_field_pattern</span>)]</span>
-        <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="kw">type</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>: <span class="kw">_</span>, .. };
+<span class="doccomment">/// Deref-coercion protection macro.
+</span><span class="attribute">#[cfg(allow_clippy)]</span>
+<span class="attribute">#[macro_export]</span>
+<span class="attribute">#[doc(hidden)]</span>
+<span class="macro">macro_rules!</span> _memoffset__field_check {
+    (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">path</span>, <span class="macro-nonterminal">$field</span>:tt) =&gt; {
+        <span class="comment">// Make sure the field actually exists. This line ensures that a
+        // compile-time error is generated if $field is accessed through a
+        // Deref impl.
+        </span><span class="attribute">#[allow(clippy::unneeded_field_pattern)]</span>
+        <span class="kw">let </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{ <span class="macro-nonterminal">$field</span>: <span class="kw">_</span>, .. };
     };
 }
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">not</span>(<span class="ident">allow_clippy</span>))]</span>
-<span class="attribute">#[<span class="ident">macro_export</span>]</span>
-<span class="attribute">#[<span class="ident">doc</span>(<span class="ident">hidden</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">_memoffset__field_check</span> {
-    (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">path</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>:<span class="ident">tt</span>) =&gt; {
-        <span class="comment">// Make sure the field actually exists. This line ensures that a</span>
-        <span class="comment">// compile-time error is generated if $field is accessed through a</span>
-        <span class="comment">// Deref impl.</span>
-        <span class="kw">let</span> <span class="macro-nonterminal">$</span><span class="kw">type</span> { <span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>: <span class="kw">_</span>, .. };
+<span class="attribute">#[cfg(not(allow_clippy))]</span>
+<span class="attribute">#[macro_export]</span>
+<span class="attribute">#[doc(hidden)]</span>
+<span class="macro">macro_rules!</span> _memoffset__field_check {
+    (<span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">path</span>, <span class="macro-nonterminal">$field</span>:tt) =&gt; {
+        <span class="comment">// Make sure the field actually exists. This line ensures that a
+        // compile-time error is generated if $field is accessed through a
+        // Deref impl.
+        </span><span class="kw">let </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{ <span class="macro-nonterminal">$field</span>: <span class="kw">_</span>, .. };
     };
 }
 
-<span class="doccomment">/// Computes a const raw pointer to the given field of the given base pointer</span>
-<span class="doccomment">/// to the given parent type.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// The `base` pointer *must not* be dangling, but it *may* point to</span>
-<span class="doccomment">/// uninitialized memory.</span>
-<span class="attribute">#[<span class="ident">macro_export</span>(<span class="ident">local_inner_macros</span>)]</span>
-<span class="macro">macro_rules!</span> <span class="ident">raw_field</span> {
-    (<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span>:<span class="ident">expr</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">parent</span>:<span class="ident">path</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>:<span class="ident">tt</span>) =&gt; {{
-        <span class="macro">_memoffset__field_check!</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">parent</span>, <span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>);
+<span class="doccomment">/// Computes a const raw pointer to the given field of the given base pointer
+/// to the given parent type.
+///
+/// The `base` pointer *must not* be dangling, but it *may* point to
+/// uninitialized memory.
+</span><span class="attribute">#[macro_export(local_inner_macros)]</span>
+<span class="macro">macro_rules!</span> raw_field {
+    (<span class="macro-nonterminal">$base</span>:expr, <span class="macro-nonterminal">$parent</span>:path, <span class="macro-nonterminal">$field</span>:tt) =&gt; {{
+        <span class="macro">_memoffset__field_check!</span>(<span class="macro-nonterminal">$parent</span>, <span class="macro-nonterminal">$field</span>);
 
-        <span class="comment">// Get the field address.</span>
-        <span class="comment">// Crucially, we know that this will not trigger a deref coercion because</span>
-        <span class="comment">// of the field check we did above.</span>
-        <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">unused_unsafe</span>)]</span> <span class="comment">// for when the macro is used in an unsafe block</span>
-        <span class="kw">unsafe</span> {
-            <span class="macro">_memoffset__raw_const!</span>((<span class="kw-2">*</span>(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">base</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="macro-nonterminal">$</span><span class="macro-nonterminal">parent</span>)).<span class="macro-nonterminal">$</span><span class="macro-nonterminal">field</span>)
+        <span class="comment">// Get the field address.
+        // Crucially, we know that this will not trigger a deref coercion because
+        // of the field check we did above.
+        </span><span class="attribute">#[allow(unused_unsafe)]</span> <span class="comment">// for when the macro is used in an unsafe block
+        </span><span class="kw">unsafe </span>{
+            <span class="macro">_memoffset__raw_const!</span>((<span class="kw-2">*</span>(<span class="macro-nonterminal">$base </span><span class="kw">as </span><span class="kw-2">*const </span><span class="macro-nonterminal">$parent</span>)).<span class="macro-nonterminal">$field</span>)
         }
     }};
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

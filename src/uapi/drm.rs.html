@@ -286,243 +286,243 @@
  * OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::ioctl</span>;
-<span class="kw">use</span> <span class="ident">core::ffi</span>;
+</span><span class="kw">use </span><span class="kw">crate</span>::ioctl;
+<span class="kw">use </span>core::ffi;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_BASE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="string">&#39;d&#39;</span> <span class="kw">as</span> <span class="ident">usize</span>;
+<span class="kw">pub const </span>DRM_IOCTL_BASE: usize = <span class="string">&#39;d&#39; </span><span class="kw">as </span>usize;
 
-<span class="comment">// Functions to generate the IOCTl numbers:</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">drm_io</span>(<span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioctl::io</span>(<span class="ident">DRM_IOCTL_BASE</span>, <span class="ident">nr</span>)
+<span class="comment">// Functions to generate the IOCTl numbers:
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>drm_io(nr: usize) -&gt; usize {
+    ioctl::io(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">drm_ior</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioctl::ior</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">DRM_IOCTL_BASE</span>, <span class="ident">nr</span>)
+<span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>drm_ior&lt;T&gt;(nr: usize) -&gt; usize {
+    ioctl::ior::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">drm_iow</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioctl::iow</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">DRM_IOCTL_BASE</span>, <span class="ident">nr</span>)
+<span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>drm_iow&lt;T&gt;(nr: usize) -&gt; usize {
+    ioctl::iow::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">drm_iowr</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">nr</span>: <span class="ident">usize</span>) -&gt; <span class="ident">usize</span> {
-    <span class="ident">ioctl::iowr</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="ident">DRM_IOCTL_BASE</span>, <span class="ident">nr</span>)
+<span class="attribute">#[inline]</span>
+<span class="kw">pub const fn </span>drm_iowr&lt;T&gt;(nr: usize) -&gt; usize {
+    ioctl::iowr::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="comment">// DRM structures:</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmVersion</span> {
-    <span class="kw">pub</span> <span class="ident">version_major</span>: <span class="ident">ffi::c_int</span>,
-    <span class="kw">pub</span> <span class="ident">version_minor</span>: <span class="ident">ffi::c_int</span>,
-    <span class="kw">pub</span> <span class="ident">version_patch_level</span>: <span class="ident">ffi::c_int</span>,
+<span class="comment">// DRM structures:
+</span><span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmVersion {
+    <span class="kw">pub </span>version_major: ffi::c_int,
+    <span class="kw">pub </span>version_minor: ffi::c_int,
+    <span class="kw">pub </span>version_patch_level: ffi::c_int,
 
-    <span class="kw">pub</span> <span class="ident">name_len</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">name</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="comment">// name of the driver</span>
+    <span class="kw">pub </span>name_len: usize,
+    <span class="kw">pub </span>name: <span class="kw-2">*mut </span>u8, <span class="comment">// name of the driver
 
-    <span class="kw">pub</span> <span class="ident">date_len</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">date</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="comment">// buffer to hold date</span>
+    </span><span class="kw">pub </span>date_len: usize,
+    <span class="kw">pub </span>date: <span class="kw-2">*mut </span>u8, <span class="comment">// buffer to hold date
 
-    <span class="kw">pub</span> <span class="ident">desc_len</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">desc</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>, <span class="comment">// buffer to hold desc</span>
+    </span><span class="kw">pub </span>desc_len: usize,
+    <span class="kw">pub </span>desc: <span class="kw-2">*mut </span>u8, <span class="comment">// buffer to hold desc
+</span>}
+
+<span class="comment">// Refer to the `libdrm` documentation for more information about the
+// capabilities.
+</span><span class="kw">pub const </span>DRM_CAP_DUMB_BUFFER: u64 = <span class="number">0x01</span>;
+<span class="kw">pub const </span>DRM_CAP_VBLANK_HIGH_CRTC: u64 = <span class="number">0x02</span>;
+<span class="kw">pub const </span>DRM_CAP_DUMB_PREFERRED_DEPTH: u64 = <span class="number">0x03</span>;
+<span class="kw">pub const </span>DRM_CAP_DUMB_PREFER_SHADOW: u64 = <span class="number">0x04</span>;
+<span class="kw">pub const </span>DRM_CAP_PRIME: u64 = <span class="number">0x05</span>;
+<span class="kw">pub const </span>DRM_PRIME_CAP_IMPORT: u64 = <span class="number">0x01</span>;
+<span class="kw">pub const </span>DRM_PRIME_CAP_EXPORT: u64 = <span class="number">0x02</span>;
+<span class="kw">pub const </span>DRM_CAP_TIMESTAMP_MONOTONIC: u64 = <span class="number">0x06</span>;
+<span class="kw">pub const </span>DRM_CAP_ASYNC_PAGE_FLIP: u64 = <span class="number">0x07</span>;
+<span class="kw">pub const </span>DRM_CAP_CURSOR_WIDTH: u64 = <span class="number">0x08</span>;
+<span class="kw">pub const </span>DRM_CAP_CURSOR_HEIGHT: u64 = <span class="number">0x09</span>;
+<span class="kw">pub const </span>DRM_CAP_ADDFB2_MODIFIERS: u64 = <span class="number">0x10</span>;
+<span class="kw">pub const </span>DRM_CAP_PAGE_FLIP_TARGET: u64 = <span class="number">0x11</span>;
+<span class="kw">pub const </span>DRM_CAP_CRTC_IN_VBLANK_EVENT: u64 = <span class="number">0x12</span>;
+<span class="kw">pub const </span>DRM_CAP_SYNCOBJ: u64 = <span class="number">0x13</span>;
+<span class="kw">pub const </span>DRM_CAP_SYNCOBJ_TIMELINE: u64 = <span class="number">0x14</span>;
+
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmGetCap {
+    <span class="kw">pub </span>capability: u64,
+    <span class="kw">pub </span>value: u64,
 }
 
-<span class="comment">// Refer to the `libdrm` documentation for more information about the</span>
-<span class="comment">// capabilities.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_DUMB_BUFFER</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x01</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_VBLANK_HIGH_CRTC</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x02</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_DUMB_PREFERRED_DEPTH</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x03</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_DUMB_PREFER_SHADOW</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x04</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_PRIME</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x05</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_PRIME_CAP_IMPORT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x01</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_PRIME_CAP_EXPORT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x02</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_TIMESTAMP_MONOTONIC</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x06</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_ASYNC_PAGE_FLIP</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x07</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_CURSOR_WIDTH</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x08</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_CURSOR_HEIGHT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x09</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_ADDFB2_MODIFIERS</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x10</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_PAGE_FLIP_TARGET</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x11</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_CRTC_IN_VBLANK_EVENT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x12</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_SYNCOBJ</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x13</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_CAP_SYNCOBJ_TIMELINE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x14</span>;
-
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmGetCap</span> {
-    <span class="kw">pub</span> <span class="ident">capability</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">value</span>: <span class="ident">u64</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeCardRes {
+    <span class="kw">pub </span>fb_id_ptr: u64,
+    <span class="kw">pub </span>crtc_id_ptr: u64,
+    <span class="kw">pub </span>connector_id_ptr: u64,
+    <span class="kw">pub </span>encoder_id_ptr: u64,
+    <span class="kw">pub </span>count_fbs: u32,
+    <span class="kw">pub </span>count_crtcs: u32,
+    <span class="kw">pub </span>count_connectors: u32,
+    <span class="kw">pub </span>count_encoders: u32,
+    <span class="kw">pub </span>min_width: u32,
+    <span class="kw">pub </span>max_width: u32,
+    <span class="kw">pub </span>min_height: u32,
+    <span class="kw">pub </span>max_height: u32,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeCardRes</span> {
-    <span class="kw">pub</span> <span class="ident">fb_id_ptr</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">crtc_id_ptr</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">connector_id_ptr</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">encoder_id_ptr</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">count_fbs</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">count_crtcs</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">count_connectors</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">count_encoders</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">min_width</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">max_width</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">min_height</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">max_height</span>: <span class="ident">u32</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeCrtc {
+    <span class="kw">pub </span>set_connectors_ptr: u64,
+    <span class="kw">pub </span>count_connectors: u32,
+
+    <span class="kw">pub </span>crtc_id: u32, <span class="comment">// crtc ID
+    </span><span class="kw">pub </span>fb_id: u32,   <span class="comment">// framebuffer ID
+
+    </span><span class="kw">pub </span>x: u32, <span class="comment">// x position on the framebuffer
+    </span><span class="kw">pub </span>y: u32, <span class="comment">// y position on the framebuffer
+
+    </span><span class="kw">pub </span>gamma_size: u32,
+    <span class="kw">pub </span>mode_valid: u32,
+
+    <span class="kw">pub </span>mode: DrmModeInfo,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeCrtc</span> {
-    <span class="kw">pub</span> <span class="ident">set_connectors_ptr</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">count_connectors</span>: <span class="ident">u32</span>,
-
-    <span class="kw">pub</span> <span class="ident">crtc_id</span>: <span class="ident">u32</span>, <span class="comment">// crtc ID</span>
-    <span class="kw">pub</span> <span class="ident">fb_id</span>: <span class="ident">u32</span>,   <span class="comment">// framebuffer ID</span>
-
-    <span class="kw">pub</span> <span class="ident">x</span>: <span class="ident">u32</span>, <span class="comment">// x position on the framebuffer</span>
-    <span class="kw">pub</span> <span class="ident">y</span>: <span class="ident">u32</span>, <span class="comment">// y position on the framebuffer</span>
-
-    <span class="kw">pub</span> <span class="ident">gamma_size</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">mode_valid</span>: <span class="ident">u32</span>,
-
-    <span class="kw">pub</span> <span class="ident">mode</span>: <span class="ident">DrmModeInfo</span>,
+<span class="attribute">#[repr(u32)]</span>
+<span class="attribute">#[derive(Copy, Clone, Debug)]</span>
+<span class="kw">pub enum </span>DrmModeConStatus {
+    Connected = <span class="number">1</span>, <span class="comment">// connector has the sink plugged in
+    </span>Disconnected = <span class="number">2</span>,
+    Unknown = <span class="number">3</span>,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u32</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">DrmModeConStatus</span> {
-    <span class="ident">Connected</span> <span class="op">=</span> <span class="number">1</span>, <span class="comment">// connector has the sink plugged in</span>
-    <span class="ident">Disconnected</span> <span class="op">=</span> <span class="number">2</span>,
-    <span class="ident">Unknown</span> <span class="op">=</span> <span class="number">3</span>,
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeGetEncoder {
+    <span class="kw">pub </span>encoder_id: u32,
+    <span class="kw">pub </span>encoder_typ: u32,
+
+    <span class="kw">pub </span>crtc_id: u32, <span class="comment">// ID of the CRTC
+
+    </span><span class="kw">pub </span>possible_crtcs: u32,
+    <span class="kw">pub </span>possible_clones: u32,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeGetEncoder</span> {
-    <span class="kw">pub</span> <span class="ident">encoder_id</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">encoder_typ</span>: <span class="ident">u32</span>,
+<span class="kw">pub const </span>DRM_MODE_TYPE_DRIVER: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
 
-    <span class="kw">pub</span> <span class="ident">crtc_id</span>: <span class="ident">u32</span>, <span class="comment">// ID of the CRTC</span>
+<span class="kw">pub const </span>DRM_MODE_FLAG_PHSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_NHSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_PVSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_NVSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_INTERLACE: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_DBLSCAN: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_CSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_PCSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_NCSYNC: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_HSKEW: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">9</span>; <span class="comment">// hskew provided
+</span><span class="kw">pub const </span>DRM_MODE_FLAG_BCAST: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">10</span>; <span class="comment">// deprecated
+</span><span class="kw">pub const </span>DRM_MODE_FLAG_PIXMUX: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>; <span class="comment">// deprecated
+</span><span class="kw">pub const </span>DRM_MODE_FLAG_DBLCLK: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">12</span>;
+<span class="kw">pub const </span>DRM_MODE_FLAG_CLKDIV2: u32 = <span class="number">1 </span>&lt;&lt; <span class="number">13</span>;
 
-    <span class="kw">pub</span> <span class="ident">possible_crtcs</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">possible_clones</span>: <span class="ident">u32</span>,
+<span class="kw">pub const </span>DRM_DISPLAY_MODE_LEN: usize = <span class="number">32</span>;
+
+<span class="attribute">#[derive(Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeInfo {
+    <span class="kw">pub </span>clock: u32,                                <span class="comment">// pixel clock in kHz
+    </span><span class="kw">pub </span>hdisplay: u16,                             <span class="comment">// horizontal display size
+    </span><span class="kw">pub </span>hsync_start: u16,                          <span class="comment">// horizontal sync start
+    </span><span class="kw">pub </span>hsync_end: u16,                            <span class="comment">// horizontal sync end
+    </span><span class="kw">pub </span>htotal: u16,                               <span class="comment">// horizontal total size
+    </span><span class="kw">pub </span>hskew: u16,                                <span class="comment">// horizontal skew
+    </span><span class="kw">pub </span>vdisplay: u16,                             <span class="comment">// vertical display size
+    </span><span class="kw">pub </span>vsync_start: u16,                          <span class="comment">// vertical sync start
+    </span><span class="kw">pub </span>vsync_end: u16,                            <span class="comment">// vertical sync end
+    </span><span class="kw">pub </span>vtotal: u16,                               <span class="comment">// vertical total size
+    </span><span class="kw">pub </span>vscan: u16,                                <span class="comment">// vertical scan
+    </span><span class="kw">pub </span>vrefresh: u32,                             <span class="comment">// approximate vertical refresh rate in Hz
+    </span><span class="kw">pub </span>flags: u32,                                <span class="comment">// bitmask of misc flags
+    </span><span class="kw">pub </span>typ: u32,                                  <span class="comment">// bitmask of type flags
+    </span><span class="kw">pub </span>name: [ffi::c_char; DRM_DISPLAY_MODE_LEN], <span class="comment">// string describing the mode resolution
+</span>}
+
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeGetConnector {
+    <span class="kw">pub </span>encoders_ptr: u64,    <span class="comment">// pointer to `u32` array of object IDs
+    </span><span class="kw">pub </span>modes_ptr: u64,       <span class="comment">// pointer to `DrmModeInfo` array
+    </span><span class="kw">pub </span>props_ptr: u64,       <span class="comment">// pointer to `u32` array of property IDs
+    </span><span class="kw">pub </span>prop_values_ptr: u64, <span class="comment">// pointer to `u64` array of property values
+
+    </span><span class="kw">pub </span>count_modes: u32,    <span class="comment">// number of modes
+    </span><span class="kw">pub </span>count_props: u32,    <span class="comment">// number of properties
+    </span><span class="kw">pub </span>count_encoders: u32, <span class="comment">// number of encoders
+
+    </span><span class="kw">pub </span>encoder_id: u32,     <span class="comment">// object id of the current encoder
+    </span><span class="kw">pub </span>connector_id: u32,   <span class="comment">// object id of the connector
+    </span><span class="kw">pub </span>connector_type: u32, <span class="comment">// type of the connector
+
+    </span><span class="doccomment">/// Type-specific connector number.
+    ///
+    /// This is not an object ID. This is a per-type connector number. Each
+    /// (`type`, `type_id`) combination is unique across all connectors of a DRM
+    /// device.
+    </span><span class="kw">pub </span>connector_type_id: u32,
+
+    <span class="kw">pub </span>connection: u32, <span class="comment">// status of the connector
+    </span><span class="kw">pub </span>mm_width: u32,   <span class="comment">// width of the connected sink in millimeters
+    </span><span class="kw">pub </span>mm_height: u32,  <span class="comment">// height of the connected sink in millimeters
+
+    </span><span class="kw">pub </span>subpixel: u32, <span class="comment">// subpixel order of the connected sink
+
+    </span><span class="kw">pub </span>pad: u32, <span class="comment">// padding; must be zero
+</span>}
+
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeFbCmd {
+    <span class="kw">pub </span>fb_id: u32,
+    <span class="kw">pub </span>width: u32,
+    <span class="kw">pub </span>height: u32,
+    <span class="kw">pub </span>pitch: u32,
+    <span class="kw">pub </span>bpp: u32,
+    <span class="kw">pub </span>depth: u32,
+    <span class="kw">pub </span>handle: u32, <span class="comment">// driver specific handle
+</span>}
+
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeCreateDumb {
+    <span class="kw">pub </span>height: u32,
+    <span class="kw">pub </span>width: u32,
+    <span class="kw">pub </span>bpp: u32,
+    <span class="kw">pub </span>flags: u32,
+
+    <span class="comment">// the following will be returned:
+    </span><span class="kw">pub </span>handle: u32,
+    <span class="kw">pub </span>pitch: u32,
+    <span class="kw">pub </span>size: u64,
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_TYPE_DRIVER</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_PHSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">0</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_NHSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_PVSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_NVSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_INTERLACE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_DBLSCAN</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_CSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_PCSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_NCSYNC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_HSKEW</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>; <span class="comment">// hskew provided</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_BCAST</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>; <span class="comment">// deprecated</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_PIXMUX</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>; <span class="comment">// deprecated</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_DBLCLK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_MODE_FLAG_CLKDIV2</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">13</span>;
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_DISPLAY_MODE_LEN</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">32</span>;
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeInfo</span> {
-    <span class="kw">pub</span> <span class="ident">clock</span>: <span class="ident">u32</span>,                                <span class="comment">// pixel clock in kHz</span>
-    <span class="kw">pub</span> <span class="ident">hdisplay</span>: <span class="ident">u16</span>,                             <span class="comment">// horizontal display size</span>
-    <span class="kw">pub</span> <span class="ident">hsync_start</span>: <span class="ident">u16</span>,                          <span class="comment">// horizontal sync start</span>
-    <span class="kw">pub</span> <span class="ident">hsync_end</span>: <span class="ident">u16</span>,                            <span class="comment">// horizontal sync end</span>
-    <span class="kw">pub</span> <span class="ident">htotal</span>: <span class="ident">u16</span>,                               <span class="comment">// horizontal total size</span>
-    <span class="kw">pub</span> <span class="ident">hskew</span>: <span class="ident">u16</span>,                                <span class="comment">// horizontal skew</span>
-    <span class="kw">pub</span> <span class="ident">vdisplay</span>: <span class="ident">u16</span>,                             <span class="comment">// vertical display size</span>
-    <span class="kw">pub</span> <span class="ident">vsync_start</span>: <span class="ident">u16</span>,                          <span class="comment">// vertical sync start</span>
-    <span class="kw">pub</span> <span class="ident">vsync_end</span>: <span class="ident">u16</span>,                            <span class="comment">// vertical sync end</span>
-    <span class="kw">pub</span> <span class="ident">vtotal</span>: <span class="ident">u16</span>,                               <span class="comment">// vertical total size</span>
-    <span class="kw">pub</span> <span class="ident">vscan</span>: <span class="ident">u16</span>,                                <span class="comment">// vertical scan</span>
-    <span class="kw">pub</span> <span class="ident">vrefresh</span>: <span class="ident">u32</span>,                             <span class="comment">// approximate vertical refresh rate in Hz</span>
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u32</span>,                                <span class="comment">// bitmask of misc flags</span>
-    <span class="kw">pub</span> <span class="ident">typ</span>: <span class="ident">u32</span>,                                  <span class="comment">// bitmask of type flags</span>
-    <span class="kw">pub</span> <span class="ident">name</span>: [<span class="ident">ffi::c_char</span>; <span class="ident">DRM_DISPLAY_MODE_LEN</span>], <span class="comment">// string describing the mode resolution</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>DrmModeMapDumb {
+    <span class="kw">pub </span>handle: u32, <span class="comment">// handle for the object being mapped
+    </span><span class="kw">pub </span>pad: u32,
+    <span class="comment">// Fake offset to use for subsequent mmap call. This is a fixed-size
+    // type for 32/64 compatibility.
+    </span><span class="kw">pub </span>offset: u64,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeGetConnector</span> {
-    <span class="kw">pub</span> <span class="ident">encoders_ptr</span>: <span class="ident">u64</span>,    <span class="comment">// pointer to `u32` array of object IDs</span>
-    <span class="kw">pub</span> <span class="ident">modes_ptr</span>: <span class="ident">u64</span>,       <span class="comment">// pointer to `DrmModeInfo` array</span>
-    <span class="kw">pub</span> <span class="ident">props_ptr</span>: <span class="ident">u64</span>,       <span class="comment">// pointer to `u32` array of property IDs</span>
-    <span class="kw">pub</span> <span class="ident">prop_values_ptr</span>: <span class="ident">u64</span>, <span class="comment">// pointer to `u64` array of property values</span>
+<span class="comment">// DRM IOCTL constants:
+</span><span class="kw">pub const </span>DRM_IOCTL_VERSION: usize = drm_iowr::&lt;DrmVersion&gt;(<span class="number">0x00</span>);
+<span class="kw">pub const </span>DRM_IOCTL_GET_CAP: usize = drm_iowr::&lt;DrmGetCap&gt;(<span class="number">0x0c</span>);
 
-    <span class="kw">pub</span> <span class="ident">count_modes</span>: <span class="ident">u32</span>,    <span class="comment">// number of modes</span>
-    <span class="kw">pub</span> <span class="ident">count_props</span>: <span class="ident">u32</span>,    <span class="comment">// number of properties</span>
-    <span class="kw">pub</span> <span class="ident">count_encoders</span>: <span class="ident">u32</span>, <span class="comment">// number of encoders</span>
+<span class="kw">pub const </span>DRM_IOCTL_MODE_GETRESOURCES: usize = drm_iowr::&lt;DrmModeCardRes&gt;(<span class="number">0xa0</span>);
+<span class="kw">pub const </span>DRM_IOCTL_GET_CRTC: usize = drm_iowr::&lt;DrmModeCrtc&gt;(<span class="number">0xa1</span>);
+<span class="kw">pub const </span>DRM_IOCTL_SET_CRTC: usize = drm_iowr::&lt;DrmModeCrtc&gt;(<span class="number">0xa2</span>);
+<span class="kw">pub const </span>DRM_IOCTL_GET_ENCODER: usize = drm_iowr::&lt;DrmModeGetEncoder&gt;(<span class="number">0xa6</span>);
+<span class="kw">pub const </span>DRM_IOCTL_GET_CONNECTOR: usize = drm_iowr::&lt;DrmModeGetConnector&gt;(<span class="number">0xa7</span>);
+<span class="kw">pub const </span>DRM_IOCTL_MODE_ADDFB: usize = drm_iowr::&lt;DrmModeFbCmd&gt;(<span class="number">0xae</span>);
 
-    <span class="kw">pub</span> <span class="ident">encoder_id</span>: <span class="ident">u32</span>,     <span class="comment">// object id of the current encoder</span>
-    <span class="kw">pub</span> <span class="ident">connector_id</span>: <span class="ident">u32</span>,   <span class="comment">// object id of the connector</span>
-    <span class="kw">pub</span> <span class="ident">connector_type</span>: <span class="ident">u32</span>, <span class="comment">// type of the connector</span>
-
-    <span class="doccomment">/// Type-specific connector number.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is not an object ID. This is a per-type connector number. Each</span>
-    <span class="doccomment">/// (`type`, `type_id`) combination is unique across all connectors of a DRM</span>
-    <span class="doccomment">/// device.</span>
-    <span class="kw">pub</span> <span class="ident">connector_type_id</span>: <span class="ident">u32</span>,
-
-    <span class="kw">pub</span> <span class="ident">connection</span>: <span class="ident">u32</span>, <span class="comment">// status of the connector</span>
-    <span class="kw">pub</span> <span class="ident">mm_width</span>: <span class="ident">u32</span>,   <span class="comment">// width of the connected sink in millimeters</span>
-    <span class="kw">pub</span> <span class="ident">mm_height</span>: <span class="ident">u32</span>,  <span class="comment">// height of the connected sink in millimeters</span>
-
-    <span class="kw">pub</span> <span class="ident">subpixel</span>: <span class="ident">u32</span>, <span class="comment">// subpixel order of the connected sink</span>
-
-    <span class="kw">pub</span> <span class="ident">pad</span>: <span class="ident">u32</span>, <span class="comment">// padding; must be zero</span>
-}
-
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeFbCmd</span> {
-    <span class="kw">pub</span> <span class="ident">fb_id</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">bpp</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">depth</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>, <span class="comment">// driver specific handle</span>
-}
-
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeCreateDumb</span> {
-    <span class="kw">pub</span> <span class="ident">height</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">width</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">bpp</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">flags</span>: <span class="ident">u32</span>,
-
-    <span class="comment">// the following will be returned:</span>
-    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">pitch</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">size</span>: <span class="ident">u64</span>,
-}
-
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">DrmModeMapDumb</span> {
-    <span class="kw">pub</span> <span class="ident">handle</span>: <span class="ident">u32</span>, <span class="comment">// handle for the object being mapped</span>
-    <span class="kw">pub</span> <span class="ident">pad</span>: <span class="ident">u32</span>,
-    <span class="comment">// Fake offset to use for subsequent mmap call. This is a fixed-size</span>
-    <span class="comment">// type for 32/64 compatibility.</span>
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">u64</span>,
-}
-
-<span class="comment">// DRM IOCTL constants:</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_VERSION</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmVersion</span><span class="op">&gt;</span>(<span class="number">0x00</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_GET_CAP</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmGetCap</span><span class="op">&gt;</span>(<span class="number">0x0c</span>);
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_MODE_GETRESOURCES</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeCardRes</span><span class="op">&gt;</span>(<span class="number">0xa0</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_GET_CRTC</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeCrtc</span><span class="op">&gt;</span>(<span class="number">0xa1</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_SET_CRTC</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeCrtc</span><span class="op">&gt;</span>(<span class="number">0xa2</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_GET_ENCODER</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeGetEncoder</span><span class="op">&gt;</span>(<span class="number">0xa6</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_GET_CONNECTOR</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeGetConnector</span><span class="op">&gt;</span>(<span class="number">0xa7</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_MODE_ADDFB</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeFbCmd</span><span class="op">&gt;</span>(<span class="number">0xae</span>);
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_MODE_CREATE_DUMB</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeCreateDumb</span><span class="op">&gt;</span>(<span class="number">0xb2</span>);
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">DRM_IOCTL_MODE_MAP_DUMB</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">drm_iowr</span>::<span class="op">&lt;</span><span class="ident">DrmModeMapDumb</span><span class="op">&gt;</span>(<span class="number">0xb3</span>);
+<span class="kw">pub const </span>DRM_IOCTL_MODE_CREATE_DUMB: usize = drm_iowr::&lt;DrmModeCreateDumb&gt;(<span class="number">0xb2</span>);
+<span class="kw">pub const </span>DRM_IOCTL_MODE_MAP_DUMB: usize = drm_iowr::&lt;DrmModeMapDumb&gt;(<span class="number">0xb3</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

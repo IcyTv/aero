@@ -1174,950 +1174,950 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::fmt::Write</span>;
+</span><span class="kw">use </span>core::fmt::Write;
 
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">MMapFlags</span>, <span class="ident">MMapProt</span>};
+<span class="kw">use </span>aero_syscall::{MMapFlags, MMapProt};
 
-<span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
-<span class="kw">use</span> <span class="ident">alloc::collections::linked_list::CursorMut</span>;
-<span class="kw">use</span> <span class="ident">alloc::collections::LinkedList</span>;
+<span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>alloc::collections::linked_list::CursorMut;
+<span class="kw">use </span>alloc::collections::LinkedList;
 
-<span class="kw">use</span> <span class="ident">xmas_elf::header</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">xmas_elf::program</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">xmas_elf</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>xmas_elf::header::<span class="kw-2">*</span>;
+<span class="kw">use </span>xmas_elf::program::<span class="kw-2">*</span>;
+<span class="kw">use </span>xmas_elf::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::task::userland_last_address</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::cache::DirCacheImpl</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::cache::DirCacheItem</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::FileSystemError</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::Path</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::AddressSpace</span>;
+<span class="kw">use </span><span class="kw">crate</span>::arch::task::userland_last_address;
+<span class="kw">use </span><span class="kw">crate</span>::fs;
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheImpl;
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheItem;
+<span class="kw">use </span><span class="kw">crate</span>::fs::FileSystemError;
+<span class="kw">use </span><span class="kw">crate</span>::fs::Path;
+<span class="kw">use </span><span class="kw">crate</span>::mem;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::AddressSpace;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syscall::ExecArgs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::syscall::ExecArgs;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">const</span> <span class="ident">ELF_HEADER_MAGIC</span>: [<span class="ident">u8</span>; <span class="number">4</span>] <span class="op">=</span> [<span class="number">0x7f</span>, <span class="string">b&#39;E&#39;</span>, <span class="string">b&#39;L&#39;</span>, <span class="string">b&#39;F&#39;</span>];
+<span class="kw">const </span>ELF_HEADER_MAGIC: [u8; <span class="number">4</span>] = [<span class="number">0x7f</span>, <span class="string">b&#39;E&#39;</span>, <span class="string">b&#39;L&#39;</span>, <span class="string">b&#39;F&#39;</span>];
 
-<span class="kw">const</span> <span class="ident">ELF_PT1_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">HeaderPt1</span><span class="op">&gt;</span>();
-<span class="kw">const</span> <span class="ident">ELF_PT2_64_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">HeaderPt2_</span><span class="op">&lt;</span><span class="ident">P64</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+<span class="kw">const </span>ELF_PT1_SIZE: usize = core::mem::size_of::&lt;HeaderPt1&gt;();
+<span class="kw">const </span>ELF_PT2_64_SIZE: usize = core::mem::size_of::&lt;HeaderPt2_&lt;P64&gt;&gt;();
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">ElfLoadError</span> {
-    <span class="doccomment">/// Unexpected file system error occured on an IO operation on the file.</span>
-    <span class="ident">IOError</span>(<span class="ident">FileSystemError</span>),
-    <span class="doccomment">/// The PT1 header has an invalid magic number.</span>
-    <span class="ident">InvalidMagic</span>,
-    <span class="doccomment">/// The ELF header contains an invalid class.</span>
-    <span class="ident">InvalidClass</span>,
-    <span class="doccomment">/// The provided program header index is invalid.</span>
-    <span class="ident">InvalidProgramHeaderIndex</span>,
-    <span class="doccomment">/// Unexpected file system error occured when memory mapping an</span>
-    <span class="doccomment">/// ELF segment.</span>
-    <span class="ident">MemoryMapError</span>,
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub enum </span>ElfLoadError {
+    <span class="doccomment">/// Unexpected file system error occured on an IO operation on the file.
+    </span>IOError(FileSystemError),
+    <span class="doccomment">/// The PT1 header has an invalid magic number.
+    </span>InvalidMagic,
+    <span class="doccomment">/// The ELF header contains an invalid class.
+    </span>InvalidClass,
+    <span class="doccomment">/// The provided program header index is invalid.
+    </span>InvalidProgramHeaderIndex,
+    <span class="doccomment">/// Unexpected file system error occured when memory mapping an
+    /// ELF segment.
+    </span>MemoryMapError,
 }
 
-<span class="kw">fn</span> <span class="ident">parse_elf_header</span><span class="op">&lt;</span><span class="lifetime">&#39;header</span><span class="op">&gt;</span>(<span class="ident">file</span>: <span class="ident">DirCacheItem</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Header</span><span class="op">&lt;</span><span class="lifetime">&#39;header</span><span class="op">&gt;</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-    <span class="comment">// 1. Read the ELF PT1 header:</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pt1_hdr_slice</span> <span class="op">=</span> <span class="ident">Box::leak</span>(<span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">ELF_PT1_SIZE</span>));
+<span class="kw">fn </span>parse_elf_header&lt;<span class="lifetime">&#39;header</span>&gt;(file: DirCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;Header&lt;<span class="lifetime">&#39;header</span>&gt;, ElfLoadError&gt; {
+    <span class="comment">// 1. Read the ELF PT1 header:
+    </span><span class="kw">let </span><span class="kw-2">mut </span>pt1_hdr_slice = Box::leak(mem::alloc_boxed_buffer::&lt;u8&gt;(ELF_PT1_SIZE));
 
-    <span class="ident">file</span>.<span class="ident">inode</span>()
-        .<span class="ident">read_at</span>(<span class="number">0</span>, <span class="kw-2">&amp;mut</span> <span class="ident">pt1_hdr_slice</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">ElfLoadError::IOError</span>(<span class="ident">err</span>))<span class="question-mark">?</span>;
+    file.inode()
+        .read_at(<span class="number">0</span>, <span class="kw-2">&amp;mut </span>pt1_hdr_slice)
+        .map_err(|err| ElfLoadError::IOError(err))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">pt1_header</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;header</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">pt1_hdr_slice</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">HeaderPt1</span>) };
+    <span class="kw">let </span>pt1_header: <span class="kw-2">&amp;</span><span class="lifetime">&#39;header </span><span class="kw">_ </span>= <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(pt1_hdr_slice.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>HeaderPt1) };
 
-    <span class="comment">// 2. Ensure that the header has the correct magic number:</span>
-    <span class="kw">if</span> <span class="ident">pt1_header</span>.<span class="ident">magic</span> <span class="op">!</span><span class="op">=</span> <span class="ident">ELF_HEADER_MAGIC</span> {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ElfLoadError::InvalidMagic</span>);
+    <span class="comment">// 2. Ensure that the header has the correct magic number:
+    </span><span class="kw">if </span>pt1_header.magic != ELF_HEADER_MAGIC {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(ElfLoadError::InvalidMagic);
     }
 
-    <span class="kw">let</span> <span class="ident">pt2_header</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">pt1_header</span>.<span class="ident">class</span>() {
-        <span class="comment">// 3. Read the 64-bit PT2 header:</span>
-        <span class="ident">Class::SixtyFour</span> =&gt; {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">pt2_hdr_slice</span> <span class="op">=</span> <span class="ident">Box::leak</span>(<span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">ELF_PT2_64_SIZE</span>));
+    <span class="kw">let </span>pt2_header = <span class="kw">match </span>pt1_header.class() {
+        <span class="comment">// 3. Read the 64-bit PT2 header:
+        </span>Class::SixtyFour =&gt; {
+            <span class="kw">let </span><span class="kw-2">mut </span>pt2_hdr_slice = Box::leak(mem::alloc_boxed_buffer::&lt;u8&gt;(ELF_PT2_64_SIZE));
 
-            <span class="ident">file</span>.<span class="ident">inode</span>()
-                .<span class="ident">read_at</span>(<span class="ident">ELF_PT1_SIZE</span>, <span class="kw-2">&amp;mut</span> <span class="ident">pt2_hdr_slice</span>)
-                .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">ElfLoadError::IOError</span>(<span class="ident">err</span>))<span class="question-mark">?</span>;
+            file.inode()
+                .read_at(ELF_PT1_SIZE, <span class="kw-2">&amp;mut </span>pt2_hdr_slice)
+                .map_err(|err| ElfLoadError::IOError(err))<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">pt2_header_ptr</span> <span class="op">=</span> <span class="ident">pt2_hdr_slice</span>.<span class="ident">as_ptr</span>();
-            <span class="kw">let</span> <span class="ident">pt2_header</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;header</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">pt2_header_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">HeaderPt2_</span><span class="op">&lt;</span><span class="ident">P64</span><span class="op">&gt;</span>) };
+            <span class="kw">let </span>pt2_header_ptr = pt2_hdr_slice.as_ptr();
+            <span class="kw">let </span>pt2_header: <span class="kw-2">&amp;</span><span class="lifetime">&#39;header </span><span class="kw">_ </span>= <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(pt2_header_ptr <span class="kw">as </span><span class="kw-2">*const </span>HeaderPt2_&lt;P64&gt;) };
 
-            <span class="prelude-val">Ok</span>(<span class="ident">HeaderPt2::Header64</span>(<span class="ident">pt2_header</span>))
+            <span class="prelude-val">Ok</span>(HeaderPt2::Header64(pt2_header))
         }
 
-        <span class="comment">// 3. Read the 32-bit PT2 header:</span>
-        <span class="ident">Class::ThirtyTwo</span> =&gt; {
+        <span class="comment">// 3. Read the 32-bit PT2 header:
+        </span>Class::ThirtyTwo =&gt; {
             <span class="macro">unimplemented!</span>(<span class="string">&quot;parse_elf_header: 32-bit executables are not implemented&quot;</span>)
         }
 
-        <span class="comment">// SAFTEY: ensure the PT1 header has a valid class.</span>
-        <span class="ident">Class::None</span> <span class="op">|</span> <span class="ident">Class::Other</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">ElfLoadError::InvalidClass</span>),
+        <span class="comment">// SAFTEY: ensure the PT1 header has a valid class.
+        </span>Class::None | Class::Other(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(ElfLoadError::InvalidClass),
     }<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">Header</span> {
-        <span class="ident">pt1</span>: <span class="ident">pt1_header</span>,
-        <span class="ident">pt2</span>: <span class="ident">pt2_header</span>,
+    <span class="prelude-val">Ok</span>(Header {
+        pt1: pt1_header,
+        pt2: pt2_header,
     })
 }
 
-<span class="kw">fn</span> <span class="ident">parse_program_header</span><span class="op">&lt;</span><span class="lifetime">&#39;pheader</span><span class="op">&gt;</span>(
-    <span class="ident">file</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">header</span>: <span class="ident">Header</span><span class="op">&lt;</span><span class="lifetime">&#39;pheader</span><span class="op">&gt;</span>,
-    <span class="ident">index</span>: <span class="ident">u16</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">ProgramHeader</span><span class="op">&lt;</span><span class="lifetime">&#39;pheader</span><span class="op">&gt;</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">pt2</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">header</span>.<span class="ident">pt2</span>;
+<span class="kw">fn </span>parse_program_header&lt;<span class="lifetime">&#39;pheader</span>&gt;(
+    file: DirCacheItem,
+    header: Header&lt;<span class="lifetime">&#39;pheader</span>&gt;,
+    index: u16,
+) -&gt; <span class="prelude-ty">Result</span>&lt;ProgramHeader&lt;<span class="lifetime">&#39;pheader</span>&gt;, ElfLoadError&gt; {
+    <span class="kw">let </span>pt2 = <span class="kw-2">&amp;</span>header.pt2;
 
-    <span class="comment">// SAFTEY: ensure that the provided program header index is valid.</span>
-    <span class="kw">if</span> <span class="op">!</span>(<span class="ident">index</span> <span class="op">&lt;</span> <span class="ident">pt2</span>.<span class="ident">ph_count</span>() <span class="op">&amp;&amp;</span> <span class="ident">pt2</span>.<span class="ident">ph_offset</span>() <span class="op">&gt;</span> <span class="number">0</span> <span class="op">&amp;&amp;</span> <span class="ident">pt2</span>.<span class="ident">ph_entry_size</span>() <span class="op">&gt;</span> <span class="number">0</span>) {
-        <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">ElfLoadError::InvalidProgramHeaderIndex</span>);
+    <span class="comment">// SAFTEY: ensure that the provided program header index is valid.
+    </span><span class="kw">if </span>!(index &lt; pt2.ph_count() &amp;&amp; pt2.ph_offset() &gt; <span class="number">0 </span>&amp;&amp; pt2.ph_entry_size() &gt; <span class="number">0</span>) {
+        <span class="kw">return </span><span class="prelude-val">Err</span>(ElfLoadError::InvalidProgramHeaderIndex);
     }
 
-    <span class="comment">// 1. Calculate the start offset and size of the program header:</span>
-    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">pt2</span>.<span class="ident">ph_offset</span>() <span class="kw">as</span> <span class="ident">usize</span> <span class="op">+</span> <span class="ident">index</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">*</span> <span class="ident">pt2</span>.<span class="ident">ph_entry_size</span>() <span class="kw">as</span> <span class="ident">usize</span>;
-    <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">pt2</span>.<span class="ident">ph_entry_size</span>() <span class="kw">as</span> <span class="ident">usize</span>;
+    <span class="comment">// 1. Calculate the start offset and size of the program header:
+    </span><span class="kw">let </span>start = pt2.ph_offset() <span class="kw">as </span>usize + index <span class="kw">as </span>usize * pt2.ph_entry_size() <span class="kw">as </span>usize;
+    <span class="kw">let </span>size = pt2.ph_entry_size() <span class="kw">as </span>usize;
 
-    <span class="comment">// 2. Read the 64-bit program header:</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">phdr_buffer</span> <span class="op">=</span> <span class="ident">Box::leak</span>(<span class="ident">mem::alloc_boxed_buffer</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>(<span class="ident">size</span>));
+    <span class="comment">// 2. Read the 64-bit program header:
+    </span><span class="kw">let </span><span class="kw-2">mut </span>phdr_buffer = Box::leak(mem::alloc_boxed_buffer::&lt;u8&gt;(size));
 
-    <span class="ident">file</span>.<span class="ident">inode</span>()
-        .<span class="ident">read_at</span>(<span class="ident">start</span>, <span class="kw-2">&amp;mut</span> <span class="ident">phdr_buffer</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">ElfLoadError::IOError</span>(<span class="ident">err</span>))<span class="question-mark">?</span>;
+    file.inode()
+        .read_at(start, <span class="kw-2">&amp;mut </span>phdr_buffer)
+        .map_err(|err| ElfLoadError::IOError(err))<span class="question-mark">?</span>;
 
-    <span class="kw">let</span> <span class="ident">phdr_ptr</span> <span class="op">=</span> <span class="ident">phdr_buffer</span>.<span class="ident">as_ptr</span>();
+    <span class="kw">let </span>phdr_ptr = phdr_buffer.as_ptr();
 
-    <span class="kw">match</span> <span class="ident">header</span>.<span class="ident">pt1</span>.<span class="ident">class</span>() {
-        <span class="comment">// 3. Cast and return the 64-bit program header:</span>
-        <span class="ident">Class::SixtyFour</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">phdr</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pheader</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">phdr_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">ProgramHeader64</span>) };
-            <span class="prelude-val">Ok</span>(<span class="ident">ProgramHeader::Ph64</span>(<span class="ident">phdr</span>))
+    <span class="kw">match </span>header.pt1.class() {
+        <span class="comment">// 3. Cast and return the 64-bit program header:
+        </span>Class::SixtyFour =&gt; {
+            <span class="kw">let </span>phdr: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pheader </span><span class="kw">_ </span>= <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(phdr_ptr <span class="kw">as </span><span class="kw-2">*const </span>ProgramHeader64) };
+            <span class="prelude-val">Ok</span>(ProgramHeader::Ph64(phdr))
         }
 
-        <span class="comment">// 3. Cast and return the 32-bit program header:</span>
-        <span class="ident">Class::ThirtyTwo</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">phdr</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pheader</span> <span class="kw">_</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;</span><span class="kw-2">*</span>(<span class="ident">phdr_ptr</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">ProgramHeader32</span>) };
-            <span class="prelude-val">Ok</span>(<span class="ident">ProgramHeader::Ph32</span>(<span class="ident">phdr</span>))
+        <span class="comment">// 3. Cast and return the 32-bit program header:
+        </span>Class::ThirtyTwo =&gt; {
+            <span class="kw">let </span>phdr: <span class="kw-2">&amp;</span><span class="lifetime">&#39;pheader </span><span class="kw">_ </span>= <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>(phdr_ptr <span class="kw">as </span><span class="kw-2">*const </span>ProgramHeader32) };
+            <span class="prelude-val">Ok</span>(ProgramHeader::Ph32(phdr))
         }
 
-        <span class="comment">// SAFTEY: ensure the PT1 header has a valid class.</span>
-        <span class="ident">Class::None</span> <span class="op">|</span> <span class="ident">Class::Other</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">ElfLoadError::InvalidClass</span>),
+        <span class="comment">// SAFTEY: ensure the PT1 header has a valid class.
+        </span>Class::None | Class::Other(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(ElfLoadError::InvalidClass),
     }
 }
 
-<span class="kw">struct</span> <span class="ident">Shebang</span> {
-    <span class="ident">interpreter</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">argument</span>: <span class="ident">String</span>,
+<span class="kw">struct </span>Shebang {
+    interpreter: DirCacheItem,
+    argument: String,
 }
 
-<span class="kw">impl</span> <span class="ident">Shebang</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">path</span>: <span class="ident">String</span>, <span class="ident">argument</span>: <span class="ident">String</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">Path::new</span>(<span class="kw-2">&amp;</span><span class="ident">path</span>);
-        <span class="kw">let</span> <span class="ident">interpreter</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">path</span>).<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">ElfLoadError::IOError</span>(<span class="ident">err</span>))<span class="question-mark">?</span>;
+<span class="kw">impl </span>Shebang {
+    <span class="kw">fn </span>new(path: String, argument: String) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ElfLoadError&gt; {
+        <span class="kw">let </span>path = Path::new(<span class="kw-2">&amp;</span>path);
+        <span class="kw">let </span>interpreter = fs::lookup_path(path).map_err(|err| ElfLoadError::IOError(err))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">interpreter</span>,
-            <span class="ident">argument</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            interpreter,
+            argument,
         })
     }
 }
 
-<span class="doccomment">/// Returns [`true`] if the provided executable (`bin`) contains a shebang</span>
-<span class="doccomment">/// at the start.</span>
-<span class="kw">fn</span> <span class="ident">contains_shebang</span>(<span class="ident">bin</span>: <span class="ident">DirCacheItem</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">bool</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">shebang</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> [<span class="number">0u8</span>; <span class="number">2</span>];
+<span class="doccomment">/// Returns [`true`] if the provided executable (`bin`) contains a shebang
+/// at the start.
+</span><span class="kw">fn </span>contains_shebang(bin: DirCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;bool, ElfLoadError&gt; {
+    <span class="kw">let </span>shebang = <span class="kw-2">&amp;mut </span>[<span class="number">0u8</span>; <span class="number">2</span>];
 
-    <span class="ident">bin</span>.<span class="ident">inode</span>()
-        .<span class="ident">read_at</span>(<span class="number">0</span>, <span class="ident">shebang</span>)
-        .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">ElfLoadError::IOError</span>(<span class="ident">err</span>))<span class="question-mark">?</span>;
+    bin.inode()
+        .read_at(<span class="number">0</span>, shebang)
+        .map_err(|err| ElfLoadError::IOError(err))<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(<span class="ident">shebang</span>[<span class="number">0</span>] <span class="op">==</span> <span class="string">&#39;#&#39;</span> <span class="kw">as</span> <span class="ident">u8</span> <span class="op">&amp;&amp;</span> <span class="ident">shebang</span>[<span class="number">1</span>] <span class="op">==</span> <span class="string">&#39;!&#39;</span> <span class="kw">as</span> <span class="ident">u8</span>)
+    <span class="prelude-val">Ok</span>(shebang[<span class="number">0</span>] == <span class="string">&#39;#&#39; </span><span class="kw">as </span>u8 &amp;&amp; shebang[<span class="number">1</span>] == <span class="string">&#39;!&#39; </span><span class="kw">as </span>u8)
 }
 
-<span class="kw">fn</span> <span class="ident">parse_shebang</span>(<span class="ident">bin</span>: <span class="ident">DirCacheItem</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Shebang</span><span class="op">&gt;</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">contains_shebang</span>(<span class="ident">bin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span> {
-        <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
+<span class="kw">fn </span>parse_shebang(bin: DirCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;Shebang&gt;, ElfLoadError&gt; {
+    <span class="kw">if </span>!contains_shebang(bin.clone())<span class="question-mark">? </span>{
+        <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>);
     }
 
-    <span class="comment">// Syntax: #![whitespace]interpreter_path [single-argument][new-line]</span>
-    <span class="comment">//</span>
-    <span class="comment">// NOTE: We set the position to `2` since we skip the `#!` prefix.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">idx</span> <span class="op">=</span> <span class="number">2</span>;
+    <span class="comment">// Syntax: #![whitespace]interpreter_path [single-argument][new-line]
+    //
+    // NOTE: We set the position to `2` since we skip the `#!` prefix.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>idx = <span class="number">2</span>;
 
-    <span class="kw">let</span> <span class="ident">read_at_index</span> <span class="op">=</span> <span class="op">|</span><span class="ident">idx</span>: <span class="ident">usize</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">char</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> [<span class="number">0u8</span>; <span class="number">1</span>];
+    <span class="kw">let </span>read_at_index = |idx: usize| -&gt; <span class="prelude-ty">Result</span>&lt;char, ElfLoadError&gt; {
+        <span class="kw">let </span>c = <span class="kw-2">&amp;mut </span>[<span class="number">0u8</span>; <span class="number">1</span>];
 
-        <span class="ident">bin</span>.<span class="ident">inode</span>()
-            .<span class="ident">read_at</span>(<span class="ident">idx</span>, <span class="ident">c</span>)
-            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">err</span><span class="op">|</span> <span class="ident">ElfLoadError::IOError</span>(<span class="ident">err</span>))<span class="question-mark">?</span>;
+        bin.inode()
+            .read_at(idx, c)
+            .map_err(|err| ElfLoadError::IOError(err))<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">c</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="ident">char</span>)
+        <span class="prelude-val">Ok</span>(c[<span class="number">0</span>] <span class="kw">as </span>char)
     };
 
-    <span class="comment">// 1. check for the optional whitespace (ignore it):</span>
-    <span class="kw">if</span> <span class="ident">read_at_index</span>(<span class="ident">idx</span>)<span class="question-mark">?</span> <span class="op">==</span> <span class="string">&#39; &#39;</span> {
-        <span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="comment">// 1. check for the optional whitespace (ignore it):
+    </span><span class="kw">if </span>read_at_index(idx)<span class="question-mark">? </span>== <span class="string">&#39; &#39; </span>{
+        idx += <span class="number">1</span>;
     }
 
-    <span class="comment">// we build the string with `16` capicity to avoid reallocations.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">path</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="number">16</span>);
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">arg</span> <span class="op">=</span> <span class="ident">String::with_capacity</span>(<span class="number">16</span>);
+    <span class="comment">// we build the string with `16` capicity to avoid reallocations.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>path = String::with_capacity(<span class="number">16</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>arg = String::with_capacity(<span class="number">16</span>);
 
-    <span class="comment">// 2. parse the interpreter path:</span>
-    <span class="kw">loop</span> {
-        <span class="kw">let</span> <span class="ident">char</span> <span class="op">=</span> <span class="ident">read_at_index</span>(<span class="ident">idx</span>)<span class="question-mark">?</span>;
+    <span class="comment">// 2. parse the interpreter path:
+    </span><span class="kw">loop </span>{
+        <span class="kw">let </span>char = read_at_index(idx)<span class="question-mark">?</span>;
 
-        <span class="kw">if</span> <span class="ident">char</span> <span class="op">==</span> <span class="string">&#39; &#39;</span> {
-            <span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+        <span class="kw">if </span>char == <span class="string">&#39; &#39; </span>{
+            idx += <span class="number">1</span>;
             <span class="kw">break</span>;
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">char</span> <span class="op">==</span> <span class="string">&#39;\n&#39;</span> {
-            <span class="comment">// there is no argument, early return:</span>
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">Shebang::new</span>(<span class="ident">path</span>, <span class="ident">arg</span>)<span class="question-mark">?</span>));
+        } <span class="kw">else if </span>char == <span class="string">&#39;\n&#39; </span>{
+            <span class="comment">// there is no argument, early return:
+            </span><span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Shebang::new(path, arg)<span class="question-mark">?</span>));
         }
 
-        <span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">path</span>.<span class="ident">write_char</span>(<span class="ident">char</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;parse_shebang: internal error&quot;</span>);
+        idx += <span class="number">1</span>;
+        path.write_char(char)
+            .expect(<span class="string">&quot;parse_shebang: internal error&quot;</span>);
     }
 
-    <span class="comment">// 3. parse the argument:</span>
-    <span class="kw">loop</span> {
-        <span class="kw">let</span> <span class="ident">char</span> <span class="op">=</span> <span class="ident">read_at_index</span>(<span class="ident">idx</span>)<span class="question-mark">?</span>;
-        <span class="ident">idx</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+    <span class="comment">// 3. parse the argument:
+    </span><span class="kw">loop </span>{
+        <span class="kw">let </span>char = read_at_index(idx)<span class="question-mark">?</span>;
+        idx += <span class="number">1</span>;
 
-        <span class="kw">if</span> <span class="ident">char</span> <span class="op">==</span> <span class="string">&#39;\n&#39;</span> <span class="op">|</span><span class="op">|</span> <span class="ident">char</span> <span class="op">==</span> <span class="string">&#39; &#39;</span> {
-            <span class="kw">return</span> <span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(<span class="ident">Shebang::new</span>(<span class="ident">path</span>, <span class="ident">arg</span>)<span class="question-mark">?</span>));
+        <span class="kw">if </span>char == <span class="string">&#39;\n&#39; </span>|| char == <span class="string">&#39; &#39; </span>{
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="prelude-val">Some</span>(Shebang::new(path, arg)<span class="question-mark">?</span>));
         }
 
-        <span class="ident">arg</span>.<span class="ident">write_char</span>(<span class="ident">char</span>).<span class="ident">expect</span>(<span class="string">&quot;parse_shebang: internal error&quot;</span>);
+        arg.write_char(char).expect(<span class="string">&quot;parse_shebang: internal error&quot;</span>);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Elf</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">header</span>: <span class="ident">Header</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">file</span>: <span class="ident">DirCacheItem</span>,
+<span class="kw">pub struct </span>Elf&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="kw">pub </span>header: Header&lt;<span class="lifetime">&#39;this</span>&gt;,
+    <span class="kw">pub </span>file: DirCacheItem,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">Elf</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">file</span>: <span class="ident">DirCacheItem</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="ident">parse_elf_header</span>(<span class="ident">file</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> { <span class="ident">header</span>, <span class="ident">file</span> })
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; Elf&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="kw">fn </span>new(file: DirCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, ElfLoadError&gt; {
+        <span class="kw">let </span>header = parse_elf_header(file.clone())<span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{ header, file })
     }
 
-    <span class="kw">fn</span> <span class="ident">program_iter</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">ProgramHeaderIter</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-        <span class="ident">ProgramHeaderIter::new</span>(<span class="self">self</span>.<span class="ident">header</span>, <span class="self">self</span>.<span class="ident">file</span>.<span class="ident">clone</span>())
+    <span class="kw">fn </span>program_iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; ProgramHeaderIter&lt;<span class="lifetime">&#39;this</span>&gt; {
+        ProgramHeaderIter::new(<span class="self">self</span>.header, <span class="self">self</span>.file.clone())
     }
 }
 
-<span class="kw">struct</span> <span class="ident">ProgramHeaderIter</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="ident">file</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">header</span>: <span class="ident">Header</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span>,
-    <span class="ident">next_index</span>: <span class="ident">usize</span>,
+<span class="kw">struct </span>ProgramHeaderIter&lt;<span class="lifetime">&#39;this</span>&gt; {
+    file: DirCacheItem,
+    header: Header&lt;<span class="lifetime">&#39;this</span>&gt;,
+    next_index: usize,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">ProgramHeaderIter</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">header</span>: <span class="ident">Header</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span>, <span class="ident">file</span>: <span class="ident">DirCacheItem</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">file</span>,
-            <span class="ident">header</span>,
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; ProgramHeaderIter&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="kw">fn </span>new(header: Header&lt;<span class="lifetime">&#39;this</span>&gt;, file: DirCacheItem) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            file,
+            header,
 
-            <span class="ident">next_index</span>: <span class="number">0</span>,
+            next_index: <span class="number">0</span>,
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">ProgramHeaderIter</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">ProgramHeader</span><span class="op">&lt;</span><span class="lifetime">&#39;this</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;this</span>&gt; Iterator <span class="kw">for </span>ProgramHeaderIter&lt;<span class="lifetime">&#39;this</span>&gt; {
+    <span class="kw">type </span>Item = ProgramHeader&lt;<span class="lifetime">&#39;this</span>&gt;;
 
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">header</span>.<span class="ident">pt2</span>.<span class="ident">ph_count</span>() <span class="kw">as</span> <span class="ident">usize</span>;
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">let </span>count = <span class="self">self</span>.header.pt2.ph_count() <span class="kw">as </span>usize;
 
-        <span class="comment">// We have reached at the end of the program header array.</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">next_index</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">count</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="comment">// We have reached at the end of the program header array.
+        </span><span class="kw">if </span><span class="self">self</span>.next_index &gt;= count {
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="comment">// Parse and return the program header.</span>
-        <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span>
-            <span class="ident">parse_program_header</span>(<span class="self">self</span>.<span class="ident">file</span>.<span class="ident">clone</span>(), <span class="self">self</span>.<span class="ident">header</span>, <span class="self">self</span>.<span class="ident">next_index</span> <span class="kw">as</span> <span class="ident">u16</span>).<span class="ident">ok</span>();
+        <span class="comment">// Parse and return the program header.
+        </span><span class="kw">let </span>result =
+            parse_program_header(<span class="self">self</span>.file.clone(), <span class="self">self</span>.header, <span class="self">self</span>.next_index <span class="kw">as </span>u16).ok();
 
-        <span class="comment">// Increment the next index.</span>
-        <span class="self">self</span>.<span class="ident">next_index</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-        <span class="ident">result</span>
+        <span class="comment">// Increment the next index.
+        </span><span class="self">self</span>.next_index += <span class="number">1</span>;
+        result
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">MMapProt</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PageTableFlags</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">e</span>: <span class="ident">MMapProt</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">PageTableFlags::empty</span>();
+<span class="kw">impl </span>From&lt;MMapProt&gt; <span class="kw">for </span>PageTableFlags {
+    <span class="kw">fn </span>from(e: MMapProt) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>res = PageTableFlags::empty();
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">e</span>.<span class="ident">contains</span>(<span class="ident">MMapProt::PROT_EXEC</span>) {
-            <span class="ident">res</span>.<span class="ident">insert</span>(<span class="ident">PageTableFlags::NO_EXECUTE</span>);
+        <span class="kw">if </span>!e.contains(MMapProt::PROT_EXEC) {
+            res.insert(PageTableFlags::NO_EXECUTE);
         }
 
-        <span class="kw">if</span> <span class="ident">e</span>.<span class="ident">contains</span>(<span class="ident">MMapProt::PROT_WRITE</span>) {
-            <span class="ident">res</span>.<span class="ident">insert</span>(<span class="ident">PageTableFlags::WRITABLE</span>);
+        <span class="kw">if </span>e.contains(MMapProt::PROT_WRITE) {
+            res.insert(PageTableFlags::WRITABLE);
         }
 
-        <span class="ident">res</span>
+        res
     }
 }
 
-<span class="kw">enum</span> <span class="ident">UnmapResult</span> {
+<span class="kw">enum </span>UnmapResult {
     <span class="prelude-val">None</span>,
-    <span class="ident">Parital</span>(<span class="ident">Mapping</span>),
-    <span class="ident">Full</span>,
-    <span class="ident">Start</span>,
-    <span class="ident">End</span>,
+    Parital(Mapping),
+    Full,
+    Start,
+    End,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LoadedBinary</span><span class="op">&lt;</span><span class="lifetime">&#39;header</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="ident">elf</span>: <span class="ident">Elf</span><span class="op">&lt;</span><span class="lifetime">&#39;header</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>LoadedBinary&lt;<span class="lifetime">&#39;header</span>&gt; {
+    <span class="kw">pub </span>elf: Elf&lt;<span class="lifetime">&#39;header</span>&gt;,
 
-    <span class="kw">pub</span> <span class="ident">entry_point</span>: <span class="ident">VirtAddr</span>,
-    <span class="kw">pub</span> <span class="ident">base_addr</span>: <span class="ident">VirtAddr</span>,
+    <span class="kw">pub </span>entry_point: VirtAddr,
+    <span class="kw">pub </span>base_addr: VirtAddr,
 
-    <span class="kw">pub</span> <span class="ident">argv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-    <span class="kw">pub</span> <span class="ident">envv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
+    <span class="kw">pub </span>argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+    <span class="kw">pub </span>envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MMapFile</span> {
-    <span class="ident">offset</span>: <span class="ident">usize</span>,
-    <span class="ident">file</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">size</span>: <span class="ident">usize</span>,
+<span class="attribute">#[derive(Clone)]</span>
+<span class="kw">pub struct </span>MMapFile {
+    offset: usize,
+    file: DirCacheItem,
+    size: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">MMapFile</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">file</span>: <span class="ident">DirCacheItem</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">file</span>, <span class="ident">offset</span>, <span class="ident">size</span> }
+<span class="kw">impl </span>MMapFile {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>new(file: DirCacheItem, offset: usize, size: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ file, offset, size }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Mapping</span> {
-    <span class="ident">protection</span>: <span class="ident">MMapProt</span>,
-    <span class="ident">flags</span>: <span class="ident">MMapFlags</span>,
+<span class="attribute">#[derive(Clone)]</span>
+<span class="kw">struct </span>Mapping {
+    protection: MMapProt,
+    flags: MMapFlags,
 
-    <span class="ident">start_addr</span>: <span class="ident">VirtAddr</span>,
-    <span class="ident">end_addr</span>: <span class="ident">VirtAddr</span>,
+    start_addr: VirtAddr,
+    end_addr: VirtAddr,
 
-    <span class="ident">file</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">MMapFile</span><span class="op">&gt;</span>,
+    file: <span class="prelude-ty">Option</span>&lt;MMapFile&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Mapping</span> {
-    <span class="doccomment">/// Handler routine for private anonymous pages. Since its an annonymous page is not</span>
-    <span class="doccomment">/// backed by a file, we have to alloctate a frame and map it at the faulted address.</span>
-    <span class="kw">fn</span> <span class="ident">handle_pf_private_anon</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">offset_table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OffsetPageTable</span>,
-        <span class="ident">reason</span>: <span class="ident">PageFaultErrorCode</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">addr_aligned</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">align_down</span>(<span class="ident">Size4KiB::SIZE</span>);
+<span class="kw">impl </span>Mapping {
+    <span class="doccomment">/// Handler routine for private anonymous pages. Since its an annonymous page is not
+    /// backed by a file, we have to alloctate a frame and map it at the faulted address.
+    </span><span class="kw">fn </span>handle_pf_private_anon(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        offset_table: <span class="kw-2">&amp;mut </span>OffsetPageTable,
+        reason: PageFaultErrorCode,
+        address: VirtAddr,
+    ) -&gt; bool {
+        <span class="kw">let </span>addr_aligned = address.align_down(Size4KiB::SIZE);
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">reason</span>.<span class="ident">contains</span>(<span class="ident">PageFaultErrorCode::PROTECTION_VIOLATION</span>) {
+        <span class="kw">if </span>!reason.contains(PageFaultErrorCode::PROTECTION_VIOLATION) {
             <span class="macro">log::trace!</span>(
                 <span class="string">&quot;    - private R: {:#x}..{:#x}&quot;</span>,
-                <span class="ident">addr_aligned</span>,
-                <span class="ident">addr_aligned</span> <span class="op">+</span> <span class="ident">Size4KiB::SIZE</span>
+                addr_aligned,
+                addr_aligned + Size4KiB::SIZE
             );
 
-            <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span> <span class="op">=</span>
-                <span class="ident">PhysFrame::containing_address</span>(<span class="ident">pmm_alloc</span>(<span class="ident">BuddyOrdering::Size4KiB</span>));
+            <span class="kw">let </span>frame: PhysFrame =
+                PhysFrame::containing_address(pmm_alloc(BuddyOrdering::Size4KiB));
 
-            <span class="kw">unsafe</span> {
-                <span class="ident">offset_table</span>.<span class="ident">map_to</span>(
-                    <span class="ident">Page::containing_address</span>(<span class="ident">addr_aligned</span>),
-                    <span class="ident">frame</span>,
-                    <span class="comment">// NOTE: We dont need to remove the writeable flag from this mapping, since</span>
-                    <span class="comment">// the writeable flag will be removed from the parent and child on fork so,</span>
-                    <span class="comment">// the mapping gets copied on write.</span>
-                    <span class="ident">PageTableFlags::USER_ACCESSIBLE</span>
-                        <span class="op">|</span> <span class="ident">PageTableFlags::PRESENT</span>
-                        <span class="op">|</span> <span class="self">self</span>.<span class="ident">protection</span>.<span class="ident">into</span>(),
+            <span class="kw">unsafe </span>{
+                offset_table.map_to(
+                    Page::containing_address(addr_aligned),
+                    frame,
+                    <span class="comment">// NOTE: We dont need to remove the writeable flag from this mapping, since
+                    // the writeable flag will be removed from the parent and child on fork so,
+                    // the mapping gets copied on write.
+                    </span>PageTableFlags::USER_ACCESSIBLE
+                        | PageTableFlags::PRESENT
+                        | <span class="self">self</span>.protection.into(),
                 )
             }
-            .<span class="ident">expect</span>(<span class="string">&quot;Failed to identity map userspace private mapping&quot;</span>)
-            .<span class="ident">flush</span>();
+            .expect(<span class="string">&quot;Failed to identity map userspace private mapping&quot;</span>)
+            .flush();
 
-            <span class="bool-val">true</span>
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">reason</span>.<span class="ident">contains</span>(<span class="ident">PageFaultErrorCode::CAUSED_BY_WRITE</span>) {
+            <span class="bool-val">true
+        </span>} <span class="kw">else if </span>reason.contains(PageFaultErrorCode::CAUSED_BY_WRITE) {
             <span class="macro">log::trace!</span>(
                 <span class="string">&quot;    - private COW: {:#x}..{:#x}&quot;</span>,
-                <span class="ident">addr_aligned</span>,
-                <span class="ident">addr_aligned</span> <span class="op">+</span> <span class="ident">Size4KiB::SIZE</span>
+                addr_aligned,
+                addr_aligned + Size4KiB::SIZE
             );
 
-            <span class="self">self</span>.<span class="ident">handle_cow</span>(<span class="ident">offset_table</span>, <span class="ident">addr_aligned</span>, <span class="bool-val">false</span>)
-        } <span class="kw">else</span> {
+            <span class="self">self</span>.handle_cow(offset_table, addr_aligned, <span class="bool-val">false</span>)
+        } <span class="kw">else </span>{
             <span class="macro">log::error!</span>(<span class="string">&quot;    - present page read failed&quot;</span>);
-            <span class="bool-val">false</span>
-        }
+            <span class="bool-val">false
+        </span>}
     }
 
-    <span class="doccomment">/// Handler routine for pages backed by a file. This function will allocate a frame and</span>
-    <span class="doccomment">/// read a page-sized amount from the disk into the allocated frame. Then it maps</span>
-    <span class="doccomment">/// the allocated frame at the faulted address.</span>
-    <span class="kw">fn</span> <span class="ident">handle_pf_file</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">offset_table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OffsetPageTable</span>,
-        <span class="ident">reason</span>: <span class="ident">PageFaultErrorCode</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">mmap_file</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">file</span>.<span class="ident">as_mut</span>() {
-            <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">align_down</span>(
-                (<span class="ident">address</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">start_addr</span>) <span class="op">+</span> <span class="ident">mmap_file</span>.<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u64</span>,
-                <span class="ident">Size4KiB::SIZE</span>,
+    <span class="doccomment">/// Handler routine for pages backed by a file. This function will allocate a frame and
+    /// read a page-sized amount from the disk into the allocated frame. Then it maps
+    /// the allocated frame at the faulted address.
+    </span><span class="kw">fn </span>handle_pf_file(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        offset_table: <span class="kw-2">&amp;mut </span>OffsetPageTable,
+        reason: PageFaultErrorCode,
+        address: VirtAddr,
+    ) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(mmap_file) = <span class="self">self</span>.file.as_mut() {
+            <span class="kw">let </span>offset = align_down(
+                (address - <span class="self">self</span>.start_addr) + mmap_file.offset <span class="kw">as </span>u64,
+                Size4KiB::SIZE,
             );
 
-            <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">align_down</span>(<span class="ident">Size4KiB::SIZE</span>);
-            <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">core::cmp::min</span>(
-                <span class="ident">Size4KiB::SIZE</span>,
-                <span class="ident">mmap_file</span>.<span class="ident">size</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">-</span> (<span class="ident">address</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">start_addr</span>),
+            <span class="kw">let </span>address = address.align_down(Size4KiB::SIZE);
+            <span class="kw">let </span>size = core::cmp::min(
+                Size4KiB::SIZE,
+                mmap_file.size <span class="kw">as </span>u64 - (address - <span class="self">self</span>.start_addr),
             );
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">reason</span>.<span class="ident">contains</span>(<span class="ident">PageFaultErrorCode::PROTECTION_VIOLATION</span>) {
-                <span class="comment">// We are writing to private file mapping so copy the content of the page.</span>
-                <span class="macro">log::trace!</span>(
+            <span class="kw">if </span>!reason.contains(PageFaultErrorCode::PROTECTION_VIOLATION) {
+                <span class="comment">// We are writing to private file mapping so copy the content of the page.
+                </span><span class="macro">log::trace!</span>(
                     <span class="string">&quot;    - private file R: {:?}..{:?} (offset={:#x})&quot;</span>,
-                    <span class="ident">address</span>,
-                    <span class="ident">address</span> <span class="op">+</span> <span class="ident">size</span>,
-                    <span class="ident">offset</span>
+                    address,
+                    address + size,
+                    offset
                 );
 
-                <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="ident">mmap_file</span>
-                    .<span class="ident">file</span>
-                    .<span class="ident">inode</span>()
-                    .<span class="ident">mmap</span>(<span class="ident">offset</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="self">self</span>.<span class="ident">flags</span>)
-                    .<span class="ident">expect</span>(<span class="string">&quot;handle_pf_file: file does not support mmap&quot;</span>);
+                <span class="kw">let </span>frame = mmap_file
+                    .file
+                    .inode()
+                    .mmap(offset <span class="kw">as _</span>, size <span class="kw">as _</span>, <span class="self">self</span>.flags)
+                    .expect(<span class="string">&quot;handle_pf_file: file does not support mmap&quot;</span>);
 
-                <span class="kw">unsafe</span> {
-                    <span class="ident">offset_table</span>.<span class="ident">map_to</span>(
-                        <span class="ident">Page::containing_address</span>(<span class="ident">address</span>),
-                        <span class="ident">frame</span>,
-                        <span class="ident">PageTableFlags::PRESENT</span>
-                            <span class="op">|</span> <span class="ident">PageTableFlags::USER_ACCESSIBLE</span>
-                            <span class="op">|</span> <span class="self">self</span>.<span class="ident">protection</span>.<span class="ident">into</span>(),
+                <span class="kw">unsafe </span>{
+                    offset_table.map_to(
+                        Page::containing_address(address),
+                        frame,
+                        PageTableFlags::PRESENT
+                            | PageTableFlags::USER_ACCESSIBLE
+                            | <span class="self">self</span>.protection.into(),
                     )
                 }
-                .<span class="ident">expect</span>(<span class="string">&quot;failed to map allocated frame for private file read&quot;</span>)
-                .<span class="ident">flush</span>();
+                .expect(<span class="string">&quot;failed to map allocated frame for private file read&quot;</span>)
+                .flush();
 
-                <span class="bool-val">true</span>
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">reason</span>.<span class="ident">contains</span>(<span class="ident">PageFaultErrorCode::CAUSED_BY_WRITE</span>) {
-                <span class="self">self</span>.<span class="ident">handle_cow</span>(<span class="ident">offset_table</span>, <span class="ident">address</span>, <span class="bool-val">true</span>)
-            } <span class="kw">else</span> {
+                <span class="bool-val">true
+            </span>} <span class="kw">else if </span>reason.contains(PageFaultErrorCode::CAUSED_BY_WRITE) {
+                <span class="self">self</span>.handle_cow(offset_table, address, <span class="bool-val">true</span>)
+            } <span class="kw">else </span>{
                 <span class="macro">log::error!</span>(<span class="string">&quot;    - present page read failed&quot;</span>);
-                <span class="bool-val">false</span>
-            }
-        } <span class="kw">else</span> {
-            <span class="bool-val">false</span>
-        }
+                <span class="bool-val">false
+            </span>}
+        } <span class="kw">else </span>{
+            <span class="bool-val">false
+        </span>}
     }
 
-    <span class="doccomment">/// Copies the contents of the `page` page to a newly allocated frame and maps it to</span>
-    <span class="doccomment">/// the `page` page with the provided `protection` protection flags.</span>
-    <span class="kw">fn</span> <span class="ident">map_copied</span>(
-        <span class="ident">offset_table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OffsetPageTable</span>,
-        <span class="ident">page</span>: <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span>,
-        <span class="ident">protection</span>: <span class="ident">MMapProt</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="comment">// Allocate a new frame to hold the contents.</span>
-        <span class="kw">let</span> <span class="ident">new_frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>
-            .<span class="ident">allocate_frame</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;map_copied: failed to allocate frame&quot;</span>);
+    <span class="doccomment">/// Copies the contents of the `page` page to a newly allocated frame and maps it to
+    /// the `page` page with the provided `protection` protection flags.
+    </span><span class="kw">fn </span>map_copied(
+        offset_table: <span class="kw-2">&amp;mut </span>OffsetPageTable,
+        page: Page&lt;Size4KiB&gt;,
+        protection: MMapProt,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="comment">// Allocate a new frame to hold the contents.
+        </span><span class="kw">let </span>new_frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR
+            .allocate_frame()
+            .expect(<span class="string">&quot;map_copied: failed to allocate frame&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">old_slice</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">page</span>.<span class="ident">start_address</span>().<span class="ident">as_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>();
-            <span class="ident">core::slice::from_raw_parts</span>(<span class="ident">ptr</span>, <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="kw">_</span>)
+        <span class="kw">let </span>old_slice = <span class="kw">unsafe </span>{
+            <span class="kw">let </span>ptr = page.start_address().as_ptr::&lt;u8&gt;();
+            core::slice::from_raw_parts(ptr, Size4KiB::SIZE <span class="kw">as _</span>)
         };
 
-        <span class="kw">let</span> <span class="ident">new_slice</span> <span class="op">=</span> <span class="ident">new_frame</span>.<span class="ident">as_slice_mut</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>new_slice = new_frame.as_slice_mut::&lt;u8&gt;();
 
-        <span class="comment">// Copy the contents from the old frame to the newly allocated frame.</span>
-        <span class="ident">new_slice</span>.<span class="ident">copy_from_slice</span>(<span class="ident">old_slice</span>);
+        <span class="comment">// Copy the contents from the old frame to the newly allocated frame.
+        </span>new_slice.copy_from_slice(old_slice);
 
-        <span class="comment">// Re-map the page to the newly allocated frame and with the provided</span>
-        <span class="comment">// protection flags.</span>
-        <span class="ident">offset_table</span>.<span class="ident">unmap</span>(<span class="ident">page</span>).<span class="ident">unwrap</span>().<span class="number">1</span>.<span class="ident">ignore</span>();
+        <span class="comment">// Re-map the page to the newly allocated frame and with the provided
+        // protection flags.
+        </span>offset_table.unmap(page).unwrap().<span class="number">1</span>.ignore();
 
-        <span class="comment">// NOTE: We operate on an active page table, so we flush the changes.</span>
-        <span class="kw">unsafe</span> {
-            <span class="ident">offset_table</span>
-                .<span class="ident">map_to</span>(
-                    <span class="ident">page</span>,
-                    <span class="ident">new_frame</span>,
-                    <span class="ident">PageTableFlags::PRESENT</span> <span class="op">|</span> <span class="ident">PageTableFlags::USER_ACCESSIBLE</span> <span class="op">|</span> <span class="ident">protection</span>.<span class="ident">into</span>(),
-                )<span class="question-mark">?</span>
-                .<span class="ident">flush</span>();
+        <span class="comment">// NOTE: We operate on an active page table, so we flush the changes.
+        </span><span class="kw">unsafe </span>{
+            offset_table
+                .map_to(
+                    page,
+                    new_frame,
+                    PageTableFlags::PRESENT | PageTableFlags::USER_ACCESSIBLE | protection.into(),
+                )<span class="question-mark">?
+                </span>.flush();
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Handler routine for a COW (Copy-On-Write) pages. A COW page is shared between multiple processes</span>
-    <span class="doccomment">/// until a write occurs after which a private copy is made for the writing process. A COW page</span>
-    <span class="doccomment">/// is recognised because the VMA for the region is marked writable even though the individual page</span>
-    <span class="doccomment">/// table entry is not.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Panics</span>
-    <span class="doccomment">/// * The provided `address` is not aligned to a page boundary.</span>
-    <span class="kw">fn</span> <span class="ident">handle_cow</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">offset_table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OffsetPageTable</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-        <span class="ident">copy</span>: <span class="ident">bool</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="macro">debug_assert!</span>(<span class="ident">address</span>.<span class="ident">is_aligned</span>(<span class="ident">Size4KiB::SIZE</span>));
+    <span class="doccomment">/// Handler routine for a COW (Copy-On-Write) pages. A COW page is shared between multiple processes
+    /// until a write occurs after which a private copy is made for the writing process. A COW page
+    /// is recognised because the VMA for the region is marked writable even though the individual page
+    /// table entry is not.
+    ///
+    /// ## Panics
+    /// * The provided `address` is not aligned to a page boundary.
+    </span><span class="kw">fn </span>handle_cow(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        offset_table: <span class="kw-2">&amp;mut </span>OffsetPageTable,
+        address: VirtAddr,
+        copy: bool,
+    ) -&gt; bool {
+        <span class="macro">debug_assert!</span>(address.is_aligned(Size4KiB::SIZE));
 
-        <span class="kw">let</span> <span class="ident">page</span>: <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Page::containing_address</span>(<span class="ident">address</span>);
+        <span class="kw">let </span>page: Page&lt;Size4KiB&gt; = Page::containing_address(address);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">TranslateResult::Mapped</span> { <span class="ident">frame</span>, .. } <span class="op">=</span> <span class="ident">offset_table</span>.<span class="ident">translate</span>(<span class="ident">address</span>) {
-            <span class="kw">let</span> <span class="ident">phys_addr</span> <span class="op">=</span> <span class="ident">frame</span>.<span class="ident">start_address</span>();
+        <span class="kw">if let </span>TranslateResult::Mapped { frame, .. } = offset_table.translate(address) {
+            <span class="kw">let </span>phys_addr = frame.start_address();
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vm_frame</span>) <span class="op">=</span> <span class="ident">phys_addr</span>.<span class="ident">as_vm_frame</span>() {
-                <span class="kw">if</span> <span class="ident">vm_frame</span>.<span class="ident">ref_count</span>() <span class="op">&gt;</span> <span class="number">1</span> <span class="op">|</span><span class="op">|</span> <span class="ident">copy</span> {
-                    <span class="comment">// This page is used by more then one process, so make it a private copy.</span>
-                    <span class="macro">log::trace!</span>(<span class="string">&quot;    - making {:?} into a private copy&quot;</span>, <span class="ident">page</span>);
-                    <span class="ident"><span class="self">Self</span>::map_copied</span>(<span class="ident">offset_table</span>, <span class="ident">page</span>, <span class="self">self</span>.<span class="ident">protection</span>).<span class="ident">unwrap</span>();
-                } <span class="kw">else</span> {
-                    <span class="comment">// This page is used by only one process, so make it writable.</span>
-                    <span class="macro">log::trace!</span>(<span class="string">&quot;    - making {:?} writable&quot;</span>, <span class="ident">page</span>);
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(vm_frame) = phys_addr.as_vm_frame() {
+                <span class="kw">if </span>vm_frame.ref_count() &gt; <span class="number">1 </span>|| copy {
+                    <span class="comment">// This page is used by more then one process, so make it a private copy.
+                    </span><span class="macro">log::trace!</span>(<span class="string">&quot;    - making {:?} into a private copy&quot;</span>, page);
+                    <span class="self">Self</span>::map_copied(offset_table, page, <span class="self">self</span>.protection).unwrap();
+                } <span class="kw">else </span>{
+                    <span class="comment">// This page is used by only one process, so make it writable.
+                    </span><span class="macro">log::trace!</span>(<span class="string">&quot;    - making {:?} writable&quot;</span>, page);
 
-                    <span class="kw">unsafe</span> {
-                        <span class="ident">offset_table</span>.<span class="ident">update_flags</span>(
-                            <span class="ident">page</span>,
-                            <span class="ident">PageTableFlags::PRESENT</span>
-                                <span class="op">|</span> <span class="ident">PageTableFlags::USER_ACCESSIBLE</span>
-                                <span class="op">|</span> <span class="self">self</span>.<span class="ident">protection</span>.<span class="ident">into</span>(),
+                    <span class="kw">unsafe </span>{
+                        offset_table.update_flags(
+                            page,
+                            PageTableFlags::PRESENT
+                                | PageTableFlags::USER_ACCESSIBLE
+                                | <span class="self">self</span>.protection.into(),
                         )
                     }
-                    .<span class="ident">unwrap</span>()
-                    .<span class="ident">flush</span>();
+                    .unwrap()
+                    .flush();
                 }
 
-                <span class="bool-val">true</span>
-            } <span class="kw">else</span> {
-                <span class="bool-val">false</span>
-            }
-        } <span class="kw">else</span> {
-            <span class="bool-val">false</span>
-        }
+                <span class="bool-val">true
+            </span>} <span class="kw">else </span>{
+                <span class="bool-val">false
+            </span>}
+        } <span class="kw">else </span>{
+            <span class="bool-val">false
+        </span>}
     }
 
-    <span class="kw">fn</span> <span class="ident">unmap</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">offset_table</span>: <span class="kw-2">&amp;mut</span> <span class="ident">OffsetPageTable</span>,
-        <span class="ident">start</span>: <span class="ident">VirtAddr</span>,
-        <span class="ident">end</span>: <span class="ident">VirtAddr</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">UnmapResult</span>, <span class="ident">UnmapError</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">unmap_range_inner</span> <span class="op">=</span> <span class="op">|</span><span class="ident">range</span><span class="op">|</span> -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">UnmapError</span><span class="op">&gt;</span> {
-            <span class="kw">match</span> <span class="ident">offset_table</span>.<span class="ident">unmap_range</span>(<span class="ident">range</span>, <span class="ident">Size4KiB::SIZE</span>) {
+    <span class="kw">fn </span>unmap(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        offset_table: <span class="kw-2">&amp;mut </span>OffsetPageTable,
+        start: VirtAddr,
+        end: VirtAddr,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;UnmapResult, UnmapError&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>unmap_range_inner = |range| -&gt; <span class="prelude-ty">Result</span>&lt;(), UnmapError&gt; {
+            <span class="kw">match </span>offset_table.unmap_range(range, Size4KiB::SIZE) {
                 <span class="prelude-val">Ok</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Ok</span>(()),
 
-                <span class="comment">// its fine since technically we are not actually allocating the range</span>
-                <span class="comment">// and they are just allocated on faults. So there might be a chance where we</span>
-                <span class="comment">// try to unmap a region that is mapped but not actually allocated.</span>
-                <span class="prelude-val">Err</span>(<span class="ident">UnmapError::PageNotMapped</span>) =&gt; <span class="prelude-val">Ok</span>(()),
-                <span class="prelude-val">Err</span>(<span class="ident">err</span>) =&gt; <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">err</span>),
+                <span class="comment">// its fine since technically we are not actually allocating the range
+                // and they are just allocated on faults. So there might be a chance where we
+                // try to unmap a region that is mapped but not actually allocated.
+                </span><span class="prelude-val">Err</span>(UnmapError::PageNotMapped) =&gt; <span class="prelude-val">Ok</span>(()),
+                <span class="prelude-val">Err</span>(err) =&gt; <span class="kw">return </span><span class="prelude-val">Err</span>(err),
             }
         };
 
-        <span class="kw">if</span> <span class="ident">end</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">start_addr</span> <span class="op">|</span><span class="op">|</span> <span class="ident">start</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">end_addr</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">UnmapResult::None</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">start</span> <span class="op">&gt;</span> <span class="self">self</span>.<span class="ident">start_addr</span> <span class="op">&amp;&amp;</span> <span class="ident">end</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">end_addr</span> {
-            <span class="comment">// The address we want to unmap is in the middle of the region. So we</span>
-            <span class="comment">// will need to split the mapping and update the end address accordingly.</span>
-            <span class="ident">unmap_range_inner</span>(<span class="ident">start</span>..<span class="ident">end</span>)<span class="question-mark">?</span>;
+        <span class="kw">if </span>end &lt;= <span class="self">self</span>.start_addr || start &gt;= <span class="self">self</span>.end_addr {
+            <span class="prelude-val">Ok</span>(UnmapResult::None)
+        } <span class="kw">else if </span>start &gt; <span class="self">self</span>.start_addr &amp;&amp; end &lt; <span class="self">self</span>.end_addr {
+            <span class="comment">// The address we want to unmap is in the middle of the region. So we
+            // will need to split the mapping and update the end address accordingly.
+            </span>unmap_range_inner(start..end)<span class="question-mark">?</span>;
 
-            <span class="kw">let</span> <span class="ident">new_file</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">file</span>.<span class="ident">as_ref</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">file</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">offset</span> <span class="op">+</span> (<span class="ident">end</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">start_addr</span>) <span class="kw">as</span> <span class="ident">usize</span>;
-                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">size</span> <span class="op">-</span> (<span class="ident">offset</span> <span class="op">-</span> <span class="ident">file</span>.<span class="ident">offset</span>);
+            <span class="kw">let </span>new_file = <span class="self">self</span>.file.as_ref().map(|file| {
+                <span class="kw">let </span>offset = file.offset + (end - <span class="self">self</span>.start_addr) <span class="kw">as </span>usize;
+                <span class="kw">let </span>size = file.size - (offset - file.offset);
 
-                <span class="ident">MMapFile::new</span>(<span class="ident">file</span>.<span class="ident">file</span>.<span class="ident">clone</span>(), <span class="ident">offset</span>, <span class="ident">size</span>)
+                MMapFile::new(file.file.clone(), offset, size)
             });
 
-            <span class="kw">let</span> <span class="ident">new_mapping</span> <span class="op">=</span> <span class="ident">Mapping</span> {
-                <span class="ident">protection</span>: <span class="self">self</span>.<span class="ident">protection</span>.<span class="ident">clone</span>(),
-                <span class="ident">flags</span>: <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">clone</span>(),
-                <span class="ident">start_addr</span>: <span class="ident">end</span>,
-                <span class="ident">end_addr</span>: <span class="ident">end</span> <span class="op">+</span> (<span class="self">self</span>.<span class="ident">end_addr</span> <span class="op">-</span> <span class="ident">end</span>),
-                <span class="ident">file</span>: <span class="ident">new_file</span>,
+            <span class="kw">let </span>new_mapping = Mapping {
+                protection: <span class="self">self</span>.protection.clone(),
+                flags: <span class="self">self</span>.flags.clone(),
+                start_addr: end,
+                end_addr: end + (<span class="self">self</span>.end_addr - end),
+                file: new_file,
             };
 
-            <span class="self">self</span>.<span class="ident">end_addr</span> <span class="op">=</span> <span class="ident">end</span>;
+            <span class="self">self</span>.end_addr = end;
 
-            <span class="prelude-val">Ok</span>(<span class="ident">UnmapResult::Parital</span>(<span class="ident">new_mapping</span>))
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">start_addr</span> <span class="op">&amp;&amp;</span> <span class="ident">end</span> <span class="op">&gt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">end_addr</span> {
-            <span class="comment">// We are unmapping the whole region.</span>
-            <span class="ident">unmap_range_inner</span>(<span class="self">self</span>.<span class="ident">start_addr</span>..<span class="self">self</span>.<span class="ident">end_addr</span>)<span class="question-mark">?</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">UnmapResult::Full</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">start_addr</span> <span class="op">&amp;&amp;</span> <span class="ident">end</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">end_addr</span> {
-            <span class="ident">unmap_range_inner</span>(<span class="self">self</span>.<span class="ident">start_addr</span>..<span class="ident">end</span>)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(UnmapResult::Parital(new_mapping))
+        } <span class="kw">else if </span>start &lt;= <span class="self">self</span>.start_addr &amp;&amp; end &gt;= <span class="self">self</span>.end_addr {
+            <span class="comment">// We are unmapping the whole region.
+            </span>unmap_range_inner(<span class="self">self</span>.start_addr..<span class="self">self</span>.end_addr)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(UnmapResult::Full)
+        } <span class="kw">else if </span>start &lt;= <span class="self">self</span>.start_addr &amp;&amp; end &lt; <span class="self">self</span>.end_addr {
+            unmap_range_inner(<span class="self">self</span>.start_addr..end)<span class="question-mark">?</span>;
 
-            <span class="comment">// Update the start address of the mapping since we have unmapped the</span>
-            <span class="comment">// first chunk of the mapping.</span>
-            <span class="kw">let</span> <span class="ident">offset</span> <span class="op">=</span> <span class="ident">end</span> <span class="op">-</span> <span class="self">self</span>.<span class="ident">start_addr</span>;
+            <span class="comment">// Update the start address of the mapping since we have unmapped the
+            // first chunk of the mapping.
+            </span><span class="kw">let </span>offset = end - <span class="self">self</span>.start_addr;
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">file</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">file</span>.<span class="ident">as_mut</span>() {
-                <span class="ident">file</span>.<span class="ident">offset</span> <span class="op">+</span><span class="op">=</span> <span class="ident">offset</span> <span class="kw">as</span> <span class="ident">usize</span>;
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(file) = <span class="self">self</span>.file.as_mut() {
+                file.offset += offset <span class="kw">as </span>usize;
             }
 
-            <span class="self">self</span>.<span class="ident">start_addr</span> <span class="op">=</span> <span class="ident">end</span>;
+            <span class="self">self</span>.start_addr = end;
 
-            <span class="prelude-val">Ok</span>(<span class="ident">UnmapResult::Start</span>)
-        } <span class="kw">else</span> {
-            <span class="ident">unmap_range_inner</span>(<span class="ident">start</span>..<span class="self">self</span>.<span class="ident">end_addr</span>)<span class="question-mark">?</span>;
+            <span class="prelude-val">Ok</span>(UnmapResult::Start)
+        } <span class="kw">else </span>{
+            unmap_range_inner(start..<span class="self">self</span>.end_addr)<span class="question-mark">?</span>;
 
-            <span class="comment">// Update the end address of the mapping since we have unmapped the</span>
-            <span class="comment">// last chunk of the mapping.</span>
-            <span class="self">self</span>.<span class="ident">end_addr</span> <span class="op">=</span> <span class="ident">end</span>;
-            <span class="prelude-val">Ok</span>(<span class="ident">UnmapResult::End</span>)
+            <span class="comment">// Update the end address of the mapping since we have unmapped the
+            // last chunk of the mapping.
+            </span><span class="self">self</span>.end_addr = end;
+            <span class="prelude-val">Ok</span>(UnmapResult::End)
         }
     }
 }
 
-<span class="kw">struct</span> <span class="ident">VmProtected</span> {
-    <span class="ident">mappings</span>: <span class="ident">LinkedList</span><span class="op">&lt;</span><span class="ident">Mapping</span><span class="op">&gt;</span>,
+<span class="kw">struct </span>VmProtected {
+    mappings: LinkedList&lt;Mapping&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">VmProtected</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">mappings</span>: <span class="ident">LinkedList::new</span>(),
+<span class="kw">impl </span>VmProtected {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            mappings: LinkedList::new(),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">mmap</span> <span class="kw">in</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">mappings</span> {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">file</span>) <span class="op">=</span> <span class="ident">mmap</span>.<span class="ident">file</span>.<span class="ident">as_ref</span>() {
+    <span class="kw">fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">for </span>mmap <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.mappings {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(file) = mmap.file.as_ref() {
                 <span class="macro">log::debug!</span>(
                     <span class="string">&quot;{:?}..{:?} =&gt; {:?}, {:?} (offset={:#x}, size={:#x})&quot;</span>,
-                    <span class="ident">mmap</span>.<span class="ident">start_addr</span>,
-                    <span class="ident">mmap</span>.<span class="ident">end_addr</span>,
-                    <span class="ident">mmap</span>.<span class="ident">protection</span>,
-                    <span class="ident">mmap</span>.<span class="ident">flags</span>,
-                    <span class="ident">file</span>.<span class="ident">offset</span>,
-                    <span class="ident">file</span>.<span class="ident">size</span>,
+                    mmap.start_addr,
+                    mmap.end_addr,
+                    mmap.protection,
+                    mmap.flags,
+                    file.offset,
+                    file.size,
                 );
-            } <span class="kw">else</span> {
+            } <span class="kw">else </span>{
                 <span class="macro">log::debug!</span>(
                     <span class="string">&quot;{:?}..{:?} =&gt; {:?}, {:?}&quot;</span>,
-                    <span class="ident">mmap</span>.<span class="ident">start_addr</span>,
-                    <span class="ident">mmap</span>.<span class="ident">end_addr</span>,
-                    <span class="ident">mmap</span>.<span class="ident">protection</span>,
-                    <span class="ident">mmap</span>.<span class="ident">flags</span>,
+                    mmap.start_addr,
+                    mmap.end_addr,
+                    mmap.protection,
+                    mmap.flags,
                 );
             }
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">handle_page_fault</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">reason</span>: <span class="ident">PageFaultErrorCode</span>,
-        <span class="ident">accessed_address</span>: <span class="ident">VirtAddr</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">map</span>) <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">mappings</span>
-            .<span class="ident">iter_mut</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">accessed_address</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">e</span>.<span class="ident">start_addr</span> <span class="op">&amp;&amp;</span> <span class="ident">accessed_address</span> <span class="op">&lt;</span> <span class="ident">e</span>.<span class="ident">end_addr</span>)
+    <span class="kw">fn </span>handle_page_fault(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        reason: PageFaultErrorCode,
+        accessed_address: VirtAddr,
+    ) -&gt; bool {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(map) = <span class="self">self
+            </span>.mappings
+            .iter_mut()
+            .find(|e| accessed_address &gt;= e.start_addr &amp;&amp; accessed_address &lt; e.end_addr)
         {
-            <span class="macro">log::trace!</span>(<span class="string">&quot;mapping {:?} on demand&quot;</span>, <span class="ident">accessed_address</span>);
+            <span class="macro">log::trace!</span>(<span class="string">&quot;mapping {:?} on demand&quot;</span>, accessed_address);
 
-            <span class="kw">if</span> <span class="ident">map</span>.<span class="ident">protection</span>.<span class="ident">is_empty</span>() {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
+            <span class="kw">if </span>map.protection.is_empty() {
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
 
-            <span class="kw">if</span> <span class="ident">reason</span>.<span class="ident">contains</span>(<span class="ident">PageFaultErrorCode::CAUSED_BY_WRITE</span>)
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">map</span>.<span class="ident">protection</span>.<span class="ident">contains</span>(<span class="ident">MMapProt::PROT_WRITE</span>)
+            <span class="kw">if </span>reason.contains(PageFaultErrorCode::CAUSED_BY_WRITE)
+                &amp;&amp; !map.protection.contains(MMapProt::PROT_WRITE)
             {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
 
-            <span class="kw">if</span> <span class="ident">reason</span>.<span class="ident">contains</span>(<span class="ident">PageFaultErrorCode::INSTRUCTION_FETCH</span>)
-                <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="ident">map</span>.<span class="ident">protection</span>.<span class="ident">contains</span>(<span class="ident">MMapProt::PROT_EXEC</span>)
+            <span class="kw">if </span>reason.contains(PageFaultErrorCode::INSTRUCTION_FETCH)
+                &amp;&amp; !map.protection.contains(MMapProt::PROT_EXEC)
             {
-                <span class="kw">return</span> <span class="bool-val">false</span>;
+                <span class="kw">return </span><span class="bool-val">false</span>;
             }
 
-            <span class="kw">let</span> <span class="ident">is_private</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_PRIVATE</span>);
-            <span class="kw">let</span> <span class="ident">is_annon</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_ANONYOMUS</span>);
+            <span class="kw">let </span>is_private = map.flags.contains(MMapFlags::MAP_PRIVATE);
+            <span class="kw">let </span>is_annon = map.flags.contains(MMapFlags::MAP_ANONYOMUS);
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset_table</span> <span class="op">=</span> <span class="ident">address_space</span>.<span class="ident">offset_page_table</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
+            <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> (<span class="ident">is_private</span>, <span class="ident">is_annon</span>) {
+            <span class="kw">let </span>result = <span class="kw">match </span>(is_private, is_annon) {
                 (<span class="bool-val">true</span>, <span class="bool-val">true</span>) =&gt; {
-                    <span class="ident">map</span>.<span class="ident">handle_pf_private_anon</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset_table</span>, <span class="ident">reason</span>, <span class="ident">accessed_address</span>)
+                    map.handle_pf_private_anon(<span class="kw-2">&amp;mut </span>offset_table, reason, accessed_address)
                 }
 
-                (<span class="bool-val">true</span>, <span class="bool-val">false</span>) <span class="op">|</span> (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; {
-                    <span class="ident">map</span>.<span class="ident">handle_pf_file</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset_table</span>, <span class="ident">reason</span>, <span class="ident">accessed_address</span>)
+                (<span class="bool-val">true</span>, <span class="bool-val">false</span>) | (<span class="bool-val">false</span>, <span class="bool-val">false</span>) =&gt; {
+                    map.handle_pf_file(<span class="kw-2">&amp;mut </span>offset_table, reason, accessed_address)
                 }
 
                 (<span class="bool-val">false</span>, <span class="bool-val">true</span>) =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;shared and anonymous mapping&quot;</span>),
             };
 
-            <span class="ident">result</span>
-        } <span class="kw">else</span> {
-            <span class="macro">log::trace!</span>(<span class="string">&quot;mapping not found for address: {:#x}&quot;</span>, <span class="ident">accessed_address</span>);
-            <span class="self">self</span>.<span class="ident">log</span>();
+            result
+        } <span class="kw">else </span>{
+            <span class="macro">log::trace!</span>(<span class="string">&quot;mapping not found for address: {:#x}&quot;</span>, accessed_address);
+            <span class="self">self</span>.log();
 
-            <span class="comment">// else the mapping does not exist, so return false.</span>
-            <span class="bool-val">false</span>
-        }
+            <span class="comment">// else the mapping does not exist, so return false.
+            </span><span class="bool-val">false
+        </span>}
     }
 
-    <span class="kw">fn</span> <span class="ident">find_fixed_mapping</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-        <span class="ident">size</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">VirtAddr</span>, <span class="ident">CursorMut</span><span class="op">&lt;</span><span class="ident">Mapping</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">cursor_front_mut</span>();
+    <span class="kw">fn </span>find_fixed_mapping(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        address: VirtAddr,
+        size: usize,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(VirtAddr, CursorMut&lt;Mapping&gt;)&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.mappings.cursor_front_mut();
 
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">map</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">current</span>() {
-            <span class="kw">if</span> <span class="ident">map</span>.<span class="ident">start_addr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">address</span> <span class="op">&amp;&amp;</span> <span class="ident">map</span>.<span class="ident">end_addr</span> <span class="op">&gt;</span> <span class="ident">address</span> {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">map</span>.<span class="ident">start_addr</span> <span class="op">&lt;</span> <span class="ident">address</span> {
-                <span class="ident">cursor</span>.<span class="ident">move_next</span>();
-            } <span class="kw">else</span> {
-                <span class="kw">if</span> <span class="ident">address</span> <span class="op">+</span> <span class="ident">size</span> <span class="op">&gt;</span> <span class="ident">map</span>.<span class="ident">start_addr</span> {
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
-                } <span class="kw">else</span> {
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(map) = cursor.current() {
+            <span class="kw">if </span>map.start_addr &lt;= address &amp;&amp; map.end_addr &gt; address {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
+            } <span class="kw">else if </span>map.start_addr &lt; address {
+                cursor.move_next();
+            } <span class="kw">else </span>{
+                <span class="kw">if </span>address + size &gt; map.start_addr {
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
+                } <span class="kw">else </span>{
                     <span class="kw">break</span>;
                 }
             }
         }
 
-        <span class="prelude-val">Some</span>((<span class="ident">address</span>, <span class="ident">cursor</span>))
+        <span class="prelude-val">Some</span>((address, cursor))
     }
 
-    <span class="kw">fn</span> <span class="ident">find_any_above</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-        <span class="ident">size</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">VirtAddr</span>, <span class="ident">CursorMut</span><span class="op">&lt;</span><span class="ident">Mapping</span><span class="op">&gt;</span>)<span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">is_empty</span>() {
-            <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">address</span>, <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">cursor_front_mut</span>()));
+    <span class="kw">fn </span>find_any_above(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        address: VirtAddr,
+        size: usize,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;(VirtAddr, CursorMut&lt;Mapping&gt;)&gt; {
+        <span class="kw">if </span><span class="self">self</span>.mappings.is_empty() {
+            <span class="kw">return </span><span class="prelude-val">Some</span>((address, <span class="self">self</span>.mappings.cursor_front_mut()));
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">cursor_front_mut</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.mappings.cursor_front_mut();
 
-        <span class="comment">// Search the mappings starting at the current cursor position for a big</span>
-        <span class="comment">// enough hole for where the address is above the provided `address`. A hole is</span>
-        <span class="comment">// big enough if it can hold the requested `size`. We use the first fit strategy,</span>
-        <span class="comment">// so it breaks as soon as a big enough hole is found.</span>
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">map</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">current</span>() {
-            <span class="kw">let</span> <span class="ident">map_start</span> <span class="op">=</span> <span class="ident">map</span>.<span class="ident">start_addr</span>;
+        <span class="comment">// Search the mappings starting at the current cursor position for a big
+        // enough hole for where the address is above the provided `address`. A hole is
+        // big enough if it can hold the requested `size`. We use the first fit strategy,
+        // so it breaks as soon as a big enough hole is found.
+        </span><span class="kw">while let </span><span class="prelude-val">Some</span>(map) = cursor.current() {
+            <span class="kw">let </span>map_start = map.start_addr;
 
-            <span class="kw">if</span> <span class="ident">map</span>.<span class="ident">start_addr</span> <span class="op">&lt;</span> <span class="ident">address</span> {
-                <span class="ident">cursor</span>.<span class="ident">move_next</span>();
-            } <span class="kw">else</span> {
-                <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pmap</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">peek_prev</span>() {
-                    <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">core::cmp::max</span>(<span class="ident">address</span>, <span class="ident">pmap</span>.<span class="ident">end_addr</span>);
-                    <span class="kw">let</span> <span class="ident">hole</span> <span class="op">=</span> <span class="ident">map_start</span>.<span class="ident">as_u64</span>() <span class="op">-</span> <span class="ident">start</span>.<span class="ident">as_u64</span>();
+            <span class="kw">if </span>map.start_addr &lt; address {
+                cursor.move_next();
+            } <span class="kw">else </span>{
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(pmap) = cursor.peek_prev() {
+                    <span class="kw">let </span>start = core::cmp::max(address, pmap.end_addr);
+                    <span class="kw">let </span>hole = map_start.as_u64() - start.as_u64();
 
-                    <span class="kw">if</span> <span class="ident">hole</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span> {
-                        <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">start</span>, <span class="ident">cursor</span>));
-                    } <span class="kw">else</span> {
-                        <span class="comment">// The hole is too small</span>
-                        <span class="ident">cursor</span>.<span class="ident">move_next</span>();
+                    <span class="kw">if </span>hole <span class="kw">as </span>usize &gt;= size {
+                        <span class="kw">return </span><span class="prelude-val">Some</span>((start, cursor));
+                    } <span class="kw">else </span>{
+                        <span class="comment">// The hole is too small
+                        </span>cursor.move_next();
                     }
-                } <span class="kw">else</span> {
-                    <span class="kw">let</span> <span class="ident">hole</span> <span class="op">=</span> <span class="ident">map_start</span>.<span class="ident">as_u64</span>() <span class="op">-</span> <span class="ident">address</span>.<span class="ident">as_u64</span>();
+                } <span class="kw">else </span>{
+                    <span class="kw">let </span>hole = map_start.as_u64() - address.as_u64();
 
-                    <span class="kw">return</span> <span class="kw">if</span> <span class="ident">hole</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size</span> {
-                        <span class="prelude-val">Some</span>((<span class="ident">address</span>, <span class="ident">cursor</span>))
-                    } <span class="kw">else</span> {
-                        <span class="comment">// The hole is too small</span>
-                        <span class="prelude-val">None</span>
-                    };
+                    <span class="kw">return if </span>hole <span class="kw">as </span>usize &gt;= size {
+                        <span class="prelude-val">Some</span>((address, cursor))
+                    } <span class="kw">else </span>{
+                        <span class="comment">// The hole is too small
+                        </span><span class="prelude-val">None
+                    </span>};
                 }
             }
         }
 
-        <span class="prelude-val">None</span>
-    }
+        <span class="prelude-val">None
+    </span>}
 
-    <span class="kw">fn</span> <span class="ident">mmap</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-        <span class="ident">size</span>: <span class="ident">usize</span>,
-        <span class="ident">protection</span>: <span class="ident">MMapProt</span>,
-        <span class="ident">flags</span>: <span class="ident">MMapFlags</span>,
-        <span class="ident">offset</span>: <span class="ident">usize</span>,
-        <span class="ident">file</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VirtAddr</span><span class="op">&gt;</span> {
-        <span class="comment">// Offset is required to be a multiple of page size.</span>
-        <span class="kw">if</span> (<span class="ident">offset</span> <span class="kw">as</span> <span class="ident">u64</span> <span class="op">&amp;</span> <span class="ident">Size4KiB::SIZE</span> <span class="op">-</span> <span class="number">1</span>) <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="kw">fn </span>mmap(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        address: VirtAddr,
+        size: usize,
+        protection: MMapProt,
+        flags: MMapFlags,
+        offset: usize,
+        file: <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;VirtAddr&gt; {
+        <span class="comment">// Offset is required to be a multiple of page size.
+        </span><span class="kw">if </span>(offset <span class="kw">as </span>u64 &amp; Size4KiB::SIZE - <span class="number">1</span>) != <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="comment">// The provided size should be non-zero.</span>
-        <span class="kw">if</span> <span class="ident">size</span> <span class="op">==</span> <span class="number">0</span> {
-            <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="comment">// The provided size should be non-zero.
+        </span><span class="kw">if </span>size == <span class="number">0 </span>{
+            <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">if</span> <span class="ident">file</span>.<span class="ident">is_some</span>() {
-            <span class="comment">// SAFTEY: We cannot mmap a file with the anonymous flag.</span>
-            <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_ANONYOMUS</span>) {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">if </span>file.is_some() {
+            <span class="comment">// SAFTEY: We cannot mmap a file with the anonymous flag.
+            </span><span class="kw">if </span>flags.contains(MMapFlags::MAP_ANONYOMUS) {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
-        } <span class="kw">else</span> {
-            <span class="comment">// SAFTEY: Mappings not backed by a file must be anonymous.</span>
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_ANONYOMUS</span>) {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+        } <span class="kw">else </span>{
+            <span class="comment">// SAFTEY: Mappings not backed by a file must be anonymous.
+            </span><span class="kw">if </span>!flags.contains(MMapFlags::MAP_ANONYOMUS) {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
 
-            <span class="comment">// SAFTEY: We cannot have a shared and an anonymous mapping.</span>
-            <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_SHARED</span>) {
-                <span class="kw">return</span> <span class="prelude-val">None</span>;
+            <span class="comment">// SAFTEY: We cannot have a shared and an anonymous mapping.
+            </span><span class="kw">if </span>flags.contains(MMapFlags::MAP_SHARED) {
+                <span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
 
-        <span class="kw">let</span> <span class="ident">size_aligned</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">size</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">Size4KiB::SIZE</span>);
+        <span class="kw">let </span>size_aligned = align_up(size <span class="kw">as _</span>, Size4KiB::SIZE);
 
-        <span class="kw">if</span> <span class="ident">address</span> <span class="op">==</span> <span class="ident">VirtAddr::zero</span>() {
-            <span class="comment">// We need to find a free mapping above 0x7000_0000_0000.</span>
-            <span class="self">self</span>.<span class="ident">find_any_above</span>(<span class="ident">VirtAddr::new</span>(<span class="number">0x7000_0000_0000</span>), <span class="ident">size_aligned</span> <span class="kw">as</span> <span class="kw">_</span>)
-        } <span class="kw">else</span> {
-            <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_FIXED</span>) {
-                <span class="comment">// SAFTEY: The provided address should be page aligned.</span>
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">address</span>.<span class="ident">is_aligned</span>(<span class="ident">Size4KiB::SIZE</span>) {
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+        <span class="kw">if </span>address == VirtAddr::zero() {
+            <span class="comment">// We need to find a free mapping above 0x7000_0000_0000.
+            </span><span class="self">self</span>.find_any_above(VirtAddr::new(<span class="number">0x7000_0000_0000</span>), size_aligned <span class="kw">as _</span>)
+        } <span class="kw">else </span>{
+            <span class="kw">if </span>flags.contains(MMapFlags::MAP_FIXED) {
+                <span class="comment">// SAFTEY: The provided address should be page aligned.
+                </span><span class="kw">if </span>!address.is_aligned(Size4KiB::SIZE) {
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
 
-                <span class="comment">// SAFTEY: The provided (address + size) should be less then</span>
-                <span class="comment">// the userland max address.</span>
-                <span class="kw">if</span> (<span class="ident">address</span> <span class="op">+</span> <span class="ident">size_aligned</span>) <span class="op">&gt;</span> <span class="ident">userland_last_address</span>() {
-                    <span class="kw">return</span> <span class="prelude-val">None</span>;
+                <span class="comment">// SAFTEY: The provided (address + size) should be less then
+                // the userland max address.
+                </span><span class="kw">if </span>(address + size_aligned) &gt; userland_last_address() {
+                    <span class="kw">return </span><span class="prelude-val">None</span>;
                 }
 
-                <span class="self">self</span>.<span class="ident">munmap</span>(<span class="ident">address</span>, <span class="ident">size_aligned</span> <span class="kw">as</span> <span class="ident">usize</span>); <span class="comment">// Unmap any existing mappings.</span>
-                <span class="self">self</span>.<span class="ident">find_fixed_mapping</span>(<span class="ident">address</span>, <span class="ident">size_aligned</span> <span class="kw">as</span> <span class="kw">_</span>)
-            } <span class="kw">else</span> {
-                <span class="self">self</span>.<span class="ident">find_any_above</span>(<span class="ident">address</span>, <span class="ident">size</span>)
+                <span class="self">self</span>.munmap(address, size_aligned <span class="kw">as </span>usize); <span class="comment">// Unmap any existing mappings.
+                </span><span class="self">self</span>.find_fixed_mapping(address, size_aligned <span class="kw">as _</span>)
+            } <span class="kw">else </span>{
+                <span class="self">self</span>.find_any_above(address, size)
             }
         }
-        .<span class="ident">and_then</span>(<span class="op">|</span>(<span class="ident">addr</span>, <span class="kw-2">mut</span> <span class="ident">cursor</span>)<span class="op">|</span> {
-            <span class="comment">// Merge same mappings instead of creating a new one.</span>
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">prev</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">peek_prev</span>() {
-                <span class="kw">if</span> <span class="ident">prev</span>.<span class="ident">end_addr</span> <span class="op">==</span> <span class="ident">addr</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">prev</span>.<span class="ident">flags</span> <span class="op">==</span> <span class="ident">flags</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">prev</span>.<span class="ident">protection</span> <span class="op">==</span> <span class="ident">protection</span>
-                    <span class="op">&amp;&amp;</span> <span class="ident">prev</span>.<span class="ident">file</span>.<span class="ident">is_none</span>()
+        .and_then(|(addr, <span class="kw-2">mut </span>cursor)| {
+            <span class="comment">// Merge same mappings instead of creating a new one.
+            </span><span class="kw">if let </span><span class="prelude-val">Some</span>(prev) = cursor.peek_prev() {
+                <span class="kw">if </span>prev.end_addr == addr
+                    &amp;&amp; prev.flags == flags
+                    &amp;&amp; prev.protection == protection
+                    &amp;&amp; prev.file.is_none()
                 {
-                    <span class="ident">prev</span>.<span class="ident">end_addr</span> <span class="op">=</span> <span class="ident">addr</span> <span class="op">+</span> <span class="ident">size_aligned</span>;
+                    prev.end_addr = addr + size_aligned;
 
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>(<span class="ident">addr</span>);
+                    <span class="kw">return </span><span class="prelude-val">Some</span>(addr);
                 }
             }
 
-            <span class="ident">cursor</span>.<span class="ident">insert_before</span>(<span class="ident">Mapping</span> {
-                <span class="ident">protection</span>,
-                <span class="ident">flags</span>,
+            cursor.insert_before(Mapping {
+                protection,
+                flags,
 
-                <span class="ident">start_addr</span>: <span class="ident">addr</span>,
-                <span class="ident">end_addr</span>: <span class="ident">addr</span> <span class="op">+</span> <span class="ident">size_aligned</span>,
+                start_addr: addr,
+                end_addr: addr + size_aligned,
 
-                <span class="ident">file</span>: <span class="ident">file</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="ident">MMapFile::new</span>(<span class="ident">f</span>, <span class="ident">offset</span>, <span class="ident">size</span>)),
+                file: file.map(|f| MMapFile::new(f, offset, size)),
             });
 
-            <span class="prelude-val">Some</span>(<span class="ident">addr</span>)
+            <span class="prelude-val">Some</span>(addr)
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">load_bin</span><span class="op">&lt;</span><span class="lifetime">&#39;header</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">bin</span>: <span class="ident">DirCacheItem</span>,
-        <span class="ident">argv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-        <span class="ident">envv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">LoadedBinary</span><span class="op">&lt;</span><span class="lifetime">&#39;header</span><span class="op">&gt;</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-        <span class="comment">// check for a shebang before proceeding.</span>
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">shebang</span>) <span class="op">=</span> <span class="ident">parse_shebang</span>(<span class="ident">bin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span> {
+    <span class="kw">fn </span>load_bin&lt;<span class="lifetime">&#39;header</span>&gt;(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        bin: DirCacheItem,
+        argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+        envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LoadedBinary&lt;<span class="lifetime">&#39;header</span>&gt;, ElfLoadError&gt; {
+        <span class="comment">// check for a shebang before proceeding.
+        </span><span class="kw">if let </span><span class="prelude-val">Some</span>(shebang) = parse_shebang(bin.clone())<span class="question-mark">? </span>{
             <span class="macro">log::debug!</span>(
                 <span class="string">&quot;shebang: (interpreter={}, argument={})&quot;</span>,
-                <span class="ident">shebang</span>.<span class="ident">interpreter</span>.<span class="ident">absolute_path_str</span>(),
-                <span class="ident">shebang</span>.<span class="ident">argument</span>
+                shebang.interpreter.absolute_path_str(),
+                shebang.argument
             );
 
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">largv</span> <span class="op">=</span> <span class="ident">ExecArgs::default</span>();
+            <span class="kw">let </span><span class="kw-2">mut </span>largv = ExecArgs::default();
 
-            <span class="ident">largv</span>.<span class="ident">push</span>(<span class="ident">shebang</span>.<span class="ident">interpreter</span>.<span class="ident">absolute_path_str</span>().<span class="ident">as_bytes</span>());
+            largv.push(shebang.interpreter.absolute_path_str().as_bytes());
 
-            <span class="kw">if</span> <span class="op">!</span><span class="ident">shebang</span>.<span class="ident">argument</span>.<span class="ident">is_empty</span>() {
-                <span class="ident">largv</span>.<span class="ident">push</span>(<span class="ident">shebang</span>.<span class="ident">argument</span>.<span class="ident">as_bytes</span>());
+            <span class="kw">if </span>!shebang.argument.is_empty() {
+                largv.push(shebang.argument.as_bytes());
             }
 
-            <span class="ident">largv</span>.<span class="ident">push</span>(<span class="ident">bin</span>.<span class="ident">absolute_path_str</span>().<span class="ident">as_bytes</span>());
-            <span class="ident">argv</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">argv</span><span class="op">|</span> <span class="ident">largv</span>.<span class="ident">extend</span>(<span class="kw-2">&amp;</span><span class="ident">argv</span>.<span class="ident">inner</span>[<span class="number">1</span>..]));
+            largv.push(bin.absolute_path_str().as_bytes());
+            argv.map(|argv| largv.extend(<span class="kw-2">&amp;</span>argv.inner[<span class="number">1</span>..]));
 
-            <span class="kw">return</span> <span class="self">self</span>.<span class="ident">load_bin</span>(<span class="ident">shebang</span>.<span class="ident">interpreter</span>, <span class="prelude-val">Some</span>(<span class="ident">largv</span>), <span class="ident">envv</span>);
+            <span class="kw">return </span><span class="self">self</span>.load_bin(shebang.interpreter, <span class="prelude-val">Some</span>(largv), envv);
         }
 
-        <span class="kw">let</span> <span class="ident">elf</span> <span class="op">=</span> <span class="ident">Elf::new</span>(<span class="ident">bin</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
-        <span class="kw">let</span> <span class="ident">header</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="ident">elf</span>.<span class="ident">header</span>;
+        <span class="kw">let </span>elf = Elf::new(bin.clone())<span class="question-mark">?</span>;
+        <span class="kw">let </span>header = <span class="kw-2">&amp;</span>elf.header;
 
-        <span class="kw">let</span> <span class="ident">load_offset</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(
-            <span class="kw">if</span> <span class="ident">header</span>.<span class="ident">pt2</span>.<span class="ident">type_</span>().<span class="ident">as_type</span>() <span class="op">==</span> <span class="ident">header::Type::SharedObject</span> {
-                <span class="number">0x40000000u64</span>
-            } <span class="kw">else</span> {
-                <span class="number">0u64</span>
-            },
+        <span class="kw">let </span>load_offset = VirtAddr::new(
+            <span class="kw">if </span>header.pt2.type_().as_type() == header::Type::SharedObject {
+                <span class="number">0x40000000u64
+            </span>} <span class="kw">else </span>{
+                <span class="number">0u64
+            </span>},
         );
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">entry_point</span> <span class="op">=</span> <span class="ident">load_offset</span> <span class="op">+</span> <span class="ident">header</span>.<span class="ident">pt2</span>.<span class="ident">entry_point</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>entry_point = load_offset + header.pt2.entry_point();
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;entry point: {:#x}&quot;</span>, <span class="ident">entry_point</span>);
-        <span class="macro">log::debug!</span>(<span class="string">&quot;entry point type: {:?}&quot;</span>, <span class="ident">header</span>.<span class="ident">pt2</span>.<span class="ident">type_</span>().<span class="ident">as_type</span>());
+        <span class="macro">log::debug!</span>(<span class="string">&quot;entry point: {:#x}&quot;</span>, entry_point);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;entry point type: {:?}&quot;</span>, header.pt2.type_().as_type());
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">base_addr</span> <span class="op">=</span> <span class="ident">VirtAddr::zero</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>base_addr = VirtAddr::zero();
 
-        <span class="kw">for</span> <span class="ident">header</span> <span class="kw">in</span> <span class="ident">elf</span>.<span class="ident">program_iter</span>() {
-            <span class="kw">let</span> <span class="ident">header_type</span> <span class="op">=</span> <span class="ident">header</span>
-                .<span class="ident">get_type</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;load_bin: failed to get program header type&quot;</span>);
+        <span class="kw">for </span>header <span class="kw">in </span>elf.program_iter() {
+            <span class="kw">let </span>header_type = header
+                .get_type()
+                .expect(<span class="string">&quot;load_bin: failed to get program header type&quot;</span>);
 
-            <span class="kw">let</span> <span class="ident">header_flags</span> <span class="op">=</span> <span class="ident">header</span>.<span class="ident">flags</span>();
+            <span class="kw">let </span>header_flags = header.flags();
 
-            <span class="kw">if</span> <span class="ident">header_type</span> <span class="op">==</span> <span class="ident">xmas_elf::program::Type::Load</span> {
-                <span class="kw">let</span> <span class="ident">virtual_start</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">header</span>.<span class="ident">virtual_addr</span>()).<span class="ident">align_down</span>(<span class="ident">Size4KiB::SIZE</span>)
-                    <span class="op">+</span> <span class="ident">load_offset</span>.<span class="ident">as_u64</span>();
+            <span class="kw">if </span>header_type == xmas_elf::program::Type::Load {
+                <span class="kw">let </span>virtual_start = VirtAddr::new(header.virtual_addr()).align_down(Size4KiB::SIZE)
+                    + load_offset.as_u64();
 
-                <span class="kw">if</span> <span class="ident">base_addr</span> <span class="op">==</span> <span class="ident">VirtAddr::zero</span>() {
-                    <span class="ident">base_addr</span> <span class="op">=</span> <span class="ident">virtual_start</span>;
+                <span class="kw">if </span>base_addr == VirtAddr::zero() {
+                    base_addr = virtual_start;
                 }
 
-                <span class="kw">let</span> <span class="ident">virtual_end</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">header</span>.<span class="ident">virtual_addr</span>() <span class="op">+</span> <span class="ident">header</span>.<span class="ident">mem_size</span>())
-                    .<span class="ident">align_up</span>(<span class="ident">Size4KiB::SIZE</span>)
-                    <span class="op">+</span> <span class="ident">load_offset</span>.<span class="ident">as_u64</span>();
+                <span class="kw">let </span>virtual_end = VirtAddr::new(header.virtual_addr() + header.mem_size())
+                    .align_up(Size4KiB::SIZE)
+                    + load_offset.as_u64();
 
-                <span class="kw">let</span> <span class="ident">virtual_fend</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="ident">header</span>.<span class="ident">virtual_addr</span>() <span class="op">+</span> <span class="ident">header</span>.<span class="ident">file_size</span>())
-                    <span class="op">+</span> <span class="ident">load_offset</span>.<span class="ident">as_u64</span>();
+                <span class="kw">let </span>virtual_fend = VirtAddr::new(header.virtual_addr() + header.file_size())
+                    + load_offset.as_u64();
 
-                <span class="kw">let</span> <span class="ident">data_size</span> <span class="op">=</span> <span class="ident">virtual_fend</span> <span class="op">-</span> <span class="ident">virtual_start</span>;
-                <span class="kw">let</span> <span class="ident">aligned_data_size</span> <span class="op">=</span> <span class="ident">align_up</span>(<span class="ident">data_size</span>, <span class="ident">Size4KiB::SIZE</span>);
+                <span class="kw">let </span>data_size = virtual_fend - virtual_start;
+                <span class="kw">let </span>aligned_data_size = align_up(data_size, Size4KiB::SIZE);
 
-                <span class="kw">let</span> <span class="ident">file_offset</span> <span class="op">=</span> <span class="ident">align_down</span>(<span class="ident">header</span>.<span class="ident">offset</span>(), <span class="ident">Size4KiB::SIZE</span>);
+                <span class="kw">let </span>file_offset = align_down(header.offset(), Size4KiB::SIZE);
 
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">prot</span> <span class="op">=</span> <span class="ident">MMapProt::empty</span>();
+                <span class="kw">let </span><span class="kw-2">mut </span>prot = MMapProt::empty();
 
-                <span class="kw">if</span> <span class="ident">header_flags</span>.<span class="ident">is_read</span>() {
-                    <span class="ident">prot</span>.<span class="ident">insert</span>(<span class="ident">MMapProt::PROT_READ</span>);
+                <span class="kw">if </span>header_flags.is_read() {
+                    prot.insert(MMapProt::PROT_READ);
                 }
 
-                <span class="kw">if</span> <span class="ident">header_flags</span>.<span class="ident">is_write</span>() {
-                    <span class="ident">prot</span>.<span class="ident">insert</span>(<span class="ident">MMapProt::PROT_WRITE</span>);
+                <span class="kw">if </span>header_flags.is_write() {
+                    prot.insert(MMapProt::PROT_WRITE);
                 }
 
-                <span class="kw">if</span> <span class="ident">header_flags</span>.<span class="ident">is_execute</span>() {
-                    <span class="ident">prot</span>.<span class="ident">insert</span>(<span class="ident">MMapProt::PROT_EXEC</span>);
+                <span class="kw">if </span>header_flags.is_execute() {
+                    prot.insert(MMapProt::PROT_EXEC);
                 }
 
                 <span class="comment">/*
@@ -2144,177 +2144,177 @@
                  *   see that the last frames of the `X` and `Y` regions in the file are followed
                  *   by the bytes of the next region. So we can&#39;t zero these parts of the frame
                  *   because they are needed by other memory regions.
-                 */</span>
-                <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="self">self</span>
-                    .<span class="ident">mmap</span>(
-                        <span class="ident">virtual_start</span>,
-                        <span class="ident">data_size</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                        <span class="ident">prot</span>,
-                        <span class="ident">MMapFlags::MAP_PRIVATE</span> <span class="op">|</span> <span class="ident">MMapFlags::MAP_FIXED</span>,
-                        <span class="ident">file_offset</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                        <span class="prelude-val">Some</span>(<span class="ident">bin</span>.<span class="ident">clone</span>()),
+                 */
+                </span><span class="kw">let </span>address = <span class="self">self
+                    </span>.mmap(
+                        virtual_start,
+                        data_size <span class="kw">as </span>usize,
+                        prot,
+                        MMapFlags::MAP_PRIVATE | MMapFlags::MAP_FIXED,
+                        file_offset <span class="kw">as </span>usize,
+                        <span class="prelude-val">Some</span>(bin.clone()),
                     )
-                    .<span class="ident">ok_or</span>(<span class="ident">ElfLoadError::MemoryMapError</span>)<span class="question-mark">?</span>;
+                    .ok_or(ElfLoadError::MemoryMapError)<span class="question-mark">?</span>;
 
-                <span class="kw">let</span> <span class="ident">virtual_fend</span> <span class="op">=</span> <span class="ident">address</span> <span class="op">+</span> <span class="ident">aligned_data_size</span>;
+                <span class="kw">let </span>virtual_fend = address + aligned_data_size;
 
-                <span class="kw">if</span> <span class="ident">virtual_fend</span> <span class="op">&lt;</span> <span class="ident">virtual_end</span> {
-                    <span class="kw">let</span> <span class="ident">bss_size</span> <span class="op">=</span> <span class="ident">virtual_end</span> <span class="op">-</span> <span class="ident">virtual_fend</span>;
+                <span class="kw">if </span>virtual_fend &lt; virtual_end {
+                    <span class="kw">let </span>bss_size = virtual_end - virtual_fend;
 
-                    <span class="self">self</span>.<span class="ident">mmap</span>(
-                        <span class="ident">virtual_fend</span>,
-                        <span class="ident">bss_size</span> <span class="kw">as</span> <span class="ident">usize</span>,
-                        <span class="ident">prot</span>,
-                        <span class="ident">MMapFlags::MAP_PRIVATE</span> <span class="op">|</span> <span class="ident">MMapFlags::MAP_ANONYOMUS</span> <span class="op">|</span> <span class="ident">MMapFlags::MAP_FIXED</span>,
+                    <span class="self">self</span>.mmap(
+                        virtual_fend,
+                        bss_size <span class="kw">as </span>usize,
+                        prot,
+                        MMapFlags::MAP_PRIVATE | MMapFlags::MAP_ANONYOMUS | MMapFlags::MAP_FIXED,
                         <span class="number">0</span>,
                         <span class="prelude-val">None</span>,
                     )
-                    .<span class="ident">ok_or</span>(<span class="ident">ElfLoadError::MemoryMapError</span>)<span class="question-mark">?</span>;
+                    .ok_or(ElfLoadError::MemoryMapError)<span class="question-mark">?</span>;
                 }
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">header_type</span> <span class="op">==</span> <span class="ident">xmas_elf::program::Type::Tls</span> {
-            } <span class="kw">else</span> <span class="kw">if</span> <span class="ident">header_type</span> <span class="op">==</span> <span class="ident">xmas_elf::program::Type::Interp</span> {
-                <span class="kw">let</span> <span class="ident">ld</span> <span class="op">=</span> <span class="ident">fs::lookup_path</span>(<span class="ident">fs::Path::new</span>(<span class="string">&quot;/usr/lib/ld.so&quot;</span>)).<span class="ident">unwrap</span>();
+            } <span class="kw">else if </span>header_type == xmas_elf::program::Type::Tls {
+            } <span class="kw">else if </span>header_type == xmas_elf::program::Type::Interp {
+                <span class="kw">let </span>ld = fs::lookup_path(fs::Path::new(<span class="string">&quot;/usr/lib/ld.so&quot;</span>)).unwrap();
 
-                <span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">load_bin</span>(<span class="ident">ld</span>, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
-                <span class="ident">entry_point</span> <span class="op">=</span> <span class="ident">res</span>.<span class="ident">entry_point</span>;
+                <span class="kw">let </span>res = <span class="self">self</span>.load_bin(ld, <span class="prelude-val">None</span>, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
+                entry_point = res.entry_point;
             }
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">LoadedBinary</span> {
-            <span class="ident">elf</span>,
-            <span class="ident">entry_point</span>,
+        <span class="prelude-val">Ok</span>(LoadedBinary {
+            elf,
+            entry_point,
 
-            <span class="ident">base_addr</span>,
+            base_addr,
 
-            <span class="ident">argv</span>,
-            <span class="ident">envv</span>,
+            argv,
+            envv,
         })
     }
 
-    <span class="doccomment">/// Clears all of the mappings without unmapping them. The caller is responsible</span>
-    <span class="doccomment">/// for going through the page table and unmapping all of the pages.</span>
-    <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">clear</span>()
+    <span class="doccomment">/// Clears all of the mappings without unmapping them. The caller is responsible
+    /// for going through the page table and unmapping all of the pages.
+    </span><span class="kw">fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.mappings.clear()
     }
 
-    <span class="kw">fn</span> <span class="ident">munmap</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtAddr</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">start</span> <span class="op">=</span> <span class="ident">address</span>.<span class="ident">align_up</span>(<span class="ident">Size4KiB::SIZE</span>);
-        <span class="kw">let</span> <span class="ident">end</span> <span class="op">=</span> (<span class="ident">address</span> <span class="op">+</span> <span class="ident">size</span>).<span class="ident">align_up</span>(<span class="ident">Size4KiB::SIZE</span>);
+    <span class="kw">fn </span>munmap(<span class="kw-2">&amp;mut </span><span class="self">self</span>, address: VirtAddr, size: usize) -&gt; bool {
+        <span class="kw">let </span>start = address.align_up(Size4KiB::SIZE);
+        <span class="kw">let </span>end = (address + size).align_up(Size4KiB::SIZE);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cursor</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">mappings</span>.<span class="ident">cursor_front_mut</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">success</span> <span class="op">=</span> <span class="bool-val">false</span>;
+        <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.mappings.cursor_front_mut();
+        <span class="kw">let </span><span class="kw-2">mut </span>success = <span class="bool-val">false</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset_table</span> <span class="op">=</span> <span class="ident">address_space</span>.<span class="ident">offset_page_table</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
+        <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;unmapping {:?}..{:?}&quot;</span>, <span class="ident">start</span>, <span class="ident">end</span>);
+        <span class="macro">log::debug!</span>(<span class="string">&quot;unmapping {:?}..{:?}&quot;</span>, start, end);
 
-        <span class="kw">while</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">map</span>) <span class="op">=</span> <span class="ident">cursor</span>.<span class="ident">current</span>() {
-            <span class="kw">if</span> <span class="ident">map</span>.<span class="ident">end_addr</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">start</span> {
-                <span class="ident">cursor</span>.<span class="ident">move_next</span>();
-            } <span class="kw">else</span> {
-                <span class="kw">match</span> <span class="ident">map</span>.<span class="ident">unmap</span>(<span class="kw-2">&amp;mut</span> <span class="ident">offset_table</span>, <span class="ident">start</span>, <span class="ident">end</span>) {
-                    <span class="prelude-val">Ok</span>(<span class="ident">result</span>) =&gt; <span class="kw">match</span> <span class="ident">result</span> {
-                        <span class="ident">UnmapResult::None</span> =&gt; <span class="kw">return</span> <span class="ident">success</span>,
-                        <span class="ident">UnmapResult::Start</span> =&gt; <span class="kw">return</span> <span class="bool-val">true</span>,
+        <span class="kw">while let </span><span class="prelude-val">Some</span>(map) = cursor.current() {
+            <span class="kw">if </span>map.end_addr &lt;= start {
+                cursor.move_next();
+            } <span class="kw">else </span>{
+                <span class="kw">match </span>map.unmap(<span class="kw-2">&amp;mut </span>offset_table, start, end) {
+                    <span class="prelude-val">Ok</span>(result) =&gt; <span class="kw">match </span>result {
+                        UnmapResult::None =&gt; <span class="kw">return </span>success,
+                        UnmapResult::Start =&gt; <span class="kw">return </span><span class="bool-val">true</span>,
 
-                        <span class="ident">UnmapResult::Full</span> =&gt; {
-                            <span class="ident">success</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                            <span class="ident">cursor</span>.<span class="ident">remove_current</span>();
+                        UnmapResult::Full =&gt; {
+                            success = <span class="bool-val">true</span>;
+                            cursor.remove_current();
                         }
 
-                        <span class="ident">UnmapResult::Parital</span>(<span class="ident">mapping</span>) =&gt; {
-                            <span class="ident">cursor</span>.<span class="ident">insert_after</span>(<span class="ident">mapping</span>);
-                            <span class="kw">return</span> <span class="bool-val">true</span>;
+                        UnmapResult::Parital(mapping) =&gt; {
+                            cursor.insert_after(mapping);
+                            <span class="kw">return </span><span class="bool-val">true</span>;
                         }
 
-                        <span class="ident">UnmapResult::End</span> =&gt; {
-                            <span class="ident">success</span> <span class="op">=</span> <span class="bool-val">true</span>;
-                            <span class="ident">cursor</span>.<span class="ident">move_next</span>();
+                        UnmapResult::End =&gt; {
+                            success = <span class="bool-val">true</span>;
+                            cursor.move_next();
                         }
                     },
 
-                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return</span> <span class="bool-val">false</span>,
+                    <span class="prelude-val">Err</span>(<span class="kw">_</span>) =&gt; <span class="kw">return </span><span class="bool-val">false</span>,
                 }
             }
         }
 
-        <span class="ident">success</span>
+        success
     }
 
-    <span class="kw">fn</span> <span class="ident">fork_from</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">Vm</span>) {
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">parent</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>();
+    <span class="kw">fn </span>fork_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, parent: <span class="kw-2">&amp;</span>Vm) {
+        <span class="kw">let </span>data = parent.inner.lock_irq();
 
-        <span class="comment">// Copy over all of the mappings from the parent into the child.</span>
-        <span class="self">self</span>.<span class="ident">mappings</span> <span class="op">=</span> <span class="ident">data</span>.<span class="ident">mappings</span>.<span class="ident">clone</span>();
+        <span class="comment">// Copy over all of the mappings from the parent into the child.
+        </span><span class="self">self</span>.mappings = data.mappings.clone();
     }
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Vm</span> {
-    <span class="ident">inner</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">VmProtected</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>Vm {
+    inner: Mutex&lt;VmProtected&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Vm</span> {
-    <span class="doccomment">/// Creates a new instance of VM.</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">inner</span>: <span class="ident">Mutex::new</span>(<span class="ident">VmProtected::new</span>()),
+<span class="kw">impl </span>Vm {
+    <span class="doccomment">/// Creates a new instance of VM.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            inner: Mutex::new(VmProtected::new()),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">mmap</span>(
+    <span class="kw">pub fn </span>mmap(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">address</span>: <span class="ident">VirtAddr</span>,
-        <span class="ident">size</span>: <span class="ident">usize</span>,
-        <span class="ident">protection</span>: <span class="ident">MMapProt</span>,
-        <span class="ident">flags</span>: <span class="ident">MMapFlags</span>,
-        <span class="ident">offset</span>: <span class="ident">usize</span>,
-        <span class="ident">file</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VirtAddr</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>
-            .<span class="ident">lock_irq</span>()
-            .<span class="ident">mmap</span>(<span class="ident">address</span>, <span class="ident">size</span>, <span class="ident">protection</span>, <span class="ident">flags</span>, <span class="ident">offset</span>, <span class="ident">file</span>)
+        address: VirtAddr,
+        size: usize,
+        protection: MMapProt,
+        flags: MMapFlags,
+        offset: usize,
+        file: <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;VirtAddr&gt; {
+        <span class="self">self</span>.inner
+            .lock_irq()
+            .mmap(address, size, protection, flags, offset, file)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">munmap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">address</span>: <span class="ident">VirtAddr</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>().<span class="ident">munmap</span>(<span class="ident">address</span>, <span class="ident">size</span>)
+    <span class="kw">pub fn </span>munmap(<span class="kw-2">&amp;</span><span class="self">self</span>, address: VirtAddr, size: usize) -&gt; bool {
+        <span class="self">self</span>.inner.lock_irq().munmap(address, size)
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">fork_from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">Vm</span>) {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>().<span class="ident">fork_from</span>(<span class="ident">parent</span>)
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>fork_from(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: <span class="kw-2">&amp;</span>Vm) {
+        <span class="self">self</span>.inner.lock_irq().fork_from(parent)
     }
 
-    <span class="doccomment">/// Mapping the provided `bin` file into the VM.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">load_bin</span>(
+    <span class="doccomment">/// Mapping the provided `bin` file into the VM.
+    </span><span class="kw">pub fn </span>load_bin(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">bin</span>: <span class="ident">DirCacheItem</span>,
-        <span class="ident">argv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-        <span class="ident">envv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">LoadedBinary</span>, <span class="ident">ElfLoadError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>().<span class="ident">load_bin</span>(<span class="ident">bin</span>, <span class="ident">argv</span>, <span class="ident">envv</span>)
+        bin: DirCacheItem,
+        argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+        envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;LoadedBinary, ElfLoadError&gt; {
+        <span class="self">self</span>.inner.lock_irq().load_bin(bin, argv, envv)
     }
 
-    <span class="doccomment">/// Clears and unmaps all of the mappings in the VM.</span>
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>().<span class="ident">clear</span>()
+    <span class="doccomment">/// Clears and unmaps all of the mappings in the VM.
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.inner.lock_irq().clear()
     }
 
-    <span class="doccomment">/// This function is responsible for handling page faults occured in</span>
-    <span class="doccomment">/// user mode. It determines the address, the reason of the page fault</span>
-    <span class="doccomment">/// and then passes it off to one of the appropriate page fault handlers.</span>
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">handle_page_fault</span>(
+    <span class="doccomment">/// This function is responsible for handling page faults occured in
+    /// user mode. It determines the address, the reason of the page fault
+    /// and then passes it off to one of the appropriate page fault handlers.
+    </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>handle_page_fault(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">reason</span>: <span class="ident">PageFaultErrorCode</span>,
-        <span class="ident">accessed_address</span>: <span class="ident">VirtAddr</span>,
-    ) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">inner</span>
-            .<span class="ident">lock_irq</span>()
-            .<span class="ident">handle_page_fault</span>(<span class="ident">reason</span>, <span class="ident">accessed_address</span>)
+        reason: PageFaultErrorCode,
+        accessed_address: VirtAddr,
+    ) -&gt; bool {
+        <span class="self">self</span>.inner
+            .lock_irq()
+            .handle_page_fault(reason, accessed_address)
     }
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">lock_irq</span>().<span class="ident">log</span>()
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.inner.lock_irq().log()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

@@ -314,321 +314,321 @@
 <span id="314">314</span>
 <span id="315">315</span>
 <span id="316">316</span>
-</pre><pre class="rust"><code><span class="comment">// Copyright 2016 Amanieu d&#39;Antras</span>
-<span class="comment">// Copyright 2020 Amari Robinson</span>
-<span class="comment">//</span>
-<span class="comment">// Licensed under the Apache License, Version 2.0, &lt;LICENSE-APACHE or</span>
-<span class="comment">// http://apache.org/licenses/LICENSE-2.0&gt; or the MIT license &lt;LICENSE-MIT or</span>
-<span class="comment">// http://opensource.org/licenses/MIT&gt;, at your option. This file may not be</span>
-<span class="comment">// copied, modified, or distributed except according to those terms.</span>
+</pre><pre class="rust"><code><span class="comment">// Copyright 2016 Amanieu d&#39;Antras
+// Copyright 2020 Amari Robinson
+//
+// Licensed under the Apache License, Version 2.0, &lt;LICENSE-APACHE or
+// http://apache.org/licenses/LICENSE-2.0&gt; or the MIT license &lt;LICENSE-MIT or
+// http://opensource.org/licenses/MIT&gt;, at your option. This file may not be
+// copied, modified, or distributed except according to those terms.
 
-<span class="doccomment">//! Intrusive collections for Rust.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! This library provides a set of high-performance intrusive collections which</span>
-<span class="doccomment">//! can offer better performance and more flexibility than standard collections.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The main difference between an intrusive collection and a normal one is that</span>
-<span class="doccomment">//! while normal collections allocate memory behind your back to keep track of a</span>
-<span class="doccomment">//! set of *values*, intrusive collections never allocate memory themselves and</span>
-<span class="doccomment">//! instead keep track of a set of *objects*. Such collections are called</span>
-<span class="doccomment">//! intrusive because they requires explicit support in objects to allow them to</span>
-<span class="doccomment">//! be inserted into a collection.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Example</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//! use intrusive_collections::intrusive_adapter;</span>
-<span class="doccomment">//! use intrusive_collections::{LinkedList, LinkedListLink};</span>
-<span class="doccomment">//! use std::cell::Cell;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // A simple struct containing an instrusive link and a value</span>
-<span class="doccomment">//! struct Test {</span>
-<span class="doccomment">//!     link: LinkedListLink,</span>
-<span class="doccomment">//!     value: Cell&lt;i32&gt;,</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // The adapter describes how an object can be inserted into an intrusive</span>
-<span class="doccomment">//! // collection. This is automatically generated using a macro.</span>
-<span class="doccomment">//! intrusive_adapter!(TestAdapter = Box&lt;Test&gt;: Test { link: LinkedListLink });</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Create a list and some objects</span>
-<span class="doccomment">//! let mut list = LinkedList::new(TestAdapter::new());</span>
-<span class="doccomment">//! let a = Box::new(Test {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(1),</span>
-<span class="doccomment">//! });</span>
-<span class="doccomment">//! let b = Box::new(Test {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(2),</span>
-<span class="doccomment">//! });</span>
-<span class="doccomment">//! let c = Box::new(Test {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(3),</span>
-<span class="doccomment">//! });</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Insert the objects at the front of the list</span>
-<span class="doccomment">//! list.push_front(a);</span>
-<span class="doccomment">//! list.push_front(b);</span>
-<span class="doccomment">//! list.push_front(c);</span>
-<span class="doccomment">//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [3, 2, 1]);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // At this point, the objects are owned by the list, and we can modify</span>
-<span class="doccomment">//! // them through the list.</span>
-<span class="doccomment">//! list.front().get().unwrap().value.set(4);</span>
-<span class="doccomment">//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [4, 2, 1]);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Removing an object from an instrusive collection gives us back the</span>
-<span class="doccomment">//! // Box&lt;Test&gt; that we originally inserted into it.</span>
-<span class="doccomment">//! let a = list.pop_front().unwrap();</span>
-<span class="doccomment">//! assert_eq!(a.value.get(), 4);</span>
-<span class="doccomment">//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [2, 1]);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Dropping the collection will automatically free b and c by</span>
-<span class="doccomment">//! // transforming them back into Box&lt;Test&gt; and dropping them.</span>
-<span class="doccomment">//! drop(list);</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Links and adapters</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Intrusive collections track objects through links which are embedded within</span>
-<span class="doccomment">//! the objects themselves. It also allows a single object to be part of</span>
-<span class="doccomment">//! multiple intrusive collections at once by having multiple links in it.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The relationship between an object and a link inside it is described by the</span>
-<span class="doccomment">//! `Adapter` trait. Intrusive collections use an implementation of this trait</span>
-<span class="doccomment">//! to determine which link in an object should be used by the collection. In</span>
-<span class="doccomment">//! most cases you do not need to write an implementation manually: the</span>
-<span class="doccomment">//! `intrusive_adapter!` macro will automatically generate the necessary code.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! For red-black trees, the adapter must also implement the `KeyAdapter` trait</span>
-<span class="doccomment">//! which allows a key to be extracted from an object. This key is then used to</span>
-<span class="doccomment">//! keep all elements in the tree in ascending order.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//! use intrusive_collections::intrusive_adapter;</span>
-<span class="doccomment">//! use intrusive_collections::{SinglyLinkedListLink, SinglyLinkedList};</span>
-<span class="doccomment">//! use intrusive_collections::{LinkedListLink, LinkedList};</span>
-<span class="doccomment">//! use intrusive_collections::{XorLinkedList, XorLinkedListLink};</span>
-<span class="doccomment">//! use intrusive_collections::{RBTreeLink, RBTree, KeyAdapter};</span>
-<span class="doccomment">//! use std::rc::Rc;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // This struct can be inside three lists and one tree simultaneously</span>
-<span class="doccomment">//! #[derive(Default)]</span>
-<span class="doccomment">//! struct Test {</span>
-<span class="doccomment">//!     link: LinkedListLink,</span>
-<span class="doccomment">//!     link2: SinglyLinkedListLink,</span>
-<span class="doccomment">//!     link3: XorLinkedListLink,</span>
-<span class="doccomment">//!     link4: RBTreeLink,</span>
-<span class="doccomment">//!     value: i32,</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! intrusive_adapter!(MyAdapter = Rc&lt;Test&gt;: Test { link: LinkedListLink });</span>
-<span class="doccomment">//! intrusive_adapter!(MyAdapter2 = Rc&lt;Test&gt;: Test { link2: SinglyLinkedListLink });</span>
-<span class="doccomment">//! intrusive_adapter!(MyAdapter3 = Rc&lt;Test&gt;: Test { link3: XorLinkedListLink });</span>
-<span class="doccomment">//! intrusive_adapter!(MyAdapter4 = Rc&lt;Test&gt;: Test { link4: RBTreeLink });</span>
-<span class="doccomment">//! impl&lt;&#39;a&gt; KeyAdapter&lt;&#39;a&gt; for MyAdapter4 {</span>
-<span class="doccomment">//!     type Key = i32;</span>
-<span class="doccomment">//!     fn get_key(&amp;self, x: &amp;&#39;a Test) -&gt; i32 { x.value }</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! let mut a = LinkedList::new(MyAdapter::new());</span>
-<span class="doccomment">//! let mut b = SinglyLinkedList::new(MyAdapter2::new());</span>
-<span class="doccomment">//! let mut c = XorLinkedList::new(MyAdapter3::new());</span>
-<span class="doccomment">//! let mut d = RBTree::new(MyAdapter4::new());</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! let test = Rc::new(Test::default());</span>
-<span class="doccomment">//! a.push_front(test.clone());</span>
-<span class="doccomment">//! b.push_front(test.clone());</span>
-<span class="doccomment">//! c.push_front(test.clone());</span>
-<span class="doccomment">//! d.insert(test);</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Cursors</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Intrusive collections are manipulated using cursors. A cursor is similar to</span>
-<span class="doccomment">//! an iterator, except that it can freely seek back-and-forth, and can safely</span>
-<span class="doccomment">//! mutate the list during iteration. This is similar to how a C++ iterator</span>
-<span class="doccomment">//! works.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! A cursor views an intrusive collection as a circular list, with a special</span>
-<span class="doccomment">//! null object between the last and first elements of the collection. A cursor</span>
-<span class="doccomment">//! will either point to a valid object in the collection or to this special</span>
-<span class="doccomment">//! null object.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Cursors come in two forms: `Cursor` and `CursorMut`. A `Cursor` gives a</span>
-<span class="doccomment">//! read-only view of a collection, but you are allowed to use multiple `Cursor`</span>
-<span class="doccomment">//! objects simultaneously on the same collection. On the other hand,</span>
-<span class="doccomment">//! `CursorMut` can be used to mutate the collection, but you may only use one</span>
-<span class="doccomment">//! of them at a time.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Cursors are a very powerful abstraction since they allow a collection to be</span>
-<span class="doccomment">//! mutated safely while it is being iterated on. For example, here is a</span>
-<span class="doccomment">//! function which removes all values within a given range from a `RBTree`:</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//! use intrusive_collections::intrusive_adapter;</span>
-<span class="doccomment">//! use intrusive_collections::{RBTreeLink, RBTree, KeyAdapter, Bound};</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! struct Element {</span>
-<span class="doccomment">//!     link: RBTreeLink,</span>
-<span class="doccomment">//!     value: i32,</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! intrusive_adapter!(ElementAdapter = Box&lt;Element&gt;: Element { link: RBTreeLink });</span>
-<span class="doccomment">//! impl&lt;&#39;a&gt; KeyAdapter&lt;&#39;a&gt; for ElementAdapter {</span>
-<span class="doccomment">//!     type Key = i32;</span>
-<span class="doccomment">//!     fn get_key(&amp;self, e: &amp;&#39;a Element) -&gt; i32 { e.value }</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! fn remove_range(tree: &amp;mut RBTree&lt;ElementAdapter&gt;, min: i32, max: i32) {</span>
-<span class="doccomment">//!     // Find the first element which is greater than or equal to min</span>
-<span class="doccomment">//!     let mut cursor = tree.lower_bound_mut(Bound::Included(&amp;min));</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//!     // Iterate over all elements in the range [min, max]</span>
-<span class="doccomment">//!     while cursor.get().map_or(false, |e| e.value &lt;= max) {</span>
-<span class="doccomment">//!         // CursorMut::remove will return a Some(&lt;Box&lt;Element&gt;), which we</span>
-<span class="doccomment">//!         // simply drop here. This will also advance the cursor to the next</span>
-<span class="doccomment">//!         // element.</span>
-<span class="doccomment">//!         cursor.remove();</span>
-<span class="doccomment">//!     }</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Scoped collections</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! Instead of taking ownership of objects inserted into them, intrusive</span>
-<span class="doccomment">//! collections can also work with borrowed values. This works by using</span>
-<span class="doccomment">//! lifetimes and the borrow checker to ensure that any objects inserted into an</span>
-<span class="doccomment">//! intrusive collection will outlive the collection itself.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//! use intrusive_collections::intrusive_adapter;</span>
-<span class="doccomment">//! use intrusive_collections::{LinkedListLink, LinkedList};</span>
-<span class="doccomment">//! use typed_arena::Arena;</span>
-<span class="doccomment">//! use std::cell::Cell;</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! struct Value {</span>
-<span class="doccomment">//!     link: LinkedListLink,</span>
-<span class="doccomment">//!     value: Cell&lt;i32&gt;,</span>
-<span class="doccomment">//! }</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Note that we use a plain reference as the pointer type for the collection.</span>
-<span class="doccomment">//! intrusive_adapter!(ValueAdapter&lt;&#39;a&gt; = &amp;&#39;a Value: Value { link: LinkedListLink });</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Create an arena and a list. Note that since stack objects are dropped in</span>
-<span class="doccomment">//! // reverse order, the Arena must be created before the LinkedList. This</span>
-<span class="doccomment">//! // ensures that the list is dropped before the values are freed by the</span>
-<span class="doccomment">//! // arena. This is enforced by the Rust lifetime system.</span>
-<span class="doccomment">//! let arena = Arena::new();</span>
-<span class="doccomment">//! let mut list = LinkedList::new(ValueAdapter::new());</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // We can now insert values allocated from the arena into the linked list</span>
-<span class="doccomment">//! list.push_back(arena.alloc(Value {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(1),</span>
-<span class="doccomment">//! }));</span>
-<span class="doccomment">//! list.push_back(arena.alloc(Value {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(2),</span>
-<span class="doccomment">//! }));</span>
-<span class="doccomment">//! list.push_back(arena.alloc(Value {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(3),</span>
-<span class="doccomment">//! }));</span>
-<span class="doccomment">//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [1, 2, 3]);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // We can also insert stack allocated values into an intrusive list.</span>
-<span class="doccomment">//! // Again, the values must outlive the LinkedList.</span>
-<span class="doccomment">//! let a = Value {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(4),</span>
-<span class="doccomment">//! };</span>
-<span class="doccomment">//! let b = Value {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(5),</span>
-<span class="doccomment">//! };</span>
-<span class="doccomment">//! let c = Value {</span>
-<span class="doccomment">//!     link: LinkedListLink::new(),</span>
-<span class="doccomment">//!     value: Cell::new(6),</span>
-<span class="doccomment">//! };</span>
-<span class="doccomment">//! let mut list2 = LinkedList::new(ValueAdapter::new());</span>
-<span class="doccomment">//! list2.push_back(&amp;a);</span>
-<span class="doccomment">//! list2.push_back(&amp;b);</span>
-<span class="doccomment">//! list2.push_back(&amp;c);</span>
-<span class="doccomment">//! assert_eq!(list2.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [4, 5, 6]);</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! // Since these are shared references, any changes in the values are reflected in</span>
-<span class="doccomment">//! // the list.</span>
-<span class="doccomment">//! a.value.set(7);</span>
-<span class="doccomment">//! assert_eq!(list2.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [7, 5, 6]);</span>
-<span class="doccomment">//! ```</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! # Safety</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! While it is possible to use intrusive collections without any unsafe code,</span>
-<span class="doccomment">//! this crate also exposes a few unsafe features.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The `cursor_from_ptr` and `cursor_mut_from_ptr` allow you to create a</span>
-<span class="doccomment">//! cursor pointing to a specific element in the collection from a pointer to</span>
-<span class="doccomment">//! that element. This is unsafe because it assumes that the objected pointed to</span>
-<span class="doccomment">//! is currently inserted in the collection.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The `UnsafeRef` type acts like `Rc`, except without the reference count.</span>
-<span class="doccomment">//! Instead, you are responsible for keeping track of the number of active</span>
-<span class="doccomment">//! references to an object and for freeing it once the last reference is</span>
-<span class="doccomment">//! dropped. The advantage of `UnsafeRef` over `Rc` is that it reduces the size</span>
-<span class="doccomment">//! of the allocation by two `usize` and avoids the overhead of maintaining</span>
-<span class="doccomment">//! reference counts.</span>
+</span><span class="doccomment">//! Intrusive collections for Rust.
+//!
+//! This library provides a set of high-performance intrusive collections which
+//! can offer better performance and more flexibility than standard collections.
+//!
+//! The main difference between an intrusive collection and a normal one is that
+//! while normal collections allocate memory behind your back to keep track of a
+//! set of *values*, intrusive collections never allocate memory themselves and
+//! instead keep track of a set of *objects*. Such collections are called
+//! intrusive because they requires explicit support in objects to allow them to
+//! be inserted into a collection.
+//!
+//! # Example
+//!
+//! ```
+//! use intrusive_collections::intrusive_adapter;
+//! use intrusive_collections::{LinkedList, LinkedListLink};
+//! use std::cell::Cell;
+//!
+//! // A simple struct containing an instrusive link and a value
+//! struct Test {
+//!     link: LinkedListLink,
+//!     value: Cell&lt;i32&gt;,
+//! }
+//!
+//! // The adapter describes how an object can be inserted into an intrusive
+//! // collection. This is automatically generated using a macro.
+//! intrusive_adapter!(TestAdapter = Box&lt;Test&gt;: Test { link: LinkedListLink });
+//!
+//! // Create a list and some objects
+//! let mut list = LinkedList::new(TestAdapter::new());
+//! let a = Box::new(Test {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(1),
+//! });
+//! let b = Box::new(Test {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(2),
+//! });
+//! let c = Box::new(Test {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(3),
+//! });
+//!
+//! // Insert the objects at the front of the list
+//! list.push_front(a);
+//! list.push_front(b);
+//! list.push_front(c);
+//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [3, 2, 1]);
+//!
+//! // At this point, the objects are owned by the list, and we can modify
+//! // them through the list.
+//! list.front().get().unwrap().value.set(4);
+//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [4, 2, 1]);
+//!
+//! // Removing an object from an instrusive collection gives us back the
+//! // Box&lt;Test&gt; that we originally inserted into it.
+//! let a = list.pop_front().unwrap();
+//! assert_eq!(a.value.get(), 4);
+//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [2, 1]);
+//!
+//! // Dropping the collection will automatically free b and c by
+//! // transforming them back into Box&lt;Test&gt; and dropping them.
+//! drop(list);
+//! ```
+//!
+//! # Links and adapters
+//!
+//! Intrusive collections track objects through links which are embedded within
+//! the objects themselves. It also allows a single object to be part of
+//! multiple intrusive collections at once by having multiple links in it.
+//!
+//! The relationship between an object and a link inside it is described by the
+//! `Adapter` trait. Intrusive collections use an implementation of this trait
+//! to determine which link in an object should be used by the collection. In
+//! most cases you do not need to write an implementation manually: the
+//! `intrusive_adapter!` macro will automatically generate the necessary code.
+//!
+//! For red-black trees, the adapter must also implement the `KeyAdapter` trait
+//! which allows a key to be extracted from an object. This key is then used to
+//! keep all elements in the tree in ascending order.
+//!
+//! ```
+//! use intrusive_collections::intrusive_adapter;
+//! use intrusive_collections::{SinglyLinkedListLink, SinglyLinkedList};
+//! use intrusive_collections::{LinkedListLink, LinkedList};
+//! use intrusive_collections::{XorLinkedList, XorLinkedListLink};
+//! use intrusive_collections::{RBTreeLink, RBTree, KeyAdapter};
+//! use std::rc::Rc;
+//!
+//! // This struct can be inside three lists and one tree simultaneously
+//! #[derive(Default)]
+//! struct Test {
+//!     link: LinkedListLink,
+//!     link2: SinglyLinkedListLink,
+//!     link3: XorLinkedListLink,
+//!     link4: RBTreeLink,
+//!     value: i32,
+//! }
+//!
+//! intrusive_adapter!(MyAdapter = Rc&lt;Test&gt;: Test { link: LinkedListLink });
+//! intrusive_adapter!(MyAdapter2 = Rc&lt;Test&gt;: Test { link2: SinglyLinkedListLink });
+//! intrusive_adapter!(MyAdapter3 = Rc&lt;Test&gt;: Test { link3: XorLinkedListLink });
+//! intrusive_adapter!(MyAdapter4 = Rc&lt;Test&gt;: Test { link4: RBTreeLink });
+//! impl&lt;&#39;a&gt; KeyAdapter&lt;&#39;a&gt; for MyAdapter4 {
+//!     type Key = i32;
+//!     fn get_key(&amp;self, x: &amp;&#39;a Test) -&gt; i32 { x.value }
+//! }
+//!
+//! let mut a = LinkedList::new(MyAdapter::new());
+//! let mut b = SinglyLinkedList::new(MyAdapter2::new());
+//! let mut c = XorLinkedList::new(MyAdapter3::new());
+//! let mut d = RBTree::new(MyAdapter4::new());
+//!
+//! let test = Rc::new(Test::default());
+//! a.push_front(test.clone());
+//! b.push_front(test.clone());
+//! c.push_front(test.clone());
+//! d.insert(test);
+//! ```
+//!
+//! # Cursors
+//!
+//! Intrusive collections are manipulated using cursors. A cursor is similar to
+//! an iterator, except that it can freely seek back-and-forth, and can safely
+//! mutate the list during iteration. This is similar to how a C++ iterator
+//! works.
+//!
+//! A cursor views an intrusive collection as a circular list, with a special
+//! null object between the last and first elements of the collection. A cursor
+//! will either point to a valid object in the collection or to this special
+//! null object.
+//!
+//! Cursors come in two forms: `Cursor` and `CursorMut`. A `Cursor` gives a
+//! read-only view of a collection, but you are allowed to use multiple `Cursor`
+//! objects simultaneously on the same collection. On the other hand,
+//! `CursorMut` can be used to mutate the collection, but you may only use one
+//! of them at a time.
+//!
+//! Cursors are a very powerful abstraction since they allow a collection to be
+//! mutated safely while it is being iterated on. For example, here is a
+//! function which removes all values within a given range from a `RBTree`:
+//!
+//! ```
+//! use intrusive_collections::intrusive_adapter;
+//! use intrusive_collections::{RBTreeLink, RBTree, KeyAdapter, Bound};
+//!
+//! struct Element {
+//!     link: RBTreeLink,
+//!     value: i32,
+//! }
+//!
+//! intrusive_adapter!(ElementAdapter = Box&lt;Element&gt;: Element { link: RBTreeLink });
+//! impl&lt;&#39;a&gt; KeyAdapter&lt;&#39;a&gt; for ElementAdapter {
+//!     type Key = i32;
+//!     fn get_key(&amp;self, e: &amp;&#39;a Element) -&gt; i32 { e.value }
+//! }
+//!
+//! fn remove_range(tree: &amp;mut RBTree&lt;ElementAdapter&gt;, min: i32, max: i32) {
+//!     // Find the first element which is greater than or equal to min
+//!     let mut cursor = tree.lower_bound_mut(Bound::Included(&amp;min));
+//!
+//!     // Iterate over all elements in the range [min, max]
+//!     while cursor.get().map_or(false, |e| e.value &lt;= max) {
+//!         // CursorMut::remove will return a Some(&lt;Box&lt;Element&gt;), which we
+//!         // simply drop here. This will also advance the cursor to the next
+//!         // element.
+//!         cursor.remove();
+//!     }
+//! }
+//! ```
+//!
+//! # Scoped collections
+//!
+//! Instead of taking ownership of objects inserted into them, intrusive
+//! collections can also work with borrowed values. This works by using
+//! lifetimes and the borrow checker to ensure that any objects inserted into an
+//! intrusive collection will outlive the collection itself.
+//!
+//! ```
+//! use intrusive_collections::intrusive_adapter;
+//! use intrusive_collections::{LinkedListLink, LinkedList};
+//! use typed_arena::Arena;
+//! use std::cell::Cell;
+//!
+//! struct Value {
+//!     link: LinkedListLink,
+//!     value: Cell&lt;i32&gt;,
+//! }
+//!
+//! // Note that we use a plain reference as the pointer type for the collection.
+//! intrusive_adapter!(ValueAdapter&lt;&#39;a&gt; = &amp;&#39;a Value: Value { link: LinkedListLink });
+//!
+//! // Create an arena and a list. Note that since stack objects are dropped in
+//! // reverse order, the Arena must be created before the LinkedList. This
+//! // ensures that the list is dropped before the values are freed by the
+//! // arena. This is enforced by the Rust lifetime system.
+//! let arena = Arena::new();
+//! let mut list = LinkedList::new(ValueAdapter::new());
+//!
+//! // We can now insert values allocated from the arena into the linked list
+//! list.push_back(arena.alloc(Value {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(1),
+//! }));
+//! list.push_back(arena.alloc(Value {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(2),
+//! }));
+//! list.push_back(arena.alloc(Value {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(3),
+//! }));
+//! assert_eq!(list.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [1, 2, 3]);
+//!
+//! // We can also insert stack allocated values into an intrusive list.
+//! // Again, the values must outlive the LinkedList.
+//! let a = Value {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(4),
+//! };
+//! let b = Value {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(5),
+//! };
+//! let c = Value {
+//!     link: LinkedListLink::new(),
+//!     value: Cell::new(6),
+//! };
+//! let mut list2 = LinkedList::new(ValueAdapter::new());
+//! list2.push_back(&amp;a);
+//! list2.push_back(&amp;b);
+//! list2.push_back(&amp;c);
+//! assert_eq!(list2.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [4, 5, 6]);
+//!
+//! // Since these are shared references, any changes in the values are reflected in
+//! // the list.
+//! a.value.set(7);
+//! assert_eq!(list2.iter().map(|x| x.value.get()).collect::&lt;Vec&lt;_&gt;&gt;(), [7, 5, 6]);
+//! ```
+//!
+//! # Safety
+//!
+//! While it is possible to use intrusive collections without any unsafe code,
+//! this crate also exposes a few unsafe features.
+//!
+//! The `cursor_from_ptr` and `cursor_mut_from_ptr` allow you to create a
+//! cursor pointing to a specific element in the collection from a pointer to
+//! that element. This is unsafe because it assumes that the objected pointed to
+//! is currently inserted in the collection.
+//!
+//! The `UnsafeRef` type acts like `Rc`, except without the reference count.
+//! Instead, you are responsible for keeping track of the number of active
+//! references to an object and for freeing it once the last reference is
+//! dropped. The advantage of `UnsafeRef` over `Rc` is that it reduces the size
+//! of the allocation by two `usize` and avoids the overhead of maintaining
+//! reference counts.
 
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">missing_docs</span>)]</span>
-<span class="attribute">#![<span class="ident">warn</span>(<span class="ident">rust_2018_idioms</span>)]</span>
-<span class="attribute">#![<span class="ident">no_std</span>]</span>
-<span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;nightly&quot;</span>, <span class="ident">feature</span>(<span class="ident">const_fn_trait_bound</span>))]</span>
-<span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::declare_interior_mutable_const</span>, <span class="ident">clippy::collapsible_if</span>)]</span>
+</span><span class="attribute">#![warn(missing_docs)]</span>
+<span class="attribute">#![warn(rust_2018_idioms)]</span>
+<span class="attribute">#![no_std]</span>
+<span class="attribute">#![cfg_attr(feature = <span class="string">&quot;nightly&quot;</span>, feature(const_fn_trait_bound))]</span>
+<span class="attribute">#![allow(clippy::declare_interior_mutable_const, clippy::collapsible_if)]</span>
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">alloc</span>;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
+<span class="kw">extern crate </span>alloc;
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">test</span>)]</span>
-<span class="kw">extern</span> <span class="kw">crate</span> <span class="ident">std</span>;
+<span class="attribute">#[cfg(test)]</span>
+<span class="kw">extern crate </span>std;
 
-<span class="kw">mod</span> <span class="ident">unsafe_ref</span>;
-<span class="attribute">#[<span class="ident">macro_use</span>]</span>
-<span class="kw">mod</span> <span class="ident">adapter</span>;
-<span class="kw">mod</span> <span class="ident">key_adapter</span>;
-<span class="kw">mod</span> <span class="ident">link_ops</span>;
-<span class="kw">mod</span> <span class="ident">pointer_ops</span>;
-<span class="kw">mod</span> <span class="ident">unchecked_option</span>;
+<span class="kw">mod </span>unsafe_ref;
+<span class="attribute">#[macro_use]</span>
+<span class="kw">mod </span>adapter;
+<span class="kw">mod </span>key_adapter;
+<span class="kw">mod </span>link_ops;
+<span class="kw">mod </span>pointer_ops;
+<span class="kw">mod </span>unchecked_option;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">linked_list</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">rbtree</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">singly_linked_list</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">xor_linked_list</span>;
+<span class="kw">pub mod </span>linked_list;
+<span class="kw">pub mod </span>rbtree;
+<span class="kw">pub mod </span>singly_linked_list;
+<span class="kw">pub mod </span>xor_linked_list;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::adapter::Adapter</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::key_adapter::KeyAdapter</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::link_ops</span>::{<span class="ident">DefaultLinkOps</span>, <span class="ident">LinkOps</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::linked_list::Link</span> <span class="kw">as</span> <span class="ident">LinkedListLink</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::linked_list::LinkedList</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::pointer_ops</span>::{<span class="ident">DefaultPointerOps</span>, <span class="ident">PointerOps</span>};
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rbtree::Link</span> <span class="kw">as</span> <span class="ident">RBTreeLink</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::rbtree::RBTree</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::singly_linked_list::Link</span> <span class="kw">as</span> <span class="ident">SinglyLinkedListLink</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::singly_linked_list::SinglyLinkedList</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::unsafe_ref::UnsafeRef</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::xor_linked_list::Link</span> <span class="kw">as</span> <span class="ident">XorLinkedListLink</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::xor_linked_list::XorLinkedList</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">memoffset::offset_of</span>;
+<span class="kw">pub use </span><span class="kw">crate</span>::adapter::Adapter;
+<span class="kw">pub use </span><span class="kw">crate</span>::key_adapter::KeyAdapter;
+<span class="kw">pub use </span><span class="kw">crate</span>::link_ops::{DefaultLinkOps, LinkOps};
+<span class="kw">pub use </span><span class="kw">crate</span>::linked_list::Link <span class="kw">as </span>LinkedListLink;
+<span class="kw">pub use </span><span class="kw">crate</span>::linked_list::LinkedList;
+<span class="kw">pub use </span><span class="kw">crate</span>::pointer_ops::{DefaultPointerOps, PointerOps};
+<span class="kw">pub use </span><span class="kw">crate</span>::rbtree::Link <span class="kw">as </span>RBTreeLink;
+<span class="kw">pub use </span><span class="kw">crate</span>::rbtree::RBTree;
+<span class="kw">pub use </span><span class="kw">crate</span>::singly_linked_list::Link <span class="kw">as </span>SinglyLinkedListLink;
+<span class="kw">pub use </span><span class="kw">crate</span>::singly_linked_list::SinglyLinkedList;
+<span class="kw">pub use </span><span class="kw">crate</span>::unsafe_ref::UnsafeRef;
+<span class="kw">pub use </span><span class="kw">crate</span>::xor_linked_list::Link <span class="kw">as </span>XorLinkedListLink;
+<span class="kw">pub use </span><span class="kw">crate</span>::xor_linked_list::XorLinkedList;
+<span class="kw">pub use </span>memoffset::offset_of;
 
-<span class="doccomment">/// An endpoint of a range of keys.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">Debug</span>, <span class="ident">Hash</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Bound</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// An inclusive bound.</span>
-    <span class="ident">Included</span>(<span class="ident">T</span>),
-    <span class="doccomment">/// An exclusive bound.</span>
-    <span class="ident">Excluded</span>(<span class="ident">T</span>),
-    <span class="doccomment">/// An infinite endpoint. Indicates that there is no bound in this direction.</span>
-    <span class="ident">Unbounded</span>,
+<span class="doccomment">/// An endpoint of a range of keys.
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]</span>
+<span class="kw">pub enum </span>Bound&lt;T&gt; {
+    <span class="doccomment">/// An inclusive bound.
+    </span>Included(T),
+    <span class="doccomment">/// An exclusive bound.
+    </span>Excluded(T),
+    <span class="doccomment">/// An infinite endpoint. Indicates that there is no bound in this direction.
+    </span>Unbounded,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

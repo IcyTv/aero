@@ -327,300 +327,300 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! System Calls are used to call a kernel service from userland.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! | %rax   | Name                    |</span>
-<span class="doccomment">//! |--------|-------------------------|</span>
-<span class="doccomment">//! | 0      | read                    |</span>
-<span class="doccomment">//! | 1      | write                   |</span>
-<span class="doccomment">//! | 2      | open                    |</span>
-<span class="doccomment">//! | 3      | close                   |</span>
-<span class="doccomment">//! | 4      | shutdown                |</span>
-<span class="doccomment">//! | 5      | exit                    |</span>
-<span class="doccomment">//! | 6      | fork                    |</span>
-<span class="doccomment">//! | 7      | reboot                  |</span>
-<span class="doccomment">//! | 8      | mmap                    |</span>
-<span class="doccomment">//! | 9      | munmap                  |</span>
-<span class="doccomment">//! | 10     | arch_prctl              |</span>
-<span class="doccomment">//! | 11     | get_dents               |</span>
-<span class="doccomment">//! | 12     | get_cwd                 |</span>
-<span class="doccomment">//! | 13     | chdir                   |</span>
-<span class="doccomment">//! | 14     | mkdir                   |</span>
-<span class="doccomment">//! | 15     | mkdirat                 |</span>
-<span class="doccomment">//! | 16     | rmdir                   |</span>
-<span class="doccomment">//! | 17     | exec                    |</span>
-<span class="doccomment">//! | 18     | log                     |</span>
-<span class="doccomment">//! | 19     | uname                   |</span>
-<span class="doccomment">//! | 20     | waitpid                 |</span>
-<span class="doccomment">//! | 21     | ioctl                   |</span>
-<span class="doccomment">//! | 22     | getpid                  |</span>
-<span class="doccomment">//! | 23     | socket                  |</span>
-<span class="doccomment">//! | 24     | connect                 |</span>
-<span class="doccomment">//! | 25     | bind                    |</span>
-<span class="doccomment">//! | 26     | listen                  |</span>
-<span class="doccomment">//! | 27     | accept                  |</span>
-<span class="doccomment">//! | 28     | seek                    |</span>
-<span class="doccomment">//! | 29     | gettid                  |</span>
-<span class="doccomment">//! | 30     | gettime                 |</span>
-<span class="doccomment">//! | 31     | sleep                   |</span>
-<span class="doccomment">//! | 32     | access                  |</span>
-<span class="doccomment">//! | 33     | pipe                    |</span>
-<span class="doccomment">//! | 34     | unlink                  |</span>
-<span class="doccomment">//! | 35     | gethostname             |</span>
-<span class="doccomment">//! | 36     | sethostname             |</span>
-<span class="doccomment">//! | 37     | info                    |</span>
-<span class="doccomment">//! | 38     | clone                   |</span>
-<span class="doccomment">//! | 39     | sigreturn               |</span>
-<span class="doccomment">//! | 40     | sigaction               |</span>
-<span class="doccomment">//! | 41     | sigprocmask             |</span>
-<span class="doccomment">//! | 42     | dup                     |</span>
-<span class="doccomment">//! | 43     | fcntl                   |</span>
-<span class="doccomment">//! | 44     | dup2                    |</span>
-<span class="doccomment">//! | 45     | ipc_send                |</span>
-<span class="doccomment">//! | 46     | ipc_recv                |</span>
-<span class="doccomment">//! | 47     | ipc_discover_root       |</span>
-<span class="doccomment">//! | 48     | ipc_become_root         |</span>
-<span class="doccomment">//! | 49     | stat                    |</span>
-<span class="doccomment">//! | 50     | fstat                   |</span>
-<span class="doccomment">//! | 51     | read_link               |</span>
+</span><span class="doccomment">//! System Calls are used to call a kernel service from userland.
+//!
+//! | %rax   | Name                    |
+//! |--------|-------------------------|
+//! | 0      | read                    |
+//! | 1      | write                   |
+//! | 2      | open                    |
+//! | 3      | close                   |
+//! | 4      | shutdown                |
+//! | 5      | exit                    |
+//! | 6      | fork                    |
+//! | 7      | reboot                  |
+//! | 8      | mmap                    |
+//! | 9      | munmap                  |
+//! | 10     | arch_prctl              |
+//! | 11     | get_dents               |
+//! | 12     | get_cwd                 |
+//! | 13     | chdir                   |
+//! | 14     | mkdir                   |
+//! | 15     | mkdirat                 |
+//! | 16     | rmdir                   |
+//! | 17     | exec                    |
+//! | 18     | log                     |
+//! | 19     | uname                   |
+//! | 20     | waitpid                 |
+//! | 21     | ioctl                   |
+//! | 22     | getpid                  |
+//! | 23     | socket                  |
+//! | 24     | connect                 |
+//! | 25     | bind                    |
+//! | 26     | listen                  |
+//! | 27     | accept                  |
+//! | 28     | seek                    |
+//! | 29     | gettid                  |
+//! | 30     | gettime                 |
+//! | 31     | sleep                   |
+//! | 32     | access                  |
+//! | 33     | pipe                    |
+//! | 34     | unlink                  |
+//! | 35     | gethostname             |
+//! | 36     | sethostname             |
+//! | 37     | info                    |
+//! | 38     | clone                   |
+//! | 39     | sigreturn               |
+//! | 40     | sigaction               |
+//! | 41     | sigprocmask             |
+//! | 42     | dup                     |
+//! | 43     | fcntl                   |
+//! | 44     | dup2                    |
+//! | 45     | ipc_send                |
+//! | 46     | ipc_recv                |
+//! | 47     | ipc_discover_root       |
+//! | 48     | ipc_become_root         |
+//! | 49     | stat                    |
+//! | 50     | fstat                   |
+//! | 51     | read_link               |
 
-<span class="kw">use</span> <span class="ident">core::mem::MaybeUninit</span>;
+</span><span class="kw">use </span>core::mem::MaybeUninit;
 
-<span class="kw">use</span> <span class="ident">aero_syscall::prelude</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span>aero_syscall::prelude::<span class="kw-2">*</span>;
 
-<span class="kw">mod</span> <span class="ident">fs</span>;
-<span class="kw">mod</span> <span class="ident">futex</span>;
-<span class="kw">mod</span> <span class="ident">ipc</span>;
-<span class="kw">mod</span> <span class="ident">net</span>;
-<span class="kw">mod</span> <span class="ident">process</span>;
-<span class="kw">mod</span> <span class="ident">time</span>;
+<span class="kw">mod </span>fs;
+<span class="kw">mod </span>futex;
+<span class="kw">mod </span>ipc;
+<span class="kw">mod </span>net;
+<span class="kw">mod </span>process;
+<span class="kw">mod </span>time;
 
-<span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+<span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>alloc::vec::Vec;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">fs</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">ipc</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">process</span>::<span class="kw-2">*</span>;
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">time</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>fs::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>ipc::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>process::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>time::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::StackHelper</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::StackHelper;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ExecArgs</span> {
-    <span class="kw">pub</span> <span class="ident">inner</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span><span class="op">&gt;</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">pub struct </span>ExecArgs {
+    <span class="kw">pub </span>inner: Vec&lt;Box&lt;[u8]&gt;&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">ExecArgs</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">arg</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) {
-        <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">push</span>(<span class="ident">arg</span>.<span class="ident">into</span>());
+<span class="kw">impl </span>ExecArgs {
+    <span class="kw">pub fn </span>push(<span class="kw-2">&amp;mut </span><span class="self">self</span>, arg: <span class="kw-2">&amp;</span>[u8]) {
+        <span class="self">self</span>.inner.push(arg.into());
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">extend</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">args</span>: <span class="kw-2">&amp;</span>[<span class="ident">Box</span><span class="op">&lt;</span>[<span class="ident">u8</span>]<span class="op">&gt;</span>]) {
-        <span class="kw">for</span> <span class="ident">arg</span> <span class="kw">in</span> <span class="ident">args</span> {
-            <span class="self">self</span>.<span class="ident">push</span>(<span class="ident">arg</span>);
+    <span class="kw">pub fn </span>extend(<span class="kw-2">&amp;mut </span><span class="self">self</span>, args: <span class="kw-2">&amp;</span>[Box&lt;[u8]&gt;]) {
+        <span class="kw">for </span>arg <span class="kw">in </span>args {
+            <span class="self">self</span>.push(arg);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">push_into_stack</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">stack</span>: <span class="kw-2">&amp;mut</span> <span class="ident">StackHelper</span>) -&gt; <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">tops</span> <span class="op">=</span> <span class="ident">Vec::with_capacity</span>(<span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">len</span>());
+    <span class="kw">pub fn </span>push_into_stack(<span class="kw-2">&amp;</span><span class="self">self</span>, stack: <span class="kw-2">&amp;mut </span>StackHelper) -&gt; Vec&lt;u64&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>tops = Vec::with_capacity(<span class="self">self</span>.inner.len());
 
-        <span class="kw">for</span> <span class="ident">slice</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">inner</span>.<span class="ident">iter</span>() {
-            <span class="kw">unsafe</span> {
-                <span class="ident">stack</span>.<span class="ident">write</span>(<span class="number">0u8</span>);
-                <span class="ident">stack</span>.<span class="ident">write_bytes</span>(<span class="ident">slice</span>);
+        <span class="kw">for </span>slice <span class="kw">in </span><span class="self">self</span>.inner.iter() {
+            <span class="kw">unsafe </span>{
+                stack.write(<span class="number">0u8</span>);
+                stack.write_bytes(slice);
             }
 
-            <span class="ident">tops</span>.<span class="ident">push</span>(<span class="ident">stack</span>.<span class="ident">top</span>());
+            tops.push(stack.top());
         }
 
-        <span class="ident">tops</span>
+        tops
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec_args_from_slice</span>(<span class="ident">args</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="ident">ExecArgs</span> {
-    <span class="comment">// NOTE: Arguments must be moved into kernel space before we utilize them.</span>
-    <span class="comment">//</span>
-    <span class="comment">// struct SliceReference {</span>
-    <span class="comment">//    ptr: *const usize,</span>
-    <span class="comment">//    len: usize,</span>
-    <span class="comment">// }</span>
-    <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="ident">args</span> <span class="kw">as</span> <span class="kw-2">*const</span> [<span class="ident">usize</span>; <span class="number">2</span>];
-    <span class="kw">let</span> <span class="ident">slice</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">core::slice::from_raw_parts</span>(<span class="ident">data</span>, <span class="ident">size</span>) };
+<span class="kw">pub fn </span>exec_args_from_slice(args: usize, size: usize) -&gt; ExecArgs {
+    <span class="comment">// NOTE: Arguments must be moved into kernel space before we utilize them.
+    //
+    // struct SliceReference {
+    //    ptr: *const usize,
+    //    len: usize,
+    // }
+    </span><span class="kw">let </span>data = args <span class="kw">as </span><span class="kw-2">*const </span>[usize; <span class="number">2</span>];
+    <span class="kw">let </span>slice = <span class="kw">unsafe </span>{ core::slice::from_raw_parts(data, size) };
 
-    <span class="comment">// todo(andy): use `with_capacity` to avoid reallocation.</span>
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+    <span class="comment">// todo(andy): use `with_capacity` to avoid reallocation.
+    </span><span class="kw">let </span><span class="kw-2">mut </span>result = Vec::new();
 
-    <span class="kw">for</span> <span class="ident">inner</span> <span class="kw">in</span> <span class="ident">slice</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">boxed</span> <span class="op">=</span> <span class="ident">Box::new_uninit_slice</span>(<span class="ident">inner</span>[<span class="number">1</span>]);
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">inner</span>[<span class="number">0</span>] <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">MaybeUninit</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>;
+    <span class="kw">for </span>inner <span class="kw">in </span>slice {
+        <span class="kw">let </span><span class="kw-2">mut </span>boxed = Box::new_uninit_slice(inner[<span class="number">1</span>]);
+        <span class="kw">let </span>ptr = inner[<span class="number">0</span>] <span class="kw">as </span><span class="kw-2">*const </span>MaybeUninit&lt;u8&gt;;
 
-        <span class="kw">unsafe</span> {
-            <span class="ident">boxed</span>.<span class="ident">as_mut_ptr</span>().<span class="ident">copy_from</span>(<span class="ident">ptr</span>, <span class="ident">inner</span>[<span class="number">1</span>]);
+        <span class="kw">unsafe </span>{
+            boxed.as_mut_ptr().copy_from(ptr, inner[<span class="number">1</span>]);
 
-            <span class="kw">let</span> <span class="ident">inner_slice</span> <span class="op">=</span> <span class="ident">boxed</span>.<span class="ident">assume_init</span>();
-            <span class="ident">result</span>.<span class="ident">push</span>(<span class="ident">inner_slice</span>);
+            <span class="kw">let </span>inner_slice = boxed.assume_init();
+            result.push(inner_slice);
         }
     }
 
-    <span class="ident">ExecArgs</span> { <span class="ident">inner</span>: <span class="ident">result</span> }
+    ExecArgs { inner: result }
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;syslog&quot;</span>)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">SysLog</span> {
-    <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>,
-    <span class="doccomment">/// The result of the syscall.</span>
-    <span class="ident">result</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The formatted argument values.</span>
-    <span class="ident">args</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>,
+<span class="attribute">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>SysLog {
+    name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    <span class="doccomment">/// The result of the syscall.
+    </span>result: <span class="prelude-ty">Option</span>&lt;<span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt;&gt;,
+    <span class="doccomment">/// The formatted argument values.
+    </span>args: Vec&lt;String&gt;,
 }
 
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;syslog&quot;</span>)]</span>
-<span class="kw">impl</span> <span class="ident">SysLog</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">name</span>,
-            <span class="ident">result</span>: <span class="prelude-val">None</span>,
-            <span class="ident">args</span>: <span class="ident">Vec::new</span>(),
+<span class="attribute">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]</span>
+<span class="kw">impl </span>SysLog {
+    <span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            name,
+            result: <span class="prelude-val">None</span>,
+            args: Vec::new(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_argument</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">core::fmt::Display</span>,
+    <span class="kw">pub fn </span>add_argument&lt;T&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: core::fmt::Display,
     {
-        <span class="self">self</span>.<span class="ident">args</span>.<span class="ident">push</span>(<span class="macro">alloc::format!</span>(<span class="string">&quot;{value}&quot;</span>));
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.args.push(<span class="macro">alloc::format!</span>(<span class="string">&quot;{value}&quot;</span>));
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_argument_dbg</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">value</span>: <span class="ident">T</span>) -&gt; <span class="self">Self</span>
-    <span class="kw">where</span>
-        <span class="ident">T</span>: <span class="ident">core::fmt::Debug</span>,
+    <span class="kw">pub fn </span>add_argument_dbg&lt;T&gt;(<span class="kw-2">mut </span><span class="self">self</span>, value: T) -&gt; <span class="self">Self
+    </span><span class="kw">where
+        </span>T: core::fmt::Debug,
     {
-        <span class="self">self</span>.<span class="ident">args</span>.<span class="ident">push</span>(<span class="macro">alloc::format!</span>(<span class="string">&quot;{value:?}&quot;</span>));
-        <span class="self">self</span>
-    }
+        <span class="self">self</span>.args.push(<span class="macro">alloc::format!</span>(<span class="string">&quot;{value:?}&quot;</span>));
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_result</span>(<span class="kw-2">mut</span> <span class="self">self</span>, <span class="ident">result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">self</span>.<span class="ident">result</span> <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">result</span>);
-        <span class="self">self</span>
-    }
+    <span class="kw">pub fn </span>set_result(<span class="kw-2">mut </span><span class="self">self</span>, result: <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">self</span>.result = <span class="prelude-val">Some</span>(result);
+        <span class="self">self
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flush</span>(<span class="self">self</span>) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">String::new</span>();
+    <span class="kw">pub fn </span>flush(<span class="self">self</span>) {
+        <span class="kw">let </span><span class="kw-2">mut </span>result = String::new();
 
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">result</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">is_ok</span>()).<span class="ident">unwrap_or_default</span>() {
-            <span class="ident">result</span>.<span class="ident">push_str</span>(<span class="string">&quot;\x1b[1;32m&quot;</span>);
-        } <span class="kw">else</span> {
-            <span class="ident">result</span>.<span class="ident">push_str</span>(<span class="string">&quot;\x1b[1;31m&quot;</span>);
+        <span class="kw">if </span><span class="self">self</span>.result.map(|e| e.is_ok()).unwrap_or_default() {
+            result.push_str(<span class="string">&quot;\x1b[1;32m&quot;</span>);
+        } <span class="kw">else </span>{
+            result.push_str(<span class="string">&quot;\x1b[1;31m&quot;</span>);
         }
 
-        <span class="ident">result</span>.<span class="ident">push_str</span>(<span class="macro">alloc::format!</span>(<span class="string">&quot;{}\x1b[0m(&quot;</span>, <span class="self">self</span>.<span class="ident">name</span>).<span class="ident">as_str</span>());
+        result.push_str(<span class="macro">alloc::format!</span>(<span class="string">&quot;{}\x1b[0m(&quot;</span>, <span class="self">self</span>.name).as_str());
 
-        <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">e</span>) <span class="kw">in</span> <span class="self">self</span>.<span class="ident">args</span>.<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-            <span class="kw">if</span> <span class="ident">i</span> <span class="op">!</span><span class="op">=</span> <span class="number">0</span> {
-                <span class="ident">result</span>.<span class="ident">push_str</span>(<span class="string">&quot;, &quot;</span>);
+        <span class="kw">for </span>(i, e) <span class="kw">in </span><span class="self">self</span>.args.iter().enumerate() {
+            <span class="kw">if </span>i != <span class="number">0 </span>{
+                result.push_str(<span class="string">&quot;, &quot;</span>);
             }
 
-            <span class="ident">result</span>.<span class="ident">push_str</span>(<span class="ident">e</span>);
+            result.push_str(e);
         }
 
-        <span class="ident">result</span>.<span class="ident">push_str</span>(<span class="macro">alloc::format!</span>(<span class="string">&quot;) = {:?}&quot;</span>, <span class="self">self</span>.<span class="ident">result</span>.<span class="ident">unwrap</span>()).<span class="ident">as_str</span>());
+        result.push_str(<span class="macro">alloc::format!</span>(<span class="string">&quot;) = {:?}&quot;</span>, <span class="self">self</span>.result.unwrap()).as_str());
         <span class="macro">log::trace!</span>(<span class="string">&quot;{result}&quot;</span>);
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">generic_do_syscall</span>(
-    <span class="ident">a</span>: <span class="ident">usize</span>,
-    <span class="ident">b</span>: <span class="ident">usize</span>,
-    <span class="ident">c</span>: <span class="ident">usize</span>,
-    <span class="ident">d</span>: <span class="ident">usize</span>,
-    <span class="ident">e</span>: <span class="ident">usize</span>,
-    <span class="ident">f</span>: <span class="ident">usize</span>,
-    <span class="ident">g</span>: <span class="ident">usize</span>,
-) -&gt; <span class="ident">usize</span> {
-    <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">a</span> {
-        <span class="ident">SYS_EXIT</span> =&gt; <span class="ident">process::exit</span>(<span class="ident">b</span>),
-        <span class="ident">SYS_SHUTDOWN</span> =&gt; <span class="ident">process::shutdown</span>(),
-        <span class="ident">SYS_FORK</span> =&gt; <span class="ident">process::fork</span>(),
-        <span class="ident">SYS_MMAP</span> =&gt; <span class="ident">process::mmap</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>, <span class="ident">g</span>),
-        <span class="ident">SYS_MUNMAP</span> =&gt; <span class="ident">process::munmap</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_EXEC</span> =&gt; <span class="ident">process::exec</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>, <span class="ident">g</span>),
-        <span class="ident">SYS_LOG</span> =&gt; <span class="ident">process::log</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_UNAME</span> =&gt; <span class="ident">process::uname</span>(<span class="ident">b</span>),
-        <span class="ident">SYS_WAITPID</span> =&gt; <span class="ident">process::waitpid</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_GETPID</span> =&gt; <span class="ident">process::getpid</span>(),
-        <span class="ident">SYS_GETTID</span> =&gt; <span class="ident">process::gettid</span>(),
-        <span class="ident">SYS_GETHOSTNAME</span> =&gt; <span class="ident">process::gethostname</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_SETHOSTNAME</span> =&gt; <span class="ident">process::sethostname</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_INFO</span> =&gt; <span class="ident">process::info</span>(<span class="ident">b</span>),
-        <span class="ident">SYS_SIGACTION</span> =&gt; <span class="ident">process::sigaction</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_SIGPROCMASK</span> =&gt; <span class="ident">process::sigprocmask</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_CLONE</span> =&gt; <span class="ident">process::clone</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_KILL</span> =&gt; <span class="ident">process::kill</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_BACKTRACE</span> =&gt; <span class="ident">process::backtrace</span>(),
+<span class="kw">pub fn </span>generic_do_syscall(
+    a: usize,
+    b: usize,
+    c: usize,
+    d: usize,
+    e: usize,
+    f: usize,
+    g: usize,
+) -&gt; usize {
+    <span class="kw">let </span>result = <span class="kw">match </span>a {
+        SYS_EXIT =&gt; process::exit(b),
+        SYS_SHUTDOWN =&gt; process::shutdown(),
+        SYS_FORK =&gt; process::fork(),
+        SYS_MMAP =&gt; process::mmap(b, c, d, e, f, g),
+        SYS_MUNMAP =&gt; process::munmap(b, c),
+        SYS_EXEC =&gt; process::exec(b, c, d, e, f, g),
+        SYS_LOG =&gt; process::log(b, c),
+        SYS_UNAME =&gt; process::uname(b),
+        SYS_WAITPID =&gt; process::waitpid(b, c, d),
+        SYS_GETPID =&gt; process::getpid(),
+        SYS_GETTID =&gt; process::gettid(),
+        SYS_GETHOSTNAME =&gt; process::gethostname(b, c),
+        SYS_SETHOSTNAME =&gt; process::sethostname(b, c),
+        SYS_INFO =&gt; process::info(b),
+        SYS_SIGACTION =&gt; process::sigaction(b, c, d, e),
+        SYS_SIGPROCMASK =&gt; process::sigprocmask(b, c, d),
+        SYS_CLONE =&gt; process::clone(b, c),
+        SYS_KILL =&gt; process::kill(b, c),
+        SYS_BACKTRACE =&gt; process::backtrace(),
 
-        <span class="ident">SYS_READ</span> =&gt; <span class="ident">fs::read</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_OPEN</span> =&gt; <span class="ident">fs::open</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_CLOSE</span> =&gt; <span class="ident">fs::close</span>(<span class="ident">b</span>),
-        <span class="ident">SYS_WRITE</span> =&gt; <span class="ident">fs::write</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_GETDENTS</span> =&gt; <span class="ident">fs::getdents</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_GETCWD</span> =&gt; <span class="ident">fs::getcwd</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_CHDIR</span> =&gt; <span class="ident">fs::chdir</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_MKDIR_AT</span> =&gt; <span class="ident">fs::mkdirat</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_RMDIR</span> =&gt; <span class="ident">fs::rmdir</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_IOCTL</span> =&gt; <span class="ident">fs::ioctl</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_SEEK</span> =&gt; <span class="ident">fs::seek</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_ACCESS</span> =&gt; <span class="ident">fs::access</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>),
-        <span class="ident">SYS_PIPE</span> =&gt; <span class="ident">fs::pipe</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_UNLINK</span> =&gt; <span class="ident">fs::unlink</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_DUP</span> =&gt; <span class="ident">fs::dup</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_DUP2</span> =&gt; <span class="ident">fs::dup2</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_FCNTL</span> =&gt; <span class="ident">fs::fcntl</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_STAT</span> =&gt; <span class="ident">fs::stat</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_FSTAT</span> =&gt; <span class="ident">fs::fstat</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_READ_LINK</span> =&gt; <span class="ident">fs::read_link</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_EVENT_FD</span> =&gt; <span class="ident">fs::event_fd</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_LINK</span> =&gt; <span class="ident">fs::link</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_POLL</span> =&gt; <span class="ident">fs::poll</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
+        SYS_READ =&gt; fs::read(b, c, d),
+        SYS_OPEN =&gt; fs::open(b, c, d, e),
+        SYS_CLOSE =&gt; fs::close(b),
+        SYS_WRITE =&gt; fs::write(b, c, d),
+        SYS_GETDENTS =&gt; fs::getdents(b, c, d),
+        SYS_GETCWD =&gt; fs::getcwd(b, c),
+        SYS_CHDIR =&gt; fs::chdir(b, c),
+        SYS_MKDIR_AT =&gt; fs::mkdirat(b, c, d),
+        SYS_RMDIR =&gt; fs::rmdir(b, c),
+        SYS_IOCTL =&gt; fs::ioctl(b, c, d),
+        SYS_SEEK =&gt; fs::seek(b, c, d),
+        SYS_ACCESS =&gt; fs::access(b, c, d, e, f),
+        SYS_PIPE =&gt; fs::pipe(b, c),
+        SYS_UNLINK =&gt; fs::unlink(b, c, d, e),
+        SYS_DUP =&gt; fs::dup(b, c),
+        SYS_DUP2 =&gt; fs::dup2(b, c, d),
+        SYS_FCNTL =&gt; fs::fcntl(b, c, d),
+        SYS_STAT =&gt; fs::stat(b, c, d),
+        SYS_FSTAT =&gt; fs::fstat(b, c),
+        SYS_READ_LINK =&gt; fs::read_link(b, c, d, e),
+        SYS_EVENT_FD =&gt; fs::event_fd(b, c),
+        SYS_LINK =&gt; fs::link(b, c, d, e),
+        SYS_POLL =&gt; fs::poll(b, c, d, e),
 
-        <span class="comment">// epoll calls:</span>
-        <span class="ident">SYS_EPOLL_CREATE</span> =&gt; <span class="ident">fs::epoll_create</span>(<span class="ident">b</span>),
-        <span class="ident">SYS_EPOLL_CTL</span> =&gt; <span class="ident">fs::epoll_ctl</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_EPOLL_PWAIT</span> =&gt; <span class="ident">fs::epoll_pwait</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>),
+        <span class="comment">// epoll calls:
+        </span>SYS_EPOLL_CREATE =&gt; fs::epoll_create(b),
+        SYS_EPOLL_CTL =&gt; fs::epoll_ctl(b, c, d, e),
+        SYS_EPOLL_PWAIT =&gt; fs::epoll_pwait(b, c, d, e, f),
 
-        <span class="ident">SYS_SOCKET</span> =&gt; <span class="ident">net::socket</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_BIND</span> =&gt; <span class="ident">net::bind</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_CONNECT</span> =&gt; <span class="ident">net::connect</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_LISTEN</span> =&gt; <span class="ident">net::listen</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_ACCEPT</span> =&gt; <span class="ident">net::accept</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_SOCK_RECV</span> =&gt; <span class="ident">net::sock_recv</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
+        SYS_SOCKET =&gt; net::socket(b, c, d),
+        SYS_BIND =&gt; net::bind(b, c, d),
+        SYS_CONNECT =&gt; net::connect(b, c, d),
+        SYS_LISTEN =&gt; net::listen(b, c),
+        SYS_ACCEPT =&gt; net::accept(b, c, d),
+        SYS_SOCK_RECV =&gt; net::sock_recv(b, c, d),
 
-        <span class="ident">SYS_GETTIME</span> =&gt; <span class="ident">time::gettime</span>(<span class="ident">b</span>, <span class="ident">c</span>),
-        <span class="ident">SYS_SLEEP</span> =&gt; <span class="ident">time::sleep</span>(<span class="ident">b</span>),
+        SYS_GETTIME =&gt; time::gettime(b, c),
+        SYS_SLEEP =&gt; time::sleep(b),
 
-        <span class="ident">SYS_SETITIMER</span> =&gt; <span class="ident">time::setitimer</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_GETITIMER</span> =&gt; <span class="ident">time::getitimer</span>(<span class="ident">b</span>, <span class="ident">c</span>),
+        SYS_SETITIMER =&gt; time::setitimer(b, c, d),
+        SYS_GETITIMER =&gt; time::getitimer(b, c),
 
-        <span class="ident">SYS_IPC_SEND</span> =&gt; <span class="ident">ipc::send</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_IPC_RECV</span> =&gt; <span class="ident">ipc::recv</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>),
-        <span class="ident">SYS_IPC_DISCOVER_ROOT</span> =&gt; <span class="ident">ipc::discover_root</span>(),
-        <span class="ident">SYS_IPC_BECOME_ROOT</span> =&gt; <span class="ident">ipc::become_root</span>(),
+        SYS_IPC_SEND =&gt; ipc::send(b, c, d),
+        SYS_IPC_RECV =&gt; ipc::recv(b, c, d, e),
+        SYS_IPC_DISCOVER_ROOT =&gt; ipc::discover_root(),
+        SYS_IPC_BECOME_ROOT =&gt; ipc::become_root(),
 
-        <span class="ident">SYS_FUTEX_WAIT</span> =&gt; <span class="ident">futex::wait</span>(<span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>),
-        <span class="ident">SYS_FUTEX_WAKE</span> =&gt; <span class="ident">futex::wake</span>(<span class="ident">b</span>),
+        SYS_FUTEX_WAIT =&gt; futex::wait(b, c, d),
+        SYS_FUTEX_WAKE =&gt; futex::wake(b),
 
-        <span class="comment">// Syscall aliases (this should be handled in aero_syscall)</span>
-        <span class="ident">SYS_MKDIR</span> =&gt; <span class="ident">fs::mkdirat</span>(<span class="ident">aero_syscall::AT_FDCWD</span> <span class="kw">as</span> <span class="kw">_</span>, <span class="ident">b</span>, <span class="ident">c</span>),
+        <span class="comment">// Syscall aliases (this should be handled in aero_syscall)
+        </span>SYS_MKDIR =&gt; fs::mkdirat(aero_syscall::AT_FDCWD <span class="kw">as _</span>, b, c),
 
-        <span class="kw">_</span> =&gt; {
-            <span class="macro">log::error!</span>(<span class="string">&quot;invalid syscall: {:#x}&quot;</span>, <span class="ident">a</span>);
-            <span class="prelude-val">Err</span>(<span class="ident">SyscallError::ENOSYS</span>)
+        <span class="kw">_ </span>=&gt; {
+            <span class="macro">log::error!</span>(<span class="string">&quot;invalid syscall: {:#x}&quot;</span>, a);
+            <span class="prelude-val">Err</span>(SyscallError::ENOSYS)
         }
     };
 
-    <span class="ident">aero_syscall::syscall_result_as_usize</span>(<span class="ident">result</span>)
+    aero_syscall::syscall_result_as_usize(result)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

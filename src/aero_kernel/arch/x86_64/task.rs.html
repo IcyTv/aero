@@ -513,486 +513,486 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! ## How does `x86_64` context switching work?</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The [`arch_task_spinup`] function is responsible for switching the current</span>
-<span class="doccomment">//! task to the next one. This function works by updating the TSS&#39;s RSP0 field to point</span>
-<span class="doccomment">//! to the per-task kernel stack and switches the page table for the next process.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! After a task is born, it directly context switches to it&#39;s specific trampoline. The</span>
-<span class="doccomment">//! trampoline is responsible for jumping to its appropriate context. At the point when</span>
-<span class="doccomment">//! the trampoline is called, the stack should have the switch frame pushed.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! The switch frame is not saved or restored at context switch time. Instead its</span>
-<span class="doccomment">//! stored when you enter and leave the kernel since then the context switch function</span>
-<span class="doccomment">//! does not have to worry about clobbering the user mode register values since</span>
-<span class="doccomment">//! they are safely stored on the kernel stack.</span>
+</span><span class="doccomment">//! ## How does `x86_64` context switching work?
+//!
+//! The [`arch_task_spinup`] function is responsible for switching the current
+//! task to the next one. This function works by updating the TSS&#39;s RSP0 field to point
+//! to the per-task kernel stack and switches the page table for the next process.
+//!
+//! After a task is born, it directly context switches to it&#39;s specific trampoline. The
+//! trampoline is responsible for jumping to its appropriate context. At the point when
+//! the trampoline is called, the stack should have the switch frame pushed.
+//!
+//! The switch frame is not saved or restored at context switch time. Instead its
+//! stored when you enter and leave the kernel since then the context switch function
+//! does not have to worry about clobbering the user mode register values since
+//! they are safely stored on the kernel stack.
 
-<span class="kw">use</span> <span class="ident">alloc::alloc::alloc_zeroed</span>;
+</span><span class="kw">use </span>alloc::alloc::alloc_zeroed;
 
-<span class="kw">use</span> <span class="ident">aero_syscall</span>::{<span class="ident">MMapFlags</span>, <span class="ident">MMapProt</span>};
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
+<span class="kw">use </span>aero_syscall::{MMapFlags, MMapProt};
+<span class="kw">use </span>alloc::vec::Vec;
 
-<span class="kw">use</span> <span class="ident">core::alloc::Layout</span>;
-<span class="kw">use</span> <span class="ident">core::ptr::Unique</span>;
+<span class="kw">use </span>core::alloc::Layout;
+<span class="kw">use </span>core::ptr::Unique;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::interrupts::InterruptErrorStack</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::cache::DirCacheItem</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syscall::ExecArgs</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::vm::Vm</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils</span>::{<span class="ident">io</span>, <span class="ident">StackHelper</span>};
+<span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::InterruptErrorStack;
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheItem;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::syscall::ExecArgs;
+<span class="kw">use </span><span class="kw">crate</span>::userland::vm::Vm;
+<span class="kw">use </span><span class="kw">crate</span>::utils::{io, StackHelper};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::controlregs</span>;
+<span class="kw">use </span><span class="kw">super</span>::controlregs;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::AddressSpace</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::AddressSpace;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">struct</span> <span class="ident">Context</span> {
-    <span class="ident">cr3</span>: <span class="ident">u64</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">struct </span>Context {
+    cr3: u64,
 
-    <span class="ident">r15</span>: <span class="ident">u64</span>,
-    <span class="ident">r14</span>: <span class="ident">u64</span>,
-    <span class="ident">r13</span>: <span class="ident">u64</span>,
-    <span class="ident">r12</span>: <span class="ident">u64</span>,
+    r15: u64,
+    r14: u64,
+    r13: u64,
+    r12: u64,
 
-    <span class="ident">rbx</span>: <span class="ident">u64</span>,
-    <span class="ident">rbp</span>: <span class="ident">u64</span>,
+    rbx: u64,
+    rbp: u64,
 
-    <span class="ident">rip</span>: <span class="ident">u64</span>,
+    rip: u64,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">u64</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">AuxvType</span> {
-    <span class="ident">AtNull</span> <span class="op">=</span> <span class="number">0</span>,
-    <span class="ident">AtPhdr</span> <span class="op">=</span> <span class="number">3</span>,
-    <span class="ident">AtPhEnt</span> <span class="op">=</span> <span class="number">4</span>,
-    <span class="ident">AtPhNum</span> <span class="op">=</span> <span class="number">5</span>,
-    <span class="ident">AtEntry</span> <span class="op">=</span> <span class="number">9</span>,
+<span class="attribute">#[repr(u64)]</span>
+<span class="attribute">#[derive(Debug, Copy, Clone)]</span>
+<span class="kw">pub enum </span>AuxvType {
+    AtNull = <span class="number">0</span>,
+    AtPhdr = <span class="number">3</span>,
+    AtPhEnt = <span class="number">4</span>,
+    AtPhNum = <span class="number">5</span>,
+    AtEntry = <span class="number">9</span>,
 }
 
-<span class="doccomment">/// Returns the first address outside the user range.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Notes</span>
-<span class="doccomment">/// * On Intel CPUs, if a SYSCALL instruction is at the highest canonical address, then</span>
-<span class="doccomment">/// that syscall will enter the kernel with a non-canonical return address, and SYSRET will</span>
-<span class="doccomment">/// explode dangerously. We avoid this particular problem by preventing anything from</span>
-<span class="doccomment">/// being mapped at the maximum canonical address.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// * On AMD CPUs in the Ryzen family, there&#39;s a nasty bug in which the CPUs malfunction if they</span>
-<span class="doccomment">/// execute code from the highest canonical page. They&#39;ll speculate right off the end of the canonical</span>
-<span class="doccomment">/// space and bad things happen. This is worked around in the same way as the Intel problem.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">userland_last_address</span>() -&gt; <span class="ident">VirtAddr</span> {
-    <span class="comment">// Reference: https://elixir.bootlin.com/linux/latest/source/arch/x86/include/asm/page_64.h#L61</span>
-    <span class="kw">static</span> <span class="ident">CACHED</span>: <span class="ident">spin::Once</span><span class="op">&lt;</span><span class="ident">VirtAddr</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">spin::Once::new</span>();
+<span class="doccomment">/// Returns the first address outside the user range.
+///
+/// ## Notes
+/// * On Intel CPUs, if a SYSCALL instruction is at the highest canonical address, then
+/// that syscall will enter the kernel with a non-canonical return address, and SYSRET will
+/// explode dangerously. We avoid this particular problem by preventing anything from
+/// being mapped at the maximum canonical address.
+///
+/// * On AMD CPUs in the Ryzen family, there&#39;s a nasty bug in which the CPUs malfunction if they
+/// execute code from the highest canonical page. They&#39;ll speculate right off the end of the canonical
+/// space and bad things happen. This is worked around in the same way as the Intel problem.
+</span><span class="kw">pub fn </span>userland_last_address() -&gt; VirtAddr {
+    <span class="comment">// Reference: https://elixir.bootlin.com/linux/latest/source/arch/x86/include/asm/page_64.h#L61
+    </span><span class="kw">static </span>CACHED: spin::Once&lt;VirtAddr&gt; = spin::Once::new();
 
-    <span class="kw-2">*</span><span class="ident">CACHED</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="kw">let</span> <span class="ident">virtual_mask_shift</span>: <span class="ident">u64</span>;
-        <span class="kw">let</span> <span class="ident">la57</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::mem::paging::level_5_paging_enabled</span>();
+    <span class="kw-2">*</span>CACHED.call_once(|| {
+        <span class="kw">let </span>virtual_mask_shift: u64;
+        <span class="kw">let </span>la57 = <span class="kw">crate</span>::mem::paging::level_5_paging_enabled();
 
-        <span class="kw">if</span> <span class="ident">la57</span> {
-            <span class="ident">virtual_mask_shift</span> <span class="op">=</span> <span class="number">56</span>;
-        } <span class="kw">else</span> {
-            <span class="ident">virtual_mask_shift</span> <span class="op">=</span> <span class="number">47</span>;
+        <span class="kw">if </span>la57 {
+            virtual_mask_shift = <span class="number">56</span>;
+        } <span class="kw">else </span>{
+            virtual_mask_shift = <span class="number">47</span>;
         }
 
-        <span class="ident">VirtAddr::new</span>((<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">virtual_mask_shift</span>) <span class="op">-</span> <span class="ident">Size4KiB::SIZE</span>)
+        VirtAddr::new((<span class="number">1u64 </span>&lt;&lt; virtual_mask_shift) - Size4KiB::SIZE)
     })
 }
 
-<span class="kw">const</span> <span class="ident">USERLAND_STACK_SIZE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x64000</span>;
+<span class="kw">const </span>USERLAND_STACK_SIZE: u64 = <span class="number">0x64000</span>;
 
-<span class="comment">//(1 &lt;&lt; 47) - (Size4KiB::SIZE * 2)</span>
-<span class="kw">const</span> <span class="ident">USERLAND_STACK_TOP</span>: <span class="ident">VirtAddr</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="number">0x7fffffffe000</span>);
-<span class="kw">const</span> <span class="ident">USERLAND_STACK_BOTTOM</span>: <span class="ident">VirtAddr</span> <span class="op">=</span> <span class="ident">USERLAND_STACK_TOP</span>.<span class="ident">const_sub_u64</span>(<span class="ident">USERLAND_STACK_SIZE</span>);
+<span class="comment">//(1 &lt;&lt; 47) - (Size4KiB::SIZE * 2)
+</span><span class="kw">const </span>USERLAND_STACK_TOP: VirtAddr = VirtAddr::new(<span class="number">0x7fffffffe000</span>);
+<span class="kw">const </span>USERLAND_STACK_BOTTOM: VirtAddr = USERLAND_STACK_TOP.const_sub_u64(USERLAND_STACK_SIZE);
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ArchTask</span> {
-    <span class="ident">context</span>: <span class="ident">Unique</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>ArchTask {
+    context: Unique&lt;Context&gt;,
 
-    <span class="ident">address_space</span>: <span class="ident">AddressSpace</span>,
-    <span class="ident">context_switch_rsp</span>: <span class="ident">VirtAddr</span>,
-    <span class="ident">user</span>: <span class="ident">bool</span>,
+    address_space: AddressSpace,
+    context_switch_rsp: VirtAddr,
+    user: bool,
 
-    <span class="ident">fs_base</span>: <span class="ident">VirtAddr</span>,
-    <span class="ident">gs_base</span>: <span class="ident">VirtAddr</span>,
+    fs_base: VirtAddr,
+    gs_base: VirtAddr,
 }
 
-<span class="kw">impl</span> <span class="ident">ArchTask</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_idle</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">context</span>: <span class="ident">Unique::dangling</span>(),
-            <span class="ident">context_switch_rsp</span>: <span class="ident">VirtAddr::zero</span>(),
+<span class="kw">impl </span>ArchTask {
+    <span class="kw">pub fn </span>new_idle() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            context: Unique::dangling(),
+            context_switch_rsp: VirtAddr::zero(),
 
-            <span class="comment">// Since the IDLE task is a special kernel task, we use the kernel&#39;s</span>
-            <span class="comment">// address space here and we also use the kernel privilage level here.</span>
-            <span class="ident">address_space</span>: <span class="ident">AddressSpace::this</span>(),
-            <span class="ident">user</span>: <span class="bool-val">false</span>,
+            <span class="comment">// Since the IDLE task is a special kernel task, we use the kernel&#39;s
+            // address space here and we also use the kernel privilage level here.
+            </span>address_space: AddressSpace::this(),
+            user: <span class="bool-val">false</span>,
 
-            <span class="ident">fs_base</span>: <span class="ident">VirtAddr::zero</span>(),
-            <span class="ident">gs_base</span>: <span class="ident">VirtAddr::zero</span>(),
+            fs_base: VirtAddr::zero(),
+            gs_base: VirtAddr::zero(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_kernel</span>(<span class="ident">entry_point</span>: <span class="ident">VirtAddr</span>, <span class="ident">enable_interrupts</span>: <span class="ident">bool</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="ident">switch_stack</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::alloc_switch_stack</span>().<span class="ident">unwrap</span>().<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>();
+    <span class="kw">pub fn </span>new_kernel(entry_point: VirtAddr, enable_interrupts: bool) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>switch_stack = <span class="self">Self</span>::alloc_switch_stack().unwrap().as_mut_ptr::&lt;u8&gt;();
 
-        <span class="kw">let</span> <span class="ident">task_stack</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">layout</span> <span class="op">=</span> <span class="ident">Layout::from_size_align_unchecked</span>(<span class="number">4096</span> <span class="op">*</span> <span class="number">16</span>, <span class="number">0x1000</span>);
-            <span class="ident">alloc_zeroed</span>(<span class="ident">layout</span>).<span class="ident">add</span>(<span class="ident">layout</span>.<span class="ident">size</span>())
+        <span class="kw">let </span>task_stack = <span class="kw">unsafe </span>{
+            <span class="kw">let </span>layout = Layout::from_size_align_unchecked(<span class="number">4096 </span>* <span class="number">16</span>, <span class="number">0x1000</span>);
+            alloc_zeroed(layout).add(layout.size())
         };
 
-        <span class="kw">let</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
+        <span class="kw">let </span>address_space = AddressSpace::this();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack_ptr</span> <span class="op">=</span> <span class="ident">switch_stack</span> <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">StackHelper::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">stack_ptr</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>stack_ptr = switch_stack <span class="kw">as </span>u64;
+        <span class="kw">let </span><span class="kw-2">mut </span>stack = StackHelper::new(<span class="kw-2">&amp;mut </span>stack_ptr);
 
-        <span class="kw">let</span> <span class="ident">kframe</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">InterruptErrorStack</span><span class="op">&gt;</span>() };
+        <span class="kw">let </span>kframe = <span class="kw">unsafe </span>{ stack.offset::&lt;InterruptErrorStack&gt;() };
 
-        <span class="ident">kframe</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">ss</span> <span class="op">=</span> <span class="number">0x10</span>; <span class="comment">// kernel stack segment</span>
-        <span class="ident">kframe</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">cs</span> <span class="op">=</span> <span class="number">0x08</span>; <span class="comment">// kernel code segment</span>
-        <span class="ident">kframe</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rip</span> <span class="op">=</span> <span class="ident">entry_point</span>.<span class="ident">as_u64</span>();
-        <span class="ident">kframe</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rsp</span> <span class="op">=</span> <span class="ident">task_stack</span> <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="ident">kframe</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rflags</span> <span class="op">=</span> <span class="kw">if</span> <span class="ident">enable_interrupts</span> { <span class="number">0x200</span> } <span class="kw">else</span> { <span class="number">0x00</span> };
+        kframe.stack.iret.ss = <span class="number">0x10</span>; <span class="comment">// kernel stack segment
+        </span>kframe.stack.iret.cs = <span class="number">0x08</span>; <span class="comment">// kernel code segment
+        </span>kframe.stack.iret.rip = entry_point.as_u64();
+        kframe.stack.iret.rsp = task_stack <span class="kw">as </span>u64;
+        kframe.stack.iret.rflags = <span class="kw">if </span>enable_interrupts { <span class="number">0x200 </span>} <span class="kw">else </span>{ <span class="number">0x00 </span>};
 
-        <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-            <span class="kw">fn</span> <span class="ident">iretq_init</span>();
+        <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+            <span class="kw">fn </span>iretq_init();
         }
 
-        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>() };
+        <span class="kw">let </span>context = <span class="kw">unsafe </span>{ stack.offset::&lt;Context&gt;() };
 
-        <span class="kw-2">*</span><span class="ident">context</span> <span class="op">=</span> <span class="ident">Context::default</span>();
-        <span class="ident">context</span>.<span class="ident">rip</span> <span class="op">=</span> <span class="ident">iretq_init</span> <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="ident">context</span>.<span class="ident">cr3</span> <span class="op">=</span> <span class="ident">controlregs::read_cr3_raw</span>();
+        <span class="kw-2">*</span>context = Context::default();
+        context.rip = iretq_init <span class="kw">as </span>u64;
+        context.cr3 = controlregs::read_cr3_raw();
 
-        <span class="self">Self</span> {
-            <span class="ident">context</span>: <span class="kw">unsafe</span> { <span class="ident">Unique::new_unchecked</span>(<span class="ident">context</span>) },
-            <span class="ident">address_space</span>,
-            <span class="ident">context_switch_rsp</span>: <span class="ident">VirtAddr::new</span>(<span class="ident">switch_stack</span> <span class="kw">as</span> <span class="ident">u64</span>),
-            <span class="ident">user</span>: <span class="bool-val">false</span>,
+        <span class="self">Self </span>{
+            context: <span class="kw">unsafe </span>{ Unique::new_unchecked(context) },
+            address_space,
+            context_switch_rsp: VirtAddr::new(switch_stack <span class="kw">as </span>u64),
+            user: <span class="bool-val">false</span>,
 
-            <span class="ident">fs_base</span>: <span class="ident">VirtAddr::zero</span>(),
-            <span class="ident">gs_base</span>: <span class="ident">VirtAddr::zero</span>(),
+            fs_base: VirtAddr::zero(),
+            gs_base: VirtAddr::zero(),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clone_process</span>(
+    <span class="kw">pub fn </span>clone_process(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">entry</span>: <span class="ident">usize</span>,
-        <span class="ident">usr_stack</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+        entry: usize,
+        usr_stack: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapToError&lt;Size4KiB&gt;&gt; {
         <span class="macro">log::trace!</span>(<span class="string">&quot;ArchTask::clone_process(entry={entry:#x}, stack={usr_stack:#x})&quot;</span>);
 
-        <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">user</span>, <span class="string">&quot;cannot clone a kernel task&quot;</span>);
+        <span class="macro">assert!</span>(<span class="self">self</span>.user, <span class="string">&quot;cannot clone a kernel task&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
-        <span class="kw">let</span> <span class="ident">switch_stack</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::alloc_switch_stack</span>()<span class="question-mark">?</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>address_space = AddressSpace::this();
+        <span class="kw">let </span>switch_stack = <span class="self">Self</span>::alloc_switch_stack()<span class="question-mark">?</span>.as_mut_ptr::&lt;u8&gt;();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_stack_ptr</span> <span class="op">=</span> <span class="ident">switch_stack</span> <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_stack</span> <span class="op">=</span> <span class="ident">StackHelper::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">new_stack_ptr</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>new_stack_ptr = switch_stack <span class="kw">as </span>u64;
+        <span class="kw">let </span><span class="kw-2">mut </span>new_stack = StackHelper::new(<span class="kw-2">&amp;mut </span>new_stack_ptr);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_stack_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">context_switch_rsp</span>.<span class="ident">as_u64</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_stack</span> <span class="op">=</span> <span class="ident">StackHelper::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">old_stack_ptr</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>old_stack_ptr = <span class="self">self</span>.context_switch_rsp.as_u64();
+        <span class="kw">let </span><span class="kw-2">mut </span>old_stack = StackHelper::new(<span class="kw-2">&amp;mut </span>old_stack_ptr);
 
-        <span class="kw">let</span> <span class="ident">old_registers_frame</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">old_stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">InterruptErrorStack</span><span class="op">&gt;</span>() };
+        <span class="kw">let </span>old_registers_frame = <span class="kw">unsafe </span>{ old_stack.offset::&lt;InterruptErrorStack&gt;() };
 
-        <span class="kw">let</span> <span class="ident">registers_frame</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">new_stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">InterruptErrorStack</span><span class="op">&gt;</span>() };
-        <span class="kw-2">*</span><span class="ident">registers_frame</span> <span class="op">=</span> <span class="ident">InterruptErrorStack::default</span>();
+        <span class="kw">let </span>registers_frame = <span class="kw">unsafe </span>{ new_stack.offset::&lt;InterruptErrorStack&gt;() };
+        <span class="kw-2">*</span>registers_frame = InterruptErrorStack::default();
 
-        <span class="ident">registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">cs</span> <span class="op">=</span> <span class="ident">old_registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">cs</span>;
-        <span class="ident">registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">ss</span> <span class="op">=</span> <span class="ident">old_registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">ss</span>;
+        registers_frame.stack.iret.cs = old_registers_frame.stack.iret.cs;
+        registers_frame.stack.iret.ss = old_registers_frame.stack.iret.ss;
 
-        <span class="ident">registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rip</span> <span class="op">=</span> <span class="ident">entry</span> <span class="kw">as</span> <span class="kw">_</span>;
-        <span class="ident">registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rsp</span> <span class="op">=</span> <span class="ident">usr_stack</span> <span class="kw">as</span> <span class="kw">_</span>;
-        <span class="ident">registers_frame</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rflags</span> <span class="op">=</span> <span class="number">0x200</span>;
+        registers_frame.stack.iret.rip = entry <span class="kw">as _</span>;
+        registers_frame.stack.iret.rsp = usr_stack <span class="kw">as _</span>;
+        registers_frame.stack.iret.rflags = <span class="number">0x200</span>;
 
-        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">new_stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>() };
+        <span class="kw">let </span>context = <span class="kw">unsafe </span>{ new_stack.offset::&lt;Context&gt;() };
 
-        <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-            <span class="kw">fn</span> <span class="ident">fork_init</span>();
+        <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+            <span class="kw">fn </span>fork_init();
         }
 
-        <span class="kw-2">*</span><span class="ident">context</span> <span class="op">=</span> <span class="ident">Context::default</span>();
-        <span class="ident">context</span>.<span class="ident">rip</span> <span class="op">=</span> <span class="ident">fork_init</span> <span class="kw">as</span> <span class="kw">_</span>;
-        <span class="ident">context</span>.<span class="ident">cr3</span> <span class="op">=</span> <span class="ident">address_space</span>.<span class="ident">cr3</span>().<span class="ident">start_address</span>().<span class="ident">as_u64</span>();
+        <span class="kw-2">*</span>context = Context::default();
+        context.rip = fork_init <span class="kw">as _</span>;
+        context.cr3 = address_space.cr3().start_address().as_u64();
 
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">context</span>: <span class="kw">unsafe</span> { <span class="ident">Unique::new_unchecked</span>(<span class="ident">context</span>) },
-            <span class="ident">context_switch_rsp</span>: <span class="ident">VirtAddr::new</span>(<span class="ident">switch_stack</span> <span class="kw">as</span> <span class="ident">u64</span>),
-            <span class="ident">address_space</span>,
-            <span class="ident">user</span>: <span class="bool-val">true</span>,
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            context: <span class="kw">unsafe </span>{ Unique::new_unchecked(context) },
+            context_switch_rsp: VirtAddr::new(switch_stack <span class="kw">as </span>u64),
+            address_space,
+            user: <span class="bool-val">true</span>,
 
-            <span class="comment">// The FS and GS bases are inherited from the parent process.</span>
-            <span class="ident">fs_base</span>: <span class="self">self</span>.<span class="ident">fs_base</span>.<span class="ident">clone</span>(),
-            <span class="ident">gs_base</span>: <span class="self">self</span>.<span class="ident">gs_base</span>.<span class="ident">clone</span>(),
+            <span class="comment">// The FS and GS bases are inherited from the parent process.
+            </span>fs_base: <span class="self">self</span>.fs_base.clone(),
+            gs_base: <span class="self">self</span>.gs_base.clone(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">fork</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">user</span>, <span class="string">&quot;cannot fork a kernel task&quot;</span>);
+    <span class="kw">pub fn </span>fork(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="macro">assert!</span>(<span class="self">self</span>.user, <span class="string">&quot;cannot fork a kernel task&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">new_address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>().<span class="ident">offset_page_table</span>().<span class="ident">fork</span>()<span class="question-mark">?</span>;
+        <span class="kw">let </span>new_address_space = AddressSpace::this().offset_page_table().fork()<span class="question-mark">?</span>;
 
-        <span class="comment">// Since the fork function marks all of the userspace entries in both the forked</span>
-        <span class="comment">// and the parent address spaces as read only, we will flush the page table of the</span>
-        <span class="comment">// current process to trigger COW.</span>
-        <span class="kw">unsafe</span> {
-            <span class="macro">asm!</span>(<span class="string">&quot;mov cr3, {}&quot;</span>, <span class="kw">in</span>(<span class="ident">reg</span>) <span class="ident">controlregs::read_cr3_raw</span>(), <span class="ident">options</span>(<span class="ident">nostack</span>));
+        <span class="comment">// Since the fork function marks all of the userspace entries in both the forked
+        // and the parent address spaces as read only, we will flush the page table of the
+        // current process to trigger COW.
+        </span><span class="kw">unsafe </span>{
+            <span class="macro">asm!</span>(<span class="string">&quot;mov cr3, {}&quot;</span>, <span class="kw">in</span>(reg) controlregs::read_cr3_raw(), options(nostack));
         }
 
-        <span class="kw">let</span> <span class="ident">switch_stack</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::alloc_switch_stack</span>()<span class="question-mark">?</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span>();
+        <span class="kw">let </span>switch_stack = <span class="self">Self</span>::alloc_switch_stack()<span class="question-mark">?</span>.as_mut_ptr::&lt;u8&gt;();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_stack_ptr</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">context_switch_rsp</span>.<span class="ident">as_u64</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">old_stack</span> <span class="op">=</span> <span class="ident">StackHelper::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">old_stack_ptr</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>old_stack_ptr = <span class="self">self</span>.context_switch_rsp.as_u64();
+        <span class="kw">let </span><span class="kw-2">mut </span>old_stack = StackHelper::new(<span class="kw-2">&amp;mut </span>old_stack_ptr);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_stack_ptr</span> <span class="op">=</span> <span class="ident">switch_stack</span> <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">new_stack</span> <span class="op">=</span> <span class="ident">StackHelper::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">new_stack_ptr</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>new_stack_ptr = switch_stack <span class="kw">as </span>u64;
+        <span class="kw">let </span><span class="kw-2">mut </span>new_stack = StackHelper::new(<span class="kw-2">&amp;mut </span>new_stack_ptr);
 
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">registers_frame</span> <span class="op">=</span> <span class="ident">new_stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">InterruptErrorStack</span><span class="op">&gt;</span>();
-            <span class="kw">let</span> <span class="ident">old_registers_frame</span> <span class="op">=</span> <span class="ident">old_stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">InterruptErrorStack</span><span class="op">&gt;</span>();
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>registers_frame = new_stack.offset::&lt;InterruptErrorStack&gt;();
+            <span class="kw">let </span>old_registers_frame = old_stack.offset::&lt;InterruptErrorStack&gt;();
 
-            <span class="kw-2">*</span><span class="ident">registers_frame</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">old_registers_frame</span>;
-            <span class="ident">registers_frame</span>.<span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rax</span> <span class="op">=</span> <span class="number">0x00</span>; <span class="comment">// Set the syscall result to 0</span>
+            <span class="kw-2">*</span>registers_frame = <span class="kw-2">*</span>old_registers_frame;
+            registers_frame.stack.scratch.rax = <span class="number">0x00</span>; <span class="comment">// Set the syscall result to 0
+        </span>}
+
+        <span class="comment">// Prepare the trampoline...
+        </span><span class="kw">let </span>context = <span class="kw">unsafe </span>{ new_stack.offset::&lt;Context&gt;() };
+
+        <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+            <span class="kw">fn </span>fork_init();
         }
 
-        <span class="comment">// Prepare the trampoline...</span>
-        <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">new_stack</span>.<span class="ident">offset</span>::<span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>() };
+        <span class="kw-2">*</span>context = Context::default();
+        context.rip = fork_init <span class="kw">as </span>u64;
+        context.cr3 = new_address_space.cr3().start_address().as_u64();
 
-        <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-            <span class="kw">fn</span> <span class="ident">fork_init</span>();
-        }
+        <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
+            context: <span class="kw">unsafe </span>{ Unique::new_unchecked(context) },
+            context_switch_rsp: VirtAddr::new(switch_stack <span class="kw">as </span>u64),
+            address_space: new_address_space,
+            user: <span class="bool-val">true</span>,
 
-        <span class="kw-2">*</span><span class="ident">context</span> <span class="op">=</span> <span class="ident">Context::default</span>();
-        <span class="ident">context</span>.<span class="ident">rip</span> <span class="op">=</span> <span class="ident">fork_init</span> <span class="kw">as</span> <span class="ident">u64</span>;
-        <span class="ident">context</span>.<span class="ident">cr3</span> <span class="op">=</span> <span class="ident">new_address_space</span>.<span class="ident">cr3</span>().<span class="ident">start_address</span>().<span class="ident">as_u64</span>();
-
-        <span class="prelude-val">Ok</span>(<span class="self">Self</span> {
-            <span class="ident">context</span>: <span class="kw">unsafe</span> { <span class="ident">Unique::new_unchecked</span>(<span class="ident">context</span>) },
-            <span class="ident">context_switch_rsp</span>: <span class="ident">VirtAddr::new</span>(<span class="ident">switch_stack</span> <span class="kw">as</span> <span class="ident">u64</span>),
-            <span class="ident">address_space</span>: <span class="ident">new_address_space</span>,
-            <span class="ident">user</span>: <span class="bool-val">true</span>,
-
-            <span class="comment">// The FS and GS bases are inherited from the parent process.</span>
-            <span class="ident">fs_base</span>: <span class="self">self</span>.<span class="ident">fs_base</span>.<span class="ident">clone</span>(),
-            <span class="ident">gs_base</span>: <span class="self">self</span>.<span class="ident">gs_base</span>.<span class="ident">clone</span>(),
+            <span class="comment">// The FS and GS bases are inherited from the parent process.
+            </span>fs_base: <span class="self">self</span>.fs_base.clone(),
+            gs_base: <span class="self">self</span>.gs_base.clone(),
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">exec</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">vm</span>: <span class="kw-2">&amp;</span><span class="ident">Vm</span>,
-        <span class="ident">executable</span>: <span class="ident">DirCacheItem</span>,
+    <span class="kw">pub fn </span>exec(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        vm: <span class="kw-2">&amp;</span>Vm,
+        executable: DirCacheItem,
 
-        <span class="ident">argv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-        <span class="ident">envv</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">ExecArgs</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">user</span> {
-            <span class="self">self</span>.<span class="ident">unref_pt</span>();
-            <span class="ident">AddressSpace::new</span>()<span class="question-mark">?</span>
-        } <span class="kw">else</span> {
-            <span class="ident">AddressSpace::new</span>()<span class="question-mark">?</span>
-        };
+        argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+        envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="kw">let </span>address_space = <span class="kw">if </span><span class="self">self</span>.user {
+            <span class="self">self</span>.unref_pt();
+            AddressSpace::new()<span class="question-mark">?
+        </span>} <span class="kw">else </span>{
+            AddressSpace::new()<span class="question-mark">?
+        </span>};
 
-        <span class="kw">let</span> <span class="ident">loaded_binary</span> <span class="op">=</span> <span class="ident">vm</span>
-            .<span class="ident">load_bin</span>(<span class="ident">executable</span>, <span class="ident">argv</span>, <span class="ident">envv</span>)
-            .<span class="ident">expect</span>(<span class="string">&quot;exec: failed to load ELF&quot;</span>);
+        <span class="kw">let </span>loaded_binary = vm
+            .load_bin(executable, argv, envv)
+            .expect(<span class="string">&quot;exec: failed to load ELF&quot;</span>);
 
-        <span class="comment">// a kernel task can only execute a user executable</span>
-        <span class="self">self</span>.<span class="ident">user</span> <span class="op">=</span> <span class="bool-val">true</span>;
+        <span class="comment">// a kernel task can only execute a user executable
+        </span><span class="self">self</span>.user = <span class="bool-val">true</span>;
 
-        <span class="comment">// mmap the userland stack...</span>
-        <span class="ident">vm</span>.<span class="ident">mmap</span>(
-            <span class="ident">USERLAND_STACK_BOTTOM</span>,
-            <span class="ident">USERLAND_STACK_SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>,
-            <span class="ident">MMapProt::PROT_WRITE</span> <span class="op">|</span> <span class="ident">MMapProt::PROT_READ</span>,
-            <span class="ident">MMapFlags::MAP_FIXED</span> <span class="op">|</span> <span class="ident">MMapFlags::MAP_PRIVATE</span> <span class="op">|</span> <span class="ident">MMapFlags::MAP_ANONYOMUS</span>,
+        <span class="comment">// mmap the userland stack...
+        </span>vm.mmap(
+            USERLAND_STACK_BOTTOM,
+            USERLAND_STACK_SIZE <span class="kw">as </span>usize,
+            MMapProt::PROT_WRITE | MMapProt::PROT_READ,
+            MMapFlags::MAP_FIXED | MMapFlags::MAP_PRIVATE | MMapFlags::MAP_ANONYOMUS,
             <span class="number">0</span>,
             <span class="prelude-val">None</span>,
         );
 
-        <span class="ident">vm</span>.<span class="ident">log</span>();
+        vm.log();
 
-        <span class="ident">address_space</span>.<span class="ident">switch</span>(); <span class="comment">// Perform the address space switch</span>
+        address_space.switch(); <span class="comment">// Perform the address space switch
 
-        <span class="self">self</span>.<span class="ident">context</span> <span class="op">=</span> <span class="ident">Unique::dangling</span>();
-        <span class="self">self</span>.<span class="ident">address_space</span> <span class="op">=</span> <span class="ident">address_space</span>; <span class="comment">// Update the address space reference</span>
+        </span><span class="self">self</span>.context = Unique::dangling();
+        <span class="self">self</span>.address_space = address_space; <span class="comment">// Update the address space reference
 
-        <span class="self">self</span>.<span class="ident">fs_base</span> <span class="op">=</span> <span class="ident">VirtAddr::zero</span>();
-        <span class="self">self</span>.<span class="ident">gs_base</span> <span class="op">=</span> <span class="ident">VirtAddr::zero</span>();
+        </span><span class="self">self</span>.fs_base = VirtAddr::zero();
+        <span class="self">self</span>.gs_base = VirtAddr::zero();
 
-        <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-            <span class="kw">fn</span> <span class="ident">jump_userland_exec</span>(<span class="ident">stack</span>: <span class="ident">VirtAddr</span>, <span class="ident">rip</span>: <span class="ident">VirtAddr</span>, <span class="ident">rflags</span>: <span class="ident">u64</span>);
+        <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+            <span class="kw">fn </span>jump_userland_exec(stack: VirtAddr, rip: VirtAddr, rflags: u64);
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack_addr</span> <span class="op">=</span> <span class="ident">USERLAND_STACK_TOP</span>.<span class="ident">as_u64</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stack</span> <span class="op">=</span> <span class="ident">StackHelper::new</span>(<span class="kw-2">&amp;mut</span> <span class="ident">stack_addr</span>);
+        <span class="kw">let </span><span class="kw-2">mut </span>stack_addr = USERLAND_STACK_TOP.as_u64();
+        <span class="kw">let </span><span class="kw-2">mut </span>stack = StackHelper::new(<span class="kw-2">&amp;mut </span>stack_addr);
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">envp</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">argp</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>envp = Vec::new();
+        <span class="kw">let </span><span class="kw-2">mut </span>argp = Vec::new();
 
-        <span class="ident">loaded_binary</span>
-            .<span class="ident">envv</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">envv</span><span class="op">|</span> <span class="ident">envp</span> <span class="op">=</span> <span class="ident">envv</span>.<span class="ident">push_into_stack</span>(<span class="kw-2">&amp;mut</span> <span class="ident">stack</span>));
+        loaded_binary
+            .envv
+            .map(|envv| envp = envv.push_into_stack(<span class="kw-2">&amp;mut </span>stack));
 
-        <span class="ident">loaded_binary</span>
-            .<span class="ident">argv</span>
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">argv</span><span class="op">|</span> <span class="ident">argp</span> <span class="op">=</span> <span class="ident">argv</span>.<span class="ident">push_into_stack</span>(<span class="kw-2">&amp;mut</span> <span class="ident">stack</span>));
+        loaded_binary
+            .argv
+            .map(|argv| argp = argv.push_into_stack(<span class="kw-2">&amp;mut </span>stack));
 
-        <span class="ident">stack</span>.<span class="ident">align_down</span>();
+        stack.align_down();
 
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">envp</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="ident">argp</span>.<span class="ident">len</span>() <span class="op">+</span> <span class="number">1</span> <span class="op">+</span> <span class="number">1</span>;
+        <span class="kw">let </span>size = envp.len() + <span class="number">1 </span>+ argp.len() + <span class="number">1 </span>+ <span class="number">1</span>;
 
-        <span class="kw">if</span> <span class="ident">size</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">1</span> {
-            <span class="kw">unsafe</span> {
-                <span class="ident">stack</span>.<span class="ident">write</span>(<span class="number">0u64</span>);
+        <span class="kw">if </span>size % <span class="number">2 </span>== <span class="number">1 </span>{
+            <span class="kw">unsafe </span>{
+                stack.write(<span class="number">0u64</span>);
             }
         }
 
-        <span class="kw">let</span> <span class="ident">p2_header</span> <span class="op">=</span> <span class="ident">loaded_binary</span>.<span class="ident">elf</span>.<span class="ident">header</span>.<span class="ident">pt2</span>;
+        <span class="kw">let </span>p2_header = loaded_binary.elf.header.pt2;
 
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">hdr</span>: [(<span class="ident">AuxvType</span>, <span class="ident">usize</span>); <span class="number">4</span>] <span class="op">=</span> [
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>hdr: [(AuxvType, usize); <span class="number">4</span>] = [
                 (
-                    <span class="ident">AuxvType::AtPhdr</span>,
-                    (<span class="ident">p2_header</span>.<span class="ident">ph_offset</span>() <span class="op">+</span> <span class="ident">loaded_binary</span>.<span class="ident">base_addr</span>.<span class="ident">as_u64</span>()) <span class="kw">as</span> <span class="ident">usize</span>,
+                    AuxvType::AtPhdr,
+                    (p2_header.ph_offset() + loaded_binary.base_addr.as_u64()) <span class="kw">as </span>usize,
                 ),
-                (<span class="ident">AuxvType::AtPhEnt</span>, <span class="ident">p2_header</span>.<span class="ident">ph_entry_size</span>() <span class="kw">as</span> <span class="ident">usize</span>),
-                (<span class="ident">AuxvType::AtPhNum</span>, <span class="ident">p2_header</span>.<span class="ident">ph_count</span>() <span class="kw">as</span> <span class="ident">usize</span>),
-                (<span class="ident">AuxvType::AtEntry</span>, <span class="ident">p2_header</span>.<span class="ident">entry_point</span>() <span class="kw">as</span> <span class="ident">usize</span>),
+                (AuxvType::AtPhEnt, p2_header.ph_entry_size() <span class="kw">as </span>usize),
+                (AuxvType::AtPhNum, p2_header.ph_count() <span class="kw">as </span>usize),
+                (AuxvType::AtEntry, p2_header.entry_point() <span class="kw">as </span>usize),
             ];
 
-            <span class="ident">stack</span>.<span class="ident">write</span>(<span class="number">0usize</span>); <span class="comment">// Make it 16 bytes aligned</span>
-            <span class="ident">stack</span>.<span class="ident">write</span>(<span class="ident">AuxvType::AtNull</span>);
-            <span class="ident">stack</span>.<span class="ident">write</span>(<span class="ident">hdr</span>);
+            stack.write(<span class="number">0usize</span>); <span class="comment">// Make it 16 bytes aligned
+            </span>stack.write(AuxvType::AtNull);
+            stack.write(hdr);
         }
 
-        <span class="comment">// struct ExecStackData {</span>
-        <span class="comment">//     argc: isize,</span>
-        <span class="comment">//     argv: *const *const u8,</span>
-        <span class="comment">//     envv: *const *const u8,</span>
-        <span class="comment">// }</span>
-        <span class="kw">unsafe</span> {
-            <span class="ident">stack</span>.<span class="ident">write</span>(<span class="number">0u64</span>);
-            <span class="ident">stack</span>.<span class="ident">write_slice</span>(<span class="ident">envp</span>.<span class="ident">as_slice</span>());
-            <span class="ident">stack</span>.<span class="ident">write</span>(<span class="number">0u64</span>);
-            <span class="ident">stack</span>.<span class="ident">write_slice</span>(<span class="ident">argp</span>.<span class="ident">as_slice</span>());
-            <span class="ident">stack</span>.<span class="ident">write</span>(<span class="ident">argp</span>.<span class="ident">len</span>());
+        <span class="comment">// struct ExecStackData {
+        //     argc: isize,
+        //     argv: *const *const u8,
+        //     envv: *const *const u8,
+        // }
+        </span><span class="kw">unsafe </span>{
+            stack.write(<span class="number">0u64</span>);
+            stack.write_slice(envp.as_slice());
+            stack.write(<span class="number">0u64</span>);
+            stack.write_slice(argp.as_slice());
+            stack.write(argp.len());
         }
 
-        <span class="ident">core::mem::drop</span>(<span class="ident">envp</span>);
-        <span class="ident">core::mem::drop</span>(<span class="ident">argp</span>);
+        core::mem::drop(envp);
+        core::mem::drop(argp);
 
-        <span class="macro">assert_eq!</span>(<span class="ident">stack</span>.<span class="ident">top</span>() <span class="op">%</span> <span class="number">16</span>, <span class="number">0</span>);
+        <span class="macro">assert_eq!</span>(stack.top() % <span class="number">16</span>, <span class="number">0</span>);
 
-        <span class="kw">unsafe</span> {
-            <span class="ident">jump_userland_exec</span>(<span class="ident">VirtAddr::new</span>(<span class="ident">stack</span>.<span class="ident">top</span>()), <span class="ident">loaded_binary</span>.<span class="ident">entry_point</span>, <span class="number">0x200</span>);
+        <span class="kw">unsafe </span>{
+            jump_userland_exec(VirtAddr::new(stack.top()), loaded_binary.entry_point, <span class="number">0x200</span>);
         }
 
         <span class="prelude-val">Ok</span>(())
     }
 
-    <span class="doccomment">/// Allocates a new context switch stack for the process and returns the stack</span>
-    <span class="doccomment">/// top address. See the module level documentation for more information.</span>
-    <span class="kw">fn</span> <span class="ident">alloc_switch_stack</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">VirtAddr</span>, <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>
-            .<span class="ident">allocate_frame</span>()
-            .<span class="ident">ok_or</span>(<span class="ident">MapToError::FrameAllocationFailed</span>)<span class="question-mark">?</span>;
+    <span class="doccomment">/// Allocates a new context switch stack for the process and returns the stack
+    /// top address. See the module level documentation for more information.
+    </span><span class="kw">fn </span>alloc_switch_stack() -&gt; <span class="prelude-ty">Result</span>&lt;VirtAddr, MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR
+            .allocate_frame()
+            .ok_or(MapToError::FrameAllocationFailed)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>().<span class="ident">as_hhdm_virt</span>() <span class="op">+</span> <span class="ident">Size4KiB::SIZE</span>)
+        <span class="prelude-val">Ok</span>(frame.start_address().as_hhdm_virt() + Size4KiB::SIZE)
     }
 
-    <span class="kw">fn</span> <span class="ident">unref_pt</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="macro">assert!</span>(<span class="self">self</span>.<span class="ident">user</span>);
+    <span class="kw">fn </span>unref_pt(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="macro">assert!</span>(<span class="self">self</span>.user);
 
-        <span class="self">self</span>.<span class="ident">address_space</span>
-            .<span class="ident">offset_page_table</span>()
-            .<span class="ident">page_table</span>()
-            .<span class="ident">for_each_entry</span>(
-                <span class="ident">PageTableFlags::PRESENT</span> <span class="op">|</span> <span class="ident">PageTableFlags::USER_ACCESSIBLE</span>,
-                <span class="op">|</span><span class="ident">entry</span><span class="op">|</span> {
-                    <span class="ident">entry</span>.<span class="ident">unref_vm_frame</span>();
-                    <span class="ident">entry</span>.<span class="ident">set_unused</span>();
+        <span class="self">self</span>.address_space
+            .offset_page_table()
+            .page_table()
+            .for_each_entry(
+                PageTableFlags::PRESENT | PageTableFlags::USER_ACCESSIBLE,
+                |entry| {
+                    entry.unref_vm_frame();
+                    entry.set_unused();
 
                     <span class="prelude-val">Ok</span>(())
                 },
             )
-            .<span class="ident">expect</span>(<span class="string">&quot;dealloc: failed to unref the page table&quot;</span>);
+            .expect(<span class="string">&quot;dealloc: failed to unref the page table&quot;</span>);
     }
 
-    <span class="doccomment">/// Deallocates the architecture-specific task resources. This function is called</span>
-    <span class="doccomment">/// when the process is turned into a zombie.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">user</span> {
-            <span class="self">self</span>.<span class="ident">unref_pt</span>();
+    <span class="doccomment">/// Deallocates the architecture-specific task resources. This function is called
+    /// when the process is turned into a zombie.
+    </span><span class="kw">pub fn </span>dealloc(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.user {
+            <span class="self">self</span>.unref_pt();
         }
 
-        <span class="comment">// deallocate the switch stack</span>
-        {
-            <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PhysFrame::containing_address</span>(
-                (<span class="self">self</span>.<span class="ident">context_switch_rsp</span> <span class="op">-</span> <span class="ident">Size4KiB::SIZE</span>).<span class="ident">as_hhdm_phys</span>(),
+        <span class="comment">// deallocate the switch stack
+        </span>{
+            <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = PhysFrame::containing_address(
+                (<span class="self">self</span>.context_switch_rsp - Size4KiB::SIZE).as_hhdm_phys(),
             );
 
-            <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">deallocate_frame</span>(<span class="ident">frame</span>);
+            FRAME_ALLOCATOR.deallocate_frame(frame);
         }
     }
 
-    <span class="doccomment">/// Returns the saved GS base for this task.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_gs_base</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">VirtAddr</span> {
-        <span class="self">self</span>.<span class="ident">gs_base</span>
+    <span class="doccomment">/// Returns the saved GS base for this task.
+    </span><span class="kw">pub fn </span>get_gs_base(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VirtAddr {
+        <span class="self">self</span>.gs_base
     }
 
-    <span class="doccomment">/// Sets the GS base to the provided `base`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Safety</span>
-    <span class="doccomment">/// This function **must** be called by the process that this [`ArchTask`] instance</span>
-    <span class="doccomment">/// belongs to. This is required since we also update the GS base register with the</span>
-    <span class="doccomment">/// `base` immediately (not waiting for a switch).</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_gs_base</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">base</span>: <span class="ident">VirtAddr</span>) {
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_KERNEL_GSBASE</span>, <span class="ident">base</span>.<span class="ident">as_u64</span>());
-        <span class="self">self</span>.<span class="ident">gs_base</span> <span class="op">=</span> <span class="ident">base</span>;
+    <span class="doccomment">/// Sets the GS base to the provided `base`.
+    ///
+    /// ## Safety
+    /// This function **must** be called by the process that this [`ArchTask`] instance
+    /// belongs to. This is required since we also update the GS base register with the
+    /// `base` immediately (not waiting for a switch).
+    </span><span class="kw">pub unsafe fn </span>set_gs_base(<span class="kw-2">&amp;mut </span><span class="self">self</span>, base: VirtAddr) {
+        io::wrmsr(io::IA32_KERNEL_GSBASE, base.as_u64());
+        <span class="self">self</span>.gs_base = base;
     }
 
-    <span class="doccomment">/// Returns the saved FS base for this task.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_fs_base</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">VirtAddr</span> {
-        <span class="self">self</span>.<span class="ident">fs_base</span>
+    <span class="doccomment">/// Returns the saved FS base for this task.
+    </span><span class="kw">pub fn </span>get_fs_base(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; VirtAddr {
+        <span class="self">self</span>.fs_base
     }
 
-    <span class="doccomment">/// Sets the FS base to the provided `base`.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Safety</span>
-    <span class="doccomment">/// This function **must** be called by the process that this [`ArchTask`] instance</span>
-    <span class="doccomment">/// belongs to. This is required since we also update the FS base register with the</span>
-    <span class="doccomment">/// `base` immediately (not waiting for a switch).</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">set_fs_base</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">base</span>: <span class="ident">VirtAddr</span>) {
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_FS_BASE</span>, <span class="ident">base</span>.<span class="ident">as_u64</span>());
-        <span class="self">self</span>.<span class="ident">fs_base</span> <span class="op">=</span> <span class="ident">base</span>;
+    <span class="doccomment">/// Sets the FS base to the provided `base`.
+    ///
+    /// ## Safety
+    /// This function **must** be called by the process that this [`ArchTask`] instance
+    /// belongs to. This is required since we also update the FS base register with the
+    /// `base` immediately (not waiting for a switch).
+    </span><span class="kw">pub unsafe fn </span>set_fs_base(<span class="kw-2">&amp;mut </span><span class="self">self</span>, base: VirtAddr) {
+        io::wrmsr(io::IA32_FS_BASE, base.as_u64());
+        <span class="self">self</span>.fs_base = base;
     }
 }
 
-<span class="doccomment">/// Check out the module level documentation for more information.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">arch_task_spinup</span>(<span class="ident">from</span>: <span class="kw-2">&amp;mut</span> <span class="ident">ArchTask</span>, <span class="ident">to</span>: <span class="kw-2">&amp;</span><span class="ident">ArchTask</span>) {
-    <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-        <span class="kw">fn</span> <span class="ident">task_spinup</span>(<span class="ident">from</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Unique</span><span class="op">&lt;</span><span class="ident">Context</span><span class="op">&gt;</span>, <span class="ident">to</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span>);
+<span class="doccomment">/// Check out the module level documentation for more information.
+</span><span class="kw">pub fn </span>arch_task_spinup(from: <span class="kw-2">&amp;mut </span>ArchTask, to: <span class="kw-2">&amp;</span>ArchTask) {
+    <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+        <span class="kw">fn </span>task_spinup(from: <span class="kw-2">&amp;mut </span>Unique&lt;Context&gt;, to: <span class="kw-2">&amp;</span>Context);
     }
 
-    <span class="kw">unsafe</span> {
-        <span class="comment">// Load the new thread&#39;s kernel stack pointer everywhere it&#39;s needed.</span>
-        <span class="kw">let</span> <span class="ident">kstackp</span> <span class="op">=</span> <span class="ident">to</span>.<span class="ident">context_switch_rsp</span>.<span class="ident">as_u64</span>();
-        <span class="ident"><span class="kw">super</span>::gdt::get_task_state_segement</span>().<span class="ident">rsp</span>[<span class="number">0</span>] <span class="op">=</span> <span class="ident">kstackp</span>;
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_SYSENTER_ESP</span>, <span class="ident">kstackp</span>);
+    <span class="kw">unsafe </span>{
+        <span class="comment">// Load the new thread&#39;s kernel stack pointer everywhere it&#39;s needed.
+        </span><span class="kw">let </span>kstackp = to.context_switch_rsp.as_u64();
+        <span class="kw">super</span>::gdt::get_task_state_segement().rsp[<span class="number">0</span>] = kstackp;
+        io::wrmsr(io::IA32_SYSENTER_ESP, kstackp);
 
-        <span class="comment">// switch to the new FS base.</span>
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_FS_BASE</span>, <span class="ident">to</span>.<span class="ident">fs_base</span>.<span class="ident">as_u64</span>());
+        <span class="comment">// switch to the new FS base.
+        </span>io::wrmsr(io::IA32_FS_BASE, to.fs_base.as_u64());
 
-        <span class="comment">// update the swap GS target to point to the new GS base.</span>
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_KERNEL_GSBASE</span>, <span class="ident">to</span>.<span class="ident">gs_base</span>.<span class="ident">as_u64</span>());
+        <span class="comment">// update the swap GS target to point to the new GS base.
+        </span>io::wrmsr(io::IA32_KERNEL_GSBASE, to.gs_base.as_u64());
 
-        <span class="ident">task_spinup</span>(<span class="kw-2">&amp;mut</span> <span class="ident">from</span>.<span class="ident">context</span>, <span class="ident">to</span>.<span class="ident">context</span>.<span class="ident">as_ref</span>());
+        task_spinup(<span class="kw-2">&amp;mut </span>from.context, to.context.as_ref());
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

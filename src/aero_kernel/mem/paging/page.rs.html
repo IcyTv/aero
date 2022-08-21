@@ -409,382 +409,382 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! Abstractions for default-sized and huge virtual memory pages.</span>
+</span><span class="doccomment">//! Abstractions for default-sized and huge virtual memory pages.
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::addr</span>::{<span class="ident">PhysAddr</span>, <span class="ident">VirtAddr</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::page_table::PageTableIndex</span>;
+</span><span class="kw">use </span><span class="kw">super</span>::addr::{PhysAddr, VirtAddr};
+<span class="kw">use </span><span class="kw">super</span>::page_table::PageTableIndex;
 
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
-<span class="kw">use</span> <span class="ident">core::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">core::ops</span>::{<span class="ident">Add</span>, <span class="ident">AddAssign</span>, <span class="ident">Sub</span>, <span class="ident">SubAssign</span>};
+<span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::marker::PhantomData;
+<span class="kw">use </span>core::ops::{Add, AddAssign, Sub, SubAssign};
 
-<span class="doccomment">/// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PageSize</span>: <span class="ident">Copy</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">PartialOrd</span> <span class="op">+</span> <span class="ident">Ord</span> {
-    <span class="doccomment">/// The page size in bytes.</span>
-    <span class="kw">const</span> <span class="ident">SIZE</span>: <span class="ident">u64</span>;
+<span class="doccomment">/// Trait for abstracting over the three possible page sizes on x86_64, 4KiB, 2MiB, 1GiB.
+</span><span class="kw">pub trait </span>PageSize: Copy + Eq + PartialOrd + Ord {
+    <span class="doccomment">/// The page size in bytes.
+    </span><span class="kw">const </span>SIZE: u64;
 
-    <span class="doccomment">/// A string representation of the page size for debug output.</span>
-    <span class="kw">const</span> <span class="ident">SIZE_AS_DEBUG_STR</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
+    <span class="doccomment">/// A string representation of the page size for debug output.
+    </span><span class="kw">const </span>SIZE_AS_DEBUG_STR: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str;
 }
 
-<span class="doccomment">/// This trait is implemented for 4KiB and 2MiB pages, but not for 1GiB pages.</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">NotGiantPageSize</span>: <span class="ident">PageSize</span> {}
+<span class="doccomment">/// This trait is implemented for 4KiB and 2MiB pages, but not for 1GiB pages.
+</span><span class="kw">pub trait </span>NotGiantPageSize: PageSize {}
 
-<span class="doccomment">/// A standard 4KiB page.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Size4KiB</span> {}
+<span class="doccomment">/// A standard 4KiB page.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="kw">pub enum </span>Size4KiB {}
 
-<span class="doccomment">/// A “huge” 2MiB page.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Size2MiB</span> {}
+<span class="doccomment">/// A “huge” 2MiB page.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="kw">pub enum </span>Size2MiB {}
 
-<span class="doccomment">/// A “giant” 1GiB page.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// (Only available on newer x86_64 CPUs.)</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Size1GiB</span> {}
+<span class="doccomment">/// A “giant” 1GiB page.
+///
+/// (Only available on newer x86_64 CPUs.)
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="kw">pub enum </span>Size1GiB {}
 
-<span class="kw">impl</span> <span class="ident">PageSize</span> <span class="kw">for</span> <span class="ident">Size4KiB</span> {
-    <span class="kw">const</span> <span class="ident">SIZE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">4096</span>;
-    <span class="kw">const</span> <span class="ident">SIZE_AS_DEBUG_STR</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;4KiB&quot;</span>;
+<span class="kw">impl </span>PageSize <span class="kw">for </span>Size4KiB {
+    <span class="kw">const </span>SIZE: u64 = <span class="number">4096</span>;
+    <span class="kw">const </span>SIZE_AS_DEBUG_STR: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;4KiB&quot;</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">NotGiantPageSize</span> <span class="kw">for</span> <span class="ident">Size4KiB</span> {}
+<span class="kw">impl </span>NotGiantPageSize <span class="kw">for </span>Size4KiB {}
 
-<span class="kw">impl</span> <span class="ident">PageSize</span> <span class="kw">for</span> <span class="ident">Size2MiB</span> {
-    <span class="kw">const</span> <span class="ident">SIZE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">Size4KiB::SIZE</span> <span class="op">*</span> <span class="number">512</span>;
-    <span class="kw">const</span> <span class="ident">SIZE_AS_DEBUG_STR</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;2MiB&quot;</span>;
+<span class="kw">impl </span>PageSize <span class="kw">for </span>Size2MiB {
+    <span class="kw">const </span>SIZE: u64 = Size4KiB::SIZE * <span class="number">512</span>;
+    <span class="kw">const </span>SIZE_AS_DEBUG_STR: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;2MiB&quot;</span>;
 }
 
-<span class="kw">impl</span> <span class="ident">NotGiantPageSize</span> <span class="kw">for</span> <span class="ident">Size2MiB</span> {}
+<span class="kw">impl </span>NotGiantPageSize <span class="kw">for </span>Size2MiB {}
 
-<span class="kw">impl</span> <span class="ident">PageSize</span> <span class="kw">for</span> <span class="ident">Size1GiB</span> {
-    <span class="kw">const</span> <span class="ident">SIZE</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="ident">Size2MiB::SIZE</span> <span class="op">*</span> <span class="number">512</span>;
-    <span class="kw">const</span> <span class="ident">SIZE_AS_DEBUG_STR</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> <span class="op">=</span> <span class="string">&quot;1GiB&quot;</span>;
+<span class="kw">impl </span>PageSize <span class="kw">for </span>Size1GiB {
+    <span class="kw">const </span>SIZE: u64 = Size2MiB::SIZE * <span class="number">512</span>;
+    <span class="kw">const </span>SIZE_AS_DEBUG_STR: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str = <span class="string">&quot;1GiB&quot;</span>;
 }
 
-<span class="doccomment">/// A virtual memory page.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span> <span class="op">=</span> <span class="ident">Size4KiB</span><span class="op">&gt;</span> {
-    <span class="ident">start_address</span>: <span class="ident">VirtAddr</span>,
-    <span class="ident">size</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A virtual memory page.
+</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>Page&lt;S: PageSize = Size4KiB&gt; {
+    start_address: VirtAddr,
+    size: PhantomData&lt;S&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns the page that contains the given virtual address.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">containing_address</span>(<span class="ident">address</span>: <span class="ident">VirtAddr</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Page</span> {
-            <span class="ident">start_address</span>: <span class="ident">address</span>.<span class="ident">align_down</span>(<span class="ident">S::SIZE</span>),
-            <span class="ident">size</span>: <span class="ident">PhantomData</span>,
+<span class="kw">impl</span>&lt;S: PageSize&gt; Page&lt;S&gt; {
+    <span class="doccomment">/// Returns the page that contains the given virtual address.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>containing_address(address: VirtAddr) -&gt; <span class="self">Self </span>{
+        Page {
+            start_address: address.align_down(S::SIZE),
+            size: PhantomData,
         }
     }
 
-    <span class="doccomment">/// Returns the start address of the page.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_address</span>(<span class="self">self</span>) -&gt; <span class="ident">VirtAddr</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>
+    <span class="doccomment">/// Returns the start address of the page.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>start_address(<span class="self">self</span>) -&gt; VirtAddr {
+        <span class="self">self</span>.start_address
     }
 
-    <span class="doccomment">/// Returns the level 5 page table index of this page.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p5_index</span>(<span class="self">self</span>) -&gt; <span class="ident">PageTableIndex</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">p5_index</span>()
+    <span class="doccomment">/// Returns the level 5 page table index of this page.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>p5_index(<span class="self">self</span>) -&gt; PageTableIndex {
+        <span class="self">self</span>.start_address().p5_index()
     }
 
-    <span class="doccomment">/// Returns the level 4 page table index of this page.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p4_index</span>(<span class="self">self</span>) -&gt; <span class="ident">PageTableIndex</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">p4_index</span>()
+    <span class="doccomment">/// Returns the level 4 page table index of this page.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>p4_index(<span class="self">self</span>) -&gt; PageTableIndex {
+        <span class="self">self</span>.start_address().p4_index()
     }
 
-    <span class="doccomment">/// Returns the level 3 page table index of this page.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p3_index</span>(<span class="self">self</span>) -&gt; <span class="ident">PageTableIndex</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">p3_index</span>()
+    <span class="doccomment">/// Returns the level 3 page table index of this page.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>p3_index(<span class="self">self</span>) -&gt; PageTableIndex {
+        <span class="self">self</span>.start_address().p3_index()
     }
 
-    <span class="doccomment">/// Returns a range of pages, exclusive `end`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">range</span>(<span class="ident">start</span>: <span class="self">Self</span>, <span class="ident">end</span>: <span class="self">Self</span>) -&gt; <span class="ident">PageRange</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-        <span class="ident">PageRange</span> { <span class="ident">start</span>, <span class="ident">end</span> }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">NotGiantPageSize</span><span class="op">&gt;</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns the level 2 page table index of this page.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">p2_index</span>(<span class="self">self</span>) -&gt; <span class="ident">PageTableIndex</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">p2_index</span>()
+    <span class="doccomment">/// Returns a range of pages, exclusive `end`.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub const fn </span>range(start: <span class="self">Self</span>, end: <span class="self">Self</span>) -&gt; PageRange&lt;S&gt; {
+        PageRange { start, end }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns the level 1 page table index of this page.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">p1_index</span>(<span class="self">self</span>) -&gt; <span class="ident">PageTableIndex</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>.<span class="ident">p1_index</span>()
+<span class="kw">impl</span>&lt;S: NotGiantPageSize&gt; Page&lt;S&gt; {
+    <span class="doccomment">/// Returns the level 2 page table index of this page.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>p2_index(<span class="self">self</span>) -&gt; PageTableIndex {
+        <span class="self">self</span>.start_address().p2_index()
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_fmt</span>(<span class="macro">format_args!</span>(
+<span class="kw">impl </span>Page&lt;Size4KiB&gt; {
+    <span class="doccomment">/// Returns the level 1 page table index of this page.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub const fn </span>p1_index(<span class="self">self</span>) -&gt; PageTableIndex {
+        <span class="self">self</span>.start_address.p1_index()
+    }
+}
+
+<span class="kw">impl</span>&lt;S: PageSize&gt; fmt::Debug <span class="kw">for </span>Page&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        f.write_fmt(<span class="macro">format_args!</span>(
             <span class="string">&quot;Page[{}]({:#x})&quot;</span>,
-            <span class="ident">S::SIZE_AS_DEBUG_STR</span>,
-            <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">as_u64</span>()
+            S::SIZE_AS_DEBUG_STR,
+            <span class="self">self</span>.start_address().as_u64()
         ))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="ident">Page::containing_address</span>(<span class="self">self</span>.<span class="ident">start_address</span>() <span class="op">+</span> <span class="ident">rhs</span> <span class="op">*</span> <span class="ident">S::SIZE</span>)
+<span class="kw">impl</span>&lt;S: PageSize&gt; Add&lt;u64&gt; <span class="kw">for </span>Page&lt;S&gt; {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>add(<span class="self">self</span>, rhs: u64) -&gt; <span class="self">Self</span>::Output {
+        Page::containing_address(<span class="self">self</span>.start_address() + rhs * S::SIZE)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">AddAssign</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; AddAssign&lt;u64&gt; <span class="kw">for </span>Page&lt;S&gt; {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: u64) {
+        <span class="kw-2">*</span><span class="self">self </span>= <span class="kw-2">*</span><span class="self">self </span>+ rhs;
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="ident">Page::containing_address</span>(<span class="self">self</span>.<span class="ident">start_address</span>() <span class="op">-</span> <span class="ident">rhs</span> <span class="op">*</span> <span class="ident">S::SIZE</span>)
+<span class="kw">impl</span>&lt;S: PageSize&gt; Sub&lt;u64&gt; <span class="kw">for </span>Page&lt;S&gt; {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>sub(<span class="self">self</span>, rhs: u64) -&gt; <span class="self">Self</span>::Output {
+        Page::containing_address(<span class="self">self</span>.start_address() - rhs * S::SIZE)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">SubAssign</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; SubAssign&lt;u64&gt; <span class="kw">for </span>Page&lt;S&gt; {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>sub_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: u64) {
+        <span class="kw-2">*</span><span class="self">self </span>= <span class="kw-2">*</span><span class="self">self </span>- rhs;
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">u64</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="self">Self</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        (<span class="self">self</span>.<span class="ident">start_address</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="ident">start_address</span>) <span class="op">/</span> <span class="ident">S::SIZE</span>
+<span class="kw">impl</span>&lt;S: PageSize&gt; Sub&lt;<span class="self">Self</span>&gt; <span class="kw">for </span>Page&lt;S&gt; {
+    <span class="kw">type </span>Output = u64;
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>sub(<span class="self">self</span>, rhs: <span class="self">Self</span>) -&gt; <span class="self">Self</span>::Output {
+        (<span class="self">self</span>.start_address - rhs.start_address) / S::SIZE
     }
 }
 
-<span class="doccomment">/// A range of pages with exclusive upper bound.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageRange</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span> <span class="op">=</span> <span class="ident">Size4KiB</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The start of the range, inclusive.</span>
-    <span class="kw">pub</span> <span class="ident">start</span>: <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The end of the range, exclusive.</span>
-    <span class="kw">pub</span> <span class="ident">end</span>: <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+<span class="doccomment">/// A range of pages with exclusive upper bound.
+</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>PageRange&lt;S: PageSize = Size4KiB&gt; {
+    <span class="doccomment">/// The start of the range, inclusive.
+    </span><span class="kw">pub </span>start: Page&lt;S&gt;,
+    <span class="doccomment">/// The end of the range, exclusive.
+    </span><span class="kw">pub </span>end: Page&lt;S&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">PageRange</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">Page</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; Iterator <span class="kw">for </span>PageRange&lt;S&gt; {
+    <span class="kw">type </span>Item = Page&lt;S&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">start</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">end</span> {
-            <span class="kw">let</span> <span class="ident">page</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">start</span>;
-            <span class="self">self</span>.<span class="ident">start</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="prelude-val">Some</span>(<span class="ident">page</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.start &lt; <span class="self">self</span>.end {
+            <span class="kw">let </span>page = <span class="self">self</span>.start;
+            <span class="self">self</span>.start += <span class="number">1</span>;
+            <span class="prelude-val">Some</span>(page)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
+    }
+}
+
+<span class="kw">impl</span>&lt;S: PageSize&gt; fmt::Debug <span class="kw">for </span>PageRange&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;PageRange&quot;</span>)
+            .field(<span class="string">&quot;start&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.start)
+            .field(<span class="string">&quot;end&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.end)
+            .finish()
+    }
+}
+
+<span class="doccomment">/// The given address was not sufficiently aligned.
+</span><span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>AddressNotAligned;
+
+<span class="kw">impl </span>fmt::Display <span class="kw">for </span>AddressNotAligned {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="macro">write!</span>(f, <span class="string">&quot;the given address was not sufficiently aligned&quot;</span>)
+    }
+}
+
+<span class="doccomment">/// A physical memory frame.
+</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>PhysFrame&lt;S: PageSize = Size4KiB&gt; {
+    <span class="kw">pub</span>(<span class="kw">crate</span>) start_address: PhysAddr, <span class="comment">// TODO: remove when start_address() is const
+    </span>size: PhantomData&lt;S&gt;,
+}
+
+<span class="kw">impl</span>&lt;S: PageSize&gt; PhysFrame&lt;S&gt; {
+    <span class="doccomment">/// Returns the frame that starts at the given virtual address.
+    ///
+    /// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>from_start_address(address: PhysAddr) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, AddressNotAligned&gt; {
+        <span class="kw">if </span>!address.is_aligned(S::SIZE) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(AddressNotAligned);
+        }
+        <span class="prelude-val">Ok</span>(PhysFrame::containing_address(address))
+    }
+
+    <span class="doccomment">/// Returns the frame that contains the given physical address.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>containing_address(address: PhysAddr) -&gt; <span class="self">Self </span>{
+        PhysFrame {
+            start_address: address.align_down(S::SIZE),
+            size: PhantomData,
+        }
+    }
+
+    <span class="doccomment">/// Returns the start address of the frame.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>start_address(<span class="self">self</span>) -&gt; PhysAddr {
+        <span class="self">self</span>.start_address
+    }
+
+    <span class="kw">pub fn </span>as_slice_mut&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>[T] {
+        <span class="macro">assert!</span>(core::mem::size_of::&lt;T&gt;() &lt; S::SIZE <span class="kw">as </span>usize);
+
+        <span class="kw">let </span>virt = <span class="self">self</span>.start_address().as_hhdm_virt();
+        <span class="kw">let </span>ptr = virt.as_mut_ptr::&lt;T&gt;();
+
+        <span class="comment">// SAFETY: The size of the slice is equal to the size of the frame and the
+        // pointer is valid.
+        </span><span class="kw">unsafe </span>{
+            core::slice::from_raw_parts_mut(ptr, S::SIZE <span class="kw">as </span>usize / core::mem::size_of::&lt;T&gt;())
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PageRange</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;PageRange&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;start&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">start</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;end&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>)
-            .<span class="ident">finish</span>()
-    }
-}
-
-<span class="doccomment">/// The given address was not sufficiently aligned.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">AddressNotAligned</span>;
-
-<span class="kw">impl</span> <span class="ident">fmt::Display</span> <span class="kw">for</span> <span class="ident">AddressNotAligned</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="macro">write!</span>(<span class="ident">f</span>, <span class="string">&quot;the given address was not sufficiently aligned&quot;</span>)
-    }
-}
-
-<span class="doccomment">/// A physical memory frame.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span> <span class="op">=</span> <span class="ident">Size4KiB</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">start_address</span>: <span class="ident">PhysAddr</span>, <span class="comment">// TODO: remove when start_address() is const</span>
-    <span class="ident">size</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// Returns the frame that starts at the given virtual address.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns an error if the address is not correctly aligned (i.e. is not a valid frame start).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_start_address</span>(<span class="ident">address</span>: <span class="ident">PhysAddr</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">AddressNotAligned</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">address</span>.<span class="ident">is_aligned</span>(<span class="ident">S::SIZE</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">AddressNotAligned</span>);
-        }
-        <span class="prelude-val">Ok</span>(<span class="ident">PhysFrame::containing_address</span>(<span class="ident">address</span>))
-    }
-
-    <span class="doccomment">/// Returns the frame that contains the given physical address.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">containing_address</span>(<span class="ident">address</span>: <span class="ident">PhysAddr</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">PhysFrame</span> {
-            <span class="ident">start_address</span>: <span class="ident">address</span>.<span class="ident">align_down</span>(<span class="ident">S::SIZE</span>),
-            <span class="ident">size</span>: <span class="ident">PhantomData</span>,
-        }
-    }
-
-    <span class="doccomment">/// Returns the start address of the frame.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">start_address</span>(<span class="self">self</span>) -&gt; <span class="ident">PhysAddr</span> {
-        <span class="self">self</span>.<span class="ident">start_address</span>
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">as_slice_mut</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut</span> [<span class="ident">T</span>] {
-        <span class="macro">assert!</span>(<span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>() <span class="op">&lt;</span> <span class="ident">S::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>);
-
-        <span class="kw">let</span> <span class="ident">virt</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">as_hhdm_virt</span>();
-        <span class="kw">let</span> <span class="ident">ptr</span> <span class="op">=</span> <span class="ident">virt</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>();
-
-        <span class="comment">// SAFETY: The size of the slice is equal to the size of the frame and the</span>
-        <span class="comment">// pointer is valid.</span>
-        <span class="kw">unsafe</span> {
-            <span class="ident">core::slice::from_raw_parts_mut</span>(<span class="ident">ptr</span>, <span class="ident">S::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">/</span> <span class="ident">core::mem::size_of</span>::<span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>())
-        }
-    }
-}
-
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">write_fmt</span>(<span class="macro">format_args!</span>(
+<span class="kw">impl</span>&lt;S: PageSize&gt; fmt::Debug <span class="kw">for </span>PhysFrame&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        f.write_fmt(<span class="macro">format_args!</span>(
             <span class="string">&quot;PhysFrame[{}]({:#x})&quot;</span>,
-            <span class="ident">S::SIZE_AS_DEBUG_STR</span>,
-            <span class="self">self</span>.<span class="ident">start_address</span>().<span class="ident">as_u64</span>()
+            S::SIZE_AS_DEBUG_STR,
+            <span class="self">self</span>.start_address().as_u64()
         ))
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Add</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="ident">PhysFrame::containing_address</span>(<span class="self">self</span>.<span class="ident">start_address</span>() <span class="op">+</span> <span class="ident">rhs</span> <span class="op">*</span> <span class="ident">S::SIZE</span>)
+<span class="kw">impl</span>&lt;S: PageSize&gt; Add&lt;u64&gt; <span class="kw">for </span>PhysFrame&lt;S&gt; {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>add(<span class="self">self</span>, rhs: u64) -&gt; <span class="self">Self</span>::Output {
+        PhysFrame::containing_address(<span class="self">self</span>.start_address() + rhs * S::SIZE)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">AddAssign</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">add_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span> <span class="op">+</span> <span class="ident">rhs</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; AddAssign&lt;u64&gt; <span class="kw">for </span>PhysFrame&lt;S&gt; {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: u64) {
+        <span class="kw-2">*</span><span class="self">self </span>= <span class="kw-2">*</span><span class="self">self </span>+ rhs;
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="self">Self</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="ident">PhysFrame::containing_address</span>(<span class="self">self</span>.<span class="ident">start_address</span>() <span class="op">-</span> <span class="ident">rhs</span> <span class="op">*</span> <span class="ident">S::SIZE</span>)
+<span class="kw">impl</span>&lt;S: PageSize&gt; Sub&lt;u64&gt; <span class="kw">for </span>PhysFrame&lt;S&gt; {
+    <span class="kw">type </span>Output = <span class="self">Self</span>;
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>sub(<span class="self">self</span>, rhs: u64) -&gt; <span class="self">Self</span>::Output {
+        PhysFrame::containing_address(<span class="self">self</span>.start_address() - rhs * S::SIZE)
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">SubAssign</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub_assign</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">u64</span>) {
-        <span class="kw-2">*</span><span class="self">self</span> <span class="op">=</span> <span class="kw-2">*</span><span class="self">self</span> <span class="op">-</span> <span class="ident">rhs</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; SubAssign&lt;u64&gt; <span class="kw">for </span>PhysFrame&lt;S&gt; {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>sub_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: u64) {
+        <span class="kw-2">*</span><span class="self">self </span>= <span class="kw-2">*</span><span class="self">self </span>- rhs;
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Sub</span><span class="op">&lt;</span><span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">u64</span>;
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">sub</span>(<span class="self">self</span>, <span class="ident">rhs</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span> {
-        (<span class="self">self</span>.<span class="ident">start_address</span> <span class="op">-</span> <span class="ident">rhs</span>.<span class="ident">start_address</span>) <span class="op">/</span> <span class="ident">S::SIZE</span>
+<span class="kw">impl</span>&lt;S: PageSize&gt; Sub&lt;PhysFrame&lt;S&gt;&gt; <span class="kw">for </span>PhysFrame&lt;S&gt; {
+    <span class="kw">type </span>Output = u64;
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>sub(<span class="self">self</span>, rhs: PhysFrame&lt;S&gt;) -&gt; <span class="self">Self</span>::Output {
+        (<span class="self">self</span>.start_address - rhs.start_address) / S::SIZE
     }
 }
 
-<span class="doccomment">/// An range of physical memory frames, exclusive the upper bound.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhysFrameRange</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span> <span class="op">=</span> <span class="ident">Size4KiB</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The start of the range, inclusive.</span>
-    <span class="kw">pub</span> <span class="ident">start</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The end of the range, exclusive.</span>
-    <span class="kw">pub</span> <span class="ident">end</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An range of physical memory frames, exclusive the upper bound.
+</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>PhysFrameRange&lt;S: PageSize = Size4KiB&gt; {
+    <span class="doccomment">/// The start of the range, inclusive.
+    </span><span class="kw">pub </span>start: PhysFrame&lt;S&gt;,
+    <span class="doccomment">/// The end of the range, exclusive.
+    </span><span class="kw">pub </span>end: PhysFrame&lt;S&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">PhysFrameRange</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; Iterator <span class="kw">for </span>PhysFrameRange&lt;S&gt; {
+    <span class="kw">type </span>Item = PhysFrame&lt;S&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">start</span> <span class="op">&lt;</span> <span class="self">self</span>.<span class="ident">end</span> {
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">start</span>;
-            <span class="self">self</span>.<span class="ident">start</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="prelude-val">Some</span>(<span class="ident">frame</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.start &lt; <span class="self">self</span>.end {
+            <span class="kw">let </span>frame = <span class="self">self</span>.start;
+            <span class="self">self</span>.start += <span class="number">1</span>;
+            <span class="prelude-val">Some</span>(frame)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PhysFrameRange</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;PhysFrameRange&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;start&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">start</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;end&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>)
-            .<span class="ident">finish</span>()
+<span class="kw">impl</span>&lt;S: PageSize&gt; fmt::Debug <span class="kw">for </span>PhysFrameRange&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;PhysFrameRange&quot;</span>)
+            .field(<span class="string">&quot;start&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.start)
+            .field(<span class="string">&quot;end&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.end)
+            .finish()
     }
 }
 
-<span class="doccomment">/// An range of physical memory frames, inclusive the upper bound.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PhysFrameRangeInclusive</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span> <span class="op">=</span> <span class="ident">Size4KiB</span><span class="op">&gt;</span> {
-    <span class="doccomment">/// The start of the range, inclusive.</span>
-    <span class="kw">pub</span> <span class="ident">start</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="doccomment">/// The start of the range, inclusive.</span>
-    <span class="kw">pub</span> <span class="ident">end</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+<span class="doccomment">/// An range of physical memory frames, inclusive the upper bound.
+</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>PhysFrameRangeInclusive&lt;S: PageSize = Size4KiB&gt; {
+    <span class="doccomment">/// The start of the range, inclusive.
+    </span><span class="kw">pub </span>start: PhysFrame&lt;S&gt;,
+    <span class="doccomment">/// The start of the range, inclusive.
+    </span><span class="kw">pub </span>end: PhysFrame&lt;S&gt;,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">Iterator</span> <span class="kw">for</span> <span class="ident">PhysFrameRangeInclusive</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">type</span> <span class="ident">Item</span> <span class="op">=</span> <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
+<span class="kw">impl</span>&lt;S: PageSize&gt; Iterator <span class="kw">for </span>PhysFrameRangeInclusive&lt;S&gt; {
+    <span class="kw">type </span>Item = PhysFrame&lt;S&gt;;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">next</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Item</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">start</span> <span class="op">&lt;</span><span class="op">=</span> <span class="self">self</span>.<span class="ident">end</span> {
-            <span class="kw">let</span> <span class="ident">frame</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">start</span>;
-            <span class="self">self</span>.<span class="ident">start</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-            <span class="prelude-val">Some</span>(<span class="ident">frame</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">None</span>
-        }
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
+        <span class="kw">if </span><span class="self">self</span>.start &lt;= <span class="self">self</span>.end {
+            <span class="kw">let </span>frame = <span class="self">self</span>.start;
+            <span class="self">self</span>.start += <span class="number">1</span>;
+            <span class="prelude-val">Some</span>(frame)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">None
+        </span>}
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">PageSize</span><span class="op">&gt;</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PhysFrameRangeInclusive</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;PhysFrameRangeInclusive&quot;</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;start&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">start</span>)
-            .<span class="ident">field</span>(<span class="string">&quot;end&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">end</span>)
-            .<span class="ident">finish</span>()
+<span class="kw">impl</span>&lt;S: PageSize&gt; fmt::Debug <span class="kw">for </span>PhysFrameRangeInclusive&lt;S&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        f.debug_struct(<span class="string">&quot;PhysFrameRangeInclusive&quot;</span>)
+            .field(<span class="string">&quot;start&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.start)
+            .field(<span class="string">&quot;end&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.end)
+            .finish()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

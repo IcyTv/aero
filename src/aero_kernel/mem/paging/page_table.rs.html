@@ -487,283 +487,283 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! Abstractions for page tables and page table entries.</span>
+</span><span class="doccomment">//! Abstractions for page tables and page table entries.
 
-<span class="kw">use</span> <span class="ident">core::fmt</span>;
-<span class="kw">use</span> <span class="ident">core::ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>};
+</span><span class="kw">use </span>core::fmt;
+<span class="kw">use </span>core::ops::{Index, IndexMut};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::addr::PhysAddr</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::page</span>::{<span class="ident">PageSize</span>, <span class="ident">PhysFrame</span>, <span class="ident">Size4KiB</span>};
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">FrameAllocator</span>, <span class="ident">MapToError</span>, <span class="ident">FRAME_ALLOCATOR</span>};
+<span class="kw">use </span><span class="kw">super</span>::addr::PhysAddr;
+<span class="kw">use </span><span class="kw">super</span>::page::{PageSize, PhysFrame, Size4KiB};
+<span class="kw">use super</span>::{FrameAllocator, MapToError, FRAME_ALLOCATOR};
 
-<span class="kw">use</span> <span class="ident">bitflags::bitflags</span>;
+<span class="kw">use </span>bitflags::bitflags;
 
-<span class="doccomment">/// The error returned by the `PageTableEntry::frame` method.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">FrameError</span> {
-    <span class="doccomment">/// The entry does not have the `PRESENT` flag set, so it isn&#39;t currently mapped to a frame.</span>
-    <span class="ident">FrameNotPresent</span>,
-    <span class="doccomment">/// The entry does have the `HUGE_PAGE` flag set. The `frame` method has a standard 4KiB frame</span>
-    <span class="doccomment">/// as return type, so a huge frame can&#39;t be returned.</span>
-    <span class="ident">HugeFrame</span>,
+<span class="doccomment">/// The error returned by the `PageTableEntry::frame` method.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]</span>
+<span class="kw">pub enum </span>FrameError {
+    <span class="doccomment">/// The entry does not have the `PRESENT` flag set, so it isn&#39;t currently mapped to a frame.
+    </span>FrameNotPresent,
+    <span class="doccomment">/// The entry does have the `HUGE_PAGE` flag set. The `frame` method has a standard 4KiB frame
+    /// as return type, so a huge frame can&#39;t be returned.
+    </span>HugeFrame,
 }
 
-<span class="doccomment">/// A 64-bit page table entry.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageTableEntry</span> {
-    <span class="ident">entry</span>: <span class="ident">u64</span>,
+<span class="doccomment">/// A 64-bit page table entry.
+</span><span class="attribute">#[derive(Clone)]</span>
+<span class="attribute">#[repr(transparent)]</span>
+<span class="kw">pub struct </span>PageTableEntry {
+    entry: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">PageTableEntry</span> {
-    <span class="kw">const</span> <span class="ident">ADDRESS_MASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x000f_ffff_ffff_f000</span>;
-    <span class="comment">// We use the unused flag bits in the page table entry for the</span>
-    <span class="comment">// page table entry counter.</span>
-    <span class="kw">const</span> <span class="ident">COUNTER_MASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x7ff0_0000_0000_0000</span>;
-    <span class="kw">const</span> <span class="ident">COUNTER_SHIFT</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">52</span>;
-    <span class="kw">const</span> <span class="ident">FLAGS_MASK</span>: <span class="ident">u64</span> <span class="op">=</span> <span class="number">0x80000000000001ff</span>;
+<span class="kw">impl </span>PageTableEntry {
+    <span class="kw">const </span>ADDRESS_MASK: u64 = <span class="number">0x000f_ffff_ffff_f000</span>;
+    <span class="comment">// We use the unused flag bits in the page table entry for the
+    // page table entry counter.
+    </span><span class="kw">const </span>COUNTER_MASK: u64 = <span class="number">0x7ff0_0000_0000_0000</span>;
+    <span class="kw">const </span>COUNTER_SHIFT: u64 = <span class="number">52</span>;
+    <span class="kw">const </span>FLAGS_MASK: u64 = <span class="number">0x80000000000001ff</span>;
 
-    <span class="doccomment">/// Creates an unused page table entry.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident">PageTableEntry</span> { <span class="ident">entry</span>: <span class="number">0</span> }
+    <span class="doccomment">/// Creates an unused page table entry.
+    </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+        PageTableEntry { entry: <span class="number">0 </span>}
     }
 
-    <span class="doccomment">/// Returns whether this entry is zero.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">is_unused</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">==</span> <span class="number">0</span>
+    <span class="doccomment">/// Returns whether this entry is zero.
+    </span><span class="kw">pub const fn </span>is_unused(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.entry == <span class="number">0
+    </span>}
+
+    <span class="doccomment">/// Sets this entry to zero.
+    </span><span class="kw">pub fn </span>set_unused(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="self">self</span>.entry = <span class="number">0</span>;
     }
 
-    <span class="doccomment">/// Sets this entry to zero.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_unused</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">=</span> <span class="number">0</span>;
+    <span class="doccomment">/// Returns the flags of this entry.
+    </span><span class="kw">pub const fn </span>flags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PageTableFlags {
+        PageTableFlags::from_bits_truncate(<span class="self">self</span>.entry)
     }
 
-    <span class="doccomment">/// Returns the flags of this entry.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PageTableFlags</span> {
-        <span class="ident">PageTableFlags::from_bits_truncate</span>(<span class="self">self</span>.<span class="ident">entry</span>)
-    }
+    <span class="kw">pub fn </span>unref_vm_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">if </span><span class="self">self</span>.addr() != PhysAddr::new(<span class="number">0x00</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(vm_frame) = <span class="self">self</span>.addr().as_vm_frame() {
+                vm_frame.dec_ref_count();
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">unref_vm_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">addr</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="number">0x00</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vm_frame</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">addr</span>().<span class="ident">as_vm_frame</span>() {
-                <span class="ident">vm_frame</span>.<span class="ident">dec_ref_count</span>();
+                <span class="kw">let </span>count = vm_frame.ref_count();
 
-                <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">vm_frame</span>.<span class="ident">ref_count</span>();
+                <span class="kw">if </span>count == <span class="number">0 </span>{
+                    <span class="comment">// No references to this frame, deallocate it.
+                    </span>FRAME_ALLOCATOR
+                        .deallocate_frame(PhysFrame::&lt;Size4KiB&gt;::containing_address(<span class="self">self</span>.addr()));
 
-                <span class="kw">if</span> <span class="ident">count</span> <span class="op">==</span> <span class="number">0</span> {
-                    <span class="comment">// No references to this frame, deallocate it.</span>
-                    <span class="ident">FRAME_ALLOCATOR</span>
-                        .<span class="ident">deallocate_frame</span>(<span class="ident">PhysFrame</span>::<span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="ident">::containing_address</span>(<span class="self">self</span>.<span class="ident">addr</span>()));
-
-                    <span class="kw">return</span> <span class="bool-val">true</span>;
+                    <span class="kw">return </span><span class="bool-val">true</span>;
                 }
             }
         }
 
-        <span class="bool-val">false</span>
-    }
+        <span class="bool-val">false
+    </span>}
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">ref_vm_frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">addr</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">PhysAddr::new</span>(<span class="number">0x00</span>) {
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">vm_frame</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">addr</span>().<span class="ident">as_vm_frame</span>() {
-                <span class="ident">vm_frame</span>.<span class="ident">inc_ref_count</span>();
+    <span class="kw">pub fn </span>ref_vm_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.addr() != PhysAddr::new(<span class="number">0x00</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(vm_frame) = <span class="self">self</span>.addr().as_vm_frame() {
+                vm_frame.inc_ref_count();
             }
         }
     }
 
-    <span class="doccomment">/// Returns the physical address mapped by this entry, might be zero.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">addr</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">PhysAddr</span> {
-        <span class="ident">PhysAddr::new</span>(<span class="self">self</span>.<span class="ident">entry</span> <span class="op">&amp;</span> <span class="ident"><span class="self">Self</span>::ADDRESS_MASK</span>)
+    <span class="doccomment">/// Returns the physical address mapped by this entry, might be zero.
+    </span><span class="kw">pub fn </span>addr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; PhysAddr {
+        PhysAddr::new(<span class="self">self</span>.entry &amp; <span class="self">Self</span>::ADDRESS_MASK)
     }
 
-    <span class="doccomment">/// Returns the unused flag bits in the page table entry for the</span>
-    <span class="doccomment">/// page table entry counter.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_entry_count</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        (<span class="self">self</span>.<span class="ident">entry</span> <span class="op">&amp;</span> <span class="ident"><span class="self">Self</span>::COUNTER_MASK</span>) <span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident"><span class="self">Self</span>::COUNTER_SHIFT</span>
+    <span class="doccomment">/// Returns the unused flag bits in the page table entry for the
+    /// page table entry counter.
+    </span><span class="kw">pub fn </span>get_entry_count(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        (<span class="self">self</span>.entry &amp; <span class="self">Self</span>::COUNTER_MASK) &gt;&gt; <span class="self">Self</span>::COUNTER_SHIFT
     }
 
-    <span class="doccomment">/// Sets the page table entry counter to the given `count`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_entry_count</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">count</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">=</span> (<span class="self">self</span>.<span class="ident">entry</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident"><span class="self">Self</span>::COUNTER_MASK</span>) <span class="op">|</span> (<span class="ident">count</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident"><span class="self">Self</span>::COUNTER_SHIFT</span>);
+    <span class="doccomment">/// Sets the page table entry counter to the given `count`.
+    </span><span class="kw">pub fn </span>set_entry_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: u64) {
+        <span class="self">self</span>.entry = (<span class="self">self</span>.entry &amp; !<span class="self">Self</span>::COUNTER_MASK) | (count &lt;&lt; <span class="self">Self</span>::COUNTER_SHIFT);
     }
 
-    <span class="doccomment">/// Increments the page table entry counter by one.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">inc_entry_count</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">let</span> <span class="ident">entry_count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">get_entry_count</span>();
-        <span class="self">self</span>.<span class="ident">set_entry_count</span>(<span class="ident">entry_count</span> <span class="op">+</span> <span class="number">1</span>);
+    <span class="doccomment">/// Increments the page table entry counter by one.
+    </span><span class="kw">pub fn </span>inc_entry_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">let </span>entry_count = <span class="self">self</span>.get_entry_count();
+        <span class="self">self</span>.set_entry_count(entry_count + <span class="number">1</span>);
     }
 
-    <span class="doccomment">/// Returns the physical frame mapped by this entry.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// Returns the following errors:</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// - `FrameError::FrameNotPresent` if the entry doesn&#39;t have the `PRESENT` flag set.</span>
-    <span class="doccomment">/// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the</span>
-    <span class="doccomment">///    `addr` function must be used)</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">frame</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PhysFrame</span>, <span class="ident">FrameError</span><span class="op">&gt;</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">flags</span>().<span class="ident">contains</span>(<span class="ident">PageTableFlags::PRESENT</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">FrameError::FrameNotPresent</span>)
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">flags</span>().<span class="ident">contains</span>(<span class="ident">PageTableFlags::HUGE_PAGE</span>) {
-            <span class="prelude-val">Err</span>(<span class="ident">FrameError::HugeFrame</span>)
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Ok</span>(<span class="ident">PhysFrame::containing_address</span>(<span class="self">self</span>.<span class="ident">addr</span>()))
+    <span class="doccomment">/// Returns the physical frame mapped by this entry.
+    ///
+    /// Returns the following errors:
+    ///
+    /// - `FrameError::FrameNotPresent` if the entry doesn&#39;t have the `PRESENT` flag set.
+    /// - `FrameError::HugeFrame` if the entry has the `HUGE_PAGE` flag set (for huge pages the
+    ///    `addr` function must be used)
+    </span><span class="kw">pub fn </span>frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;PhysFrame, FrameError&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.flags().contains(PageTableFlags::PRESENT) {
+            <span class="prelude-val">Err</span>(FrameError::FrameNotPresent)
+        } <span class="kw">else if </span><span class="self">self</span>.flags().contains(PageTableFlags::HUGE_PAGE) {
+            <span class="prelude-val">Err</span>(FrameError::HugeFrame)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(PhysFrame::containing_address(<span class="self">self</span>.addr()))
         }
     }
 
-    <span class="doccomment">/// Map the entry to the specified physical address with the specified flags.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_addr</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">PhysAddr</span>, <span class="ident">flags</span>: <span class="ident">PageTableFlags</span>) {
-        <span class="macro">assert!</span>(<span class="ident">addr</span>.<span class="ident">is_aligned</span>(<span class="ident">Size4KiB::SIZE</span>));
+    <span class="doccomment">/// Map the entry to the specified physical address with the specified flags.
+    </span><span class="kw">pub fn </span>set_addr(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: PhysAddr, flags: PageTableFlags) {
+        <span class="macro">assert!</span>(addr.is_aligned(Size4KiB::SIZE));
 
-        <span class="kw">let</span> <span class="ident">ref_pp</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">addr</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">addr</span>;
+        <span class="kw">let </span>ref_pp = <span class="self">self</span>.addr() != addr;
 
-        <span class="kw">if</span> <span class="ident">ref_pp</span> {
-            <span class="self">self</span>.<span class="ident">unref_vm_frame</span>();
+        <span class="kw">if </span>ref_pp {
+            <span class="self">self</span>.unref_vm_frame();
         }
 
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident"><span class="self">Self</span>::ADDRESS_MASK</span>;
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">|</span><span class="op">=</span> <span class="ident">addr</span>.<span class="ident">as_u64</span>();
+        <span class="self">self</span>.entry &amp;= !<span class="self">Self</span>::ADDRESS_MASK;
+        <span class="self">self</span>.entry |= addr.as_u64();
 
-        <span class="self">self</span>.<span class="ident">set_flags</span>(<span class="ident">flags</span>);
+        <span class="self">self</span>.set_flags(flags);
 
-        <span class="kw">if</span> <span class="ident">ref_pp</span> {
-            <span class="self">self</span>.<span class="ident">ref_vm_frame</span>();
+        <span class="kw">if </span>ref_pp {
+            <span class="self">self</span>.ref_vm_frame();
         }
     }
 
-    <span class="doccomment">/// Map the entry to the specified physical frame with the specified flags.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_frame</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">frame</span>: <span class="ident">PhysFrame</span>, <span class="ident">flags</span>: <span class="ident">PageTableFlags</span>) {
-        <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">PageTableFlags::HUGE_PAGE</span>));
-        <span class="self">self</span>.<span class="ident">set_addr</span>(<span class="ident">frame</span>.<span class="ident">start_address</span>(), <span class="ident">flags</span>)
+    <span class="doccomment">/// Map the entry to the specified physical frame with the specified flags.
+    </span><span class="kw">pub fn </span>set_frame(<span class="kw-2">&amp;mut </span><span class="self">self</span>, frame: PhysFrame, flags: PageTableFlags) {
+        <span class="macro">assert!</span>(!flags.contains(PageTableFlags::HUGE_PAGE));
+        <span class="self">self</span>.set_addr(frame.start_address(), flags)
     }
 
-    <span class="doccomment">/// Sets the flags of this entry.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_flags</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">flags</span>: <span class="ident">PageTableFlags</span>) {
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">&amp;=</span> <span class="op">!</span><span class="ident"><span class="self">Self</span>::FLAGS_MASK</span>;
-        <span class="self">self</span>.<span class="ident">entry</span> <span class="op">|</span><span class="op">=</span> <span class="ident">flags</span>.<span class="ident">bits</span>();
+    <span class="doccomment">/// Sets the flags of this entry.
+    </span><span class="kw">pub fn </span>set_flags(<span class="kw-2">&amp;mut </span><span class="self">self</span>, flags: PageTableFlags) {
+        <span class="self">self</span>.entry &amp;= !<span class="self">Self</span>::FLAGS_MASK;
+        <span class="self">self</span>.entry |= flags.bits();
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PageTableEntry</span> {
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;PageTableEntry&quot;</span>);
-        <span class="ident">f</span>.<span class="ident">field</span>(<span class="string">&quot;addr&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">addr</span>());
-        <span class="ident">f</span>.<span class="ident">field</span>(<span class="string">&quot;flags&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">flags</span>());
-        <span class="ident">f</span>.<span class="ident">finish</span>()
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PageTableEntry {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        <span class="kw">let </span><span class="kw-2">mut </span>f = f.debug_struct(<span class="string">&quot;PageTableEntry&quot;</span>);
+        f.field(<span class="string">&quot;addr&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.addr());
+        f.field(<span class="string">&quot;flags&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.flags());
+        f.finish()
     }
 }
 
 <span class="macro">bitflags!</span> {
-    <span class="doccomment">/// Possible flags for a page table entry.</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageTableFlags</span>: <span class="ident">u64</span> {
-        <span class="doccomment">/// Specifies whether the mapped frame or page table is loaded in memory.</span>
-        <span class="kw">const</span> <span class="ident">PRESENT</span> <span class="op">=</span>         <span class="number">1</span>;
-        <span class="doccomment">/// Controls whether writes to the mapped frames are allowed.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// If this bit is unset in a level 1 page table entry, the mapped frame is read-only.</span>
-        <span class="doccomment">/// If this bit is unset in a higher level page table entry the complete range of mapped</span>
-        <span class="doccomment">/// pages is read-only.</span>
-        <span class="kw">const</span> <span class="ident">WRITABLE</span> <span class="op">=</span>        <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>;
-        <span class="doccomment">/// Controls whether accesses from userspace (i.e. ring 3) are permitted.</span>
-        <span class="kw">const</span> <span class="ident">USER_ACCESSIBLE</span> <span class="op">=</span> <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">2</span>;
-        <span class="doccomment">/// If this bit is set, a “write-through” policy is used for the cache, else a “write-back”</span>
-        <span class="doccomment">/// policy is used.</span>
-        <span class="kw">const</span> <span class="ident">WRITE_THROUGH</span> <span class="op">=</span>   <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="doccomment">/// Disables caching for the pointed entry is cacheable.</span>
-        <span class="kw">const</span> <span class="ident">NO_CACHE</span> <span class="op">=</span>        <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">4</span>;
-        <span class="doccomment">/// Set by the CPU when the mapped frame or page table is accessed.</span>
-        <span class="kw">const</span> <span class="ident">ACCESSED</span> <span class="op">=</span>        <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">5</span>;
-        <span class="doccomment">/// Set by the CPU on a write to the mapped frame.</span>
-        <span class="kw">const</span> <span class="ident">DIRTY</span> <span class="op">=</span>           <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">6</span>;
-        <span class="doccomment">/// Specifies that the entry maps a huge frame instead of a page table. Only allowed in</span>
-        <span class="doccomment">/// P2 or P3 tables.</span>
-        <span class="kw">const</span> <span class="ident">HUGE_PAGE</span> <span class="op">=</span>       <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">7</span>;
-        <span class="doccomment">/// Indicates that the mapping is present in all address spaces, so it isn&#39;t flushed from</span>
-        <span class="doccomment">/// the TLB on an address space switch.</span>
-        <span class="kw">const</span> <span class="ident">GLOBAL</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_9</span> <span class="op">=</span>           <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">9</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_10</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">10</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_11</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">11</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_52</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">52</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_53</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">53</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_54</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">54</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_55</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">55</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_56</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">56</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_57</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">57</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_58</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">58</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_59</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">59</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_60</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">60</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_61</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">61</span>;
-        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.</span>
-        <span class="kw">const</span> <span class="ident">BIT_62</span> <span class="op">=</span>          <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">62</span>;
-        <span class="doccomment">/// Forbid code execution from the mapped frames.</span>
-        <span class="doccomment">///</span>
-        <span class="doccomment">/// Can be only used when the no-execute page protection feature is enabled in the EFER</span>
-        <span class="doccomment">/// register.</span>
-        <span class="kw">const</span> <span class="ident">NO_EXECUTE</span> <span class="op">=</span>      <span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">63</span>;
+    <span class="doccomment">/// Possible flags for a page table entry.
+    </span><span class="kw">pub struct </span>PageTableFlags: u64 {
+        <span class="doccomment">/// Specifies whether the mapped frame or page table is loaded in memory.
+        </span><span class="kw">const </span>PRESENT =         <span class="number">1</span>;
+        <span class="doccomment">/// Controls whether writes to the mapped frames are allowed.
+        ///
+        /// If this bit is unset in a level 1 page table entry, the mapped frame is read-only.
+        /// If this bit is unset in a higher level page table entry the complete range of mapped
+        /// pages is read-only.
+        </span><span class="kw">const </span>WRITABLE =        <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
+        <span class="doccomment">/// Controls whether accesses from userspace (i.e. ring 3) are permitted.
+        </span><span class="kw">const </span>USER_ACCESSIBLE = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
+        <span class="doccomment">/// If this bit is set, a “write-through” policy is used for the cache, else a “write-back”
+        /// policy is used.
+        </span><span class="kw">const </span>WRITE_THROUGH =   <span class="number">1 </span>&lt;&lt; <span class="number">3</span>;
+        <span class="doccomment">/// Disables caching for the pointed entry is cacheable.
+        </span><span class="kw">const </span>NO_CACHE =        <span class="number">1 </span>&lt;&lt; <span class="number">4</span>;
+        <span class="doccomment">/// Set by the CPU when the mapped frame or page table is accessed.
+        </span><span class="kw">const </span>ACCESSED =        <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;
+        <span class="doccomment">/// Set by the CPU on a write to the mapped frame.
+        </span><span class="kw">const </span>DIRTY =           <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
+        <span class="doccomment">/// Specifies that the entry maps a huge frame instead of a page table. Only allowed in
+        /// P2 or P3 tables.
+        </span><span class="kw">const </span>HUGE_PAGE =       <span class="number">1 </span>&lt;&lt; <span class="number">7</span>;
+        <span class="doccomment">/// Indicates that the mapping is present in all address spaces, so it isn&#39;t flushed from
+        /// the TLB on an address space switch.
+        </span><span class="kw">const </span>GLOBAL =          <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_9 =           <span class="number">1 </span>&lt;&lt; <span class="number">9</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_10 =          <span class="number">1 </span>&lt;&lt; <span class="number">10</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_11 =          <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_52 =          <span class="number">1 </span>&lt;&lt; <span class="number">52</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_53 =          <span class="number">1 </span>&lt;&lt; <span class="number">53</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_54 =          <span class="number">1 </span>&lt;&lt; <span class="number">54</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_55 =          <span class="number">1 </span>&lt;&lt; <span class="number">55</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_56 =          <span class="number">1 </span>&lt;&lt; <span class="number">56</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_57 =          <span class="number">1 </span>&lt;&lt; <span class="number">57</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_58 =          <span class="number">1 </span>&lt;&lt; <span class="number">58</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_59 =          <span class="number">1 </span>&lt;&lt; <span class="number">59</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_60 =          <span class="number">1 </span>&lt;&lt; <span class="number">60</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_61 =          <span class="number">1 </span>&lt;&lt; <span class="number">61</span>;
+        <span class="doccomment">/// Available to the OS, can be used to store additional data, e.g. custom flags.
+        </span><span class="kw">const </span>BIT_62 =          <span class="number">1 </span>&lt;&lt; <span class="number">62</span>;
+        <span class="doccomment">/// Forbid code execution from the mapped frames.
+        ///
+        /// Can be only used when the no-execute page protection feature is enabled in the EFER
+        /// register.
+        </span><span class="kw">const </span>NO_EXECUTE =      <span class="number">1 </span>&lt;&lt; <span class="number">63</span>;
     }
 }
 
-<span class="doccomment">/// The number of entries in a page table.</span>
-<span class="kw">const</span> <span class="ident">ENTRY_COUNT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">512</span>;
+<span class="doccomment">/// The number of entries in a page table.
+</span><span class="kw">const </span>ENTRY_COUNT: usize = <span class="number">512</span>;
 
-<span class="doccomment">/// Represents a page table.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Always page-sized.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed</span>
-<span class="doccomment">/// through index operations. For example, `page_table[15]` returns the 15th page table entry.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Note that while this type implements [`Clone`], the users must be careful not to introduce</span>
-<span class="doccomment">/// mutable aliasing by using the cloned page tables.</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">align</span>(<span class="number">4096</span>))]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageTable</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="ident">entries</span>: [<span class="ident">PageTableEntry</span>; <span class="ident">ENTRY_COUNT</span>],
+<span class="doccomment">/// Represents a page table.
+///
+/// Always page-sized.
+///
+/// This struct implements the `Index` and `IndexMut` traits, so the entries can be accessed
+/// through index operations. For example, `page_table[15]` returns the 15th page table entry.
+///
+/// Note that while this type implements [`Clone`], the users must be careful not to introduce
+/// mutable aliasing by using the cloned page tables.
+</span><span class="attribute">#[repr(align(<span class="number">4096</span>))]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Clone)]</span>
+<span class="kw">pub struct </span>PageTable {
+    <span class="kw">pub</span>(<span class="kw">super</span>) entries: [PageTableEntry; ENTRY_COUNT],
 }
 
-<span class="kw">impl</span> <span class="ident">PageTable</span> {
-    <span class="doccomment">/// Creates an empty page table.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">const</span> <span class="ident">EMPTY</span>: <span class="ident">PageTableEntry</span> <span class="op">=</span> <span class="ident">PageTableEntry::new</span>();
-        <span class="ident">PageTable</span> {
-            <span class="ident">entries</span>: [<span class="ident">EMPTY</span>; <span class="ident">ENTRY_COUNT</span>],
+<span class="kw">impl </span>PageTable {
+    <span class="doccomment">/// Creates an empty page table.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="kw">const </span>EMPTY: PageTableEntry = PageTableEntry::new();
+        PageTable {
+            entries: [EMPTY; ENTRY_COUNT],
         }
     }
 
-    <span class="doccomment">/// Clears all entries.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">zero</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
-        <span class="kw">for</span> <span class="ident">entry</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">iter_mut</span>() {
-            <span class="ident">entry</span>.<span class="ident">set_unused</span>();
+    <span class="doccomment">/// Clears all entries.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>zero(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="kw">for </span>entry <span class="kw">in </span><span class="self">self</span>.entries.iter_mut() {
+            entry.set_unused();
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">for_each_entry</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">flags</span>: <span class="ident">PageTableFlags</span>,
-        <span class="kw-2">mut</span> <span class="ident">_fun</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;mut</span> <span class="ident">PageTableEntry</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">for_entries_mut</span>(<span class="ident">flags</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">_entry</span>, <span class="ident">table</span><span class="op">|</span> {
-            <span class="ident">table</span>.<span class="ident">for_entries_mut</span>(<span class="ident">flags</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">_entry</span>, <span class="ident">table</span><span class="op">|</span> {
-                <span class="ident">table</span>.<span class="ident">for_entries_mut</span>(<span class="ident">flags</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">_entry</span>, <span class="ident">table</span><span class="op">|</span> {
-                    <span class="ident">table</span>.<span class="ident">for_entries_mut</span>(<span class="ident">flags</span>, <span class="op">|</span><span class="kw">_</span>, <span class="ident">_entry</span>, <span class="kw">_</span><span class="op">|</span> <span class="comment">/* fun(entry) */</span> <span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
+    <span class="kw">pub fn </span>for_each_entry(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        flags: PageTableFlags,
+        <span class="kw-2">mut </span>_fun: <span class="kw">impl </span>FnMut(<span class="kw-2">&amp;mut </span>PageTableEntry) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="self">self</span>.for_entries_mut(flags, |<span class="kw">_</span>, _entry, table| {
+            table.for_entries_mut(flags, |<span class="kw">_</span>, _entry, table| {
+                table.for_entries_mut(flags, |<span class="kw">_</span>, _entry, table| {
+                    table.for_entries_mut(flags, |<span class="kw">_</span>, _entry, <span class="kw">_</span>| <span class="comment">/* fun(entry) */ </span><span class="prelude-val">Ok</span>(()))<span class="question-mark">?</span>;
                     <span class="prelude-val">Ok</span>(())
                 })<span class="question-mark">?</span>;
                 <span class="prelude-val">Ok</span>(())
@@ -772,175 +772,175 @@
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">for_entries_mut</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">flags</span>: <span class="ident">PageTableFlags</span>,
-        <span class="kw-2">mut</span> <span class="ident">fun</span>: <span class="kw">impl</span> <span class="ident">FnMut</span>(
-            <span class="ident">usize</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">PageTableEntry</span>,
-            <span class="kw-2">&amp;mut</span> <span class="ident">PageTable</span>,
-        ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">MapToError</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">entries</span>
-            .<span class="ident">iter_mut</span>()
-            .<span class="ident">enumerate</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span>(<span class="kw">_</span>, <span class="ident">e</span>)<span class="op">|</span> <span class="ident">e</span>.<span class="ident">flags</span>().<span class="ident">contains</span>(<span class="ident">flags</span>))
-            .<span class="ident">try_for_each</span>(<span class="op">|</span>(<span class="ident">idx</span>, <span class="ident">e</span>)<span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">table</span> <span class="op">=</span> <span class="kw">unsafe</span> {
-                    <span class="kw">let</span> <span class="ident">addr</span> <span class="op">=</span> <span class="ident">e</span>.<span class="ident">addr</span>().<span class="ident">as_hhdm_virt</span>();
-                    <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">addr</span>.<span class="ident">as_mut_ptr</span>::<span class="op">&lt;</span><span class="ident">PageTable</span><span class="op">&gt;</span>()
+    <span class="kw">pub fn </span>for_entries_mut(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        flags: PageTableFlags,
+        <span class="kw-2">mut </span>fun: <span class="kw">impl </span>FnMut(
+            usize,
+            <span class="kw-2">&amp;mut </span>PageTableEntry,
+            <span class="kw-2">&amp;mut </span>PageTable,
+        ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(), MapToError&lt;Size4KiB&gt;&gt; {
+        <span class="self">self</span>.entries
+            .iter_mut()
+            .enumerate()
+            .filter(|(<span class="kw">_</span>, e)| e.flags().contains(flags))
+            .try_for_each(|(idx, e)| {
+                <span class="kw">let </span>table = <span class="kw">unsafe </span>{
+                    <span class="kw">let </span>addr = e.addr().as_hhdm_virt();
+                    <span class="kw-2">&amp;mut *</span>addr.as_mut_ptr::&lt;PageTable&gt;()
                 };
 
-                <span class="ident">fun</span>(<span class="ident">idx</span>, <span class="ident">e</span>, <span class="ident">table</span>)
+                fun(idx, e, table)
             })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PageTable</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">PageTableEntry</span>;
+<span class="kw">impl </span>Index&lt;usize&gt; <span class="kw">for </span>PageTable {
+    <span class="kw">type </span>Output = PageTableEntry;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">index</span>]
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.entries[index]
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PageTable</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">index</span>]
+<span class="kw">impl </span>IndexMut&lt;usize&gt; <span class="kw">for </span>PageTable {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[index]
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">PageTableIndex</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PageTable</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">PageTableEntry</span>;
+<span class="kw">impl </span>Index&lt;PageTableIndex&gt; <span class="kw">for </span>PageTable {
+    <span class="kw">type </span>Output = PageTableEntry;
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">PageTableIndex</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">usize::from</span>(<span class="ident">index</span>)]
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.entries[usize::from(index)]
     }
 }
 
-<span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">PageTableIndex</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">PageTable</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">PageTableIndex</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">usize::from</span>(<span class="ident">index</span>)]
+<span class="kw">impl </span>IndexMut&lt;PageTableIndex&gt; <span class="kw">for </span>PageTable {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[usize::from(index)]
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">PageTable</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::new</span>()
+<span class="kw">impl </span>Default <span class="kw">for </span>PageTable {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::new()
     }
 }
 
-<span class="kw">impl</span> <span class="ident">fmt::Debug</span> <span class="kw">for</span> <span class="ident">PageTable</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">fmt::Formatter</span>) -&gt; <span class="ident">fmt::Result</span> {
-        <span class="self">self</span>.<span class="ident">entries</span>[..].<span class="ident">fmt</span>(<span class="ident">f</span>)
+<span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PageTable {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+        <span class="self">self</span>.entries[..].fmt(f)
     }
 }
 
-<span class="doccomment">/// A 9-bit index into a page table.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Can be used to select one of the 512 entries of a page table.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Guaranteed to only ever contain 0..512.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageTableIndex</span>(<span class="ident">u16</span>);
+<span class="doccomment">/// A 9-bit index into a page table.
+///
+/// Can be used to select one of the 512 entries of a page table.
+///
+/// Guaranteed to only ever contain 0..512.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="kw">pub struct </span>PageTableIndex(u16);
 
-<span class="kw">impl</span> <span class="ident">PageTableIndex</span> {
-    <span class="doccomment">/// Creates a new index from the given `u16`. Panics if the given value is &gt;=512.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">index</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
-        <span class="macro">assert!</span>(<span class="ident">usize::from</span>(<span class="ident">index</span>) <span class="op">&lt;</span> <span class="ident">ENTRY_COUNT</span>);
-        <span class="self">Self</span>(<span class="ident">index</span>)
+<span class="kw">impl </span>PageTableIndex {
+    <span class="doccomment">/// Creates a new index from the given `u16`. Panics if the given value is &gt;=512.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>new(index: u16) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert!</span>(usize::from(index) &lt; ENTRY_COUNT);
+        <span class="self">Self</span>(index)
     }
 
-    <span class="doccomment">/// Creates a new index from the given `u16`. Throws away bits if the value is &gt;=512.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new_truncate</span>(<span class="ident">index</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">index</span> <span class="op">%</span> <span class="ident">ENTRY_COUNT</span> <span class="kw">as</span> <span class="ident">u16</span>)
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageTableIndex</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u16</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">index</span>: <span class="ident">PageTableIndex</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">index</span>.<span class="number">0</span>
+    <span class="doccomment">/// Creates a new index from the given `u16`. Throws away bits if the value is &gt;=512.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub const fn </span>new_truncate(index: u16) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(index % ENTRY_COUNT <span class="kw">as </span>u16)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageTableIndex</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u32</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">index</span>: <span class="ident">PageTableIndex</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">u32::from</span>(<span class="ident">index</span>.<span class="number">0</span>)
+<span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u16 {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+        index.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u32 {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+        u32::from(index.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageTableIndex</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">index</span>: <span class="ident">PageTableIndex</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">u64::from</span>(<span class="ident">index</span>.<span class="number">0</span>)
+<span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u64 {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+        u64::from(index.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageTableIndex</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">usize</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">index</span>: <span class="ident">PageTableIndex</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">usize::from</span>(<span class="ident">index</span>.<span class="number">0</span>)
+<span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>usize {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+        usize::from(index.<span class="number">0</span>)
     }
 }
 
-<span class="doccomment">/// A 12-bit offset into a 4KiB Page.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This type is returned by the `VirtAddr::page_offset` method.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// Guaranteed to only ever contain 0..4096.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>, <span class="ident">Copy</span>, <span class="ident">PartialEq</span>, <span class="ident">Eq</span>, <span class="ident">PartialOrd</span>, <span class="ident">Ord</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PageOffset</span>(<span class="ident">u16</span>);
+<span class="doccomment">/// A 12-bit offset into a 4KiB Page.
+///
+/// This type is returned by the `VirtAddr::page_offset` method.
+///
+/// Guaranteed to only ever contain 0..4096.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
+<span class="kw">pub struct </span>PageOffset(u16);
 
-<span class="kw">impl</span> <span class="ident">PageOffset</span> {
-    <span class="doccomment">/// Creates a new offset from the given `u16`. Panics if the passed value is &gt;=4096.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">offset</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
-        <span class="macro">assert!</span>(<span class="ident">offset</span> <span class="op">&lt;</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>));
-        <span class="self">Self</span>(<span class="ident">offset</span>)
+<span class="kw">impl </span>PageOffset {
+    <span class="doccomment">/// Creates a new offset from the given `u16`. Panics if the passed value is &gt;=4096.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>new(offset: u16) -&gt; <span class="self">Self </span>{
+        <span class="macro">assert!</span>(offset &lt; (<span class="number">1 </span>&lt;&lt; <span class="number">12</span>));
+        <span class="self">Self</span>(offset)
     }
 
-    <span class="doccomment">/// Creates a new offset from the given `u16`. Throws away bits if the value is &gt;=4096.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">new_truncate</span>(<span class="ident">offset</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">offset</span> <span class="op">%</span> (<span class="number">1</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">12</span>))
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageOffset</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u16</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">offset</span>: <span class="ident">PageOffset</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">offset</span>.<span class="number">0</span>
+    <span class="doccomment">/// Creates a new offset from the given `u16`. Throws away bits if the value is &gt;=4096.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub const fn </span>new_truncate(offset: u16) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(offset % (<span class="number">1 </span>&lt;&lt; <span class="number">12</span>))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageOffset</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u32</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">offset</span>: <span class="ident">PageOffset</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">u32::from</span>(<span class="ident">offset</span>.<span class="number">0</span>)
+<span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u16 {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+        offset.<span class="number">0
+    </span>}
+}
+
+<span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u32 {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+        u32::from(offset.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageOffset</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">u64</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">offset</span>: <span class="ident">PageOffset</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">u64::from</span>(<span class="ident">offset</span>.<span class="number">0</span>)
+<span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u64 {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+        u64::from(offset.<span class="number">0</span>)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">PageOffset</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">usize</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">offset</span>: <span class="ident">PageOffset</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">usize::from</span>(<span class="ident">offset</span>.<span class="number">0</span>)
+<span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>usize {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+        usize::from(offset.<span class="number">0</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

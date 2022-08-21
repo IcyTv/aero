@@ -245,218 +245,218 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! Wrapper functions for the hardware IO using respective assembly instructions.</span>
+</span><span class="doccomment">//! Wrapper functions for the hardware IO using respective assembly instructions.
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_EFER</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xc0000080</span>;
+</span><span class="kw">pub const </span>IA32_EFER: u32 = <span class="number">0xc0000080</span>;
 
-<span class="doccomment">/// Map of BASE Address of FS (R/W)  See Table 35-2.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_FS_BASE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xC0000100</span>;
+<span class="doccomment">/// Map of BASE Address of FS (R/W)  See Table 35-2.
+</span><span class="kw">pub const </span>IA32_FS_BASE: u32 = <span class="number">0xC0000100</span>;
 
-<span class="doccomment">/// Map of BASE Address of GS (R/W)  See Table 35-2.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_GS_BASE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xc0000101</span>;
+<span class="doccomment">/// Map of BASE Address of GS (R/W)  See Table 35-2.
+</span><span class="kw">pub const </span>IA32_GS_BASE: u32 = <span class="number">0xc0000101</span>;
 
-<span class="doccomment">/// Swap Target of BASE Address of GS (R/W) See Table 35-2.</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_KERNEL_GSBASE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xc0000102</span>;
+<span class="doccomment">/// Swap Target of BASE Address of GS (R/W) See Table 35-2.
+</span><span class="kw">pub const </span>IA32_KERNEL_GSBASE: u32 = <span class="number">0xc0000102</span>;
 
-<span class="doccomment">/// System Call Target Address (R/W).</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_STAR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xc0000081</span>;
+<span class="doccomment">/// System Call Target Address (R/W).
+</span><span class="kw">pub const </span>IA32_STAR: u32 = <span class="number">0xc0000081</span>;
 
-<span class="doccomment">/// IA-32e Mode System Call Target Address (R/W).</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_LSTAR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xc0000082</span>;
+<span class="doccomment">/// IA-32e Mode System Call Target Address (R/W).
+</span><span class="kw">pub const </span>IA32_LSTAR: u32 = <span class="number">0xc0000082</span>;
 
-<span class="doccomment">/// System Call Flag Mask (R/W).</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_FMASK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0xc0000084</span>;
+<span class="doccomment">/// System Call Flag Mask (R/W).
+</span><span class="kw">pub const </span>IA32_FMASK: u32 = <span class="number">0xc0000084</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_SYSENTER_CS</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x174</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_SYSENTER_ESP</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x175</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_SYSENTER_EIP</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x176</span>;
+<span class="kw">pub const </span>IA32_SYSENTER_CS: u32 = <span class="number">0x174</span>;
+<span class="kw">pub const </span>IA32_SYSENTER_ESP: u32 = <span class="number">0x175</span>;
+<span class="kw">pub const </span>IA32_SYSENTER_EIP: u32 = <span class="number">0x176</span>;
 
-<span class="doccomment">/// APIC Location and Status (R/W).</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ```text</span>
-<span class="doccomment">/// [..........]   [..........]   [............]  [...............]  [.......]  [...]  [............]</span>
-<span class="doccomment">/// 63         36  35         12       11                10              9        8    7            0</span>
-<span class="doccomment">///   reserved        address      XAPIC global     enable X2APIC    reserved    BSP      reserved</span>
-<span class="doccomment">/// ```</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">IA32_APIC_BASE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0x1b</span>;
+<span class="doccomment">/// APIC Location and Status (R/W).
+///
+/// ```text
+/// [..........]   [..........]   [............]  [...............]  [.......]  [...]  [............]
+/// 63         36  35         12       11                10              9        8    7            0
+///   reserved        address      XAPIC global     enable X2APIC    reserved    BSP      reserved
+/// ```
+</span><span class="kw">pub const </span>IA32_APIC_BASE: u32 = <span class="number">0x1b</span>;
 
-<span class="doccomment">/// Wrapper function to the `outb` assembly instruction used to do the</span>
-<span class="doccomment">/// 8-bit low level port output.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">outb</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u8</span>) {
+<span class="doccomment">/// Wrapper function to the `outb` assembly instruction used to do the
+/// 8-bit low level port output.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>outb(port: u16, value: u8) {
     <span class="macro">asm!</span>(
        <span class="string">&quot;out dx, al&quot;</span>,
-       <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) <span class="ident">port</span>,
-       <span class="kw">in</span>(<span class="string">&quot;al&quot;</span>) <span class="ident">value</span>,
-       <span class="ident">options</span>(<span class="ident">preserves_flags</span>, <span class="ident">nomem</span>, <span class="ident">nostack</span>)
+       <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
+       <span class="kw">in</span>(<span class="string">&quot;al&quot;</span>) value,
+       options(preserves_flags, nomem, nostack)
     );
 }
 
-<span class="doccomment">/// Wrapper function to the `inb` assembly instruction used to do the</span>
-<span class="doccomment">/// 8-bit low level port input.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">inb</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u8</span> {
-    <span class="kw">let</span> <span class="ident">ret</span>: <span class="ident">u8</span>;
+<span class="doccomment">/// Wrapper function to the `inb` assembly instruction used to do the
+/// 8-bit low level port input.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>inb(port: u16) -&gt; u8 {
+    <span class="kw">let </span>ret: u8;
 
     <span class="macro">asm!</span>(
         <span class="string">&quot;in al, dx&quot;</span>,
-        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) <span class="ident">port</span>,
-        <span class="ident">out</span>(<span class="string">&quot;al&quot;</span>) <span class="ident">ret</span>,
-        <span class="ident">options</span>(<span class="ident">preserves_flags</span>, <span class="ident">nomem</span>, <span class="ident">nostack</span>)
+        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
+        out(<span class="string">&quot;al&quot;</span>) ret,
+        options(preserves_flags, nomem, nostack)
     );
 
-    <span class="ident">ret</span>
+    ret
 }
 
-<span class="doccomment">/// Wrapper function to the `outw` assembly instruction used to do the</span>
-<span class="doccomment">/// 16-bit low level port output.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">outw</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u16</span>) {
+<span class="doccomment">/// Wrapper function to the `outw` assembly instruction used to do the
+/// 16-bit low level port output.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>outw(port: u16, value: u16) {
     <span class="macro">asm!</span>(
         <span class="string">&quot;out dx, ax&quot;</span>,
-        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) <span class="ident">port</span>,
-        <span class="kw">in</span>(<span class="string">&quot;ax&quot;</span>) <span class="ident">value</span>,
-        <span class="ident">options</span>(<span class="ident">preserves_flags</span>, <span class="ident">nomem</span>, <span class="ident">nostack</span>)
+        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
+        <span class="kw">in</span>(<span class="string">&quot;ax&quot;</span>) value,
+        options(preserves_flags, nomem, nostack)
     );
 }
 
-<span class="doccomment">/// Wrapper function to the `outl` assembly instruction used to do the</span>
-<span class="doccomment">/// 32-bit low level port output.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">outl</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u32</span>) {
+<span class="doccomment">/// Wrapper function to the `outl` assembly instruction used to do the
+/// 32-bit low level port output.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>outl(port: u16, value: u32) {
     <span class="macro">asm!</span>(
         <span class="string">&quot;out dx, eax&quot;</span>,
-        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) <span class="ident">port</span>,
-        <span class="kw">in</span>(<span class="string">&quot;eax&quot;</span>) <span class="ident">value</span>,
-        <span class="ident">options</span>(<span class="ident">preserves_flags</span>, <span class="ident">nomem</span>, <span class="ident">nostack</span>)
+        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
+        <span class="kw">in</span>(<span class="string">&quot;eax&quot;</span>) value,
+        options(preserves_flags, nomem, nostack)
     );
 }
 
-<span class="doccomment">/// Wrapper function to the `inl` assembly instruction used to do the</span>
-<span class="doccomment">/// 32-bit low level port input.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">inl</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span> {
-    <span class="kw">let</span> <span class="ident">ret</span>: <span class="ident">u32</span>;
+<span class="doccomment">/// Wrapper function to the `inl` assembly instruction used to do the
+/// 32-bit low level port input.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>inl(port: u16) -&gt; u32 {
+    <span class="kw">let </span>ret: u32;
 
     <span class="macro">asm!</span>(
         <span class="string">&quot;in eax, dx&quot;</span>,
-        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) <span class="ident">port</span>,
-        <span class="ident">out</span>(<span class="string">&quot;eax&quot;</span>) <span class="ident">ret</span>,
-        <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>, <span class="ident">preserves_flags</span>)
+        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
+        out(<span class="string">&quot;eax&quot;</span>) ret,
+        options(nomem, nostack, preserves_flags)
     );
 
-    <span class="ident">ret</span>
+    ret
 }
 
-<span class="doccomment">/// Wrapper function to the `inw` assembly instruction used to do the</span>
-<span class="doccomment">/// 16-bit low level port input.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">inw</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span> {
-    <span class="kw">let</span> <span class="ident">ret</span>: <span class="ident">u16</span>;
+<span class="doccomment">/// Wrapper function to the `inw` assembly instruction used to do the
+/// 16-bit low level port input.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>inw(port: u16) -&gt; u16 {
+    <span class="kw">let </span>ret: u16;
 
     <span class="macro">asm!</span>(
         <span class="string">&quot;in ax, dx&quot;</span>,
-        <span class="ident">out</span>(<span class="string">&quot;ax&quot;</span>) <span class="ident">ret</span>,
-        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) <span class="ident">port</span>,
-        <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>, <span class="ident">preserves_flags</span>)
+        out(<span class="string">&quot;ax&quot;</span>) ret,
+        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
+        options(nomem, nostack, preserves_flags)
     );
 
-    <span class="ident">ret</span>
+    ret
 }
 
-<span class="doccomment">/// This function is called after every `outb` and `outl` instruction as on older machines</span>
-<span class="doccomment">/// its necessary to give the PIC some time to react to commands as they might not</span>
-<span class="doccomment">/// be processed quickly.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">wait</span>() {
-    <span class="ident">outb</span>(<span class="number">0x80</span>, <span class="number">0</span>)
+<span class="doccomment">/// This function is called after every `outb` and `outl` instruction as on older machines
+/// its necessary to give the PIC some time to react to commands as they might not
+/// be processed quickly.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>wait() {
+    outb(<span class="number">0x80</span>, <span class="number">0</span>)
 }
 
-<span class="doccomment">/// Wrapper function to the `wrmsr` assembly instruction used</span>
-<span class="doccomment">/// to write 64 bits to msr register.</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">wrmsr</span>(<span class="ident">msr</span>: <span class="ident">u32</span>, <span class="ident">value</span>: <span class="ident">u64</span>) {
-    <span class="kw">let</span> <span class="ident">low</span> <span class="op">=</span> <span class="ident">value</span> <span class="kw">as</span> <span class="ident">u32</span>;
-    <span class="kw">let</span> <span class="ident">high</span> <span class="op">=</span> (<span class="ident">value</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">32</span>) <span class="kw">as</span> <span class="ident">u32</span>;
+<span class="doccomment">/// Wrapper function to the `wrmsr` assembly instruction used
+/// to write 64 bits to msr register.
+</span><span class="kw">pub unsafe fn </span>wrmsr(msr: u32, value: u64) {
+    <span class="kw">let </span>low = value <span class="kw">as </span>u32;
+    <span class="kw">let </span>high = (value &gt;&gt; <span class="number">32</span>) <span class="kw">as </span>u32;
 
-    <span class="macro">asm!</span>(<span class="string">&quot;wrmsr&quot;</span>, <span class="kw">in</span>(<span class="string">&quot;ecx&quot;</span>) <span class="ident">msr</span>, <span class="kw">in</span>(<span class="string">&quot;eax&quot;</span>) <span class="ident">low</span>, <span class="kw">in</span>(<span class="string">&quot;edx&quot;</span>) <span class="ident">high</span>, <span class="ident">options</span>(<span class="ident">nomem</span>));
+    <span class="macro">asm!</span>(<span class="string">&quot;wrmsr&quot;</span>, <span class="kw">in</span>(<span class="string">&quot;ecx&quot;</span>) msr, <span class="kw">in</span>(<span class="string">&quot;eax&quot;</span>) low, <span class="kw">in</span>(<span class="string">&quot;edx&quot;</span>) high, options(nomem));
 }
 
-<span class="doccomment">/// Wrapper function to the `rdmsr` assembly instruction used</span>
-<span class="comment">// to read 64 bits msr register.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">rdmsr</span>(<span class="ident">msr</span>: <span class="ident">u32</span>) -&gt; <span class="ident">u64</span> {
-    <span class="kw">let</span> (<span class="ident">high</span>, <span class="ident">low</span>): (<span class="ident">u32</span>, <span class="ident">u32</span>);
+<span class="doccomment">/// Wrapper function to the `rdmsr` assembly instruction used
+</span><span class="comment">// to read 64 bits msr register.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>rdmsr(msr: u32) -&gt; u64 {
+    <span class="kw">let </span>(high, low): (u32, u32);
 
-    <span class="macro">asm!</span>(<span class="string">&quot;rdmsr&quot;</span>, <span class="ident">out</span>(<span class="string">&quot;eax&quot;</span>) <span class="ident">low</span>, <span class="ident">out</span>(<span class="string">&quot;edx&quot;</span>) <span class="ident">high</span>, <span class="kw">in</span>(<span class="string">&quot;ecx&quot;</span>) <span class="ident">msr</span>, <span class="ident">options</span>(<span class="ident">nomem</span>));
+    <span class="macro">asm!</span>(<span class="string">&quot;rdmsr&quot;</span>, out(<span class="string">&quot;eax&quot;</span>) low, out(<span class="string">&quot;edx&quot;</span>) high, <span class="kw">in</span>(<span class="string">&quot;ecx&quot;</span>) msr, options(nomem));
 
-    ((<span class="ident">high</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>) <span class="op">|</span> (<span class="ident">low</span> <span class="kw">as</span> <span class="ident">u64</span>)
+    ((high <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>) | (low <span class="kw">as </span>u64)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">delay</span>(<span class="ident">cycles</span>: <span class="ident">usize</span>) {
-    <span class="kw">unsafe</span> {
-        <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">cycles</span> {
-            <span class="ident">inb</span>(<span class="number">0x80</span>);
+<span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>delay(cycles: usize) {
+    <span class="kw">unsafe </span>{
+        <span class="kw">for _ in </span><span class="number">0</span>..cycles {
+            inb(<span class="number">0x80</span>);
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">InOut</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_in</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="self">Self</span>;
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_out</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="self">Self</span>);
+<span class="kw">pub trait </span>InOut {
+    <span class="kw">unsafe fn </span>port_in(port: u16) -&gt; <span class="self">Self</span>;
+    <span class="kw">unsafe fn </span>port_out(port: u16, value: <span class="self">Self</span>);
 }
 
-<span class="kw">impl</span> <span class="ident">InOut</span> <span class="kw">for</span> <span class="ident">u8</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_in</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u8</span> {
-        <span class="ident">inb</span>(<span class="ident">port</span>)
+<span class="kw">impl </span>InOut <span class="kw">for </span>u8 {
+    <span class="kw">unsafe fn </span>port_in(port: u16) -&gt; u8 {
+        inb(port)
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_out</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u8</span>) {
-        <span class="ident">outb</span>(<span class="ident">port</span>, <span class="ident">value</span>);
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">InOut</span> <span class="kw">for</span> <span class="ident">u16</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_in</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u16</span> {
-        <span class="ident">inw</span>(<span class="ident">port</span>)
-    }
-
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_out</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u16</span>) {
-        <span class="ident">outw</span>(<span class="ident">port</span>, <span class="ident">value</span>);
+    <span class="kw">unsafe fn </span>port_out(port: u16, value: u8) {
+        outb(port, value);
     }
 }
 
-<span class="kw">impl</span> <span class="ident">InOut</span> <span class="kw">for</span> <span class="ident">u32</span> {
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_in</span>(<span class="ident">port</span>: <span class="ident">u16</span>) -&gt; <span class="ident">u32</span> {
-        <span class="ident">inl</span>(<span class="ident">port</span>)
+<span class="kw">impl </span>InOut <span class="kw">for </span>u16 {
+    <span class="kw">unsafe fn </span>port_in(port: u16) -&gt; u16 {
+        inw(port)
     }
 
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">port_out</span>(<span class="ident">port</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">u32</span>) {
-        <span class="ident">outl</span>(<span class="ident">port</span>, <span class="ident">value</span>);
+    <span class="kw">unsafe fn </span>port_out(port: u16, value: u16) {
+        outw(port, value);
     }
 }
 
-<span class="comment">// based :^)</span>
+<span class="kw">impl </span>InOut <span class="kw">for </span>u32 {
+    <span class="kw">unsafe fn </span>port_in(port: u16) -&gt; u32 {
+        inl(port)
+    }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BasedPort</span> {
-    <span class="ident">base</span>: <span class="ident">u16</span>,
+    <span class="kw">unsafe fn </span>port_out(port: u16, value: u32) {
+        outl(port, value);
+    }
 }
 
-<span class="kw">impl</span> <span class="ident">BasedPort</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">base</span>: <span class="ident">u16</span>) -&gt; <span class="ident">BasedPort</span> {
-        <span class="ident">BasedPort</span> { <span class="ident">base</span> }
+<span class="comment">// based :^)
+
+</span><span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="kw">pub struct </span>BasedPort {
+    base: u16,
+}
+
+<span class="kw">impl </span>BasedPort {
+    <span class="kw">pub fn </span>new(base: u16) -&gt; BasedPort {
+        BasedPort { base }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">read_offset</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">InOut</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u16</span>) -&gt; <span class="ident">V</span> {
-        <span class="kw">unsafe</span> { <span class="ident">V::port_in</span>(<span class="self">self</span>.<span class="ident">base</span> <span class="op">+</span> <span class="ident">offset</span>) }
+    <span class="kw">pub fn </span>read_offset&lt;V: InOut&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: u16) -&gt; V {
+        <span class="kw">unsafe </span>{ V::port_in(<span class="self">self</span>.base + offset) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">write_offset</span><span class="op">&lt;</span><span class="ident">V</span>: <span class="ident">InOut</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">u16</span>, <span class="ident">value</span>: <span class="ident">V</span>) {
-        <span class="kw">unsafe</span> { <span class="ident">V::port_out</span>(<span class="self">self</span>.<span class="ident">base</span> <span class="op">+</span> <span class="ident">offset</span>, <span class="ident">value</span>) }
+    <span class="kw">pub fn </span>write_offset&lt;V: InOut&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, offset: u16, value: V) {
+        <span class="kw">unsafe </span>{ V::port_out(<span class="self">self</span>.base + offset, value) }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

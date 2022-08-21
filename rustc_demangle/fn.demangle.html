@@ -3,9 +3,9 @@
 the de-mangled version will be written. If the symbol does not look like
 a mangled symbol, the original value will be written instead.</p>
 <h2 id="examples"><a href="#examples">Examples</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use</span> <span class="ident">rustc_demangle::demangle</span>;
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>rustc_demangle::demangle;
 
-<span class="macro">assert_eq!</span>(<span class="ident">demangle</span>(<span class="string">&quot;_ZN4testE&quot;</span>).<span class="ident">to_string</span>(), <span class="string">&quot;test&quot;</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">demangle</span>(<span class="string">&quot;_ZN3foo3barE&quot;</span>).<span class="ident">to_string</span>(), <span class="string">&quot;foo::bar&quot;</span>);
-<span class="macro">assert_eq!</span>(<span class="ident">demangle</span>(<span class="string">&quot;foo&quot;</span>).<span class="ident">to_string</span>(), <span class="string">&quot;foo&quot;</span>);</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="rustc_demangle" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+<span class="macro">assert_eq!</span>(demangle(<span class="string">&quot;_ZN4testE&quot;</span>).to_string(), <span class="string">&quot;test&quot;</span>);
+<span class="macro">assert_eq!</span>(demangle(<span class="string">&quot;_ZN3foo3barE&quot;</span>).to_string(), <span class="string">&quot;foo::bar&quot;</span>);
+<span class="macro">assert_eq!</span>(demangle(<span class="string">&quot;foo&quot;</span>).to_string(), <span class="string">&quot;foo&quot;</span>);</code></pre></div>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="rustc_demangle" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

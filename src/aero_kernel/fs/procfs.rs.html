@@ -313,320 +313,320 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+</pre><pre class="rust"><code><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident">alloc::collections::BTreeMap</span>;
-<span class="kw">use</span> <span class="ident">alloc::string</span>::{<span class="ident">String</span>, <span class="ident">ToString</span>};
-<span class="kw">use</span> <span class="ident">alloc::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
+<span class="kw">use </span>alloc::collections::BTreeMap;
+<span class="kw">use </span>alloc::string::{String, ToString};
+<span class="kw">use </span>alloc::sync::{Arc, Weak};
 
-<span class="kw">use</span> <span class="ident">spin</span>::{<span class="ident">Once</span>, <span class="ident">RwLock</span>};
+<span class="kw">use </span>spin::{Once, RwLock};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::inode::FileType</span>;
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::FileType;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::tls</span>;
+<span class="kw">use </span><span class="kw">crate</span>::arch::tls;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::cache;
+<span class="kw">use </span><span class="kw">super</span>::cache::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::FileSystemError</span>;
+<span class="kw">use </span><span class="kw">super</span>::FileSystemError;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::inode</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="kw">super</span>::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::inode::<span class="kw-2">*</span>;
+<span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-<span class="kw">fn</span> <span class="ident">push_string_if_some</span>(<span class="ident">map</span>: <span class="kw-2">&amp;mut</span> <span class="ident">serde_json::Value</span>, <span class="ident">key</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">value</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>) {
-    <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">value</span>) <span class="op">=</span> <span class="ident">value</span> {
-        <span class="ident">map</span>[<span class="ident">key</span>] <span class="op">=</span> <span class="ident">serde_json::Value::String</span>(<span class="ident">value</span>);
+<span class="kw">fn </span>push_string_if_some(map: <span class="kw-2">&amp;mut </span>serde_json::Value, key: <span class="kw-2">&amp;</span>str, value: <span class="prelude-ty">Option</span>&lt;String&gt;) {
+    <span class="kw">if let </span><span class="prelude-val">Some</span>(value) = value {
+        map[key] = serde_json::Value::String(value);
     }
 }
 
-<span class="kw">fn</span> <span class="ident">get_cmdline_cached</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-    <span class="kw">static</span> <span class="ident">CACHED</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">fn </span>get_cmdline_cached() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">static </span>CACHED: Once&lt;String&gt; = Once::new();
 
-    <span class="ident">CACHED</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="kw">use</span> <span class="ident">serde_json</span>::<span class="kw-2">*</span>;
+    CACHED.call_once(|| {
+        <span class="kw">use </span>serde_json::<span class="kw-2">*</span>;
 
         <span class="macro">json!</span>({
-            <span class="string">&quot;cmdline&quot;</span>: <span class="ident"><span class="kw">crate</span>::cmdline::get_raw_cmdline</span>(),
+            <span class="string">&quot;cmdline&quot;</span>: <span class="kw">crate</span>::cmdline::get_raw_cmdline(),
         })
-        .<span class="ident">to_string</span>()
+        .to_string()
     })
 }
 
-<span class="kw">fn</span> <span class="ident">get_cpuinfo_cached</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-    <span class="kw">static</span> <span class="ident">CACHED</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">fn </span>get_cpuinfo_cached() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">static </span>CACHED: Once&lt;String&gt; = Once::new();
 
-    <span class="ident">CACHED</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> {
-        <span class="kw">use</span> <span class="ident">alloc::vec</span>;
-        <span class="kw">use</span> <span class="ident">serde_json</span>::<span class="kw-2">*</span>;
+    CACHED.call_once(|| {
+        <span class="kw">use </span>alloc::vec;
+        <span class="kw">use </span>serde_json::<span class="kw-2">*</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">data</span> <span class="op">=</span> <span class="macro">json!</span>({ <span class="string">&quot;processors&quot;</span>: [] });
+        <span class="kw">let </span><span class="kw-2">mut </span>data = <span class="macro">json!</span>({ <span class="string">&quot;processors&quot;</span>: [] });
 
-        <span class="ident">data</span>.<span class="ident">get_mut</span>(<span class="string">&quot;processors&quot;</span>)
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">processors</span><span class="op">|</span> <span class="ident">processors</span>.<span class="ident">as_array_mut</span>())
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">processors</span><span class="op">|</span> {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">cpu_info</span> <span class="op">=</span> <span class="macro">vec!</span>[];
+        data.get_mut(<span class="string">&quot;processors&quot;</span>)
+            .and_then(|processors| processors.as_array_mut())
+            .map(|processors| {
+                <span class="kw">let </span><span class="kw-2">mut </span>cpu_info = <span class="macro">vec!</span>[];
 
-                <span class="ident">tls::for_cpu_info_cached</span>(<span class="op">|</span><span class="ident">info</span><span class="op">|</span> {
-                    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">processor</span> <span class="op">=</span> <span class="macro">json!</span>({});
+                tls::for_cpu_info_cached(|info| {
+                    <span class="kw">let </span><span class="kw-2">mut </span>processor = <span class="macro">json!</span>({});
 
-                    <span class="ident">processor</span>[<span class="string">&quot;id&quot;</span>] <span class="op">=</span> <span class="ident">Value::Number</span>(<span class="ident">Number::from</span>(<span class="ident">info</span>.<span class="ident">cpuid</span>));
-                    <span class="ident">processor</span>[<span class="string">&quot;fpu&quot;</span>] <span class="op">=</span> <span class="ident">Value::Bool</span>(<span class="ident">info</span>.<span class="ident">fpu</span>);
+                    processor[<span class="string">&quot;id&quot;</span>] = Value::Number(Number::from(info.cpuid));
+                    processor[<span class="string">&quot;fpu&quot;</span>] = Value::Bool(info.fpu);
 
-                    <span class="ident">push_string_if_some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">processor</span>, <span class="string">&quot;brand&quot;</span>, <span class="ident">info</span>.<span class="ident">brand</span>.<span class="ident">clone</span>());
-                    <span class="ident">push_string_if_some</span>(<span class="kw-2">&amp;mut</span> <span class="ident">processor</span>, <span class="string">&quot;vendor&quot;</span>, <span class="ident">info</span>.<span class="ident">vendor</span>.<span class="ident">clone</span>());
+                    push_string_if_some(<span class="kw-2">&amp;mut </span>processor, <span class="string">&quot;brand&quot;</span>, info.brand.clone());
+                    push_string_if_some(<span class="kw-2">&amp;mut </span>processor, <span class="string">&quot;vendor&quot;</span>, info.vendor.clone());
 
-                    <span class="ident">processor</span>[<span class="string">&quot;features&quot;</span>] <span class="op">=</span> <span class="ident">Value::Array</span>(
-                        <span class="ident">info</span>.<span class="ident">features</span>
-                            .<span class="ident">iter</span>()
-                            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">feature</span><span class="op">|</span> <span class="ident">Value::String</span>(<span class="ident">feature</span>.<span class="ident">to_string</span>()))
-                            .<span class="ident">collect</span>(),
+                    processor[<span class="string">&quot;features&quot;</span>] = Value::Array(
+                        info.features
+                            .iter()
+                            .map(|feature| Value::String(feature.to_string()))
+                            .collect(),
                     );
 
-                    <span class="ident">cpu_info</span>.<span class="ident">push</span>(<span class="ident">processor</span>);
+                    cpu_info.push(processor);
                 });
 
-                <span class="kw-2">*</span><span class="ident">processors</span> <span class="op">=</span> <span class="ident">cpu_info</span>;
+                <span class="kw-2">*</span>processors = cpu_info;
             });
 
-        <span class="ident">data</span>.<span class="ident">to_string</span>()
+        data.to_string()
     })
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">struct</span> <span class="ident">ProcINode</span> {
-    <span class="ident">id</span>: <span class="ident">usize</span>,
-    <span class="ident">parent</span>: <span class="ident">INodeCacheWeakItem</span>,
-    <span class="ident">node</span>: <span class="ident">INodeCacheWeakItem</span>,
-    <span class="ident">children</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">INodeCacheItem</span><span class="op">&gt;</span>,
-    <span class="ident">filesystem</span>: <span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">ProcFs</span><span class="op">&gt;</span>,
-    <span class="ident">file_type</span>: <span class="ident">FileType</span>,
-    <span class="ident">contents</span>: <span class="ident">FileContents</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">struct </span>ProcINode {
+    id: usize,
+    parent: INodeCacheWeakItem,
+    node: INodeCacheWeakItem,
+    children: BTreeMap&lt;String, INodeCacheItem&gt;,
+    filesystem: Weak&lt;ProcFs&gt;,
+    file_type: FileType,
+    contents: FileContents,
 }
 
-<span class="kw">enum</span> <span class="ident">FileContents</span> {
-    <span class="ident">CpuInfo</span>,
-    <span class="ident">CmdLine</span>,
+<span class="kw">enum </span>FileContents {
+    CpuInfo,
+    CmdLine,
 
     <span class="prelude-val">None</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">FileContents</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="ident"><span class="self">Self</span>::None</span>
+<span class="kw">impl </span>Default <span class="kw">for </span>FileContents {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::None
     }
 }
 
-<span class="kw">struct</span> <span class="ident">LockedProcINode</span>(<span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">ProcINode</span><span class="op">&gt;</span>);
+<span class="kw">struct </span>LockedProcINode(RwLock&lt;ProcINode&gt;);
 
-<span class="kw">impl</span> <span class="ident">LockedProcINode</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">node</span>: <span class="ident">ProcINode</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">RwLock::new</span>(<span class="ident">node</span>))
+<span class="kw">impl </span>LockedProcINode {
+    <span class="kw">fn </span>new(node: ProcINode) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(RwLock::new(node))
     }
 
-    <span class="kw">fn</span> <span class="ident">init</span>(
+    <span class="kw">fn </span>init(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">INodeCacheWeakItem</span>,
-        <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">INodeCacheWeakItem</span>,
-        <span class="ident">filesystem</span>: <span class="kw-2">&amp;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">ProcFs</span><span class="op">&gt;</span>,
-        <span class="ident">file_type</span>: <span class="ident">FileType</span>,
+        parent: <span class="kw-2">&amp;</span>INodeCacheWeakItem,
+        node: <span class="kw-2">&amp;</span>INodeCacheWeakItem,
+        filesystem: <span class="kw-2">&amp;</span>Weak&lt;ProcFs&gt;,
+        file_type: FileType,
     ) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="ident">this</span>.<span class="ident">parent</span> <span class="op">=</span> <span class="ident">parent</span>.<span class="ident">clone</span>();
-        <span class="ident">this</span>.<span class="ident">node</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">clone</span>();
-        <span class="ident">this</span>.<span class="ident">filesystem</span> <span class="op">=</span> <span class="ident">filesystem</span>.<span class="ident">clone</span>();
-        <span class="ident">this</span>.<span class="ident">file_type</span> <span class="op">=</span> <span class="ident">file_type</span>;
+        this.parent = parent.clone();
+        this.node = node.clone();
+        this.filesystem = filesystem.clone();
+        this.file_type = file_type;
     }
 
-    <span class="kw">fn</span> <span class="ident">make_inode</span>(
+    <span class="kw">fn </span>make_inode(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">file_type</span>: <span class="ident">FileType</span>,
-        <span class="ident">contents</span>: <span class="ident">FileContents</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">icache</span> <span class="op">=</span> <span class="ident">cache::icache</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+        name: <span class="kw-2">&amp;</span>str,
+        file_type: FileType,
+        contents: FileContents,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="kw">let </span>icache = cache::icache();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="kw">if</span> <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">contains_key</span>(<span class="ident">name</span>) <span class="op">|</span><span class="op">|</span> [<span class="string">&quot;&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::EntryExists</span>);
+        <span class="kw">if </span>this.children.contains_key(name) || [<span class="string">&quot;&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].contains(<span class="kw-2">&amp;</span>name) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::EntryExists);
         }
 
-        <span class="kw">let</span> <span class="ident">filesystem</span> <span class="op">=</span> <span class="ident">this</span>.<span class="ident">filesystem</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>();
+        <span class="kw">let </span>filesystem = this.filesystem.upgrade().unwrap();
 
-        <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">filesystem</span>.<span class="ident">allocate_inode</span>(<span class="ident">file_type</span>, <span class="ident">contents</span>);
-        <span class="kw">let</span> <span class="ident">inode_cached</span> <span class="op">=</span> <span class="ident">icache</span>.<span class="ident">make_item_no_cache</span>(<span class="ident">CachedINode::new</span>(<span class="ident">inode</span>));
+        <span class="kw">let </span>inode = filesystem.allocate_inode(file_type, contents);
+        <span class="kw">let </span>inode_cached = icache.make_item_no_cache(CachedINode::new(inode));
 
-        <span class="ident">inode_cached</span>
-            .<span class="ident">inner</span>()
-            .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">LockedProcINode</span><span class="op">&gt;</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">init</span>(
-                <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">node</span>,
-                <span class="kw-2">&amp;</span><span class="ident">inode_cached</span>.<span class="ident">downgrade</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">filesystem</span>,
-                <span class="ident">file_type</span>,
+        inode_cached
+            .inner()
+            .downcast_arc::&lt;LockedProcINode&gt;()
+            .unwrap()
+            .init(
+                <span class="kw-2">&amp;</span>this.node,
+                <span class="kw-2">&amp;</span>inode_cached.downgrade(),
+                <span class="kw-2">&amp;</span>this.filesystem,
+                file_type,
             );
 
-        <span class="ident">this</span>.<span class="ident">children</span>
-            .<span class="ident">insert</span>(<span class="ident">String::from</span>(<span class="ident">name</span>), <span class="ident">inode_cached</span>.<span class="ident">clone</span>());
+        this.children
+            .insert(String::from(name), inode_cached.clone());
 
-        <span class="prelude-val">Ok</span>(<span class="ident">inode_cached</span>)
+        <span class="prelude-val">Ok</span>(inode_cached)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">LockedProcINode</span> {
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>LockedProcINode {
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">let</span> <span class="ident">data</span> <span class="op">=</span> <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::CpuInfo</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">get_cpuinfo_cached</span>()),
-            <span class="ident">FileContents::CmdLine</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">get_cmdline_cached</span>()),
+        <span class="kw">let </span>data = <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::CpuInfo =&gt; <span class="prelude-val">Ok</span>(get_cpuinfo_cached()),
+            FileContents::CmdLine =&gt; <span class="prelude-val">Ok</span>(get_cmdline_cached()),
 
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="ident">core::cmp::min</span>(<span class="ident">buffer</span>.<span class="ident">len</span>(), <span class="ident">data</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">offset</span>);
-        <span class="ident">buffer</span>[..<span class="ident">count</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">data</span>.<span class="ident">as_bytes</span>()[<span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">count</span>]);
+        <span class="kw">let </span>count = core::cmp::min(buffer.len(), data.len() - offset);
+        buffer[..count].copy_from_slice(<span class="kw-2">&amp;</span>data.as_bytes()[offset..offset + count]);
 
-        <span class="prelude-val">Ok</span>(<span class="ident">count</span>)
+        <span class="prelude-val">Ok</span>(count)
     }
 
-    <span class="kw">fn</span> <span class="ident">lookup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dir</span>: <span class="ident">DirCacheItem</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
-        <span class="kw">let</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">this</span>
-            .<span class="ident">children</span>
-            .<span class="ident">get</span>(<span class="ident">name</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">FileSystemError::EntryNotFound</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, dir: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
+        <span class="kw">let </span>child = this
+            .children
+            .get(name)
+            .ok_or(FileSystemError::EntryNotFound)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">DirEntry::new</span>(
-            <span class="ident">dir</span>.<span class="ident">clone</span>(),
-            <span class="ident">child</span>.<span class="ident">clone</span>(),
-            <span class="ident">String::from</span>(<span class="ident">name</span>),
+        <span class="prelude-val">Ok</span>(DirEntry::new(
+            dir.clone(),
+            child.clone(),
+            String::from(name),
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Metadata</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Metadata&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Metadata</span> {
-            <span class="ident">id</span>: <span class="ident">this</span>.<span class="ident">id</span>,
-            <span class="ident">file_type</span>: <span class="ident">this</span>.<span class="ident">file_type</span>,
-            <span class="ident">size</span>: <span class="number">0</span>,
-            <span class="ident">children_len</span>: <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">len</span>(),
+        <span class="prelude-val">Ok</span>(Metadata {
+            id: this.id,
+            file_type: this.file_type,
+            size: <span class="number">0</span>,
+            children_len: this.children.len(),
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">dirent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, index: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">if</span> <span class="ident">this</span>.<span class="ident">file_type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">FileType::Directory</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotDirectory</span>);
+        <span class="kw">if </span>this.file_type != FileType::Directory {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotDirectory);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">index</span> {
-            <span class="number">0x00</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">DirEntry::new</span>(
-                <span class="ident">parent</span>,
-                <span class="comment">// UNWRAP: The inner node value should not be dropped.</span>
-                <span class="ident">this</span>.<span class="ident">node</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>().<span class="ident">into</span>(),
-                <span class="ident">String::from</span>(<span class="string">&quot;.&quot;</span>),
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>index {
+            <span class="number">0x00 </span>=&gt; <span class="prelude-val">Some</span>(DirEntry::new(
+                parent,
+                <span class="comment">// UNWRAP: The inner node value should not be dropped.
+                </span>this.node.upgrade().unwrap().into(),
+                String::from(<span class="string">&quot;.&quot;</span>),
             )),
 
-            <span class="number">0x01</span> =&gt; {
-                <span class="prelude-val">Some</span>(<span class="ident">DirEntry::new</span>(
-                    <span class="ident">parent</span>,
-                    <span class="comment">// UNWRAP: The inner node value should not be dropped.</span>
-                    <span class="ident">this</span>.<span class="ident">node</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>().<span class="ident">into</span>(),
-                    <span class="ident">String::from</span>(<span class="string">&quot;..&quot;</span>),
+            <span class="number">0x01 </span>=&gt; {
+                <span class="prelude-val">Some</span>(DirEntry::new(
+                    parent,
+                    <span class="comment">// UNWRAP: The inner node value should not be dropped.
+                    </span>this.node.upgrade().unwrap().into(),
+                    String::from(<span class="string">&quot;..&quot;</span>),
                 ))
             }
 
-            <span class="comment">// Subtract two because of the &quot;.&quot; and &quot;..&quot; entries.</span>
-            <span class="kw">_</span> =&gt; <span class="ident">this</span>
-                .<span class="ident">children</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">nth</span>(<span class="ident">index</span> <span class="op">-</span> <span class="number">2</span>)
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">inode</span>)<span class="op">|</span> <span class="ident">DirEntry::new</span>(<span class="ident">parent</span>, <span class="ident">inode</span>.<span class="ident">clone</span>(), <span class="ident">name</span>.<span class="ident">clone</span>())),
+            <span class="comment">// Subtract two because of the &quot;.&quot; and &quot;..&quot; entries.
+            </span><span class="kw">_ </span>=&gt; this
+                .children
+                .iter()
+                .nth(index - <span class="number">2</span>)
+                .map(|(name, inode)| DirEntry::new(parent, inode.clone(), name.clone())),
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">weak_filesystem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>().<span class="ident">filesystem</span>.<span class="ident">clone</span>())
+    <span class="kw">fn </span>weak_filesystem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Weak&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.read().filesystem.clone())
     }
 }
 
-<span class="kw">struct</span> <span class="ident">ProcFs</span> {
-    <span class="ident">root_inode</span>: <span class="ident">INodeCacheItem</span>,
-    <span class="ident">root_dir</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">next_id</span>: <span class="ident">AtomicUsize</span>,
+<span class="kw">struct </span>ProcFs {
+    root_inode: INodeCacheItem,
+    root_dir: DirCacheItem,
+    next_id: AtomicUsize,
 }
 
-<span class="kw">impl</span> <span class="ident">ProcFs</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">icache</span> <span class="op">=</span> <span class="ident">cache::icache</span>();
+<span class="kw">impl </span>ProcFs {
+    <span class="kw">pub fn </span>new() -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="self">Self</span>&gt;&gt; {
+        <span class="kw">let </span>icache = cache::icache();
 
-        <span class="kw">let</span> <span class="ident">root_node</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">LockedProcINode::new</span>(<span class="ident">ProcINode::default</span>()));
-        <span class="kw">let</span> <span class="ident">root_cached</span> <span class="op">=</span> <span class="ident">icache</span>.<span class="ident">make_item_no_cache</span>(<span class="ident">CachedINode::new</span>(<span class="ident">root_node</span>));
+        <span class="kw">let </span>root_node = Arc::new(LockedProcINode::new(ProcINode::default()));
+        <span class="kw">let </span>root_cached = icache.make_item_no_cache(CachedINode::new(root_node));
 
-        <span class="kw">let</span> <span class="ident">root_dir</span> <span class="op">=</span> <span class="ident">DirEntry::new_root</span>(<span class="ident">root_cached</span>.<span class="ident">clone</span>(), <span class="ident">String::from</span>(<span class="string">&quot;/&quot;</span>));
+        <span class="kw">let </span>root_dir = DirEntry::new_root(root_cached.clone(), String::from(<span class="string">&quot;/&quot;</span>));
 
-        <span class="kw">let</span> <span class="ident">ramfs</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="self">Self</span> {
-            <span class="ident">root_inode</span>: <span class="ident">root_cached</span>.<span class="ident">clone</span>(),
-            <span class="ident">root_dir</span>: <span class="ident">root_dir</span>.<span class="ident">clone</span>(),
-            <span class="ident">next_id</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0x00</span>),
+        <span class="kw">let </span>ramfs = Arc::new(<span class="self">Self </span>{
+            root_inode: root_cached.clone(),
+            root_dir: root_dir.clone(),
+            next_id: AtomicUsize::new(<span class="number">0x00</span>),
         });
 
-        <span class="kw">let</span> <span class="ident">copy</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ramfs</span>.<span class="ident">clone</span>();
+        <span class="kw">let </span>copy: Arc&lt;<span class="kw">dyn </span>FileSystem&gt; = ramfs.clone();
 
-        <span class="ident">root_dir</span>.<span class="ident">filesystem</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Arc::downgrade</span>(<span class="kw-2">&amp;</span><span class="ident">copy</span>));
+        root_dir.filesystem.call_once(|| Arc::downgrade(<span class="kw-2">&amp;</span>copy));
 
-        <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">root_cached</span>
-            .<span class="ident">inner</span>()
-            .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">LockedProcINode</span><span class="op">&gt;</span>()
-            .<span class="ident">unwrap</span>();
+        <span class="kw">let </span>inode = root_cached
+            .inner()
+            .downcast_arc::&lt;LockedProcINode&gt;()
+            .unwrap();
 
-        <span class="ident">inode</span>.<span class="ident">init</span>(
-            <span class="kw-2">&amp;</span><span class="ident">ramfs</span>.<span class="ident">root_inode</span>.<span class="ident">downgrade</span>(),
-            <span class="op">&amp;&amp;</span><span class="ident">root_cached</span>.<span class="ident">downgrade</span>(),
-            <span class="kw-2">&amp;</span><span class="ident">Arc::downgrade</span>(<span class="kw-2">&amp;</span><span class="ident">ramfs</span>),
-            <span class="ident">FileType::Directory</span>,
+        inode.init(
+            <span class="kw-2">&amp;</span>ramfs.root_inode.downgrade(),
+            &amp;&amp;root_cached.downgrade(),
+            <span class="kw-2">&amp;</span>Arc::downgrade(<span class="kw-2">&amp;</span>ramfs),
+            FileType::Directory,
         );
 
-        <span class="ident">inode</span>.<span class="ident">make_inode</span>(<span class="string">&quot;cpuinfo&quot;</span>, <span class="ident">FileType::File</span>, <span class="ident">FileContents::CpuInfo</span>)<span class="question-mark">?</span>;
-        <span class="ident">inode</span>.<span class="ident">make_inode</span>(<span class="string">&quot;cmdline&quot;</span>, <span class="ident">FileType::File</span>, <span class="ident">FileContents::CmdLine</span>)<span class="question-mark">?</span>;
+        inode.make_inode(<span class="string">&quot;cpuinfo&quot;</span>, FileType::File, FileContents::CpuInfo)<span class="question-mark">?</span>;
+        inode.make_inode(<span class="string">&quot;cmdline&quot;</span>, FileType::File, FileContents::CmdLine)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">ramfs</span>)
+        <span class="prelude-val">Ok</span>(ramfs)
     }
 
-    <span class="kw">fn</span> <span class="ident">allocate_inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">file_type</span>: <span class="ident">FileType</span>, <span class="ident">contents</span>: <span class="ident">FileContents</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">LockedProcINode</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new</span>(<span class="ident">LockedProcINode::new</span>(<span class="ident">ProcINode</span> {
-            <span class="ident">parent</span>: <span class="ident">CacheWeak::new</span>(),
-            <span class="ident">node</span>: <span class="ident">CacheWeak::new</span>(),
-            <span class="ident">filesystem</span>: <span class="ident">Weak::default</span>(),
-            <span class="ident">children</span>: <span class="ident">BTreeMap::new</span>(),
-            <span class="ident">id</span>: <span class="self">self</span>.<span class="ident">next_id</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>),
-            <span class="ident">contents</span>,
-            <span class="ident">file_type</span>,
+    <span class="kw">fn </span>allocate_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, file_type: FileType, contents: FileContents) -&gt; Arc&lt;LockedProcINode&gt; {
+        Arc::new(LockedProcINode::new(ProcINode {
+            parent: CacheWeak::new(),
+            node: CacheWeak::new(),
+            filesystem: Weak::default(),
+            children: BTreeMap::new(),
+            id: <span class="self">self</span>.next_id.fetch_add(<span class="number">1</span>, Ordering::SeqCst),
+            contents,
+            file_type,
         }))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FileSystem</span> <span class="kw">for</span> <span class="ident">ProcFs</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">root_dir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DirCacheItem</span> {
-        <span class="self">self</span>.<span class="ident">root_dir</span>.<span class="ident">clone</span>()
+<span class="kw">impl </span>FileSystem <span class="kw">for </span>ProcFs {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>root_dir(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; DirCacheItem {
+        <span class="self">self</span>.root_dir.clone()
     }
 }
 
-<span class="kw">static</span> <span class="ident">PROC_FS</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">ProcFs</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>PROC_FS: Once&lt;Arc&lt;ProcFs&gt;&gt; = Once::new();
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">fs</span> <span class="op">=</span> <span class="ident">ProcFs::new</span>()<span class="question-mark">?</span>;
-    <span class="kw">let</span> <span class="ident">fs</span> <span class="op">=</span> <span class="ident">PROC_FS</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">fs</span>);
+<span class="kw">pub fn </span>init() -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">let </span>fs = ProcFs::new()<span class="question-mark">?</span>;
+    <span class="kw">let </span>fs = PROC_FS.call_once(|| fs);
 
-    <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::lookup_path</span>(<span class="ident">Path::new</span>(<span class="string">&quot;/proc&quot;</span>))<span class="question-mark">?</span>;
-    <span class="ident">MOUNT_MANAGER</span>.<span class="ident">mount</span>(<span class="ident">inode</span>, <span class="ident">fs</span>.<span class="ident">clone</span>())<span class="question-mark">?</span>;
+    <span class="kw">let </span>inode = <span class="kw">super</span>::lookup_path(Path::new(<span class="string">&quot;/proc&quot;</span>))<span class="question-mark">?</span>;
+    MOUNT_MANAGER.mount(inode, fs.clone())<span class="question-mark">?</span>;
 
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

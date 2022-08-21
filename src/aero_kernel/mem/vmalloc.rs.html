@@ -225,198 +225,198 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! Due to internal-fragmentation in the buddy frame allocator, we cannot allocate large</span>
-<span class="doccomment">//! amount of contiguous physical memory. We instead use [`vmalloc`] to allocate virtually</span>
-<span class="doccomment">//! contiguous memory. The allocator uses a red-black tree to keep track of the free memory</span>
-<span class="doccomment">//! so we can allocate and free memory efficiently.</span>
-<span class="doccomment">//!</span>
-<span class="doccomment">//! An area is reserved for [`vmalloc`] in the kernel address space, starting</span>
-<span class="doccomment">//! at [`VMALLOC_VIRT_START`] and ending at [`VMALLOC_VIRT_END`].</span>
+</span><span class="doccomment">//! Due to internal-fragmentation in the buddy frame allocator, we cannot allocate large
+//! amount of contiguous physical memory. We instead use [`vmalloc`] to allocate virtually
+//! contiguous memory. The allocator uses a red-black tree to keep track of the free memory
+//! so we can allocate and free memory efficiently.
+//!
+//! An area is reserved for [`vmalloc`] in the kernel address space, starting
+//! at [`VMALLOC_VIRT_START`] and ending at [`VMALLOC_VIRT_END`].
 
-<span class="kw">use</span> <span class="ident">alloc::boxed::Box</span>;
-<span class="kw">use</span> <span class="ident">intrusive_collections</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+</span><span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>intrusive_collections::<span class="kw-2">*</span>;
+<span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{Mutex, MutexGuard};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::paging</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::AddressSpace</span>;
+<span class="kw">use </span><span class="kw">super</span>::paging::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::AddressSpace;
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="ident">VMALLOC_MAX_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">128</span> <span class="op">*</span> <span class="number">1024</span> <span class="op">*</span> <span class="number">1024</span>; <span class="comment">// 128 GiB</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="ident">VMALLOC_START</span>: <span class="ident">VirtAddr</span> <span class="op">=</span> <span class="ident">VirtAddr::new</span>(<span class="number">0xfffff80000000000</span>);
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const</span> <span class="ident">VMALLOC_END</span>: <span class="ident">VirtAddr</span> <span class="op">=</span>
-    <span class="ident">VirtAddr::new</span>(<span class="number">0xfffff80000000000</span> <span class="op">+</span> <span class="ident">VMALLOC_MAX_SIZE</span> <span class="kw">as</span> <span class="ident">u64</span>);
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const </span>VMALLOC_MAX_SIZE: usize = <span class="number">128 </span>* <span class="number">1024 </span>* <span class="number">1024</span>; <span class="comment">// 128 GiB
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const </span>VMALLOC_START: VirtAddr = VirtAddr::new(<span class="number">0xfffff80000000000</span>);
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const </span>VMALLOC_END: VirtAddr =
+    VirtAddr::new(<span class="number">0xfffff80000000000 </span>+ VMALLOC_MAX_SIZE <span class="kw">as </span>u64);
 
-<span class="kw">static</span> <span class="ident">VMALLOC</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Vmalloc</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
+<span class="kw">static </span>VMALLOC: Once&lt;Mutex&lt;Vmalloc&gt;&gt; = Once::new();
 
-<span class="kw">struct</span> <span class="ident">VmallocAreaProtected</span> {
-    <span class="ident">addr</span>: <span class="ident">VirtAddr</span>,
-    <span class="ident">size</span>: <span class="ident">usize</span>,
+<span class="kw">struct </span>VmallocAreaProtected {
+    addr: VirtAddr,
+    size: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">VmallocAreaProtected</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">addr</span>: <span class="ident">VirtAddr</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> { <span class="ident">addr</span>, <span class="ident">size</span> }
+<span class="kw">impl </span>VmallocAreaProtected {
+    <span class="kw">fn </span>new(addr: VirtAddr, size: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ addr, size }
     }
 }
 
-<span class="kw">struct</span> <span class="ident">VmallocArea</span> {
-    <span class="comment">// NOTE: Since there are equal amount of read and write operations we are going to</span>
-    <span class="comment">// protect the data using a [`Mutex`].</span>
-    <span class="ident">protected</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">VmallocAreaProtected</span><span class="op">&gt;</span>,
-    <span class="ident">link</span>: <span class="ident">RBTreeLink</span>,
+<span class="kw">struct </span>VmallocArea {
+    <span class="comment">// NOTE: Since there are equal amount of read and write operations we are going to
+    // protect the data using a [`Mutex`].
+    </span>protected: Mutex&lt;VmallocAreaProtected&gt;,
+    link: RBTreeLink,
 }
 
-<span class="kw">impl</span> <span class="ident">VmallocArea</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">addr</span>: <span class="ident">VirtAddr</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">protected</span>: <span class="ident">Mutex::new</span>(<span class="ident">VmallocAreaProtected::new</span>(<span class="ident">addr</span>, <span class="ident">size</span>)),
-            <span class="ident">link</span>: <span class="ident">Default::default</span>(),
+<span class="kw">impl </span>VmallocArea {
+    <span class="kw">fn </span>new(addr: VirtAddr, size: usize) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            protected: Mutex::new(VmallocAreaProtected::new(addr, size)),
+            link: Default::default(),
         }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="ident">KeyAdapter</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">VmallocAreaAdaptor</span> {
-    <span class="kw">type</span> <span class="ident">Key</span> <span class="op">=</span> <span class="ident">usize</span>;
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>VmallocAreaAdaptor {
+    <span class="kw">type </span>Key = usize;
 
-    <span class="kw">fn</span> <span class="ident">get_key</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">this</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">VmallocArea</span>) -&gt; <span class="ident"><span class="self">Self</span>::Key</span> {
-        <span class="comment">// NOTE: We use the size of the vmalloc area as the key for the red-black tree</span>
-        <span class="comment">// so when we are allocating or deallocating memory we can find a large enough, free</span>
-        <span class="comment">// vmalloc area efficiently.</span>
-        <span class="ident">this</span>.<span class="ident">protected</span>.<span class="ident">lock</span>().<span class="ident">size</span>
+    <span class="kw">fn </span>get_key(<span class="kw-2">&amp;</span><span class="self">self</span>, this: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>VmallocArea) -&gt; <span class="self">Self</span>::Key {
+        <span class="comment">// NOTE: We use the size of the vmalloc area as the key for the red-black tree
+        // so when we are allocating or deallocating memory we can find a large enough, free
+        // vmalloc area efficiently.
+        </span>this.protected.lock().size
     }
 }
 
-<span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="ident">VmallocAreaAdaptor</span> <span class="op">=</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="ident">VmallocArea</span><span class="op">&gt;</span>: <span class="ident">VmallocArea</span> { <span class="ident">link</span>: <span class="ident">RBTreeLink</span> });
+<span class="macro">intrusive_collections::intrusive_adapter!</span>(VmallocAreaAdaptor = Box&lt;VmallocArea&gt;: VmallocArea { link: RBTreeLink });
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct</span> <span class="ident">Vmalloc</span> {
-    <span class="ident">free_list</span>: <span class="ident">RBTree</span><span class="op">&lt;</span><span class="ident">VmallocAreaAdaptor</span><span class="op">&gt;</span>,
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Vmalloc {
+    free_list: RBTree&lt;VmallocAreaAdaptor&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">Vmalloc</span> {
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">Self</span> {
-            <span class="ident">free_list</span>: <span class="ident">RBTree::new</span>(<span class="ident">Default::default</span>()),
+<span class="kw">impl </span>Vmalloc {
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self </span>{
+            free_list: RBTree::new(Default::default()),
         };
 
-        <span class="ident">this</span>.<span class="ident">free_list</span>
-            .<span class="ident">insert</span>(<span class="kw">box</span> <span class="ident">VmallocArea::new</span>(<span class="ident">VMALLOC_START</span>, <span class="ident">VMALLOC_MAX_SIZE</span>));
+        this.free_list
+            .insert(<span class="kw">box </span>VmallocArea::new(VMALLOC_START, VMALLOC_MAX_SIZE));
 
-        <span class="ident">this</span>
+        this
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">alloc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">npages</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">VirtAddr</span><span class="op">&gt;</span> {
-        <span class="comment">// +1: area for the guard page.</span>
-        <span class="kw">let</span> <span class="ident">size_bytes</span> <span class="op">=</span> (<span class="ident">npages</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>;
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>alloc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, npages: usize) -&gt; <span class="prelude-ty">Option</span>&lt;VirtAddr&gt; {
+        <span class="comment">// +1: area for the guard page.
+        </span><span class="kw">let </span>size_bytes = (npages + <span class="number">1</span>) * Size4KiB::SIZE <span class="kw">as </span>usize;
 
-        <span class="kw">let</span> <span class="ident">area</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">free_list</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">area</span><span class="op">|</span> <span class="ident">area</span>.<span class="ident">protected</span>.<span class="ident">lock</span>().<span class="ident">size</span> <span class="op">&gt;</span><span class="op">=</span> <span class="ident">size_bytes</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>area = <span class="self">self
+            </span>.free_list
+            .iter()
+            .find(|area| area.protected.lock().size &gt;= size_bytes)<span class="question-mark">?</span>;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">area_p</span> <span class="op">=</span> <span class="ident">area</span>.<span class="ident">protected</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="ident">address</span> <span class="op">=</span> <span class="ident">area_p</span>.<span class="ident">addr</span>.<span class="ident">clone</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>area_p = area.protected.lock();
+        <span class="kw">let </span>address = area_p.addr.clone();
 
-        <span class="kw">if</span> <span class="ident">area_p</span>.<span class="ident">size</span> <span class="op">&gt;</span> <span class="ident">size_bytes</span> {
-            <span class="ident">area_p</span>.<span class="ident">addr</span> <span class="op">=</span> <span class="ident">area_p</span>.<span class="ident">addr</span> <span class="op">+</span> <span class="ident">size_bytes</span>;
-            <span class="ident">area_p</span>.<span class="ident">size</span> <span class="op">-</span><span class="op">=</span> <span class="ident">size_bytes</span>;
-        } <span class="kw">else</span> {
-            <span class="comment">// NOTE: the area is has exactly the requested size, so we can remove it</span>
-            <span class="comment">// from the free list.</span>
-            <span class="ident">core::mem::drop</span>(<span class="ident">area_p</span>); <span class="comment">// unlock</span>
+        <span class="kw">if </span>area_p.size &gt; size_bytes {
+            area_p.addr = area_p.addr + size_bytes;
+            area_p.size -= size_bytes;
+        } <span class="kw">else </span>{
+            <span class="comment">// NOTE: the area is has exactly the requested size, so we can remove it
+            // from the free list.
+            </span>core::mem::drop(area_p); <span class="comment">// unlock
 
-            <span class="kw">let</span> <span class="ident">area_ptr</span> <span class="op">=</span> <span class="ident">area</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">VmallocArea</span>;
+            </span><span class="kw">let </span>area_ptr = area <span class="kw">as </span><span class="kw-2">*const </span>VmallocArea;
 
-            <span class="comment">// SAFETY: The constructed pointer is a valid object that is in the tree,</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">area_cursor</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">free_list</span>.<span class="ident">cursor_mut_from_ptr</span>(<span class="ident">area_ptr</span>) };
-            <span class="ident">area_cursor</span>.<span class="ident">remove</span>();
+            <span class="comment">// SAFETY: The constructed pointer is a valid object that is in the tree,
+            </span><span class="kw">let </span><span class="kw-2">mut </span>area_cursor = <span class="kw">unsafe </span>{ <span class="self">self</span>.free_list.cursor_mut_from_ptr(area_ptr) };
+            area_cursor.remove();
         }
 
-        <span class="comment">// subtract the size of the guard page since we are not required to allocate</span>
-        <span class="comment">// a frame for that area.</span>
-        <span class="kw">let</span> <span class="ident">size_bytes</span> <span class="op">=</span> <span class="ident">size_bytes</span> <span class="op">-</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="comment">// subtract the size of the guard page since we are not required to allocate
+        // a frame for that area.
+        </span><span class="kw">let </span>size_bytes = size_bytes - Size4KiB::SIZE <span class="kw">as </span>usize;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset_table</span> <span class="op">=</span> <span class="ident">address_space</span>.<span class="ident">offset_page_table</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
+        <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
-        <span class="kw">let</span> <span class="ident">page_range</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">start_page</span>: <span class="ident">Page</span> <span class="op">=</span> <span class="ident">Page::containing_address</span>(<span class="ident">address</span>);
-            <span class="kw">let</span> <span class="ident">end_page</span> <span class="op">=</span> <span class="ident">Page::containing_address</span>(<span class="ident">address</span> <span class="op">+</span> <span class="ident">size_bytes</span>);
+        <span class="kw">let </span>page_range = {
+            <span class="kw">let </span>start_page: Page = Page::containing_address(address);
+            <span class="kw">let </span>end_page = Page::containing_address(address + size_bytes);
 
-            <span class="ident">Page::range</span>(<span class="ident">start_page</span>, <span class="ident">end_page</span>)
+            Page::range(start_page, end_page)
         };
 
-        <span class="comment">// map the pages at the allocated address.</span>
-        <span class="kw">for</span> <span class="ident">page</span> <span class="kw">in</span> <span class="ident">page_range</span> {
-            <span class="kw">let</span> <span class="ident">frame</span>: <span class="ident">PhysFrame</span><span class="op">&lt;</span><span class="ident">Size4KiB</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>
-                .<span class="ident">allocate_frame</span>()
-                .<span class="ident">expect</span>(<span class="string">&quot;vmalloc: physical memory exhausted&quot;</span>);
+        <span class="comment">// map the pages at the allocated address.
+        </span><span class="kw">for </span>page <span class="kw">in </span>page_range {
+            <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR
+                .allocate_frame()
+                .expect(<span class="string">&quot;vmalloc: physical memory exhausted&quot;</span>);
 
-            <span class="kw">unsafe</span> {
-                <span class="ident">offset_table</span>.<span class="ident">map_to</span>(
-                    <span class="ident">page</span>,
-                    <span class="ident">frame</span>,
-                    <span class="ident">PageTableFlags::PRESENT</span> <span class="op">|</span> <span class="ident">PageTableFlags::WRITABLE</span>,
+            <span class="kw">unsafe </span>{
+                offset_table.map_to(
+                    page,
+                    frame,
+                    PageTableFlags::PRESENT | PageTableFlags::WRITABLE,
                 )
             }
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">flush</span>();
+            .unwrap()
+            .flush();
         }
 
-        <span class="prelude-val">Some</span>(<span class="ident">address</span>)
+        <span class="prelude-val">Some</span>(address)
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">dealloc</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">addr</span>: <span class="ident">VirtAddr</span>, <span class="ident">npages</span>: <span class="ident">usize</span>) {
-        <span class="comment">// +1: area for the guard page.</span>
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> (<span class="ident">npages</span> <span class="op">+</span> <span class="number">1</span>) <span class="op">*</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>;
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>dealloc(<span class="kw-2">&amp;mut </span><span class="self">self</span>, addr: VirtAddr, npages: usize) {
+        <span class="comment">// +1: area for the guard page.
+        </span><span class="kw">let </span>size = (npages + <span class="number">1</span>) * Size4KiB::SIZE <span class="kw">as </span>usize;
 
-        <span class="comment">// check if this block can be merged into another block.</span>
-        <span class="kw">let</span> <span class="ident">merge</span> <span class="op">=</span> <span class="self">self</span>
-            .<span class="ident">free_list</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">find</span>(<span class="op">|</span><span class="ident">area</span><span class="op">|</span> <span class="ident">addr</span> <span class="op">+</span> <span class="ident">size</span> <span class="op">==</span> <span class="ident">area</span>.<span class="ident">protected</span>.<span class="ident">lock</span>().<span class="ident">addr</span>);
+        <span class="comment">// check if this block can be merged into another block.
+        </span><span class="kw">let </span>merge = <span class="self">self
+            </span>.free_list
+            .iter()
+            .find(|area| addr + size == area.protected.lock().addr);
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">merge</span>) <span class="op">=</span> <span class="ident">merge</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">merge</span> <span class="op">=</span> <span class="ident">merge</span>.<span class="ident">protected</span>.<span class="ident">lock</span>();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(merge) = merge {
+            <span class="kw">let </span><span class="kw-2">mut </span>merge = merge.protected.lock();
 
-            <span class="ident">merge</span>.<span class="ident">addr</span> <span class="op">=</span> <span class="ident">addr</span>;
-            <span class="ident">merge</span>.<span class="ident">size</span> <span class="op">+</span><span class="op">=</span> <span class="ident">size</span>;
-        } <span class="kw">else</span> {
-            <span class="comment">// the block cannot be merged, so add it to the free list.</span>
-            <span class="self">self</span>.<span class="ident">free_list</span>.<span class="ident">insert</span>(<span class="kw">box</span> <span class="ident">VmallocArea::new</span>(<span class="ident">addr</span>, <span class="ident">size</span>));
+            merge.addr = addr;
+            merge.size += size;
+        } <span class="kw">else </span>{
+            <span class="comment">// the block cannot be merged, so add it to the free list.
+            </span><span class="self">self</span>.free_list.insert(<span class="kw">box </span>VmallocArea::new(addr, size));
         }
 
-        <span class="comment">// subtract the size of the guard page since its not mapped.</span>
-        <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">size</span> <span class="op">-</span> <span class="ident">Size4KiB::SIZE</span> <span class="kw">as</span> <span class="ident">usize</span>;
+        <span class="comment">// subtract the size of the guard page since its not mapped.
+        </span><span class="kw">let </span>size = size - Size4KiB::SIZE <span class="kw">as </span>usize;
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">address_space</span> <span class="op">=</span> <span class="ident">AddressSpace::this</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">offset_table</span> <span class="op">=</span> <span class="ident">address_space</span>.<span class="ident">offset_page_table</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
+        <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
-        <span class="kw">let</span> <span class="ident">page_range</span> <span class="op">=</span> {
-            <span class="kw">let</span> <span class="ident">start_page</span>: <span class="ident">Page</span> <span class="op">=</span> <span class="ident">Page::containing_address</span>(<span class="ident">addr</span>);
-            <span class="kw">let</span> <span class="ident">end_page</span> <span class="op">=</span> <span class="ident">Page::containing_address</span>(<span class="ident">addr</span> <span class="op">+</span> <span class="ident">size</span>);
+        <span class="kw">let </span>page_range = {
+            <span class="kw">let </span>start_page: Page = Page::containing_address(addr);
+            <span class="kw">let </span>end_page = Page::containing_address(addr + size);
 
-            <span class="ident">Page::range</span>(<span class="ident">start_page</span>, <span class="ident">end_page</span>)
+            Page::range(start_page, end_page)
         };
 
-        <span class="kw">for</span> <span class="ident">page</span> <span class="kw">in</span> <span class="ident">page_range</span> {
-            <span class="comment">// unmap the page at the address which in turn will deallocate</span>
-            <span class="comment">// the frame (refcnt == 0).</span>
-            <span class="ident">offset_table</span>.<span class="ident">unmap</span>(<span class="ident">page</span>).<span class="ident">unwrap</span>().<span class="number">1</span>.<span class="ident">flush</span>();
+        <span class="kw">for </span>page <span class="kw">in </span>page_range {
+            <span class="comment">// unmap the page at the address which in turn will deallocate
+            // the frame (refcnt == 0).
+            </span>offset_table.unmap(page).unwrap().<span class="number">1</span>.flush();
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="ident">VMALLOC</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">Vmalloc::new</span>()));
+<span class="kw">pub fn </span>init() {
+    VMALLOC.call_once(|| Mutex::new(Vmalloc::new()));
 }
 
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// * If the `vmalloc` allocator is not initialized.</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">get_vmalloc</span>() -&gt; <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">Vmalloc</span><span class="op">&gt;</span> {
-    <span class="ident">VMALLOC</span>.<span class="ident">get</span>().<span class="ident">expect</span>(<span class="string">&quot;get_vmalloc: not initialized&quot;</span>).<span class="ident">lock</span>()
+<span class="doccomment">/// ## Panics
+/// * If the `vmalloc` allocator is not initialized.
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get_vmalloc() -&gt; MutexGuard&lt;<span class="lifetime">&#39;static</span>, Vmalloc&gt; {
+    VMALLOC.get().expect(<span class="string">&quot;get_vmalloc: not initialized&quot;</span>).lock()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

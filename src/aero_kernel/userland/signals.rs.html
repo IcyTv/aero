@@ -482,455 +482,455 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">aero_syscall::signal</span>::<span class="kw-2">*</span>;
+</span><span class="kw">use </span>aero_syscall::signal::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
+<span class="kw">use </span>alloc::sync::Arc;
 
-<span class="kw">use</span> <span class="ident">core::ops</span>::{<span class="ident">Index</span>, <span class="ident">IndexMut</span>};
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicU64</span>, <span class="ident">Ordering</span>};
+<span class="kw">use </span>core::ops::{Index, IndexMut};
+<span class="kw">use </span>core::sync::atomic::{AtomicU64, Ordering};
 
-<span class="kw">use</span> <span class="ident">bit_field::BitField</span>;
+<span class="kw">use </span>bit_field::BitField;
 
-<span class="kw">use</span> <span class="ident">aero_syscall::SyscallError</span>;
+<span class="kw">use </span>aero_syscall::SyscallError;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::fs::FileSystemError</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">Mutex</span>, <span class="ident">MutexGuard</span>};
+<span class="kw">use </span><span class="kw">super</span>::scheduler;
+<span class="kw">use </span><span class="kw">crate</span>::fs::FileSystemError;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{Mutex, MutexGuard};
 
-<span class="kw">mod</span> <span class="ident">default</span> {
-    <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
+<span class="kw">mod </span>default {
+    <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
 
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">Action</span> {
-        <span class="ident">Ignore</span>,
-        <span class="ident">Handle</span>(<span class="kw">fn</span>()),
+    <span class="attribute">#[derive(Copy, Clone, PartialEq)]</span>
+    <span class="kw">pub enum </span>Action {
+        Ignore,
+        Handle(<span class="kw">fn</span>()),
     }
 
-    <span class="doccomment">/// Some of the default actions for the signals.</span>
-    <span class="kw">static</span> <span class="ident">DEFAULT_ACTIONS</span>: [<span class="ident">Action</span>; <span class="ident"><span class="kw">super</span>::SIGNAL_COUNT</span>] <span class="op">=</span> [
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGHUP</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGINT</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGQUIT</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGILL</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGABRT</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGBUS</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGFPE</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGKILL</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGSEGV</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGPIPE</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// SIGALRM</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGTERM</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// SIGCHLD</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate</span>),        <span class="comment">// SIGCONT</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">stop</span>),             <span class="comment">// SIGSTOP</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">stop</span>),             <span class="comment">// SIGTSTP</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Handle</span>(<span class="ident">terminate_thread</span>), <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-        <span class="ident">Action::Ignore</span>,                   <span class="comment">// UNUSED</span>
-    ];
+    <span class="doccomment">/// Some of the default actions for the signals.
+    </span><span class="kw">static </span>DEFAULT_ACTIONS: [Action; <span class="kw">super</span>::SIGNAL_COUNT] = [
+        Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Handle(terminate),        <span class="comment">// SIGHUP
+        </span>Action::Handle(terminate),        <span class="comment">// SIGINT
+        </span>Action::Handle(terminate),        <span class="comment">// SIGQUIT
+        </span>Action::Handle(terminate),        <span class="comment">// SIGILL
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Handle(terminate),        <span class="comment">// SIGABRT
+        </span>Action::Handle(terminate),        <span class="comment">// SIGBUS
+        </span>Action::Handle(terminate),        <span class="comment">// SIGFPE
+        </span>Action::Handle(terminate),        <span class="comment">// SIGKILL
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Handle(terminate),        <span class="comment">// SIGSEGV
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Handle(terminate),        <span class="comment">// SIGPIPE
+        </span>Action::Ignore,                   <span class="comment">// SIGALRM
+        </span>Action::Handle(terminate),        <span class="comment">// SIGTERM
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// SIGCHLD
+        </span>Action::Handle(terminate),        <span class="comment">// SIGCONT
+        </span>Action::Handle(stop),             <span class="comment">// SIGSTOP
+        </span>Action::Handle(stop),             <span class="comment">// SIGTSTP
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Handle(terminate_thread), <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+        </span>Action::Ignore,                   <span class="comment">// UNUSED
+    </span>];
 
-    <span class="kw">fn</span> <span class="ident">terminate</span>() {
-        <span class="ident">scheduler::get_scheduler</span>().<span class="ident">exit</span>(<span class="number">1</span>);
+    <span class="kw">fn </span>terminate() {
+        scheduler::get_scheduler().exit(<span class="number">1</span>);
     }
 
-    <span class="kw">fn</span> <span class="ident">terminate_thread</span>() {
+    <span class="kw">fn </span>terminate_thread() {
         <span class="macro">unimplemented!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">stop</span>() {
+    <span class="kw">fn </span>stop() {
         <span class="macro">unimplemented!</span>()
     }
 
-    <span class="doccomment">/// Get the default action for the provided `signal`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">action</span>(<span class="ident">signal</span>: <span class="ident">usize</span>) -&gt; <span class="ident">Action</span> {
-        <span class="ident">DEFAULT_ACTIONS</span>[<span class="ident">signal</span>]
+    <span class="doccomment">/// Get the default action for the provided `signal`.
+    </span><span class="kw">pub fn </span>action(signal: usize) -&gt; Action {
+        DEFAULT_ACTIONS[signal]
     }
 
-    <span class="doccomment">/// Runs the default action for the provided `signal`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">handle_default</span>(<span class="ident">signal</span>: <span class="ident">usize</span>) {
-        <span class="kw">let</span> <span class="ident">action</span> <span class="op">=</span> <span class="ident">DEFAULT_ACTIONS</span>[<span class="ident">signal</span>];
+    <span class="doccomment">/// Runs the default action for the provided `signal`.
+    </span><span class="kw">pub fn </span>handle_default(signal: usize) {
+        <span class="kw">let </span>action = DEFAULT_ACTIONS[signal];
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="ident">Action::Handle</span>(<span class="ident">f</span>) <span class="op">=</span> <span class="ident">action</span> {
-            (<span class="ident">f</span>)();
+        <span class="kw">if let </span>Action::Handle(f) = action {
+            (f)();
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">PartialEq</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SignalError</span> {
-    <span class="ident">Interrupted</span>,
+<span class="attribute">#[derive(Debug, PartialEq)]</span>
+<span class="kw">pub enum </span>SignalError {
+    Interrupted,
 }
 
-<span class="kw">const</span> <span class="ident">IMMUTABLE_MASK</span>: <span class="ident">u64</span> <span class="op">=</span> (<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">SIGSTOP</span>) <span class="op">|</span> (<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">SIGCONT</span>) <span class="op">|</span> (<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">SIGKILL</span>);
+<span class="kw">const </span>IMMUTABLE_MASK: u64 = (<span class="number">1u64 </span>&lt;&lt; SIGSTOP) | (<span class="number">1u64 </span>&lt;&lt; SIGCONT) | (<span class="number">1u64 </span>&lt;&lt; SIGKILL);
 
-<span class="doccomment">/// Returns [`true`] if the provided `signal` is overridable.</span>
-<span class="kw">fn</span> <span class="ident">can_override</span>(<span class="ident">signal</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-    <span class="ident">IMMUTABLE_MASK</span>.<span class="ident">get_bit</span>(<span class="ident">signal</span>) <span class="op">==</span> <span class="bool-val">false</span>
-}
+<span class="doccomment">/// Returns [`true`] if the provided `signal` is overridable.
+</span><span class="kw">fn </span>can_override(signal: usize) -&gt; bool {
+    IMMUTABLE_MASK.get_bit(signal) == <span class="bool-val">false
+</span>}
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SignalResult</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">core::result::Result</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">SignalError</span><span class="op">&gt;</span>;
+<span class="kw">pub type </span>SignalResult&lt;T&gt; = core::result::Result&lt;T, SignalError&gt;;
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SignalError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">FileSystemError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">SignalError</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="ident">SignalError::Interrupted</span> =&gt; <span class="ident">FileSystemError::Interrupted</span>,
+<span class="kw">impl </span>From&lt;SignalError&gt; <span class="kw">for </span>FileSystemError {
+    <span class="kw">fn </span>from(s: SignalError) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>s {
+            SignalError::Interrupted =&gt; FileSystemError::Interrupted,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SignalError</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SyscallError</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">s</span>: <span class="ident">SignalError</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">s</span> {
-            <span class="ident">SignalError::Interrupted</span> =&gt; <span class="ident">SyscallError::EINTR</span>,
+<span class="kw">impl </span>From&lt;SignalError&gt; <span class="kw">for </span>SyscallError {
+    <span class="kw">fn </span>from(s: SignalError) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>s {
+            SignalError::Interrupted =&gt; SyscallError::EINTR,
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SignalEntry</span> {
-    <span class="ident">handler</span>: <span class="ident">SignalHandler</span>,
-    <span class="ident">flags</span>: <span class="ident">SignalFlags</span>,
-    <span class="ident">mask</span>: <span class="ident">u64</span>,
-    <span class="ident">sigreturn</span>: <span class="ident">usize</span>,
+<span class="attribute">#[derive(Default, Copy, Clone, Debug)]</span>
+<span class="kw">pub struct </span>SignalEntry {
+    handler: SignalHandler,
+    flags: SignalFlags,
+    mask: u64,
+    sigreturn: usize,
 }
 
-<span class="kw">impl</span> <span class="ident">SignalEntry</span> {
-    <span class="doccomment">/// Create a new `SignalEntry` with the provided `sigaction` and `sigreturn`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">from_sigaction</span>(
-        <span class="ident">sigaction</span>: <span class="ident">SigAction</span>,
-        <span class="ident">sigreturn</span>: <span class="ident">usize</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">SignalEntry</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">SignalEntry</span> {
-            <span class="ident">handler</span>: <span class="ident">SignalHandler::from</span>(<span class="ident">sigaction</span>.<span class="ident">sa_handler</span>),
-            <span class="ident">flags</span>: <span class="ident">SignalFlags::from_bits</span>(<span class="ident">sigaction</span>.<span class="ident">sa_flags</span>).<span class="ident">ok_or</span>(<span class="ident">SyscallError::EINVAL</span>)<span class="question-mark">?</span>,
-            <span class="ident">mask</span>: <span class="ident">sigaction</span>.<span class="ident">sa_mask</span>,
-            <span class="ident">sigreturn</span>,
+<span class="kw">impl </span>SignalEntry {
+    <span class="doccomment">/// Create a new `SignalEntry` with the provided `sigaction` and `sigreturn`.
+    </span><span class="kw">pub fn </span>from_sigaction(
+        sigaction: SigAction,
+        sigreturn: usize,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;SignalEntry, SyscallError&gt; {
+        <span class="prelude-val">Ok</span>(SignalEntry {
+            handler: SignalHandler::from(sigaction.sa_handler),
+            flags: SignalFlags::from_bits(sigaction.sa_flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>,
+            mask: sigaction.sa_mask,
+            sigreturn,
         })
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">into_sigaction</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SigAction</span> {
-        <span class="kw">let</span> <span class="ident">handler</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handler</span>.<span class="ident">into</span>();
+    <span class="kw">pub fn </span>into_sigaction(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SigAction {
+        <span class="kw">let </span>handler: usize = <span class="self">self</span>.handler.into();
 
-        <span class="ident">SigAction</span> {
-            <span class="ident">sa_handler</span>: <span class="ident">handler</span> <span class="kw">as</span> <span class="ident">u64</span>,
-            <span class="ident">sa_mask</span>: <span class="self">self</span>.<span class="ident">mask</span>,
-            <span class="ident">sa_flags</span>: <span class="self">self</span>.<span class="ident">flags</span>.<span class="ident">bits</span>(),
-            <span class="ident">sa_sigaction</span>: <span class="number">0</span>,
+        SigAction {
+            sa_handler: handler <span class="kw">as </span>u64,
+            sa_mask: <span class="self">self</span>.mask,
+            sa_flags: <span class="self">self</span>.flags.bits(),
+            sa_sigaction: <span class="number">0</span>,
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flags</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SignalFlags</span> {
-        <span class="self">self</span>.<span class="ident">flags</span>
+    <span class="kw">pub fn </span>flags(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SignalFlags {
+        <span class="self">self</span>.flags
     }
 }
 
-<span class="kw">impl</span> <span class="ident">SignalEntry</span> {
-    <span class="doccomment">/// Returns the `SignalHandler` for this `SignalEntry`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">handler</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SignalHandler</span> {
-        <span class="self">self</span>.<span class="ident">handler</span>
+<span class="kw">impl </span>SignalEntry {
+    <span class="doccomment">/// Returns the `SignalHandler` for this `SignalEntry`.
+    </span><span class="kw">pub fn </span>handler(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SignalHandler {
+        <span class="self">self</span>.handler
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sigreturn</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">sigreturn</span>
-    }
-}
-
-<span class="kw">const</span> <span class="ident">SIGNAL_COUNT</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">35</span>;
-
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Entries</span> {
-    <span class="ident">entries</span>: [<span class="ident">SignalEntry</span>; <span class="ident">SIGNAL_COUNT</span>],
-    <span class="ident">pending_mask</span>: <span class="ident">u64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Entries</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="ident">Entries</span> {
-        <span class="ident">Entries</span> {
-            <span class="ident">entries</span>: [<span class="ident">SignalEntry::default</span>(); <span class="ident">SIGNAL_COUNT</span>],
-            <span class="ident">pending_mask</span>: <span class="number">0</span>,
-        }
+    <span class="kw">pub fn </span>sigreturn(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.sigreturn
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Index</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Entries</span> {
-    <span class="kw">type</span> <span class="ident">Output</span> <span class="op">=</span> <span class="ident">SignalEntry</span>;
+<span class="kw">const </span>SIGNAL_COUNT: usize = <span class="number">35</span>;
 
-    <span class="kw">fn</span> <span class="ident">index</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">index</span>]
-    }
+<span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="kw">pub struct </span>Entries {
+    entries: [SignalEntry; SIGNAL_COUNT],
+    pending_mask: u64,
 }
 
-<span class="kw">impl</span> <span class="ident">IndexMut</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">Entries</span> {
-    <span class="kw">fn</span> <span class="ident">index_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident"><span class="self">Self</span>::Output</span> {
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">entries</span>[<span class="ident">index</span>]
-    }
-}
-
-<span class="kw">impl</span> <span class="ident">Entries</span> {
-    <span class="doccomment">/// Returns the pending mask.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">pending_mask</span>
-    }
-
-    <span class="doccomment">/// Marks the provided `signal` as not pending.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_pending</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="ident">pending_mask</span>.<span class="ident">set_bit</span>(<span class="ident">signal</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="bool-val">false</span>);
-    }
-
-    <span class="doccomment">/// Sets the provided `signal` to be pending.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_pending</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">u64</span>) {
-        <span class="self">self</span>.<span class="ident">pending_mask</span>.<span class="ident">set_bit</span>(<span class="ident">signal</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="bool-val">true</span>);
-    }
-}
-
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Signals</span> {
-    <span class="ident">entries</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">Entries</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-    <span class="ident">blocked_mask</span>: <span class="ident">AtomicU64</span>,
-    <span class="ident">thread_pending_mask</span>: <span class="ident">AtomicU64</span>,
-}
-
-<span class="kw">impl</span> <span class="ident">Signals</span> {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">entries</span>: <span class="ident">Arc::new</span>(<span class="ident">Mutex::new</span>(<span class="ident">Default::default</span>())),
-            <span class="ident">blocked_mask</span>: <span class="ident">AtomicU64::new</span>(<span class="number">0</span>),
-            <span class="ident">thread_pending_mask</span>: <span class="ident">AtomicU64::new</span>(<span class="number">0</span>),
+<span class="kw">impl </span>Default <span class="kw">for </span>Entries {
+    <span class="kw">fn </span>default() -&gt; Entries {
+        Entries {
+            entries: [SignalEntry::default(); SIGNAL_COUNT],
+            pending_mask: <span class="number">0</span>,
         }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Clone</span> <span class="kw">for</span> <span class="ident">Signals</span> {
-    <span class="kw">fn</span> <span class="ident">clone</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Signals</span> {
-            <span class="ident">entries</span>: <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">clone</span>(),
-            <span class="ident">blocked_mask</span>: <span class="ident">AtomicU64::new</span>(<span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)),
-            <span class="ident">thread_pending_mask</span>: <span class="ident">AtomicU64::new</span>(<span class="number">0</span>),
+<span class="kw">impl </span>Index&lt;usize&gt; <span class="kw">for </span>Entries {
+    <span class="kw">type </span>Output = SignalEntry;
+
+    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.entries[index]
+    }
+}
+
+<span class="kw">impl </span>IndexMut&lt;usize&gt; <span class="kw">for </span>Entries {
+    <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[index]
+    }
+}
+
+<span class="kw">impl </span>Entries {
+    <span class="doccomment">/// Returns the pending mask.
+    </span><span class="kw">pub fn </span>pending(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.pending_mask
+    }
+
+    <span class="doccomment">/// Marks the provided `signal` as not pending.
+    </span><span class="kw">pub fn </span>clear_pending(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signal: u64) {
+        <span class="self">self</span>.pending_mask.set_bit(signal <span class="kw">as </span>usize, <span class="bool-val">false</span>);
+    }
+
+    <span class="doccomment">/// Sets the provided `signal` to be pending.
+    </span><span class="kw">pub fn </span>set_pending(<span class="kw-2">&amp;mut </span><span class="self">self</span>, signal: u64) {
+        <span class="self">self</span>.pending_mask.set_bit(signal <span class="kw">as </span>usize, <span class="bool-val">true</span>);
+    }
+}
+
+<span class="kw">pub struct </span>Signals {
+    entries: Arc&lt;Mutex&lt;Entries&gt;&gt;,
+    blocked_mask: AtomicU64,
+    thread_pending_mask: AtomicU64,
+}
+
+<span class="kw">impl </span>Signals {
+    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            entries: Arc::new(Mutex::new(Default::default())),
+            blocked_mask: AtomicU64::new(<span class="number">0</span>),
+            thread_pending_mask: AtomicU64::new(<span class="number">0</span>),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">TriggerResult</span> {
-    <span class="ident">Ignored</span>,
-    <span class="ident">Blocked</span>,
-    <span class="ident">Triggered</span>,
+<span class="kw">impl </span>Clone <span class="kw">for </span>Signals {
+    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        Signals {
+            entries: <span class="self">self</span>.entries.clone(),
+            blocked_mask: AtomicU64::new(<span class="self">self</span>.blocked_mask.load(Ordering::SeqCst)),
+            thread_pending_mask: AtomicU64::new(<span class="number">0</span>),
+        }
+    }
 }
 
-<span class="kw">impl</span> <span class="ident">Signals</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">entries</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">MutexGuard</span><span class="op">&lt;</span><span class="ident">Entries</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">lock_irq</span>()
+<span class="kw">pub enum </span>TriggerResult {
+    Ignored,
+    Blocked,
+    Triggered,
+}
+
+<span class="kw">impl </span>Signals {
+    <span class="kw">pub fn </span>entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MutexGuard&lt;Entries&gt; {
+        <span class="self">self</span>.entries.lock_irq()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">thread_pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">thread_pending_mask</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">pub fn </span>thread_pending(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.thread_pending_mask.load(Ordering::SeqCst)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">thread_pending</span>() <span class="op">|</span> <span class="self">self</span>.<span class="ident">entries</span>().<span class="ident">pending</span>()
+    <span class="kw">pub fn </span>pending(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.thread_pending() | <span class="self">self</span>.entries().pending()
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">u64</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">pending</span>().<span class="ident">get_bit</span>(<span class="ident">signal</span> <span class="kw">as</span> <span class="ident">usize</span>)
+    <span class="kw">pub fn </span>is_pending(<span class="kw-2">&amp;</span><span class="self">self</span>, signal: u64) -&gt; bool {
+        <span class="self">self</span>.pending().get_bit(signal <span class="kw">as </span>usize)
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear_pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">u64</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">thread_pending</span>().<span class="ident">get_bit</span>(<span class="ident">signal</span> <span class="kw">as</span> <span class="ident">usize</span>) {
-            <span class="self">self</span>.<span class="ident">thread_pending_mask</span>
-                .<span class="ident">fetch_and</span>(<span class="op">!</span>(<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">signal</span>), <span class="ident">Ordering::SeqCst</span>);
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">entries</span>().<span class="ident">clear_pending</span>(<span class="ident">signal</span>);
+    <span class="kw">pub fn </span>clear_pending(<span class="kw-2">&amp;</span><span class="self">self</span>, signal: u64) {
+        <span class="kw">if </span><span class="self">self</span>.thread_pending().get_bit(signal <span class="kw">as </span>usize) {
+            <span class="self">self</span>.thread_pending_mask
+                .fetch_and(!(<span class="number">1u64 </span>&lt;&lt; signal), Ordering::SeqCst);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.entries().clear_pending(signal);
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">u64</span>, <span class="ident">thread_scope</span>: <span class="ident">bool</span>) {
-        <span class="kw">if</span> <span class="ident">thread_scope</span> {
-            <span class="self">self</span>.<span class="ident">thread_pending_mask</span>
-                .<span class="ident">fetch_or</span>(<span class="number">1u64</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="ident">signal</span>, <span class="ident">Ordering::SeqCst</span>);
-        } <span class="kw">else</span> {
-            <span class="self">self</span>.<span class="ident">entries</span>().<span class="ident">set_pending</span>(<span class="ident">signal</span>);
+    <span class="kw">pub fn </span>set_pending(<span class="kw-2">&amp;</span><span class="self">self</span>, signal: u64, thread_scope: bool) {
+        <span class="kw">if </span>thread_scope {
+            <span class="self">self</span>.thread_pending_mask
+                .fetch_or(<span class="number">1u64 </span>&lt;&lt; signal, Ordering::SeqCst);
+        } <span class="kw">else </span>{
+            <span class="self">self</span>.entries().set_pending(signal);
         }
     }
 
-    <span class="doccomment">/// Returns [`true`] if has pending signals.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">has_pending</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        (<span class="self">self</span>.<span class="ident">entries</span>().<span class="ident">pending</span>() <span class="op">|</span> <span class="self">self</span>.<span class="ident">thread_pending</span>()) <span class="op">&amp;</span> <span class="op">!</span><span class="self">self</span>.<span class="ident">blocked_mask</span>() <span class="op">&gt;</span> <span class="number">0</span>
+    <span class="doccomment">/// Returns [`true`] if has pending signals.
+    </span><span class="kw">pub fn </span>has_pending(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        (<span class="self">self</span>.entries().pending() | <span class="self">self</span>.thread_pending()) &amp; !<span class="self">self</span>.blocked_mask() &gt; <span class="number">0
+    </span>}
+
+    <span class="doccomment">/// Returns the blocked mask.
+    </span><span class="kw">pub fn </span>blocked_mask(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.blocked_mask.load(Ordering::SeqCst)
     }
 
-    <span class="doccomment">/// Returns the blocked mask.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">blocked_mask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">u64</span> {
-        <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="doccomment">/// Returns [`true`] if the provided `signal` is blocked.
+    </span><span class="kw">pub fn </span>is_blocked(<span class="kw-2">&amp;</span><span class="self">self</span>, signal: usize) -&gt; bool {
+        <span class="self">self</span>.blocked_mask().get_bit(signal)
     }
 
-    <span class="doccomment">/// Returns [`true`] if the provided `signal` is blocked.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_blocked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">usize</span>) -&gt; <span class="ident">bool</span> {
-        <span class="self">self</span>.<span class="ident">blocked_mask</span>().<span class="ident">get_bit</span>(<span class="ident">signal</span>)
-    }
+    <span class="kw">pub fn </span>trigger(<span class="kw-2">&amp;</span><span class="self">self</span>, signal: usize, this_thread: bool) -&gt; TriggerResult {
+        <span class="macro">assert!</span>(signal &lt; SIGNAL_COUNT);
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">trigger</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signal</span>: <span class="ident">usize</span>, <span class="ident">this_thread</span>: <span class="ident">bool</span>) -&gt; <span class="ident">TriggerResult</span> {
-        <span class="macro">assert!</span>(<span class="ident">signal</span> <span class="op">&lt;</span> <span class="ident">SIGNAL_COUNT</span>);
+        <span class="kw">let </span>sigs = <span class="self">self</span>.entries();
+        <span class="kw">let </span>handler = sigs[signal].handler();
 
-        <span class="kw">let</span> <span class="ident">sigs</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>();
-        <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="ident">sigs</span>[<span class="ident">signal</span>].<span class="ident">handler</span>();
+        <span class="kw">if match </span>handler {
+            SignalHandler::Ignore =&gt; <span class="bool-val">false</span>,
 
-        <span class="kw">if</span> <span class="kw">match</span> <span class="ident">handler</span> {
-            <span class="ident">SignalHandler::Ignore</span> =&gt; <span class="bool-val">false</span>,
+            SignalHandler::Default =&gt; {
+                <span class="kw">let </span>action = default::action(signal);
 
-            <span class="ident">SignalHandler::Default</span> =&gt; {
-                <span class="kw">let</span> <span class="ident">action</span> <span class="op">=</span> <span class="ident">default::action</span>(<span class="ident">signal</span>);
-
-                <span class="kw">match</span> <span class="ident">action</span> {
-                    <span class="ident">default::Action::Ignore</span> =&gt; <span class="bool-val">false</span>,
-                    <span class="ident">default::Action::Handle</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+                <span class="kw">match </span>action {
+                    default::Action::Ignore =&gt; <span class="bool-val">false</span>,
+                    default::Action::Handle(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
                 }
             }
 
-            <span class="ident">SignalHandler::Handle</span>(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
+            SignalHandler::Handle(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
         } {
-            <span class="ident">core::mem::drop</span>(<span class="ident">sigs</span>); <span class="comment">// drop the lock</span>
-            <span class="self">self</span>.<span class="ident">set_pending</span>(<span class="ident">signal</span> <span class="kw">as</span> <span class="ident">u64</span>, <span class="ident">this_thread</span>);
+            core::mem::drop(sigs); <span class="comment">// drop the lock
+            </span><span class="self">self</span>.set_pending(signal <span class="kw">as </span>u64, this_thread);
 
-            <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_blocked</span>(<span class="ident">signal</span>) {
-                <span class="ident">TriggerResult::Blocked</span>
-            } <span class="kw">else</span> {
-                <span class="ident">TriggerResult::Triggered</span>
+            <span class="kw">if </span><span class="self">self</span>.is_blocked(signal) {
+                TriggerResult::Blocked
+            } <span class="kw">else </span>{
+                TriggerResult::Triggered
             }
-        } <span class="kw">else</span> {
-            <span class="ident">TriggerResult::Ignored</span>
+        } <span class="kw">else </span>{
+            TriggerResult::Ignored
         }
     }
 
-    <span class="doccomment">/// Clear the signal entries and blocked mask.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">clear</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">entries</span>.<span class="ident">lock_irq</span>() <span class="op">=</span> <span class="ident">Entries::default</span>();
-        <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">store</span>(<span class="number">0</span>, <span class="ident">Ordering::SeqCst</span>);
+    <span class="doccomment">/// Clear the signal entries and blocked mask.
+    </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw-2">*</span><span class="self">self</span>.entries.lock_irq() = Entries::default();
+        <span class="self">self</span>.blocked_mask.store(<span class="number">0</span>, Ordering::SeqCst);
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_signal</span>(
+    <span class="kw">pub fn </span>set_signal(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">signal</span>: <span class="ident">usize</span>,
-        <span class="ident">handler</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SignalEntry</span><span class="op">&gt;</span>,
-        <span class="ident">old</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">SigAction</span><span class="op">&gt;</span>,
+        signal: usize,
+        handler: <span class="prelude-ty">Option</span>&lt;SignalEntry&gt;,
+        old: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>SigAction&gt;,
     ) {
-        <span class="macro">assert!</span>(<span class="ident">signal</span> <span class="op">&lt;</span> <span class="ident">SIGNAL_COUNT</span>);
+        <span class="macro">assert!</span>(signal &lt; SIGNAL_COUNT);
 
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">can_override</span>(<span class="ident">signal</span>) {
+        <span class="kw">if </span>!can_override(signal) {
             <span class="kw">return</span>;
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">signals</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">entries</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>signals = <span class="self">self</span>.entries();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">old</span>) <span class="op">=</span> <span class="ident">old</span> {
-            <span class="kw-2">*</span><span class="ident">old</span> <span class="op">=</span> <span class="ident">signals</span>[<span class="ident">signal</span>].<span class="ident">into_sigaction</span>();
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = old {
+            <span class="kw-2">*</span>old = signals[signal].into_sigaction();
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">handler</span>) <span class="op">=</span> <span class="ident">handler</span> {
-            <span class="ident">signals</span>[<span class="ident">signal</span>] <span class="op">=</span> <span class="ident">handler</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(handler) = handler {
+            signals[signal] = handler;
         }
     }
 
-    <span class="doccomment">/// Copy over the signals from the provided `signals`.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">copy_from</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">signals</span>: <span class="kw-2">&amp;</span><span class="ident">Signals</span>) {
-        <span class="comment">// Copy over the signl entries.</span>
-        <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">entries</span>() <span class="op">=</span> <span class="kw-2">*</span><span class="ident">signals</span>.<span class="ident">entries</span>();
+    <span class="doccomment">/// Copy over the signals from the provided `signals`.
+    </span><span class="kw">pub fn </span>copy_from(<span class="kw-2">&amp;</span><span class="self">self</span>, signals: <span class="kw-2">&amp;</span>Signals) {
+        <span class="comment">// Copy over the signl entries.
+        </span><span class="kw-2">*</span><span class="self">self</span>.entries() = <span class="kw-2">*</span>signals.entries();
 
-        <span class="comment">// Copy over the blocked mask.</span>
-        <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">store</span>(
-            <span class="ident">signals</span>.<span class="ident">blocked_mask</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>),
-            <span class="ident">Ordering::SeqCst</span>,
+        <span class="comment">// Copy over the blocked mask.
+        </span><span class="self">self</span>.blocked_mask.store(
+            signals.blocked_mask.load(Ordering::SeqCst),
+            Ordering::SeqCst,
         );
     }
 
-    <span class="doccomment">/// Used to update or read the signal mask of a task.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// ## Notes</span>
-    <span class="doccomment">/// * If `old_set` is not `None`, the previous value of the signal mask is</span>
-    <span class="doccomment">/// stored in oldset.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// * If `set` is `None`, then the signal mask is unchanged (i.e., `how` is</span>
-    <span class="doccomment">/// ignored), but the current value of the signal mask is returned in `old_set`</span>
-    <span class="doccomment">/// (if it is not `None`).</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_mask</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">how</span>: <span class="ident">SigProcMask</span>, <span class="ident">set</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">u64</span><span class="op">&gt;</span>, <span class="ident">old_set</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">u64</span><span class="op">&gt;</span>) {
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">old</span>) <span class="op">=</span> <span class="ident">old_set</span> {
-            <span class="kw-2">*</span><span class="ident">old</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>);
+    <span class="doccomment">/// Used to update or read the signal mask of a task.
+    ///
+    /// ## Notes
+    /// * If `old_set` is not `None`, the previous value of the signal mask is
+    /// stored in oldset.
+    ///
+    /// * If `set` is `None`, then the signal mask is unchanged (i.e., `how` is
+    /// ignored), but the current value of the signal mask is returned in `old_set`
+    /// (if it is not `None`).
+    </span><span class="kw">pub fn </span>set_mask(<span class="kw-2">&amp;</span><span class="self">self</span>, how: SigProcMask, set: <span class="prelude-ty">Option</span>&lt;u64&gt;, old_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>u64&gt;) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(old) = old_set {
+            <span class="kw-2">*</span>old = <span class="self">self</span>.blocked_mask.load(Ordering::SeqCst);
         }
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">set</span>) <span class="op">=</span> <span class="ident">set</span> {
-            <span class="kw">let</span> <span class="ident">set</span> <span class="op">=</span> <span class="ident">set</span> <span class="op">&amp;</span> <span class="op">!</span><span class="ident">IMMUTABLE_MASK</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(set) = set {
+            <span class="kw">let </span>set = set &amp; !IMMUTABLE_MASK;
 
-            <span class="kw">match</span> <span class="ident">how</span> {
-                <span class="ident">SigProcMask::Block</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">fetch_or</span>(<span class="ident">set</span>, <span class="ident">Ordering::SeqCst</span>);
+            <span class="kw">match </span>how {
+                SigProcMask::Block =&gt; {
+                    <span class="self">self</span>.blocked_mask.fetch_or(set, Ordering::SeqCst);
                 }
 
-                <span class="ident">SigProcMask::Unblock</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">fetch_and</span>(<span class="op">!</span><span class="ident">set</span>, <span class="ident">Ordering::SeqCst</span>);
+                SigProcMask::Unblock =&gt; {
+                    <span class="self">self</span>.blocked_mask.fetch_and(!set, Ordering::SeqCst);
                 }
 
-                <span class="ident">SigProcMask::Set</span> =&gt; {
-                    <span class="self">self</span>.<span class="ident">blocked_mask</span>.<span class="ident">store</span>(<span class="ident">set</span>, <span class="ident">Ordering::SeqCst</span>);
+                SigProcMask::Set =&gt; {
+                    <span class="self">self</span>.blocked_mask.store(set, Ordering::SeqCst);
                 }
             }
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">check_for_signals</span>() -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">usize</span>, <span class="ident">SignalEntry</span>)<span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">task</span> <span class="op">=</span> <span class="ident">scheduler::get_scheduler</span>().<span class="ident">current_task</span>();
-    <span class="kw">let</span> <span class="ident">signals</span> <span class="op">=</span> <span class="ident">task</span>.<span class="ident">signals</span>();
+<span class="kw">pub fn </span>check_for_signals() -&gt; <span class="prelude-ty">Option</span>&lt;(usize, SignalEntry)&gt; {
+    <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>signals = task.signals();
 
-    <span class="comment">// Check if there are any pending signals.</span>
-    <span class="kw">if</span> <span class="op">!</span><span class="ident">signals</span>.<span class="ident">has_pending</span>() {
-        <span class="kw">return</span> <span class="prelude-val">None</span>;
+    <span class="comment">// Check if there are any pending signals.
+    </span><span class="kw">if </span>!signals.has_pending() {
+        <span class="kw">return </span><span class="prelude-val">None</span>;
     }
 
-    <span class="comment">// Check if a SIGKILL is pending, and if so, kill the task.</span>
-    <span class="kw">if</span> <span class="ident">signals</span>.<span class="ident">is_pending</span>(<span class="ident">SIGKILL</span> <span class="kw">as</span> <span class="ident">u64</span>) {
-        <span class="ident">signals</span>.<span class="ident">clear_pending</span>(<span class="ident">SIGKILL</span> <span class="kw">as</span> <span class="ident">u64</span>);
-        <span class="ident">scheduler::get_scheduler</span>().<span class="ident">exit</span>(<span class="number">1</span>);
+    <span class="comment">// Check if a SIGKILL is pending, and if so, kill the task.
+    </span><span class="kw">if </span>signals.is_pending(SIGKILL <span class="kw">as </span>u64) {
+        signals.clear_pending(SIGKILL <span class="kw">as </span>u64);
+        scheduler::get_scheduler().exit(<span class="number">1</span>);
     }
 
-    <span class="kw">for</span> <span class="ident">i</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">SIGNAL_COUNT</span> {
-        <span class="kw">if</span> <span class="op">!</span><span class="ident">signals</span>.<span class="ident">is_blocked</span>(<span class="ident">i</span>) <span class="op">&amp;&amp;</span> <span class="ident">signals</span>.<span class="ident">is_pending</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>) {
-            <span class="ident">signals</span>.<span class="ident">clear_pending</span>(<span class="ident">i</span> <span class="kw">as</span> <span class="ident">u64</span>);
+    <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..SIGNAL_COUNT {
+        <span class="kw">if </span>!signals.is_blocked(i) &amp;&amp; signals.is_pending(i <span class="kw">as </span>u64) {
+            signals.clear_pending(i <span class="kw">as </span>u64);
 
-            <span class="kw">let</span> <span class="ident">entries</span> <span class="op">=</span> <span class="ident">signals</span>.<span class="ident">entries</span>();
-            <span class="kw">let</span> <span class="ident">entry</span> <span class="op">=</span> <span class="ident">entries</span>[<span class="ident">i</span>];
+            <span class="kw">let </span>entries = signals.entries();
+            <span class="kw">let </span>entry = entries[i];
 
-            <span class="kw">match</span> <span class="ident">entry</span>.<span class="ident">handler</span>() {
-                <span class="ident">SignalHandler::Default</span> =&gt; {
-                    <span class="ident">drop</span>(<span class="ident">entries</span>);
-                    <span class="ident">default::handle_default</span>(<span class="ident">i</span>);
+            <span class="kw">match </span>entry.handler() {
+                SignalHandler::Default =&gt; {
+                    drop(entries);
+                    default::handle_default(i);
                 }
 
-                <span class="ident">SignalHandler::Handle</span>(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">return</span> <span class="prelude-val">Some</span>((<span class="ident">i</span>, <span class="ident">entry</span>));
+                SignalHandler::Handle(<span class="kw">_</span>) =&gt; {
+                    <span class="kw">return </span><span class="prelude-val">Some</span>((i, entry));
                 }
 
-                <span class="ident">SignalHandler::Ignore</span> =&gt; {
+                SignalHandler::Ignore =&gt; {
                     <span class="macro">unreachable!</span>()
                 }
             }
         }
     }
 
-    <span class="prelude-val">None</span>
-}
+    <span class="prelude-val">None
+</span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

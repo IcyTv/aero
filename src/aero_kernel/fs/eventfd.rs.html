@@ -87,60 +87,60 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">alloc::sync::Arc</span>;
+</span><span class="kw">use </span>alloc::sync::Arc;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::inode</span>::{<span class="ident">INodeInterface</span>, <span class="ident">PollFlags</span>, <span class="ident">PollTable</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync</span>::{<span class="ident">BlockQueue</span>, <span class="ident">Mutex</span>};
+<span class="kw">use </span><span class="kw">super</span>::inode::{INodeInterface, PollFlags, PollTable};
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">EventFd</span> {
-    <span class="ident">wq</span>: <span class="ident">BlockQueue</span>,
-    <span class="ident">count</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span>,
+<span class="kw">pub struct </span>EventFd {
+    wq: BlockQueue,
+    count: Mutex&lt;usize&gt;,
 }
 
-<span class="kw">impl</span> <span class="ident">EventFd</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new</span>(<span class="self">Self</span> {
-            <span class="ident">wq</span>: <span class="ident">BlockQueue::new</span>(),
-            <span class="ident">count</span>: <span class="ident">Mutex::new</span>(<span class="number">0</span>),
+<span class="kw">impl </span>EventFd {
+    <span class="kw">pub fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        Arc::new(<span class="self">Self </span>{
+            wq: BlockQueue::new(),
+            count: Mutex::new(<span class="number">0</span>),
         })
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">EventFd</span> {
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">_buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">wq</span>.<span class="ident">notify_complete</span>();
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>EventFd {
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="self">self</span>.wq.notify_complete();
 
         <span class="macro">unimplemented!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">write_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">_offset</span>: <span class="ident">usize</span>, <span class="ident">_buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">wq</span>.<span class="ident">notify_complete</span>();
+    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="self">self</span>.wq.notify_complete();
 
         <span class="macro">unimplemented!</span>()
     }
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">PollTable</span><span class="op">&gt;</span>) -&gt; <span class="ident"><span class="kw">super</span>::Result</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">count</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">count</span>.<span class="ident">lock</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">events</span> <span class="op">=</span> <span class="ident">PollFlags::empty</span>();
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; <span class="kw">super</span>::Result&lt;PollFlags&gt; {
+        <span class="kw">let </span>count = <span class="self">self</span>.count.lock();
+        <span class="kw">let </span><span class="kw-2">mut </span>events = PollFlags::empty();
 
-        <span class="ident">table</span>.<span class="ident">map</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> <span class="ident">e</span>.<span class="ident">insert</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">wq</span>)); <span class="comment">// listen for changes</span>
+        table.map(|e| e.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.wq)); <span class="comment">// listen for changes
 
-        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">count</span> <span class="op">&gt;</span> <span class="number">0</span> {
-            <span class="ident">events</span>.<span class="ident">insert</span>(<span class="ident">PollFlags::IN</span>);
+        </span><span class="kw">if </span><span class="kw-2">*</span>count &gt; <span class="number">0 </span>{
+            events.insert(PollFlags::IN);
         }
 
-        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">count</span> <span class="op">==</span> <span class="ident">usize::MAX</span> {
-            <span class="ident">events</span>.<span class="ident">insert</span>(<span class="ident">PollFlags::ERR</span>);
+        <span class="kw">if </span><span class="kw-2">*</span>count == usize::MAX {
+            events.insert(PollFlags::ERR);
         }
 
-        <span class="kw">if</span> <span class="kw-2">*</span><span class="ident">count</span> <span class="op">&lt;</span> (<span class="ident">usize::MAX</span> <span class="op">-</span> <span class="number">1</span>) {
-            <span class="ident">events</span>.<span class="ident">insert</span>(<span class="ident">PollFlags::OUT</span>); <span class="comment">// possible to write a value of at least &quot;1&quot; without blocking.</span>
-        }
+        <span class="kw">if </span><span class="kw-2">*</span>count &lt; (usize::MAX - <span class="number">1</span>) {
+            events.insert(PollFlags::OUT); <span class="comment">// possible to write a value of at least &quot;1&quot; without blocking.
+        </span>}
 
-        <span class="prelude-val">Ok</span>(<span class="ident">events</span>)
+        <span class="prelude-val">Ok</span>(events)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

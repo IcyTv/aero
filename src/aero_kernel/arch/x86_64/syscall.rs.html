@@ -170,154 +170,154 @@
 <span id="170">170</span>
 <span id="171">171</span>
 <span id="172">172</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">aero_syscall::SyscallError</span>;
-<span class="kw">use</span> <span class="ident">raw_cpuid::CpuId</span>;
+</pre><pre class="rust"><code><span class="kw">use </span>aero_syscall::SyscallError;
+<span class="kw">use </span>raw_cpuid::CpuId;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::arch::gdt::GdtEntryType</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging::VirtAddr</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::IrqGuard</span>;
+<span class="kw">use </span><span class="kw">crate</span>::arch::gdt::GdtEntryType;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
+<span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::IrqGuard;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::interrupts::InterruptErrorStack</span>;
+<span class="kw">use </span><span class="kw">super</span>::interrupts::InterruptErrorStack;
 
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> {
-    <span class="kw">fn</span> <span class="ident">x86_64_syscall_handler</span>();
-    <span class="kw">fn</span> <span class="ident">x86_64_sysenter_handler</span>();
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
+    <span class="kw">fn </span>x86_64_syscall_handler();
+    <span class="kw">fn </span>x86_64_sysenter_handler();
 }
 
-<span class="kw">const</span> <span class="ident">ARCH_SET_GS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x1001</span>;
-<span class="kw">const</span> <span class="ident">ARCH_SET_FS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x1002</span>;
-<span class="kw">const</span> <span class="ident">ARCH_GET_FS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x1003</span>;
-<span class="kw">const</span> <span class="ident">ARCH_GET_GS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x1004</span>;
+<span class="kw">const </span>ARCH_SET_GS: usize = <span class="number">0x1001</span>;
+<span class="kw">const </span>ARCH_SET_FS: usize = <span class="number">0x1002</span>;
+<span class="kw">const </span>ARCH_GET_FS: usize = <span class="number">0x1003</span>;
+<span class="kw">const </span>ARCH_GET_GS: usize = <span class="number">0x1004</span>;
 
-<span class="kw">fn</span> <span class="ident">arch_prctl</span>(<span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">address</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">match</span> <span class="ident">command</span> {
-        <span class="ident">ARCH_SET_FS</span> =&gt; <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">IrqGuard::new</span>();
+<span class="kw">fn </span>arch_prctl(command: usize, address: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">match </span>command {
+        ARCH_SET_FS =&gt; <span class="kw">unsafe </span>{
+            <span class="kw">let </span>_guard = IrqGuard::new();
 
-            <span class="ident">scheduler::get_scheduler</span>()
-                .<span class="ident">current_task</span>()
-                .<span class="ident">arch_task_mut</span>()
-                .<span class="ident">set_fs_base</span>(<span class="ident">VirtAddr::new</span>(<span class="ident">address</span> <span class="kw">as</span> <span class="ident">u64</span>));
+            scheduler::get_scheduler()
+                .current_task()
+                .arch_task_mut()
+                .set_fs_base(VirtAddr::new(address <span class="kw">as </span>u64));
 
             <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
         },
 
-        <span class="ident">ARCH_GET_FS</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">scheduler::get_scheduler</span>()
-            .<span class="ident">current_task</span>()
-            .<span class="ident">arch_task</span>()
-            .<span class="ident">get_fs_base</span>()
-            .<span class="ident">as_u64</span>() <span class="kw">as</span> <span class="ident">usize</span>),
+        ARCH_GET_FS =&gt; <span class="prelude-val">Ok</span>(scheduler::get_scheduler()
+            .current_task()
+            .arch_task()
+            .get_fs_base()
+            .as_u64() <span class="kw">as </span>usize),
 
-        <span class="ident">ARCH_SET_GS</span> =&gt; <span class="kw">unsafe</span> {
-            <span class="kw">let</span> <span class="ident">_guard</span> <span class="op">=</span> <span class="ident">IrqGuard::new</span>();
+        ARCH_SET_GS =&gt; <span class="kw">unsafe </span>{
+            <span class="kw">let </span>_guard = IrqGuard::new();
 
-            <span class="ident">scheduler::get_scheduler</span>()
-                .<span class="ident">current_task</span>()
-                .<span class="ident">arch_task_mut</span>()
-                .<span class="ident">set_gs_base</span>(<span class="ident">VirtAddr::new</span>(<span class="ident">address</span> <span class="kw">as</span> <span class="ident">u64</span>));
+            scheduler::get_scheduler()
+                .current_task()
+                .arch_task_mut()
+                .set_gs_base(VirtAddr::new(address <span class="kw">as </span>u64));
 
             <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
         },
 
-        <span class="ident">ARCH_GET_GS</span> =&gt; <span class="prelude-val">Ok</span>(<span class="ident">scheduler::get_scheduler</span>()
-            .<span class="ident">current_task</span>()
-            .<span class="ident">arch_task</span>()
-            .<span class="ident">get_gs_base</span>()
-            .<span class="ident">as_u64</span>() <span class="kw">as</span> <span class="ident">usize</span>),
+        ARCH_GET_GS =&gt; <span class="prelude-val">Ok</span>(scheduler::get_scheduler()
+            .current_task()
+            .arch_task()
+            .get_gs_base()
+            .as_u64() <span class="kw">as </span>usize),
 
-        <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">SyscallError::EINVAL</span>),
+        <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(SyscallError::EINVAL),
     }
 }
 
-<span class="doccomment">/// Check the user-provided return addresses for system calls via SYSENTER</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// We cannot execute `sysexit` on return with non-canonical return addresses, or we</span>
-<span class="doccomment">/// will take a fault in the kernel with the user&#39;s GS base already swapped back.</span>
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">extern</span> <span class="string">&quot;sysv64&quot;</span> <span class="kw">fn</span> <span class="ident">x86_64_check_sysenter</span>(<span class="ident">stack</span>: <span class="kw-2">&amp;mut</span> <span class="ident">InterruptErrorStack</span>) {
-    <span class="kw">let</span> <span class="ident">rip</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rip</span>;
-    <span class="kw">let</span> <span class="ident">rsp</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">stack</span>.<span class="ident">iret</span>.<span class="ident">rsp</span>;
-    <span class="kw">let</span> <span class="ident">max_user_addr</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::task::userland_last_address</span>().<span class="ident">as_u64</span>();
+<span class="doccomment">/// Check the user-provided return addresses for system calls via SYSENTER
+///
+/// We cannot execute `sysexit` on return with non-canonical return addresses, or we
+/// will take a fault in the kernel with the user&#39;s GS base already swapped back.
+</span><span class="attribute">#[no_mangle]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">extern </span><span class="string">&quot;sysv64&quot; </span><span class="kw">fn </span>x86_64_check_sysenter(stack: <span class="kw-2">&amp;mut </span>InterruptErrorStack) {
+    <span class="kw">let </span>rip = stack.stack.iret.rip;
+    <span class="kw">let </span>rsp = stack.stack.iret.rsp;
+    <span class="kw">let </span>max_user_addr = <span class="kw">super</span>::task::userland_last_address().as_u64();
 
-    <span class="kw">if</span> <span class="ident">rip</span> <span class="op">&gt;</span> <span class="ident">max_user_addr</span> <span class="op">|</span><span class="op">|</span> <span class="ident">rsp</span> <span class="op">&gt;</span> <span class="ident">max_user_addr</span> {
-        <span class="macro">log::error!</span>(<span class="string">&quot;bad sysenter: rip={:#018x},rsp={:#018x}&quot;</span>, <span class="ident">rip</span>, <span class="ident">rsp</span>);
+    <span class="kw">if </span>rip &gt; max_user_addr || rsp &gt; max_user_addr {
+        <span class="macro">log::error!</span>(<span class="string">&quot;bad sysenter: rip={:#018x},rsp={:#018x}&quot;</span>, rip, rsp);
 
-        <span class="comment">// Forcibly kill the process, we have nowhere to return to.</span>
-        <span class="ident">scheduler::get_scheduler</span>().<span class="ident">exit</span>(<span class="op">-</span><span class="number">1</span>);
+        <span class="comment">// Forcibly kill the process, we have nowhere to return to.
+        </span>scheduler::get_scheduler().exit(-<span class="number">1</span>);
     }
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">x86_64_do_syscall</span>(<span class="ident">stack</span>: <span class="kw-2">&amp;mut</span> <span class="ident">InterruptErrorStack</span>) {
-    <span class="kw">let</span> <span class="ident">stack</span> <span class="op">=</span> <span class="kw-2">&amp;mut</span> <span class="ident">stack</span>.<span class="ident">stack</span>;
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>x86_64_do_syscall(stack: <span class="kw-2">&amp;mut </span>InterruptErrorStack) {
+    <span class="kw">let </span>stack = <span class="kw-2">&amp;mut </span>stack.stack;
 
-    <span class="kw">let</span> <span class="ident">syscall_number</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rax</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// syscall number</span>
-    <span class="kw">let</span> <span class="ident">a</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rdi</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// argument 1</span>
-    <span class="kw">let</span> <span class="ident">b</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rsi</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// argument 2</span>
-    <span class="kw">let</span> <span class="ident">c</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rdx</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// argument 3</span>
-    <span class="kw">let</span> <span class="ident">d</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">r10</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// argument 4</span>
-    <span class="kw">let</span> <span class="ident">e</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">r8</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// argument 5</span>
-    <span class="kw">let</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">r9</span> <span class="kw">as</span> <span class="ident">usize</span>; <span class="comment">// argument 6</span>
+    <span class="kw">let </span>syscall_number = stack.scratch.rax <span class="kw">as </span>usize; <span class="comment">// syscall number
+    </span><span class="kw">let </span>a = stack.scratch.rdi <span class="kw">as </span>usize; <span class="comment">// argument 1
+    </span><span class="kw">let </span>b = stack.scratch.rsi <span class="kw">as </span>usize; <span class="comment">// argument 2
+    </span><span class="kw">let </span>c = stack.scratch.rdx <span class="kw">as </span>usize; <span class="comment">// argument 3
+    </span><span class="kw">let </span>d = stack.scratch.r10 <span class="kw">as </span>usize; <span class="comment">// argument 4
+    </span><span class="kw">let </span>e = stack.scratch.r8 <span class="kw">as </span>usize; <span class="comment">// argument 5
+    </span><span class="kw">let </span>f = stack.scratch.r9 <span class="kw">as </span>usize; <span class="comment">// argument 6
 
-    <span class="kw">match</span> <span class="ident">syscall_number</span> {
-        <span class="comment">// handle arch-specific syscalls (`sigreturn` and `arch_prctl`):</span>
-        <span class="ident">aero_syscall::prelude::SYS_SIGRETURN</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident"><span class="kw">super</span>::signals::sigreturn</span>(<span class="ident">stack</span>);
-            <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rax</span> <span class="op">=</span> <span class="ident">result</span> <span class="kw">as</span> <span class="ident">u64</span>;
+    </span><span class="kw">match </span>syscall_number {
+        <span class="comment">// handle arch-specific syscalls (`sigreturn` and `arch_prctl`):
+        </span>aero_syscall::prelude::SYS_SIGRETURN =&gt; {
+            <span class="kw">let </span>result = <span class="kw">super</span>::signals::sigreturn(stack);
+            stack.scratch.rax = result <span class="kw">as </span>u64;
             <span class="kw">return</span>;
         }
 
-        <span class="ident">aero_syscall::prelude::SYS_ARCH_PRCTL</span> =&gt; {
-            <span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident"><span class="self">self</span>::arch_prctl</span>(<span class="ident">a</span>, <span class="ident">b</span>);
-            <span class="kw">let</span> <span class="ident">result_usize</span> <span class="op">=</span> <span class="ident">aero_syscall::syscall_result_as_usize</span>(<span class="ident">result</span>);
+        aero_syscall::prelude::SYS_ARCH_PRCTL =&gt; {
+            <span class="kw">let </span>result = <span class="self">self</span>::arch_prctl(a, b);
+            <span class="kw">let </span>result_usize = aero_syscall::syscall_result_as_usize(result);
 
-            <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rax</span> <span class="op">=</span> <span class="ident">result_usize</span> <span class="kw">as</span> <span class="kw">_</span>;
+            stack.scratch.rax = result_usize <span class="kw">as _</span>;
             <span class="kw">return</span>;
         }
 
-        <span class="ident">aero_syscall::prelude::SYS_EXIT</span> =&gt; {}
-        <span class="kw">_</span> =&gt; <span class="kw">unsafe</span> { <span class="ident"><span class="kw">super</span>::interrupts::enable_interrupts</span>() },
+        aero_syscall::prelude::SYS_EXIT =&gt; {}
+        <span class="kw">_ </span>=&gt; <span class="kw">unsafe </span>{ <span class="kw">super</span>::interrupts::enable_interrupts() },
     }
 
-    <span class="kw">let</span> <span class="ident">result_usize</span> <span class="op">=</span> <span class="ident"><span class="kw">crate</span>::syscall::generic_do_syscall</span>(<span class="ident">syscall_number</span>, <span class="ident">a</span>, <span class="ident">b</span>, <span class="ident">c</span>, <span class="ident">d</span>, <span class="ident">e</span>, <span class="ident">f</span>);
+    <span class="kw">let </span>result_usize = <span class="kw">crate</span>::syscall::generic_do_syscall(syscall_number, a, b, c, d, e, f);
 
-    <span class="ident"><span class="kw">super</span>::signals::syscall_check_signals</span>(<span class="ident">result_usize</span> <span class="kw">as</span> <span class="ident">isize</span>, <span class="ident">stack</span>);
-    <span class="ident">stack</span>.<span class="ident">scratch</span>.<span class="ident">rax</span> <span class="op">=</span> <span class="ident">result_usize</span> <span class="kw">as</span> <span class="kw">_</span>;
+    <span class="kw">super</span>::signals::syscall_check_signals(result_usize <span class="kw">as </span>isize, stack);
+    stack.scratch.rax = result_usize <span class="kw">as _</span>;
 }
 
-<span class="doccomment">/// Initializes support for the `syscall` and `sysret` instructions for the</span>
-<span class="doccomment">/// current CPU.</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="kw">let</span> <span class="ident">cpuid</span> <span class="op">=</span> <span class="ident">CpuId::new</span>();
+<span class="doccomment">/// Initializes support for the `syscall` and `sysret` instructions for the
+/// current CPU.
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>init() {
+    <span class="kw">let </span>cpuid = CpuId::new();
 
-    <span class="comment">// Check if syscall is supported as it is a required CPU feature for aero to run.</span>
-    <span class="kw">let</span> <span class="ident">has_syscall</span> <span class="op">=</span> <span class="ident">cpuid</span>
-        .<span class="ident">get_extended_processor_and_feature_identifiers</span>()
-        .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">has_syscall_sysret</span>());
+    <span class="comment">// Check if syscall is supported as it is a required CPU feature for aero to run.
+    </span><span class="kw">let </span>has_syscall = cpuid
+        .get_extended_processor_and_feature_identifiers()
+        .map_or(<span class="bool-val">false</span>, |i| i.has_syscall_sysret());
 
-    <span class="macro">assert!</span>(<span class="ident">has_syscall</span>);
+    <span class="macro">assert!</span>(has_syscall);
 
-    <span class="kw">unsafe</span> {
+    <span class="kw">unsafe </span>{
         <span class="comment">/*
          * Enable support for `syscall` and `sysret` instructions if the current
          * CPU supports them and the target pointer width is 64.
-         */</span>
-        <span class="kw">let</span> <span class="ident">syscall_base</span> <span class="op">=</span> <span class="ident">GdtEntryType::KERNEL_CODE</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>;
-        <span class="kw">let</span> <span class="ident">sysret_base</span> <span class="op">=</span> (<span class="ident">GdtEntryType::KERNEL_TLS</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>) <span class="op">|</span> <span class="number">3</span>;
+         */
+        </span><span class="kw">let </span>syscall_base = GdtEntryType::KERNEL_CODE &lt;&lt; <span class="number">3</span>;
+        <span class="kw">let </span>sysret_base = (GdtEntryType::KERNEL_TLS &lt;&lt; <span class="number">3</span>) | <span class="number">3</span>;
 
-        <span class="kw">let</span> <span class="ident">star_hi</span> <span class="op">=</span> <span class="ident">syscall_base</span> <span class="kw">as</span> <span class="ident">u32</span> <span class="op">|</span> ((<span class="ident">sysret_base</span> <span class="kw">as</span> <span class="ident">u32</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">16</span>);
+        <span class="kw">let </span>star_hi = syscall_base <span class="kw">as </span>u32 | ((sysret_base <span class="kw">as </span>u32) &lt;&lt; <span class="number">16</span>);
 
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_STAR</span>, (<span class="ident">star_hi</span> <span class="kw">as</span> <span class="ident">u64</span>) <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">32</span>);
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_LSTAR</span>, <span class="ident">x86_64_syscall_handler</span> <span class="kw">as</span> <span class="ident">u64</span>);
+        io::wrmsr(io::IA32_STAR, (star_hi <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>);
+        io::wrmsr(io::IA32_LSTAR, x86_64_syscall_handler <span class="kw">as </span>u64);
 
-        <span class="comment">// Clear the trap flag and enable interrupts.</span>
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_FMASK</span>, <span class="number">0x300</span>);
+        <span class="comment">// Clear the trap flag and enable interrupts.
+        </span>io::wrmsr(io::IA32_FMASK, <span class="number">0x300</span>);
 
-        <span class="comment">// Set the EFER.SCE bit to enable the syscall feature</span>
-        <span class="kw">let</span> <span class="ident">efer</span> <span class="op">=</span> <span class="ident">io::rdmsr</span>(<span class="ident">io::IA32_EFER</span>);
-        <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_EFER</span>, <span class="ident">efer</span> <span class="op">|</span> <span class="number">1</span>);
+        <span class="comment">// Set the EFER.SCE bit to enable the syscall feature
+        </span><span class="kw">let </span>efer = io::rdmsr(io::IA32_EFER);
+        io::wrmsr(io::IA32_EFER, efer | <span class="number">1</span>);
     }
 
     <span class="comment">/*
@@ -327,20 +327,20 @@
      * not in Long mode (Compatibility or 64-bit modes), so still report support
      * for it via `cpuid`. In this case the #UD exception is caught to handle the
      * system call.
-     */</span>
-    <span class="kw">let</span> <span class="ident">has_sysenter</span> <span class="op">=</span> <span class="ident">cpuid</span>
-        .<span class="ident">get_feature_info</span>()
-        .<span class="ident">map_or</span>(<span class="bool-val">false</span>, <span class="op">|</span><span class="ident">i</span><span class="op">|</span> <span class="ident">i</span>.<span class="ident">has_sysenter_sysexit</span>());
+     */
+    </span><span class="kw">let </span>has_sysenter = cpuid
+        .get_feature_info()
+        .map_or(<span class="bool-val">false</span>, |i| i.has_sysenter_sysexit());
 
-    <span class="kw">if</span> <span class="ident">has_sysenter</span> {
-        <span class="kw">unsafe</span> {
-            <span class="ident">io::wrmsr</span>(
-                <span class="ident">io::IA32_SYSENTER_CS</span>,
-                (<span class="ident">GdtEntryType::KERNEL_CODE</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">3</span>) <span class="kw">as</span> <span class="ident">u64</span>,
+    <span class="kw">if </span>has_sysenter {
+        <span class="kw">unsafe </span>{
+            io::wrmsr(
+                io::IA32_SYSENTER_CS,
+                (GdtEntryType::KERNEL_CODE &lt;&lt; <span class="number">3</span>) <span class="kw">as </span>u64,
             );
-            <span class="ident">io::wrmsr</span>(<span class="ident">io::IA32_SYSENTER_EIP</span>, <span class="ident">x86_64_sysenter_handler</span> <span class="kw">as</span> <span class="ident">u64</span>);
+            io::wrmsr(io::IA32_SYSENTER_EIP, x86_64_sysenter_handler <span class="kw">as </span>u64);
         }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

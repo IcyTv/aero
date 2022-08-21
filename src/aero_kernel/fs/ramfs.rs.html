@@ -518,491 +518,491 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="doccomment">//! Implementation of in-memory filesystem. This is used for temporary filesystems (e.g. dev, tmp) and</span>
-<span class="doccomment">//! since Aero currently does not have support for actual disk filesystems (e.g. ex2 and FAT32), ram-fs is</span>
-<span class="doccomment">//! used as the root filesystem.</span>
+</span><span class="doccomment">//! Implementation of in-memory filesystem. This is used for temporary filesystems (e.g. dev, tmp) and
+//! since Aero currently does not have support for actual disk filesystems (e.g. ex2 and FAT32), ram-fs is
+//! used as the root filesystem.
 
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+</span><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">use</span> <span class="ident">aero_syscall::MMapFlags</span>;
-<span class="kw">use</span> <span class="ident">alloc::collections::BTreeMap</span>;
-<span class="kw">use</span> <span class="ident">alloc::string</span>::{<span class="ident">String</span>, <span class="ident">ToString</span>};
-<span class="kw">use</span> <span class="ident">alloc::sync</span>::{<span class="ident">Arc</span>, <span class="ident">Weak</span>};
+<span class="kw">use </span>aero_syscall::MMapFlags;
+<span class="kw">use </span>alloc::collections::BTreeMap;
+<span class="kw">use </span>alloc::string::{String, ToString};
+<span class="kw">use </span>alloc::sync::{Arc, Weak};
 
-<span class="kw">use</span> <span class="ident">alloc::vec::Vec</span>;
-<span class="kw">use</span> <span class="ident">spin::RwLock</span>;
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>spin::RwLock;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::mem::paging</span>::<span class="kw-2">*</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache</span>::{<span class="self">self</span>, <span class="ident">CacheWeak</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::cache</span>::{<span class="ident">CachedINode</span>, <span class="ident">DirCacheItem</span>, <span class="ident">INodeCacheItem</span>, <span class="ident">INodeCacheWeakItem</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::devfs::DevINode</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::inode</span>::{<span class="ident">DirEntry</span>, <span class="ident">FileType</span>, <span class="ident">INodeInterface</span>, <span class="ident">PollFlags</span>, <span class="ident">PollTable</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::inode</span>::{<span class="ident">FileContents</span>, <span class="ident">Metadata</span>};
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">FileSystem</span>, <span class="ident">FileSystemError</span>, <span class="prelude-ty">Result</span>};
+<span class="kw">use </span><span class="kw">super</span>::cache::{<span class="self">self</span>, CacheWeak};
+<span class="kw">use </span><span class="kw">super</span>::cache::{CachedINode, DirCacheItem, INodeCacheItem, INodeCacheWeakItem};
+<span class="kw">use </span><span class="kw">super</span>::devfs::DevINode;
+<span class="kw">use </span><span class="kw">super</span>::inode::{DirEntry, FileType, INodeInterface, PollFlags, PollTable};
+<span class="kw">use </span><span class="kw">super</span>::inode::{FileContents, Metadata};
+<span class="kw">use super</span>::{FileSystem, FileSystemError, <span class="prelude-ty">Result</span>};
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RamINode</span> {
-    <span class="ident">id</span>: <span class="ident">usize</span>,
-    <span class="ident">parent</span>: <span class="ident">INodeCacheWeakItem</span>,
-    <span class="ident">node</span>: <span class="ident">INodeCacheWeakItem</span>,
-    <span class="ident">children</span>: <span class="ident">BTreeMap</span><span class="op">&lt;</span><span class="ident">String</span>, <span class="ident">INodeCacheItem</span><span class="op">&gt;</span>,
-    <span class="ident">filesystem</span>: <span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">RamFs</span><span class="op">&gt;</span>,
-    <span class="ident">file_type</span>: <span class="ident">FileType</span>,
-    <span class="ident">contents</span>: <span class="ident">FileContents</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="kw">pub struct </span>RamINode {
+    id: usize,
+    parent: INodeCacheWeakItem,
+    node: INodeCacheWeakItem,
+    children: BTreeMap&lt;String, INodeCacheItem&gt;,
+    filesystem: Weak&lt;RamFs&gt;,
+    file_type: FileType,
+    contents: FileContents,
 }
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">LockedRamINode</span>(<span class="ident">RwLock</span><span class="op">&lt;</span><span class="ident">RamINode</span><span class="op">&gt;</span>);
+<span class="kw">pub struct </span>LockedRamINode(RwLock&lt;RamINode&gt;);
 
-<span class="kw">impl</span> <span class="ident">LockedRamINode</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">node</span>: <span class="ident">RamINode</span>) -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span>(<span class="ident">RwLock::new</span>(<span class="ident">node</span>))
+<span class="kw">impl </span>LockedRamINode {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>new(node: RamINode) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>(RwLock::new(node))
     }
 
-    <span class="kw">fn</span> <span class="ident">init</span>(
+    <span class="kw">fn </span>init(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">parent</span>: <span class="kw-2">&amp;</span><span class="ident">INodeCacheWeakItem</span>,
-        <span class="ident">node</span>: <span class="kw-2">&amp;</span><span class="ident">INodeCacheWeakItem</span>,
-        <span class="ident">filesystem</span>: <span class="kw-2">&amp;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="ident">RamFs</span><span class="op">&gt;</span>,
-        <span class="ident">file_type</span>: <span class="ident">FileType</span>,
+        parent: <span class="kw-2">&amp;</span>INodeCacheWeakItem,
+        node: <span class="kw-2">&amp;</span>INodeCacheWeakItem,
+        filesystem: <span class="kw-2">&amp;</span>Weak&lt;RamFs&gt;,
+        file_type: FileType,
     ) {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="ident">this</span>.<span class="ident">parent</span> <span class="op">=</span> <span class="ident">parent</span>.<span class="ident">clone</span>();
-        <span class="ident">this</span>.<span class="ident">node</span> <span class="op">=</span> <span class="ident">node</span>.<span class="ident">clone</span>();
-        <span class="ident">this</span>.<span class="ident">filesystem</span> <span class="op">=</span> <span class="ident">filesystem</span>.<span class="ident">clone</span>();
-        <span class="ident">this</span>.<span class="ident">file_type</span> <span class="op">=</span> <span class="ident">file_type</span>;
+        this.parent = parent.clone();
+        this.node = node.clone();
+        this.filesystem = filesystem.clone();
+        this.file_type = file_type;
     }
 
-    <span class="kw">fn</span> <span class="ident">make_inode</span>(
+    <span class="kw">fn </span>make_inode(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">file_type</span>: <span class="ident">FileType</span>,
-        <span class="ident">contents</span>: <span class="ident">FileContents</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">icache</span> <span class="op">=</span> <span class="ident">cache::icache</span>();
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+        name: <span class="kw-2">&amp;</span>str,
+        file_type: FileType,
+        contents: FileContents,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="kw">let </span>icache = cache::icache();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="kw">if</span> <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">contains_key</span>(<span class="ident">name</span>) <span class="op">|</span><span class="op">|</span> [<span class="string">&quot;&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">name</span>) {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::EntryExists</span>);
+        <span class="kw">if </span>this.children.contains_key(name) || [<span class="string">&quot;&quot;</span>, <span class="string">&quot;.&quot;</span>, <span class="string">&quot;..&quot;</span>].contains(<span class="kw-2">&amp;</span>name) {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::EntryExists);
         }
 
-        <span class="kw">let</span> <span class="ident">filesystem</span> <span class="op">=</span> <span class="ident">this</span>
-            .<span class="ident">filesystem</span>
-            .<span class="ident">upgrade</span>()
-            .<span class="ident">expect</span>(<span class="string">&quot;Failed to upgrade to strong filesystem&quot;</span>);
+        <span class="kw">let </span>filesystem = this
+            .filesystem
+            .upgrade()
+            .expect(<span class="string">&quot;Failed to upgrade to strong filesystem&quot;</span>);
 
-        <span class="kw">let</span> <span class="ident">inode</span> <span class="op">=</span> <span class="ident">filesystem</span>.<span class="ident">allocate_inode</span>(<span class="ident">file_type</span>, <span class="ident">contents</span>);
-        <span class="kw">let</span> <span class="ident">inode_cached</span> <span class="op">=</span> <span class="ident">icache</span>.<span class="ident">make_item_no_cache</span>(<span class="ident">CachedINode::new</span>(<span class="ident">inode</span>));
+        <span class="kw">let </span>inode = filesystem.allocate_inode(file_type, contents);
+        <span class="kw">let </span>inode_cached = icache.make_item_no_cache(CachedINode::new(inode));
 
-        <span class="ident">inode_cached</span>
-            .<span class="ident">inner</span>()
-            .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">LockedRamINode</span><span class="op">&gt;</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">init</span>(
-                <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">node</span>,
-                <span class="kw-2">&amp;</span><span class="ident">inode_cached</span>.<span class="ident">downgrade</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">filesystem</span>,
-                <span class="ident">file_type</span>,
+        inode_cached
+            .inner()
+            .downcast_arc::&lt;LockedRamINode&gt;()
+            .unwrap()
+            .init(
+                <span class="kw-2">&amp;</span>this.node,
+                <span class="kw-2">&amp;</span>inode_cached.downgrade(),
+                <span class="kw-2">&amp;</span>this.filesystem,
+                file_type,
             );
 
-        <span class="ident">this</span>.<span class="ident">children</span>
-            .<span class="ident">insert</span>(<span class="ident">String::from</span>(<span class="ident">name</span>), <span class="ident">inode_cached</span>.<span class="ident">clone</span>());
+        this.children
+            .insert(String::from(name), inode_cached.clone());
 
-        <span class="prelude-val">Ok</span>(<span class="ident">inode_cached</span>)
+        <span class="prelude-val">Ok</span>(inode_cached)
     }
 }
 
-<span class="kw">impl</span> <span class="ident">INodeInterface</span> <span class="kw">for</span> <span class="ident">LockedRamINode</span> {
-    <span class="kw">fn</span> <span class="ident">stat</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">aero_syscall::Stat</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">stat</span> <span class="op">=</span> <span class="ident">aero_syscall::Stat::default</span>();
+<span class="kw">impl </span>INodeInterface <span class="kw">for </span>LockedRamINode {
+    <span class="kw">fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;aero_syscall::Stat&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>stat = aero_syscall::Stat::default();
 
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Content</span>(<span class="ident">contents</span>) =&gt; {
-                <span class="ident">stat</span>.<span class="ident">st_size</span> <span class="op">=</span> <span class="ident">contents</span>.<span class="ident">lock</span>().<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Content(contents) =&gt; {
+                stat.st_size = contents.lock().len() <span class="kw">as _</span>;
             }
 
-            <span class="ident">FileContents::StaticContent</span>(<span class="ident">contents</span>) =&gt; {
-                <span class="ident">stat</span>.<span class="ident">st_size</span> <span class="op">=</span> <span class="ident">contents</span>.<span class="ident">len</span>() <span class="kw">as</span> <span class="kw">_</span>;
+            FileContents::StaticContent(contents) =&gt; {
+                stat.st_size = contents.len() <span class="kw">as _</span>;
             }
 
-            <span class="kw">_</span> =&gt; {}
+            <span class="kw">_ </span>=&gt; {}
         }
 
-        <span class="prelude-val">Ok</span>(<span class="ident">stat</span>)
+        <span class="prelude-val">Ok</span>(stat)
     }
 
-    <span class="kw">fn</span> <span class="ident">touch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">DirEntry::new</span>(
-            <span class="ident">parent</span>,
-            <span class="self">self</span>.<span class="ident">make_inode</span>(
-                <span class="ident">name</span>,
-                <span class="ident">FileType::File</span>,
-                <span class="ident">FileContents::Content</span>(<span class="ident">Mutex::new</span>(<span class="ident">Vec::new</span>())),
+    <span class="kw">fn </span>touch(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem&gt; {
+        <span class="prelude-val">Ok</span>(DirEntry::new(
+            parent,
+            <span class="self">self</span>.make_inode(
+                name,
+                FileType::File,
+                FileContents::Content(Mutex::new(Vec::new())),
             )<span class="question-mark">?</span>,
-            <span class="ident">String::from</span>(<span class="ident">name</span>),
+            String::from(name),
         ))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">mkdir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">make_inode</span>(<span class="ident">name</span>, <span class="ident">FileType::Directory</span>, <span class="ident">FileContents::None</span>)
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>mkdir(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="self">self</span>.make_inode(name, FileType::Directory, FileContents::None)
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">make_dev_inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">marker</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">make_inode</span>(
-            <span class="ident">name</span>,
-            <span class="ident">FileType::Device</span>,
-            <span class="ident">FileContents::Device</span>(<span class="ident">DevINode::new</span>(<span class="ident">marker</span>)<span class="question-mark">?</span>),
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>make_dev_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, marker: usize) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="self">self</span>.make_inode(
+            name,
+            FileType::Device,
+            FileContents::Device(DevINode::new(marker)<span class="question-mark">?</span>),
         )
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">make_ramfs_inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">make_inode</span>(<span class="ident">name</span>, <span class="ident">FileType::File</span>, <span class="ident">FileContents::StaticContent</span>(<span class="ident">buffer</span>))
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>make_ramfs_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="self">self</span>.make_inode(name, FileType::File, FileContents::StaticContent(buffer))
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">make_local_socket_inode</span>(
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>make_local_socket_inode(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>,
-        <span class="ident">inode</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span>,
-    ) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">INodeCacheItem</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">make_inode</span>(<span class="ident">name</span>, <span class="ident">FileType::Socket</span>, <span class="ident">FileContents::Socket</span>(<span class="ident">inode</span>))
+        name: <span class="kw-2">&amp;</span>str,
+        inode: Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
+        <span class="self">self</span>.make_inode(name, FileType::Socket, FileContents::Socket(inode))
     }
 
-    <span class="kw">fn</span> <span class="ident">write_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Content</span>(<span class="ident">vec</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">vec</span>.<span class="ident">lock</span>();
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Content(vec) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = vec.lock();
 
-                <span class="kw">if</span> <span class="ident">vec</span>.<span class="ident">len</span>() <span class="op">&lt;</span> <span class="ident">offset</span> <span class="op">+</span> <span class="ident">buffer</span>.<span class="ident">len</span>() {
-                    <span class="ident">vec</span>.<span class="ident">resize</span>(<span class="ident">offset</span> <span class="op">+</span> <span class="ident">buffer</span>.<span class="ident">len</span>(), <span class="number">0</span>);
+                <span class="kw">if </span>vec.len() &lt; offset + buffer.len() {
+                    vec.resize(offset + buffer.len(), <span class="number">0</span>);
                 }
 
-                <span class="ident">vec</span>.<span class="ident">as_mut_slice</span>()[<span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">buffer</span>.<span class="ident">len</span>()].<span class="ident">copy_from_slice</span>(<span class="ident">buffer</span>);
-                <span class="prelude-val">Ok</span>(<span class="ident">buffer</span>.<span class="ident">len</span>())
+                vec.as_mut_slice()[offset..offset + buffer.len()].copy_from_slice(buffer);
+                <span class="prelude-val">Ok</span>(buffer.len())
             }
 
-            <span class="ident">FileContents::StaticContent</span>(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            FileContents::StaticContent(<span class="kw">_</span>) =&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
 
-            <span class="ident">FileContents::Device</span>(<span class="ident">dev</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">dev</span>.<span class="ident">clone</span>();
-                <span class="ident">drop</span>(<span class="ident">this</span>);
+            FileContents::Device(dev) =&gt; {
+                <span class="kw">let </span>device = dev.clone();
+                drop(this);
 
-                <span class="ident">device</span>.<span class="ident">write_at</span>(<span class="ident">offset</span>, <span class="ident">buffer</span>)
+                device.write_at(offset, buffer)
             }
 
-            <span class="ident">FileContents::Socket</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">write_at</span>(<span class="ident">offset</span>, <span class="ident">buffer</span>),
-            <span class="ident">FileContents::None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            FileContents::Socket(e) =&gt; e.write_at(offset, buffer),
+            FileContents::None =&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">dirent</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">parent</span>: <span class="ident">DirCacheItem</span>, <span class="ident">index</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, index: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">if</span> <span class="ident">this</span>.<span class="ident">file_type</span> <span class="op">!</span><span class="op">=</span> <span class="ident">FileType::Directory</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotDirectory</span>);
+        <span class="kw">if </span>this.file_type != FileType::Directory {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotDirectory);
         }
 
-        <span class="prelude-val">Ok</span>(<span class="kw">match</span> <span class="ident">index</span> {
-            <span class="number">0x00</span> =&gt; <span class="prelude-val">Some</span>(<span class="ident">DirEntry::new</span>(
-                <span class="ident">parent</span>,
-                <span class="comment">// UNWRAP: The inner node value should not be dropped.</span>
-                <span class="ident">this</span>.<span class="ident">node</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>().<span class="ident">into</span>(),
-                <span class="ident">String::from</span>(<span class="string">&quot;.&quot;</span>),
+        <span class="prelude-val">Ok</span>(<span class="kw">match </span>index {
+            <span class="number">0x00 </span>=&gt; <span class="prelude-val">Some</span>(DirEntry::new(
+                parent,
+                <span class="comment">// UNWRAP: The inner node value should not be dropped.
+                </span>this.node.upgrade().unwrap().into(),
+                String::from(<span class="string">&quot;.&quot;</span>),
             )),
 
-            <span class="number">0x01</span> =&gt; {
-                <span class="prelude-val">Some</span>(<span class="ident">DirEntry::new</span>(
-                    <span class="ident">parent</span>,
-                    <span class="comment">// UNWRAP: The inner node value should not be dropped.</span>
-                    <span class="ident">this</span>.<span class="ident">node</span>.<span class="ident">upgrade</span>().<span class="ident">unwrap</span>().<span class="ident">into</span>(),
-                    <span class="ident">String::from</span>(<span class="string">&quot;..&quot;</span>),
+            <span class="number">0x01 </span>=&gt; {
+                <span class="prelude-val">Some</span>(DirEntry::new(
+                    parent,
+                    <span class="comment">// UNWRAP: The inner node value should not be dropped.
+                    </span>this.node.upgrade().unwrap().into(),
+                    String::from(<span class="string">&quot;..&quot;</span>),
                 ))
             }
 
-            <span class="comment">// Subtract two because of the &quot;.&quot; and &quot;..&quot; entries.</span>
-            <span class="kw">_</span> =&gt; <span class="ident">this</span>
-                .<span class="ident">children</span>
-                .<span class="ident">iter</span>()
-                .<span class="ident">nth</span>(<span class="ident">index</span> <span class="op">-</span> <span class="number">2</span>)
-                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">inode</span>)<span class="op">|</span> <span class="ident">DirEntry::new</span>(<span class="ident">parent</span>, <span class="ident">inode</span>.<span class="ident">clone</span>(), <span class="ident">name</span>.<span class="ident">clone</span>())),
+            <span class="comment">// Subtract two because of the &quot;.&quot; and &quot;..&quot; entries.
+            </span><span class="kw">_ </span>=&gt; this
+                .children
+                .iter()
+                .nth(index - <span class="number">2</span>)
+                .map(|(name, inode)| DirEntry::new(parent, inode.clone(), name.clone())),
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">unlink</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+    <span class="kw">fn </span>unlink(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="kw">_</span>) <span class="op">=</span> <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">remove</span>(<span class="ident">name</span>) {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(<span class="kw">_</span>) = this.children.remove(name) {
             <span class="prelude-val">Ok</span>(())
-        } <span class="kw">else</span> {
-            <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::EntryNotFound</span>)
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(FileSystemError::EntryNotFound)
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">truncate</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+    <span class="kw">fn </span>truncate(<span class="kw-2">&amp;</span><span class="self">self</span>, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Content</span>(<span class="ident">vec</span>) =&gt; {
-                <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">vec</span>.<span class="ident">lock</span>();
-                <span class="ident">vec</span>.<span class="ident">resize</span>(<span class="ident">size</span>, <span class="number">0</span>);
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Content(vec) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>vec = vec.lock();
+                vec.resize(size, <span class="number">0</span>);
 
-                <span class="kw">return</span> <span class="prelude-val">Ok</span>(());
+                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
             }
 
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">read_at</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">buffer</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="comment">// NOTE: We cannot just straight way copy the buffer using the `copy_from_slice` method</span>
-            <span class="comment">// since the buffer can be larger than the static buffer causing it to panic since</span>
-            <span class="comment">// it expects the buffers to be the same size.</span>
-            <span class="ident">FileContents::Content</span>(<span class="ident">vec</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">vec</span> <span class="op">=</span> <span class="ident">vec</span>.<span class="ident">lock</span>();
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            <span class="comment">// NOTE: We cannot just straight way copy the buffer using the `copy_from_slice` method
+            // since the buffer can be larger than the static buffer causing it to panic since
+            // it expects the buffers to be the same size.
+            </span>FileContents::Content(vec) =&gt; {
+                <span class="kw">let </span>vec = vec.lock();
 
-                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">core::cmp::min</span>(<span class="ident">buffer</span>.<span class="ident">len</span>(), <span class="ident">vec</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">offset</span>);
+                <span class="kw">let </span>size = core::cmp::min(buffer.len(), vec.len() - offset);
 
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> (<span class="kw-2">&amp;</span><span class="ident">vec</span>.<span class="ident">as_slice</span>()[<span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>]).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="ident">buffer</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
+                <span class="kw">for </span>(i, b) <span class="kw">in </span>(<span class="kw-2">&amp;</span>vec.as_slice()[offset..offset + size]).iter().enumerate() {
+                    buffer[i] = <span class="kw-2">*</span>b;
                 }
 
-                <span class="prelude-val">Ok</span>(<span class="ident">size</span>)
+                <span class="prelude-val">Ok</span>(size)
             }
 
-            <span class="ident">FileContents::StaticContent</span>(<span class="ident">static_buffer</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">size</span> <span class="op">=</span> <span class="ident">core::cmp::min</span>(<span class="ident">buffer</span>.<span class="ident">len</span>(), <span class="ident">static_buffer</span>.<span class="ident">len</span>() <span class="op">-</span> <span class="ident">offset</span>);
+            FileContents::StaticContent(static_buffer) =&gt; {
+                <span class="kw">let </span>size = core::cmp::min(buffer.len(), static_buffer.len() - offset);
 
-                <span class="kw">for</span> (<span class="ident">i</span>, <span class="ident">b</span>) <span class="kw">in</span> (<span class="kw-2">&amp;</span><span class="ident">static_buffer</span>[<span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>]).<span class="ident">iter</span>().<span class="ident">enumerate</span>() {
-                    <span class="ident">buffer</span>[<span class="ident">i</span>] <span class="op">=</span> <span class="kw-2">*</span><span class="ident">b</span>;
+                <span class="kw">for </span>(i, b) <span class="kw">in </span>(<span class="kw-2">&amp;</span>static_buffer[offset..offset + size]).iter().enumerate() {
+                    buffer[i] = <span class="kw-2">*</span>b;
                 }
 
-                <span class="prelude-val">Ok</span>(<span class="ident">size</span>)
+                <span class="prelude-val">Ok</span>(size)
             }
 
-            <span class="ident">FileContents::Device</span>(<span class="ident">device</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">clone</span>();
-                <span class="ident">drop</span>(<span class="ident">this</span>);
+            FileContents::Device(device) =&gt; {
+                <span class="kw">let </span>device = device.clone();
+                drop(this);
 
-                <span class="ident">device</span>.<span class="ident">read_at</span>(<span class="ident">offset</span>, <span class="ident">buffer</span>)
+                device.read_at(offset, buffer)
             }
 
-            <span class="ident">FileContents::Socket</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span>.<span class="ident">read_at</span>(<span class="ident">offset</span>, <span class="ident">buffer</span>),
-            <span class="ident">FileContents::None</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            FileContents::Socket(e) =&gt; e.read_at(offset, buffer),
+            FileContents::None =&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">metadata</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Metadata</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>metadata(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Metadata&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="prelude-val">Ok</span>(<span class="ident">Metadata</span> {
-            <span class="ident">id</span>: <span class="ident">this</span>.<span class="ident">id</span>,
-            <span class="ident">file_type</span>: <span class="ident">this</span>.<span class="ident">file_type</span>,
-            <span class="ident">size</span>: <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-                <span class="ident">FileContents::Content</span>(<span class="ident">bytes</span>) =&gt; <span class="ident">bytes</span>.<span class="ident">lock</span>().<span class="ident">len</span>(), <span class="comment">// Temporary value dropped and lock is unlocked!</span>
-                <span class="ident">FileContents::StaticContent</span>(<span class="ident">bytes</span>) =&gt; <span class="ident">bytes</span>.<span class="ident">len</span>(),
-                <span class="kw">_</span> =&gt; <span class="number">0x00</span>,
+        <span class="prelude-val">Ok</span>(Metadata {
+            id: this.id,
+            file_type: this.file_type,
+            size: <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+                FileContents::Content(bytes) =&gt; bytes.lock().len(), <span class="comment">// Temporary value dropped and lock is unlocked!
+                </span>FileContents::StaticContent(bytes) =&gt; bytes.len(),
+                <span class="kw">_ </span>=&gt; <span class="number">0x00</span>,
             },
-            <span class="ident">children_len</span>: <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">len</span>(),
+            children_len: this.children.len(),
         })
     }
 
-    <span class="kw">fn</span> <span class="ident">ioctl</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>ioctl(<span class="kw-2">&amp;</span><span class="self">self</span>, command: usize, arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Device</span>(<span class="ident">dev</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">dev</span>.<span class="ident">clone</span>();
-                <span class="ident">drop</span>(<span class="ident">this</span>);
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Device(dev) =&gt; {
+                <span class="kw">let </span>device = dev.clone();
+                drop(this);
 
-                <span class="ident">device</span>.<span class="ident">ioctl</span>(<span class="ident">command</span>, <span class="ident">arg</span>)
+                device.ioctl(command, arg)
             }
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">mmap</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">MMapFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PhysFrame</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>mmap(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, size: usize, flags: MMapFlags) -&gt; <span class="prelude-ty">Result</span>&lt;PhysFrame&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Device</span>(<span class="ident">dev</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">dev</span>.<span class="ident">clone</span>();
-                <span class="ident">drop</span>(<span class="ident">this</span>);
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Device(dev) =&gt; {
+                <span class="kw">let </span>device = dev.clone();
+                drop(this);
 
-                <span class="ident">device</span>.<span class="ident">mmap</span>(<span class="ident">offset</span>, <span class="ident">size</span>, <span class="ident">flags</span>)
+                device.mmap(offset, size, flags)
             }
 
-            <span class="ident">FileContents::StaticContent</span>(<span class="ident">contents</span>) =&gt; {
-                <span class="comment">// TODO: Support shared static content ramfs file mappings.</span>
-                <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_SHARED</span>));
+            FileContents::StaticContent(contents) =&gt; {
+                <span class="comment">// TODO: Support shared static content ramfs file mappings.
+                </span><span class="macro">assert!</span>(!flags.contains(MMapFlags::MAP_SHARED));
 
-                <span class="kw">let</span> <span class="ident">private_cp</span>: <span class="ident">PhysFrame</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
-                <span class="ident">private_cp</span>.<span class="ident">as_slice_mut</span>()[..<span class="ident">size</span>].<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">contents</span>[<span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>]);
+                <span class="kw">let </span>private_cp: PhysFrame = FRAME_ALLOCATOR.allocate_frame().unwrap();
+                private_cp.as_slice_mut()[..size].copy_from_slice(<span class="kw-2">&amp;</span>contents[offset..offset + size]);
 
-                <span class="prelude-val">Ok</span>(<span class="ident">private_cp</span>)
+                <span class="prelude-val">Ok</span>(private_cp)
             }
 
-            <span class="ident">FileContents::Content</span>(<span class="ident">contents</span>) =&gt; {
-                <span class="comment">// TODO: Support shared content ramfs file mappings.</span>
-                <span class="macro">assert!</span>(<span class="op">!</span><span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">MMapFlags::MAP_SHARED</span>));
+            FileContents::Content(contents) =&gt; {
+                <span class="comment">// TODO: Support shared content ramfs file mappings.
+                </span><span class="macro">assert!</span>(!flags.contains(MMapFlags::MAP_SHARED));
 
-                <span class="kw">let</span> <span class="ident">private_cp</span>: <span class="ident">PhysFrame</span> <span class="op">=</span> <span class="ident">FRAME_ALLOCATOR</span>.<span class="ident">allocate_frame</span>().<span class="ident">unwrap</span>();
-                <span class="ident">private_cp</span>.<span class="ident">as_slice_mut</span>()[..<span class="ident">size</span>]
-                    .<span class="ident">copy_from_slice</span>(<span class="kw-2">&amp;</span><span class="ident">contents</span>.<span class="ident">lock</span>()[<span class="ident">offset</span>..<span class="ident">offset</span> <span class="op">+</span> <span class="ident">size</span>]);
+                <span class="kw">let </span>private_cp: PhysFrame = FRAME_ALLOCATOR.allocate_frame().unwrap();
+                private_cp.as_slice_mut()[..size]
+                    .copy_from_slice(<span class="kw-2">&amp;</span>contents.lock()[offset..offset + size]);
 
-                <span class="prelude-val">Ok</span>(<span class="ident">private_cp</span>)
+                <span class="prelude-val">Ok</span>(private_cp)
             }
 
-            <span class="comment">// TODO: Support other memory mapping ramfs files:</span>
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            <span class="comment">// TODO: Support other memory mapping ramfs files:
+            </span><span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">lookup</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">dir</span>: <span class="ident">DirCacheItem</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">DirCacheItem</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
-        <span class="kw">let</span> <span class="ident">child</span> <span class="op">=</span> <span class="ident">this</span>
-            .<span class="ident">children</span>
-            .<span class="ident">get</span>(<span class="ident">name</span>)
-            .<span class="ident">ok_or</span>(<span class="ident">FileSystemError::EntryNotFound</span>)<span class="question-mark">?</span>;
+    <span class="kw">fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, dir: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
+        <span class="kw">let </span>child = this
+            .children
+            .get(name)
+            .ok_or(FileSystemError::EntryNotFound)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="ident">DirEntry::new</span>(
-            <span class="ident">dir</span>.<span class="ident">clone</span>(),
-            <span class="ident">child</span>.<span class="ident">clone</span>(),
-            <span class="ident">String::from</span>(<span class="ident">name</span>),
+        <span class="prelude-val">Ok</span>(DirEntry::new(
+            dir.clone(),
+            child.clone(),
+            String::from(name),
         ))
     }
 
-    <span class="kw">fn</span> <span class="ident">as_unix_socket</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">INodeInterface</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>as_unix_socket(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Socket</span>(<span class="ident">socket</span>) =&gt; <span class="prelude-val">Ok</span>(<span class="ident">socket</span>.<span class="ident">clone</span>()),
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSocket</span>),
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Socket(socket) =&gt; <span class="prelude-val">Ok</span>(socket.clone()),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSocket),
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">poll</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">table</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">PollTable</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">PollFlags</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PollFlags&gt; {
+        <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-        <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="ident">contents</span> {
-            <span class="ident">FileContents::Device</span>(<span class="ident">device</span>) =&gt; {
-                <span class="kw">let</span> <span class="ident">device</span> <span class="op">=</span> <span class="ident">device</span>.<span class="ident">clone</span>();
-                <span class="ident">drop</span>(<span class="ident">this</span>);
+        <span class="kw">match </span><span class="kw-2">&amp;</span>this.contents {
+            FileContents::Device(device) =&gt; {
+                <span class="kw">let </span>device = device.clone();
+                drop(this);
 
-                <span class="ident">device</span>.<span class="ident">poll</span>(<span class="ident">table</span>)
+                device.poll(table)
             }
 
-            <span class="kw">_</span> =&gt; <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotSupported</span>),
+            <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(FileSystemError::NotSupported),
         }
     }
 
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">weak_filesystem</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Weak</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span><span class="op">&gt;</span> {
-        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>().<span class="ident">filesystem</span>.<span class="ident">clone</span>())
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>weak_filesystem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Weak&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.read().filesystem.clone())
     }
 
-    <span class="kw">fn</span> <span class="ident">link</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">src</span>: <span class="ident">INodeCacheItem</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>()<span class="op">&gt;</span> {
-        <span class="comment">// ensure: The dest inode (self) is a directory.</span>
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">file_type</span>() <span class="op">!</span><span class="op">=</span> <span class="ident">FileType::Directory</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::NotDirectory</span>);
+    <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, src: INodeCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="comment">// ensure: The dest inode (self) is a directory.
+        </span><span class="kw">if </span><span class="self">self</span>.metadata()<span class="question-mark">?</span>.file_type() != FileType::Directory {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotDirectory);
         }
 
-        <span class="comment">// ensure: The src inode is not a directory.</span>
-        <span class="kw">if</span> <span class="ident">src</span>.<span class="ident">metadata</span>()<span class="question-mark">?</span>.<span class="ident">file_type</span>() <span class="op">==</span> <span class="ident">FileType::Directory</span> {
-            <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::IsDir</span>);
+        <span class="comment">// ensure: The src inode is not a directory.
+        </span><span class="kw">if </span>src.metadata()<span class="question-mark">?</span>.file_type() == FileType::Directory {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::IsDir);
         }
 
-        <span class="comment">// ensure: The dest directory does not already contain a</span>
-        <span class="comment">// file with the same name.</span>
-        {
-            <span class="kw">let</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">read</span>();
+        <span class="comment">// ensure: The dest directory does not already contain a
+        // file with the same name.
+        </span>{
+            <span class="kw">let </span>this = <span class="self">self</span>.<span class="number">0</span>.read();
 
-            <span class="kw">if</span> <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">iter</span>().<span class="ident">find</span>(<span class="op">|</span>(<span class="ident">e</span>, <span class="kw">_</span>)<span class="op">|</span> <span class="ident">e</span> <span class="op">==</span> <span class="kw-2">&amp;</span><span class="ident">name</span>).<span class="ident">is_some</span>() {
-                <span class="kw">return</span> <span class="prelude-val">Err</span>(<span class="ident">FileSystemError::EntryExists</span>);
+            <span class="kw">if </span>this.children.iter().find(|(e, <span class="kw">_</span>)| e == <span class="kw-2">&amp;</span>name).is_some() {
+                <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::EntryExists);
             }
         }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">this</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span>.<span class="ident">write</span>();
+        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.<span class="number">0</span>.write();
 
-        <span class="comment">// Create the link!</span>
-        <span class="ident">this</span>.<span class="ident">children</span>.<span class="ident">insert</span>(<span class="ident">name</span>.<span class="ident">to_string</span>(), <span class="ident">src</span>.<span class="ident">clone</span>());
+        <span class="comment">// Create the link!
+        </span>this.children.insert(name.to_string(), src.clone());
         <span class="prelude-val">Ok</span>(())
     }
 }
 
-<span class="doccomment">/// Implementation of in-memory filesystem. (See the module-level documentation for more</span>
-<span class="doccomment">/// information).</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">RamFs</span> {
-    <span class="ident">root_inode</span>: <span class="ident">INodeCacheItem</span>,
-    <span class="ident">root_dir</span>: <span class="ident">DirCacheItem</span>,
-    <span class="ident">next_id</span>: <span class="ident">AtomicUsize</span>,
+<span class="doccomment">/// Implementation of in-memory filesystem. (See the module-level documentation for more
+/// information).
+</span><span class="kw">pub struct </span>RamFs {
+    root_inode: INodeCacheItem,
+    root_dir: DirCacheItem,
+    next_id: AtomicUsize,
 }
 
-<span class="kw">impl</span> <span class="ident">RamFs</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span> {
-        <span class="kw">let</span> <span class="ident">icache</span> <span class="op">=</span> <span class="ident">cache::icache</span>();
+<span class="kw">impl </span>RamFs {
+    <span class="kw">pub fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+        <span class="kw">let </span>icache = cache::icache();
 
-        <span class="kw">let</span> <span class="ident">root_node</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="ident">LockedRamINode::new</span>(<span class="ident">RamINode::default</span>()));
-        <span class="kw">let</span> <span class="ident">root_cached</span> <span class="op">=</span> <span class="ident">icache</span>.<span class="ident">make_item_no_cache</span>(<span class="ident">CachedINode::new</span>(<span class="ident">root_node</span>));
+        <span class="kw">let </span>root_node = Arc::new(LockedRamINode::new(RamINode::default()));
+        <span class="kw">let </span>root_cached = icache.make_item_no_cache(CachedINode::new(root_node));
 
-        <span class="kw">let</span> <span class="ident">root_dir</span> <span class="op">=</span> <span class="ident">DirEntry::new_root</span>(<span class="ident">root_cached</span>.<span class="ident">clone</span>(), <span class="ident">String::from</span>(<span class="string">&quot;/&quot;</span>));
+        <span class="kw">let </span>root_dir = DirEntry::new_root(root_cached.clone(), String::from(<span class="string">&quot;/&quot;</span>));
 
-        <span class="kw">let</span> <span class="ident">ramfs</span> <span class="op">=</span> <span class="ident">Arc::new</span>(<span class="self">Self</span> {
-            <span class="ident">root_inode</span>: <span class="ident">root_cached</span>.<span class="ident">clone</span>(),
-            <span class="ident">root_dir</span>: <span class="ident">root_dir</span>.<span class="ident">clone</span>(),
-            <span class="ident">next_id</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0x00</span>),
+        <span class="kw">let </span>ramfs = Arc::new(<span class="self">Self </span>{
+            root_inode: root_cached.clone(),
+            root_dir: root_dir.clone(),
+            next_id: AtomicUsize::new(<span class="number">0x00</span>),
         });
 
-        <span class="kw">let</span> <span class="ident">copy</span>: <span class="ident">Arc</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">FileSystem</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">ramfs</span>.<span class="ident">clone</span>();
+        <span class="kw">let </span>copy: Arc&lt;<span class="kw">dyn </span>FileSystem&gt; = ramfs.clone();
 
-        <span class="ident">root_dir</span>.<span class="ident">filesystem</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Arc::downgrade</span>(<span class="kw-2">&amp;</span><span class="ident">copy</span>));
+        root_dir.filesystem.call_once(|| Arc::downgrade(<span class="kw-2">&amp;</span>copy));
 
-        <span class="ident">root_cached</span>
-            .<span class="ident">inner</span>()
-            .<span class="ident">downcast_arc</span>::<span class="op">&lt;</span><span class="ident">LockedRamINode</span><span class="op">&gt;</span>()
-            .<span class="ident">unwrap</span>()
-            .<span class="ident">init</span>(
-                <span class="kw-2">&amp;</span><span class="ident">ramfs</span>.<span class="ident">root_inode</span>.<span class="ident">downgrade</span>(),
-                <span class="op">&amp;&amp;</span><span class="ident">root_cached</span>.<span class="ident">downgrade</span>(),
-                <span class="kw-2">&amp;</span><span class="ident">Arc::downgrade</span>(<span class="kw-2">&amp;</span><span class="ident">ramfs</span>),
-                <span class="ident">FileType::Directory</span>,
+        root_cached
+            .inner()
+            .downcast_arc::&lt;LockedRamINode&gt;()
+            .unwrap()
+            .init(
+                <span class="kw-2">&amp;</span>ramfs.root_inode.downgrade(),
+                &amp;&amp;root_cached.downgrade(),
+                <span class="kw-2">&amp;</span>Arc::downgrade(<span class="kw-2">&amp;</span>ramfs),
+                FileType::Directory,
             );
 
-        <span class="ident">ramfs</span>
+        ramfs
     }
 
-    <span class="kw">fn</span> <span class="ident">allocate_inode</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">file_type</span>: <span class="ident">FileType</span>, <span class="ident">contents</span>: <span class="ident">FileContents</span>) -&gt; <span class="ident">Arc</span><span class="op">&lt;</span><span class="ident">LockedRamINode</span><span class="op">&gt;</span> {
-        <span class="ident">Arc::new</span>(<span class="ident">LockedRamINode::new</span>(<span class="ident">RamINode</span> {
-            <span class="ident">parent</span>: <span class="ident">CacheWeak::new</span>(),
-            <span class="ident">node</span>: <span class="ident">CacheWeak::new</span>(),
-            <span class="ident">filesystem</span>: <span class="ident">Weak::default</span>(),
-            <span class="ident">children</span>: <span class="ident">BTreeMap::new</span>(),
-            <span class="ident">id</span>: <span class="self">self</span>.<span class="ident">next_id</span>.<span class="ident">fetch_add</span>(<span class="number">1</span>, <span class="ident">Ordering::SeqCst</span>),
-            <span class="ident">contents</span>,
-            <span class="ident">file_type</span>,
+    <span class="kw">fn </span>allocate_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, file_type: FileType, contents: FileContents) -&gt; Arc&lt;LockedRamINode&gt; {
+        Arc::new(LockedRamINode::new(RamINode {
+            parent: CacheWeak::new(),
+            node: CacheWeak::new(),
+            filesystem: Weak::default(),
+            children: BTreeMap::new(),
+            id: <span class="self">self</span>.next_id.fetch_add(<span class="number">1</span>, Ordering::SeqCst),
+            contents,
+            file_type,
         }))
     }
 }
 
-<span class="kw">impl</span> <span class="ident">FileSystem</span> <span class="kw">for</span> <span class="ident">RamFs</span> {
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">fn</span> <span class="ident">root_dir</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">DirCacheItem</span> {
-        <span class="self">self</span>.<span class="ident">root_dir</span>.<span class="ident">clone</span>()
+<span class="kw">impl </span>FileSystem <span class="kw">for </span>RamFs {
+    <span class="attribute">#[inline]</span>
+    <span class="kw">fn </span>root_dir(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; DirCacheItem {
+        <span class="self">self</span>.root_dir.clone()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

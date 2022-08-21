@@ -328,301 +328,301 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">mod</span> <span class="ident">exceptions</span>;
-<span class="kw">mod</span> <span class="ident">idt</span>;
+</span><span class="kw">mod </span>exceptions;
+<span class="kw">mod </span>idt;
 
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicUsize</span>, <span class="ident">Ordering</span>};
+<span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">idt</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span>idt::<span class="kw-2">*</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::apic</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::io</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::apic;
+<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::controlregs</span>;
+<span class="kw">use </span><span class="kw">super</span>::controlregs;
 
-<span class="kw">const</span> <span class="ident">PIC1_COMMAND</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x20</span>;
-<span class="kw">const</span> <span class="ident">PIC1_DATA</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0x21</span>;
+<span class="kw">const </span>PIC1_COMMAND: u16 = <span class="number">0x20</span>;
+<span class="kw">const </span>PIC1_DATA: u16 = <span class="number">0x21</span>;
 
-<span class="kw">const</span> <span class="ident">PIC2_DATA</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0xA1</span>;
-<span class="kw">const</span> <span class="ident">PIC2_COMMAND</span>: <span class="ident">u16</span> <span class="op">=</span> <span class="number">0xA0</span>;
+<span class="kw">const </span>PIC2_DATA: u16 = <span class="number">0xA1</span>;
+<span class="kw">const </span>PIC2_COMMAND: u16 = <span class="number">0xA0</span>;
 
-<span class="kw">const</span> <span class="ident">PIC_EOI</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x20</span>;
+<span class="kw">const </span>PIC_EOI: u8 = <span class="number">0x20</span>;
 
-<span class="kw">const</span> <span class="ident">ICW1_INIT</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x10</span>;
-<span class="kw">const</span> <span class="ident">ICW1_READ_ISR</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x0B</span>;
-<span class="kw">const</span> <span class="ident">ICW1_ICW4</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x01</span>;
-<span class="kw">const</span> <span class="ident">ICW4_8086</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0x01</span>;
+<span class="kw">const </span>ICW1_INIT: u8 = <span class="number">0x10</span>;
+<span class="kw">const </span>ICW1_READ_ISR: u8 = <span class="number">0x0B</span>;
+<span class="kw">const </span>ICW1_ICW4: u8 = <span class="number">0x01</span>;
+<span class="kw">const </span>ICW4_8086: u8 = <span class="number">0x01</span>;
 
 <span class="macro">lazy_static::lazy_static!</span> {
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">PIC_CONTROLLER</span>: <span class="ident">PicController</span> <span class="op">=</span> <span class="ident">PicController::new</span>();
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">APIC_CONTROLLER</span>: <span class="ident">ApicController</span> <span class="op">=</span> <span class="ident">ApicController</span>;
+    <span class="kw">pub static </span><span class="kw-2">ref </span>PIC_CONTROLLER: PicController = PicController::new();
+    <span class="kw">pub static </span><span class="kw-2">ref </span>APIC_CONTROLLER: ApicController = ApicController;
 
-    <span class="doccomment">/// The global interrupt controller for x86 protected by a read-write lock.</span>
-    <span class="kw">pub</span> <span class="kw">static</span> <span class="kw-2">ref</span> <span class="ident">INTERRUPT_CONTROLLER</span>: <span class="ident">InterruptController</span> <span class="op">=</span> <span class="ident">InterruptController::new</span>();
+    <span class="doccomment">/// The global interrupt controller for x86 protected by a read-write lock.
+    </span><span class="kw">pub static </span><span class="kw-2">ref </span>INTERRUPT_CONTROLLER: InterruptController = InterruptController::new();
 }
 
-<span class="doccomment">/// The interrupt controller interface. The task of an interrupt controller is to</span>
-<span class="doccomment">/// end the interrupt, mask the interrupt, send ipi, etc...</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InterruptController</span> {
-    <span class="ident">method</span>: <span class="ident">AtomicUsize</span>,
+<span class="doccomment">/// The interrupt controller interface. The task of an interrupt controller is to
+/// end the interrupt, mask the interrupt, send ipi, etc...
+</span><span class="attribute">#[repr(transparent)]</span>
+<span class="kw">pub struct </span>InterruptController {
+    method: AtomicUsize,
 }
 
-<span class="kw">impl</span> <span class="ident">InterruptController</span> {
-    <span class="doccomment">/// Creates a new interrupt controller using the PIC chip by default.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">method</span>: <span class="ident">AtomicUsize::new</span>(<span class="number">0</span>),
+<span class="kw">impl </span>InterruptController {
+    <span class="doccomment">/// Creates a new interrupt controller using the PIC chip by default.
+    </span><span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            method: AtomicUsize::new(<span class="number">0</span>),
         }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">method</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
-        <span class="self">self</span>.<span class="ident">method</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+    <span class="kw">pub fn </span>method(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.method.load(Ordering::SeqCst)
     }
 
-    <span class="doccomment">/// Send EOI, indicating the completion of an interrupt.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">eoi</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">match</span> <span class="self">self</span>.<span class="ident">method</span>.<span class="ident">load</span>(<span class="ident">Ordering::Acquire</span>) {
-            <span class="number">0</span> =&gt; <span class="ident">PIC_CONTROLLER</span>.<span class="ident">eoi</span>(),
-            <span class="number">1</span> =&gt; <span class="ident">APIC_CONTROLLER</span>.<span class="ident">eoi</span>(),
+    <span class="doccomment">/// Send EOI, indicating the completion of an interrupt.
+    </span><span class="kw">pub fn </span>eoi(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">match </span><span class="self">self</span>.method.load(Ordering::Acquire) {
+            <span class="number">0 </span>=&gt; PIC_CONTROLLER.eoi(),
+            <span class="number">1 </span>=&gt; APIC_CONTROLLER.eoi(),
 
-            <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         }
     }
 
-    <span class="doccomment">/// Sets the interrupt controller to APIC.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">switch_to_apic</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">method</span>.<span class="ident">store</span>(<span class="number">1</span>, <span class="ident">Ordering::Release</span>);
+    <span class="doccomment">/// Sets the interrupt controller to APIC.
+    </span><span class="attribute">#[inline(always)]</span>
+    <span class="kw">pub fn </span>switch_to_apic(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.method.store(<span class="number">1</span>, Ordering::Release);
 
-        <span class="kw">unsafe</span> {
-            <span class="ident">PIC_CONTROLLER</span>.<span class="ident">disable</span>();
+        <span class="kw">unsafe </span>{
+            PIC_CONTROLLER.disable();
         }
     }
 }
 
-<span class="doccomment">/// APIC (Advanced Programmable Interrupt Controller) is an upgraded, advanced version</span>
-<span class="doccomment">/// of the PIC chip. It is used for interrupt redirection, and sending interrupts between</span>
-<span class="doccomment">/// processors.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Notes</span>
-<span class="doccomment">/// * &lt;https://wiki.osdev.org/APIC&gt;</span>
-<span class="doccomment">/// * &lt;https://wiki.osdev.org/8259_PIC&gt;</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ApicController</span>;
+<span class="doccomment">/// APIC (Advanced Programmable Interrupt Controller) is an upgraded, advanced version
+/// of the PIC chip. It is used for interrupt redirection, and sending interrupts between
+/// processors.
+///
+/// ## Notes
+/// * &lt;https://wiki.osdev.org/APIC&gt;
+/// * &lt;https://wiki.osdev.org/8259_PIC&gt;
+</span><span class="kw">pub struct </span>ApicController;
 
-<span class="kw">impl</span> <span class="ident">ApicController</span> {
-    <span class="doccomment">/// Send EOI to the local APIC, indicating the completion of an interrupt.</span>
-    <span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">eoi</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="ident">apic::get_local_apic</span>().<span class="ident">eoi</span>();
+<span class="kw">impl </span>ApicController {
+    <span class="doccomment">/// Send EOI to the local APIC, indicating the completion of an interrupt.
+    </span><span class="attribute">#[inline(always)]</span>
+    <span class="kw">fn </span>eoi(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        apic::get_local_apic().eoi();
     }
 }
 
-<span class="doccomment">/// PIC (Programmable Interrupt Controller) manages hardware interrupts and sends</span>
-<span class="doccomment">/// them to the appropriate system interrupt for the x86 architecture. Since APIC</span>
-<span class="doccomment">/// has replaced PIC on modern systems, Aero disables PIC when APIC is avaliable.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Notes</span>
-<span class="doccomment">/// * &lt;https://wiki.osdev.org/8259_PIC&gt;</span>
-<span class="doccomment">/// * &lt;https://wiki.osdev.org/APIC&gt;</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PicController</span>;
+<span class="doccomment">/// PIC (Programmable Interrupt Controller) manages hardware interrupts and sends
+/// them to the appropriate system interrupt for the x86 architecture. Since APIC
+/// has replaced PIC on modern systems, Aero disables PIC when APIC is avaliable.
+///
+/// ## Notes
+/// * &lt;https://wiki.osdev.org/8259_PIC&gt;
+/// * &lt;https://wiki.osdev.org/APIC&gt;
+</span><span class="kw">pub struct </span>PicController;
 
-<span class="kw">impl</span> <span class="ident">PicController</span> {
-    <span class="doccomment">/// Creates a new PIC controller. This function is responsible for remapping</span>
-    <span class="doccomment">/// the PIC chip.</span>
-    <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
-        <span class="kw">unsafe</span> {
-            <span class="kw">let</span> (<span class="ident">a1</span>, <span class="ident">a2</span>);
+<span class="kw">impl </span>PicController {
+    <span class="doccomment">/// Creates a new PIC controller. This function is responsible for remapping
+    /// the PIC chip.
+    </span><span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
+        <span class="kw">unsafe </span>{
+            <span class="kw">let </span>(a1, a2);
 
-            <span class="ident">a1</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="ident">PIC1_DATA</span>);
-            <span class="ident">io::wait</span>();
+            a1 = io::inb(PIC1_DATA);
+            io::wait();
 
-            <span class="ident">a2</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="ident">PIC2_DATA</span>);
-            <span class="ident">io::wait</span>();
+            a2 = io::inb(PIC2_DATA);
+            io::wait();
 
-            <span class="ident">io::outb</span>(<span class="ident">PIC1_COMMAND</span>, <span class="ident">ICW1_INIT</span> <span class="op">|</span> <span class="ident">ICW1_ICW4</span>);
-            <span class="ident">io::wait</span>();
-            <span class="ident">io::outb</span>(<span class="ident">PIC2_COMMAND</span>, <span class="ident">ICW1_INIT</span> <span class="op">|</span> <span class="ident">ICW1_ICW4</span>);
-            <span class="ident">io::wait</span>();
+            io::outb(PIC1_COMMAND, ICW1_INIT | ICW1_ICW4);
+            io::wait();
+            io::outb(PIC2_COMMAND, ICW1_INIT | ICW1_ICW4);
+            io::wait();
 
-            <span class="ident">io::outb</span>(<span class="ident">PIC1_DATA</span>, <span class="number">0x20</span>);
-            <span class="ident">io::wait</span>();
-            <span class="ident">io::outb</span>(<span class="ident">PIC2_DATA</span>, <span class="number">0x28</span>);
-            <span class="ident">io::wait</span>();
+            io::outb(PIC1_DATA, <span class="number">0x20</span>);
+            io::wait();
+            io::outb(PIC2_DATA, <span class="number">0x28</span>);
+            io::wait();
 
-            <span class="ident">io::outb</span>(<span class="ident">PIC1_DATA</span>, <span class="number">4</span>);
-            <span class="ident">io::wait</span>();
-            <span class="ident">io::outb</span>(<span class="ident">PIC2_DATA</span>, <span class="number">2</span>);
-            <span class="ident">io::wait</span>();
+            io::outb(PIC1_DATA, <span class="number">4</span>);
+            io::wait();
+            io::outb(PIC2_DATA, <span class="number">2</span>);
+            io::wait();
 
-            <span class="ident">io::outb</span>(<span class="ident">PIC1_DATA</span>, <span class="ident">ICW4_8086</span>);
-            <span class="ident">io::wait</span>();
-            <span class="ident">io::outb</span>(<span class="ident">PIC2_DATA</span>, <span class="ident">ICW4_8086</span>);
-            <span class="ident">io::wait</span>();
+            io::outb(PIC1_DATA, ICW4_8086);
+            io::wait();
+            io::outb(PIC2_DATA, ICW4_8086);
+            io::wait();
 
-            <span class="ident">io::outb</span>(<span class="ident">PIC1_DATA</span>, <span class="ident">a1</span>);
-            <span class="ident">io::wait</span>();
-            <span class="ident">io::outb</span>(<span class="ident">PIC2_DATA</span>, <span class="ident">a2</span>);
-            <span class="ident">io::wait</span>();
+            io::outb(PIC1_DATA, a1);
+            io::wait();
+            io::outb(PIC2_DATA, a2);
+            io::wait();
 
-            <span class="ident">io::outb</span>(<span class="ident">PIC1_DATA</span>, <span class="number">0b11111000</span>);
-            <span class="ident">io::outb</span>(<span class="ident">PIC2_DATA</span>, <span class="number">0b11101111</span>);
+            io::outb(PIC1_DATA, <span class="number">0b11111000</span>);
+            io::outb(PIC2_DATA, <span class="number">0b11101111</span>);
         }
 
-        <span class="self">Self</span>
+        <span class="self">Self
+    </span>}
+
+    <span class="doccomment">/// Helper function to get the IRQ register. This function is responsible
+    /// for sending the provided `command` PIC master to get the register values. PIC
+    /// master represents IRQs 0-7, with 2 being the chain. PIC slave is chained, and
+    /// represents IRQs 8-15.
+    </span><span class="kw">unsafe fn </span>get_irq_register(<span class="kw-2">&amp;</span><span class="self">self</span>, command: u8) -&gt; u16 {
+        io::outb(PIC2_COMMAND, command);
+        io::wait();
+
+        io::outb(PIC1_COMMAND, command);
+        io::wait();
+
+        <span class="kw">let </span>master_command = io::inb(PIC1_COMMAND) <span class="kw">as </span>u16;
+        <span class="kw">let </span>slave_command = io::inb(PIC2_COMMAND) <span class="kw">as </span>u16;
+
+        master_command &lt;&lt; <span class="number">8 </span>| slave_command
     }
 
-    <span class="doccomment">/// Helper function to get the IRQ register. This function is responsible</span>
-    <span class="doccomment">/// for sending the provided `command` PIC master to get the register values. PIC</span>
-    <span class="doccomment">/// master represents IRQs 0-7, with 2 being the chain. PIC slave is chained, and</span>
-    <span class="doccomment">/// represents IRQs 8-15.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">get_irq_register</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">command</span>: <span class="ident">u8</span>) -&gt; <span class="ident">u16</span> {
-        <span class="ident">io::outb</span>(<span class="ident">PIC2_COMMAND</span>, <span class="ident">command</span>);
-        <span class="ident">io::wait</span>();
+    <span class="doccomment">/// Returns true if the PIC master chip is active.
+    </span><span class="kw">fn </span>is_master_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">let </span>isr = <span class="kw">unsafe </span>{ <span class="self">self</span>.get_irq_register(ICW1_READ_ISR) };
 
-        <span class="ident">io::outb</span>(<span class="ident">PIC1_COMMAND</span>, <span class="ident">command</span>);
-        <span class="ident">io::wait</span>();
+        (isr &amp; <span class="number">0xFF</span>) &gt; <span class="number">0
+    </span>}
 
-        <span class="kw">let</span> <span class="ident">master_command</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="ident">PIC1_COMMAND</span>) <span class="kw">as</span> <span class="ident">u16</span>;
-        <span class="kw">let</span> <span class="ident">slave_command</span> <span class="op">=</span> <span class="ident">io::inb</span>(<span class="ident">PIC2_COMMAND</span>) <span class="kw">as</span> <span class="ident">u16</span>;
+    <span class="doccomment">/// Returns true if the PIC slave chip is active.
+    </span><span class="kw">fn </span>is_slave_active(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="kw">let </span>isr = <span class="kw">unsafe </span>{ <span class="self">self</span>.get_irq_register(ICW1_READ_ISR) };
 
-        <span class="ident">master_command</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">8</span> <span class="op">|</span> <span class="ident">slave_command</span>
-    }
+        (isr &gt;&gt; <span class="number">8</span>) &gt; <span class="number">0
+    </span>}
 
-    <span class="doccomment">/// Returns true if the PIC master chip is active.</span>
-    <span class="kw">fn</span> <span class="ident">is_master_active</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">isr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_irq_register</span>(<span class="ident">ICW1_READ_ISR</span>) };
-
-        (<span class="ident">isr</span> <span class="op">&amp;</span> <span class="number">0xFF</span>) <span class="op">&gt;</span> <span class="number">0</span>
-    }
-
-    <span class="doccomment">/// Returns true if the PIC slave chip is active.</span>
-    <span class="kw">fn</span> <span class="ident">is_slave_active</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">bool</span> {
-        <span class="kw">let</span> <span class="ident">isr</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="self">self</span>.<span class="ident">get_irq_register</span>(<span class="ident">ICW1_READ_ISR</span>) };
-
-        (<span class="ident">isr</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">8</span>) <span class="op">&gt;</span> <span class="number">0</span>
-    }
-
-    <span class="doccomment">/// Send EOI to the PIC chip, indicating the completion of an interrupt.</span>
-    <span class="kw">fn</span> <span class="ident">eoi</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_master_active</span>() {
-            <span class="kw">unsafe</span> { <span class="ident">io::outb</span>(<span class="ident">PIC1_COMMAND</span>, <span class="ident">PIC_EOI</span>) }
-        } <span class="kw">else</span> <span class="kw">if</span> <span class="self">self</span>.<span class="ident">is_slave_active</span>() {
-            <span class="kw">unsafe</span> {
-                <span class="ident">io::outb</span>(<span class="ident">PIC2_COMMAND</span>, <span class="ident">PIC_EOI</span>);
-                <span class="ident">io::outb</span>(<span class="ident">PIC1_COMMAND</span>, <span class="ident">PIC_EOI</span>);
+    <span class="doccomment">/// Send EOI to the PIC chip, indicating the completion of an interrupt.
+    </span><span class="kw">fn </span>eoi(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">if </span><span class="self">self</span>.is_master_active() {
+            <span class="kw">unsafe </span>{ io::outb(PIC1_COMMAND, PIC_EOI) }
+        } <span class="kw">else if </span><span class="self">self</span>.is_slave_active() {
+            <span class="kw">unsafe </span>{
+                io::outb(PIC2_COMMAND, PIC_EOI);
+                io::outb(PIC1_COMMAND, PIC_EOI);
             }
         }
     }
 
-    <span class="doccomment">/// Disables the PIC interrupt controller.</span>
-    <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">disable</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="doccomment">/// Disables the PIC interrupt controller.
+    </span><span class="kw">unsafe fn </span>disable(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="macro">log::debug!</span>(<span class="string">&quot;Disabled PIC&quot;</span>);
 
-        <span class="ident">io::outb</span>(<span class="ident">PIC1_DATA</span>, <span class="number">0xFF</span>);
-        <span class="ident">io::wait</span>();
+        io::outb(PIC1_DATA, <span class="number">0xFF</span>);
+        io::wait();
 
-        <span class="ident">io::outb</span>(<span class="ident">PIC2_DATA</span>, <span class="number">0xFF</span>);
-        <span class="ident">io::wait</span>();
+        io::outb(PIC2_DATA, <span class="number">0xFF</span>);
+        io::wait();
     }
 }
 
-<span class="attribute">#[<span class="ident">no_mangle</span>]</span>
-<span class="kw">extern</span> <span class="string">&quot;C&quot;</span> <span class="kw">fn</span> <span class="ident">generic_interrupt_handler</span>(<span class="ident">isr</span>: <span class="ident">usize</span>, <span class="ident">stack_frame</span>: <span class="kw-2">*mut</span> <span class="ident">InterruptErrorStack</span>) {
-    <span class="kw">let</span> <span class="ident">stack_frame</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="ident">stack_frame</span> };
-    <span class="kw">let</span> <span class="ident">handlers</span> <span class="op">=</span> <span class="ident">idt::INTERRUPT_HANDLERS</span>.<span class="ident">lock</span>();
+<span class="attribute">#[no_mangle]</span>
+<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>generic_interrupt_handler(isr: usize, stack_frame: <span class="kw-2">*mut </span>InterruptErrorStack) {
+    <span class="kw">let </span>stack_frame = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>stack_frame };
+    <span class="kw">let </span>handlers = idt::INTERRUPT_HANDLERS.lock();
 
-    <span class="kw">match</span> <span class="kw-2">&amp;</span><span class="ident">handlers</span>[<span class="ident">isr</span>] {
-        <span class="ident">IrqHandler::Handler</span>(<span class="ident">handler</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">handler</span>;
-            <span class="ident">core::mem::drop</span>(<span class="ident">handlers</span>); <span class="comment">// drop the lock</span>
-            <span class="ident">handler</span>(<span class="kw-2">&amp;mut</span> <span class="ident">stack_frame</span>.<span class="ident">stack</span>);
+    <span class="kw">match </span><span class="kw-2">&amp;</span>handlers[isr] {
+        IrqHandler::Handler(handler) =&gt; {
+            <span class="kw">let </span>handler = <span class="kw-2">*</span>handler;
+            core::mem::drop(handlers); <span class="comment">// drop the lock
+            </span>handler(<span class="kw-2">&amp;mut </span>stack_frame.stack);
         }
 
-        <span class="ident">IrqHandler::ErrorHandler</span>(<span class="ident">handler</span>) =&gt; {
-            <span class="kw">let</span> <span class="ident">handler</span> <span class="op">=</span> <span class="kw-2">*</span><span class="ident">handler</span>;
-            <span class="ident">core::mem::drop</span>(<span class="ident">handlers</span>); <span class="comment">// drop the lock</span>
-            <span class="ident">handler</span>(<span class="ident">stack_frame</span>);
+        IrqHandler::ErrorHandler(handler) =&gt; {
+            <span class="kw">let </span>handler = <span class="kw-2">*</span>handler;
+            core::mem::drop(handlers); <span class="comment">// drop the lock
+            </span>handler(stack_frame);
         }
 
-        <span class="ident">IrqHandler::None</span> =&gt; <span class="macro">log::warn!</span>(<span class="string">&quot;unhandled interrupt {}&quot;</span>, <span class="ident">isr</span>),
+        IrqHandler::None =&gt; <span class="macro">log::warn!</span>(<span class="string">&quot;unhandled interrupt {}&quot;</span>, isr),
     }
 
-    <span class="comment">// Check and evaluate any pending signals.</span>
-    <span class="ident"><span class="kw">super</span>::signals::interrupt_check_signals</span>(<span class="kw-2">&amp;mut</span> <span class="ident">stack_frame</span>.<span class="ident">stack</span>);
-    <span class="ident">INTERRUPT_CONTROLLER</span>.<span class="ident">eoi</span>();
+    <span class="comment">// Check and evaluate any pending signals.
+    </span><span class="kw">super</span>::signals::interrupt_check_signals(<span class="kw-2">&amp;mut </span>stack_frame.stack);
+    INTERRUPT_CONTROLLER.eoi();
 }
 
-<span class="doccomment">/// ## Panics</span>
-<span class="doccomment">/// * If another handler is already installed in the provided interrupt vector.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">register_handler</span>(<span class="ident">vector</span>: <span class="ident">u8</span>, <span class="ident">handler</span>: <span class="kw">fn</span>(<span class="kw-2">&amp;mut</span> <span class="ident">InterruptStack</span>)) {
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">handlers</span> <span class="op">=</span> <span class="ident">idt::INTERRUPT_HANDLERS</span>.<span class="ident">lock_irq</span>();
+<span class="doccomment">/// ## Panics
+/// * If another handler is already installed in the provided interrupt vector.
+</span><span class="kw">pub fn </span>register_handler(vector: u8, handler: <span class="kw">fn</span>(<span class="kw-2">&amp;mut </span>InterruptStack)) {
+    <span class="kw">let </span><span class="kw-2">mut </span>handlers = idt::INTERRUPT_HANDLERS.lock_irq();
 
-    <span class="comment">// SAFETY: ensure there is no handler already installed.</span>
-    <span class="kw">match</span> <span class="ident">handlers</span>[<span class="ident">vector</span> <span class="kw">as</span> <span class="ident">usize</span>] {
-        <span class="ident">IrqHandler::None</span> =&gt; {}
-        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;register_handler: handler has already been registered&quot;</span>),
+    <span class="comment">// SAFETY: ensure there is no handler already installed.
+    </span><span class="kw">match </span>handlers[vector <span class="kw">as </span>usize] {
+        IrqHandler::None =&gt; {}
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;register_handler: handler has already been registered&quot;</span>),
     }
 
-    <span class="ident">handlers</span>[<span class="ident">vector</span> <span class="kw">as</span> <span class="ident">usize</span>] <span class="op">=</span> <span class="ident">idt::IrqHandler::Handler</span>(<span class="ident">handler</span>);
+    handlers[vector <span class="kw">as </span>usize] = idt::IrqHandler::Handler(handler);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">allocate_vector</span>() -&gt; <span class="ident">u8</span> {
-    <span class="kw">static</span> <span class="ident">IDT_FREE_VECTOR</span>: <span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">u8</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Mutex::new</span>(<span class="number">32</span>);
+<span class="kw">pub fn </span>allocate_vector() -&gt; u8 {
+    <span class="kw">static </span>IDT_FREE_VECTOR: Mutex&lt;u8&gt; = Mutex::new(<span class="number">32</span>);
 
-    <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">fvector</span> <span class="op">=</span> <span class="ident">IDT_FREE_VECTOR</span>.<span class="ident">lock</span>();
-    <span class="kw">let</span> <span class="ident">fcopy</span> <span class="op">=</span> <span class="ident">fvector</span>.<span class="ident">clone</span>();
+    <span class="kw">let </span><span class="kw-2">mut </span>fvector = IDT_FREE_VECTOR.lock();
+    <span class="kw">let </span>fcopy = fvector.clone();
 
-    <span class="kw">if</span> <span class="ident">fcopy</span> <span class="op">==</span> <span class="number">0xf0</span> {
+    <span class="kw">if </span>fcopy == <span class="number">0xf0 </span>{
         <span class="macro">panic!</span>(<span class="string">&quot;allocate_vector: vector allocation exhausted&quot;</span>)
     }
 
-    <span class="kw-2">*</span><span class="ident">fvector</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
-    <span class="ident">fcopy</span>
+    <span class="kw-2">*</span>fvector += <span class="number">1</span>;
+    fcopy
 }
 
-<span class="doccomment">/// Wrapper function to the `hlt` assembly instruction used to halt</span>
-<span class="doccomment">/// the CPU.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">halt</span>() {
-    <span class="macro">asm!</span>(<span class="string">&quot;hlt&quot;</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>));
+<span class="doccomment">/// Wrapper function to the `hlt` assembly instruction used to halt
+/// the CPU.
+</span><span class="attribute">#[inline(always)]</span>
+<span class="kw">pub unsafe fn </span>halt() {
+    <span class="macro">asm!</span>(<span class="string">&quot;hlt&quot;</span>, options(nomem, nostack));
 }
 
-<span class="doccomment">/// Wrapper function to the `cli` assembly instruction used to disable</span>
-<span class="doccomment">/// interrupts.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">disable_interrupts</span>() {
-    <span class="macro">asm!</span>(<span class="string">&quot;cli&quot;</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>));
+<span class="doccomment">/// Wrapper function to the `cli` assembly instruction used to disable
+/// interrupts.
+</span><span class="attribute">#[inline(always)]</span>
+<span class="kw">pub unsafe fn </span>disable_interrupts() {
+    <span class="macro">asm!</span>(<span class="string">&quot;cli&quot;</span>, options(nomem, nostack));
 }
 
-<span class="doccomment">/// Wrapper function to the `sti` assembly instruction used to enable</span>
-<span class="doccomment">/// interrupts.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">enable_interrupts</span>() {
-    <span class="macro">asm!</span>(<span class="string">&quot;sti&quot;</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>));
+<span class="doccomment">/// Wrapper function to the `sti` assembly instruction used to enable
+/// interrupts.
+</span><span class="attribute">#[inline(always)]</span>
+<span class="kw">pub unsafe fn </span>enable_interrupts() {
+    <span class="macro">asm!</span>(<span class="string">&quot;sti&quot;</span>, options(nomem, nostack));
 }
 
-<span class="doccomment">/// Returns true if interrupts are enabled.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">is_enabled</span>() -&gt; <span class="ident">bool</span> {
-    <span class="ident">controlregs::read_rflags</span>().<span class="ident">contains</span>(<span class="ident">controlregs::RFlags::INTERRUPT_FLAG</span>)
+<span class="doccomment">/// Returns true if interrupts are enabled.
+</span><span class="attribute">#[inline(always)]</span>
+<span class="kw">pub fn </span>is_enabled() -&gt; bool {
+    controlregs::read_rflags().contains(controlregs::RFlags::INTERRUPT_FLAG)
 }
 
-<span class="doccomment">/// Wrapper function to the `pause` assembly instruction used to pause</span>
-<span class="doccomment">/// the cpu.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Saftey</span>
-<span class="doccomment">/// Its safe to pause the CPU as the pause assembly instruction is similar</span>
-<span class="doccomment">/// to the `nop` instruction and has no memory effects.</span>
-<span class="attribute">#[<span class="ident">inline</span>(<span class="ident">always</span>)]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">pause</span>() {
-    <span class="kw">unsafe</span> {
-        <span class="macro">asm!</span>(<span class="string">&quot;pause&quot;</span>, <span class="ident">options</span>(<span class="ident">nomem</span>, <span class="ident">nostack</span>));
+<span class="doccomment">/// Wrapper function to the `pause` assembly instruction used to pause
+/// the cpu.
+///
+/// ## Saftey
+/// Its safe to pause the CPU as the pause assembly instruction is similar
+/// to the `nop` instruction and has no memory effects.
+</span><span class="attribute">#[inline(always)]</span>
+<span class="kw">pub fn </span>pause() {
+    <span class="kw">unsafe </span>{
+        <span class="macro">asm!</span>(<span class="string">&quot;pause&quot;</span>, options(nomem, nostack));
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

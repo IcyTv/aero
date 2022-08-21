@@ -149,156 +149,156 @@
 <span id="149">149</span>
 <span id="150">150</span>
 <span id="151">151</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::bitmask::BitMask</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::EMPTY</span>;
-<span class="kw">use</span> <span class="ident">core</span>::{<span class="ident">mem</span>, <span class="ident">ptr</span>};
+</pre><pre class="rust"><code><span class="kw">use </span><span class="kw">super</span>::bitmask::BitMask;
+<span class="kw">use </span><span class="kw">super</span>::EMPTY;
+<span class="kw">use </span>core::{mem, ptr};
 
-<span class="comment">// Use the native word size as the group size. Using a 64-bit group size on</span>
-<span class="comment">// a 32-bit architecture will just end up being more expensive because</span>
-<span class="comment">// shifts and multiplies will need to be emulated.</span>
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">any</span>(
-    <span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;64&quot;</span>,
-    <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>,
-    <span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>,
+<span class="comment">// Use the native word size as the group size. Using a 64-bit group size on
+// a 32-bit architecture will just end up being more expensive because
+// shifts and multiplies will need to be emulated.
+</span><span class="attribute">#[cfg(any(
+    target_pointer_width = <span class="string">&quot;64&quot;</span>,
+    target_arch = <span class="string">&quot;aarch64&quot;</span>,
+    target_arch = <span class="string">&quot;x86_64&quot;</span>,
 ))]</span>
-<span class="kw">type</span> <span class="ident">GroupWord</span> <span class="op">=</span> <span class="ident">u64</span>;
-<span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">all</span>(
-    <span class="ident">target_pointer_width</span> <span class="op">=</span> <span class="string">&quot;32&quot;</span>,
-    <span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;aarch64&quot;</span>),
-    <span class="ident">not</span>(<span class="ident">target_arch</span> <span class="op">=</span> <span class="string">&quot;x86_64&quot;</span>),
+<span class="kw">type </span>GroupWord = u64;
+<span class="attribute">#[cfg(all(
+    target_pointer_width = <span class="string">&quot;32&quot;</span>,
+    not(target_arch = <span class="string">&quot;aarch64&quot;</span>),
+    not(target_arch = <span class="string">&quot;x86_64&quot;</span>),
 ))]</span>
-<span class="kw">type</span> <span class="ident">GroupWord</span> <span class="op">=</span> <span class="ident">u32</span>;
+<span class="kw">type </span>GroupWord = u32;
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">BitMaskWord</span> <span class="op">=</span> <span class="ident">GroupWord</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BITMASK_STRIDE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">8</span>;
-<span class="comment">// We only care about the highest bit of each byte for the mask.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cast_possible_truncation</span>, <span class="ident">clippy::unnecessary_cast</span>)]</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">BITMASK_MASK</span>: <span class="ident">BitMaskWord</span> <span class="op">=</span> <span class="number">0x8080_8080_8080_8080_u64</span> <span class="kw">as</span> <span class="ident">GroupWord</span>;
+<span class="kw">pub type </span>BitMaskWord = GroupWord;
+<span class="kw">pub const </span>BITMASK_STRIDE: usize = <span class="number">8</span>;
+<span class="comment">// We only care about the highest bit of each byte for the mask.
+</span><span class="attribute">#[allow(clippy::cast_possible_truncation, clippy::unnecessary_cast)]</span>
+<span class="kw">pub const </span>BITMASK_MASK: BitMaskWord = <span class="number">0x8080_8080_8080_8080_u64 </span><span class="kw">as </span>GroupWord;
 
-<span class="doccomment">/// Helper function to replicate a byte across a `GroupWord`.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">fn</span> <span class="ident">repeat</span>(<span class="ident">byte</span>: <span class="ident">u8</span>) -&gt; <span class="ident">GroupWord</span> {
-    <span class="ident">GroupWord::from_ne_bytes</span>([<span class="ident">byte</span>; <span class="ident">Group::WIDTH</span>])
+<span class="doccomment">/// Helper function to replicate a byte across a `GroupWord`.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">fn </span>repeat(byte: u8) -&gt; GroupWord {
+    GroupWord::from_ne_bytes([byte; Group::WIDTH])
 }
 
-<span class="doccomment">/// Abstraction over a group of control bytes which can be scanned in</span>
-<span class="doccomment">/// parallel.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// This implementation uses a word-sized integer.</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Group</span>(<span class="ident">GroupWord</span>);
+<span class="doccomment">/// Abstraction over a group of control bytes which can be scanned in
+/// parallel.
+///
+/// This implementation uses a word-sized integer.
+</span><span class="attribute">#[derive(Copy, Clone)]</span>
+<span class="kw">pub struct </span>Group(GroupWord);
 
-<span class="comment">// We perform all operations in the native endianess, and convert to</span>
-<span class="comment">// little-endian just before creating a BitMask. The can potentially</span>
-<span class="comment">// enable the compiler to eliminate unnecessary byte swaps if we are</span>
-<span class="comment">// only checking whether a BitMask is empty.</span>
-<span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::use_self</span>)]</span>
-<span class="kw">impl</span> <span class="ident">Group</span> {
-    <span class="doccomment">/// Number of bytes in the group.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="ident">WIDTH</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="ident">mem::size_of</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>();
+<span class="comment">// We perform all operations in the native endianess, and convert to
+// little-endian just before creating a BitMask. The can potentially
+// enable the compiler to eliminate unnecessary byte swaps if we are
+// only checking whether a BitMask is empty.
+</span><span class="attribute">#[allow(clippy::use_self)]</span>
+<span class="kw">impl </span>Group {
+    <span class="doccomment">/// Number of bytes in the group.
+    </span><span class="kw">pub const </span>WIDTH: usize = mem::size_of::&lt;<span class="self">Self</span>&gt;();
 
-    <span class="doccomment">/// Returns a full group of empty bytes, suitable for use as the initial</span>
-    <span class="doccomment">/// value for an empty hash table.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This is guaranteed to be aligned to the group size.</span>
-    <span class="kw">pub</span> <span class="kw">const</span> <span class="kw">fn</span> <span class="ident">static_empty</span>() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> [<span class="ident">u8</span>; <span class="ident">Group::WIDTH</span>] {
-        <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-        <span class="kw">struct</span> <span class="ident">AlignedBytes</span> {
-            <span class="ident">_align</span>: [<span class="ident">Group</span>; <span class="number">0</span>],
-            <span class="ident">bytes</span>: [<span class="ident">u8</span>; <span class="ident">Group::WIDTH</span>],
+    <span class="doccomment">/// Returns a full group of empty bytes, suitable for use as the initial
+    /// value for an empty hash table.
+    ///
+    /// This is guaranteed to be aligned to the group size.
+    </span><span class="kw">pub const fn </span>static_empty() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8; Group::WIDTH] {
+        <span class="attribute">#[repr(C)]</span>
+        <span class="kw">struct </span>AlignedBytes {
+            _align: [Group; <span class="number">0</span>],
+            bytes: [u8; Group::WIDTH],
         }
-        <span class="kw">const</span> <span class="ident">ALIGNED_BYTES</span>: <span class="ident">AlignedBytes</span> <span class="op">=</span> <span class="ident">AlignedBytes</span> {
-            <span class="ident">_align</span>: [],
-            <span class="ident">bytes</span>: [<span class="ident">EMPTY</span>; <span class="ident">Group::WIDTH</span>],
+        <span class="kw">const </span>ALIGNED_BYTES: AlignedBytes = AlignedBytes {
+            _align: [],
+            bytes: [EMPTY; Group::WIDTH],
         };
-        <span class="kw-2">&amp;</span><span class="ident">ALIGNED_BYTES</span>.<span class="ident">bytes</span>
+        <span class="kw-2">&amp;</span>ALIGNED_BYTES.bytes
     }
 
-    <span class="doccomment">/// Loads a group of bytes starting at the given address.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cast_ptr_alignment</span>)]</span> <span class="comment">// unaligned load</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load</span>(<span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
-        <span class="ident">Group</span>(<span class="ident">ptr::read_unaligned</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>()))
+    <span class="doccomment">/// Loads a group of bytes starting at the given address.
+    </span><span class="attribute">#[inline]</span>
+    <span class="attribute">#[allow(clippy::cast_ptr_alignment)]</span> <span class="comment">// unaligned load
+    </span><span class="kw">pub unsafe fn </span>load(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
+        Group(ptr::read_unaligned(ptr.cast()))
     }
 
-    <span class="doccomment">/// Loads a group of bytes starting at the given address, which must be</span>
-    <span class="doccomment">/// aligned to `mem::align_of::&lt;Group&gt;()`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cast_ptr_alignment</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">load_aligned</span>(<span class="ident">ptr</span>: <span class="kw-2">*const</span> <span class="ident">u8</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// FIXME: use align_offset once it stabilizes</span>
-        <span class="macro">debug_assert_eq!</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> (<span class="ident">mem::align_of</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="number">1</span>), <span class="number">0</span>);
-        <span class="ident">Group</span>(<span class="ident">ptr::read</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>()))
+    <span class="doccomment">/// Loads a group of bytes starting at the given address, which must be
+    /// aligned to `mem::align_of::&lt;Group&gt;()`.
+    </span><span class="attribute">#[inline]</span>
+    <span class="attribute">#[allow(clippy::cast_ptr_alignment)]</span>
+    <span class="kw">pub unsafe fn </span>load_aligned(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
+        <span class="comment">// FIXME: use align_offset once it stabilizes
+        </span><span class="macro">debug_assert_eq!</span>(ptr <span class="kw">as </span>usize &amp; (mem::align_of::&lt;<span class="self">Self</span>&gt;() - <span class="number">1</span>), <span class="number">0</span>);
+        Group(ptr::read(ptr.cast()))
     }
 
-    <span class="doccomment">/// Stores the group of bytes to the given address, which must be</span>
-    <span class="doccomment">/// aligned to `mem::align_of::&lt;Group&gt;()`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::cast_ptr_alignment</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">store_aligned</span>(<span class="self">self</span>, <span class="ident">ptr</span>: <span class="kw-2">*mut</span> <span class="ident">u8</span>) {
-        <span class="comment">// FIXME: use align_offset once it stabilizes</span>
-        <span class="macro">debug_assert_eq!</span>(<span class="ident">ptr</span> <span class="kw">as</span> <span class="ident">usize</span> <span class="op">&amp;</span> (<span class="ident">mem::align_of</span>::<span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>() <span class="op">-</span> <span class="number">1</span>), <span class="number">0</span>);
-        <span class="ident">ptr::write</span>(<span class="ident">ptr</span>.<span class="ident">cast</span>(), <span class="self">self</span>.<span class="number">0</span>);
+    <span class="doccomment">/// Stores the group of bytes to the given address, which must be
+    /// aligned to `mem::align_of::&lt;Group&gt;()`.
+    </span><span class="attribute">#[inline]</span>
+    <span class="attribute">#[allow(clippy::cast_ptr_alignment)]</span>
+    <span class="kw">pub unsafe fn </span>store_aligned(<span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8) {
+        <span class="comment">// FIXME: use align_offset once it stabilizes
+        </span><span class="macro">debug_assert_eq!</span>(ptr <span class="kw">as </span>usize &amp; (mem::align_of::&lt;<span class="self">Self</span>&gt;() - <span class="number">1</span>), <span class="number">0</span>);
+        ptr::write(ptr.cast(), <span class="self">self</span>.<span class="number">0</span>);
     }
 
-    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which *may*</span>
-    <span class="doccomment">/// have the given value.</span>
-    <span class="doccomment">///</span>
-    <span class="doccomment">/// This function may return a false positive in certain cases where</span>
-    <span class="doccomment">/// the byte in the group differs from the searched value only in its</span>
-    <span class="doccomment">/// lowest bit. This is fine because:</span>
-    <span class="doccomment">/// - This never happens for `EMPTY` and `DELETED`, only full entries.</span>
-    <span class="doccomment">/// - The check for key equality will catch these.</span>
-    <span class="doccomment">/// - This only happens if there is at least 1 true match.</span>
-    <span class="doccomment">/// - The chance of this happening is very low (&lt; 1% chance per byte).</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">match_byte</span>(<span class="self">self</span>, <span class="ident">byte</span>: <span class="ident">u8</span>) -&gt; <span class="ident">BitMask</span> {
-        <span class="comment">// This algorithm is derived from</span>
-        <span class="comment">// http://graphics.stanford.edu/~seander/bithacks.html##ValueInWord</span>
-        <span class="kw">let</span> <span class="ident">cmp</span> <span class="op">=</span> <span class="self">self</span>.<span class="number">0</span> <span class="op">^</span> <span class="ident">repeat</span>(<span class="ident">byte</span>);
-        <span class="ident">BitMask</span>((<span class="ident">cmp</span>.<span class="ident">wrapping_sub</span>(<span class="ident">repeat</span>(<span class="number">0x01</span>)) <span class="op">&amp;</span> <span class="op">!</span><span class="ident">cmp</span> <span class="op">&amp;</span> <span class="ident">repeat</span>(<span class="number">0x80</span>)).<span class="ident">to_le</span>())
+    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which *may*
+    /// have the given value.
+    ///
+    /// This function may return a false positive in certain cases where
+    /// the byte in the group differs from the searched value only in its
+    /// lowest bit. This is fine because:
+    /// - This never happens for `EMPTY` and `DELETED`, only full entries.
+    /// - The check for key equality will catch these.
+    /// - This only happens if there is at least 1 true match.
+    /// - The chance of this happening is very low (&lt; 1% chance per byte).
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>match_byte(<span class="self">self</span>, byte: u8) -&gt; BitMask {
+        <span class="comment">// This algorithm is derived from
+        // http://graphics.stanford.edu/~seander/bithacks.html##ValueInWord
+        </span><span class="kw">let </span>cmp = <span class="self">self</span>.<span class="number">0 </span>^ repeat(byte);
+        BitMask((cmp.wrapping_sub(repeat(<span class="number">0x01</span>)) &amp; !cmp &amp; repeat(<span class="number">0x80</span>)).to_le())
     }
 
-    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are</span>
-    <span class="doccomment">/// `EMPTY`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">match_empty</span>(<span class="self">self</span>) -&gt; <span class="ident">BitMask</span> {
-        <span class="comment">// If the high bit is set, then the byte must be either:</span>
-        <span class="comment">// 1111_1111 (EMPTY) or 1000_0000 (DELETED).</span>
-        <span class="comment">// So we can just check if the top two bits are 1 by ANDing them.</span>
-        <span class="ident">BitMask</span>((<span class="self">self</span>.<span class="number">0</span> <span class="op">&amp;</span> (<span class="self">self</span>.<span class="number">0</span> <span class="op">&lt;</span><span class="op">&lt;</span> <span class="number">1</span>) <span class="op">&amp;</span> <span class="ident">repeat</span>(<span class="number">0x80</span>)).<span class="ident">to_le</span>())
+    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are
+    /// `EMPTY`.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>match_empty(<span class="self">self</span>) -&gt; BitMask {
+        <span class="comment">// If the high bit is set, then the byte must be either:
+        // 1111_1111 (EMPTY) or 1000_0000 (DELETED).
+        // So we can just check if the top two bits are 1 by ANDing them.
+        </span>BitMask((<span class="self">self</span>.<span class="number">0 </span>&amp; (<span class="self">self</span>.<span class="number">0 </span>&lt;&lt; <span class="number">1</span>) &amp; repeat(<span class="number">0x80</span>)).to_le())
     }
 
-    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are</span>
-    <span class="doccomment">/// `EMPTY` or `DELETED`.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">match_empty_or_deleted</span>(<span class="self">self</span>) -&gt; <span class="ident">BitMask</span> {
-        <span class="comment">// A byte is EMPTY or DELETED iff the high bit is set</span>
-        <span class="ident">BitMask</span>((<span class="self">self</span>.<span class="number">0</span> <span class="op">&amp;</span> <span class="ident">repeat</span>(<span class="number">0x80</span>)).<span class="ident">to_le</span>())
+    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are
+    /// `EMPTY` or `DELETED`.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>match_empty_or_deleted(<span class="self">self</span>) -&gt; BitMask {
+        <span class="comment">// A byte is EMPTY or DELETED iff the high bit is set
+        </span>BitMask((<span class="self">self</span>.<span class="number">0 </span>&amp; repeat(<span class="number">0x80</span>)).to_le())
     }
 
-    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are full.</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">match_full</span>(<span class="self">self</span>) -&gt; <span class="ident">BitMask</span> {
-        <span class="self">self</span>.<span class="ident">match_empty_or_deleted</span>().<span class="ident">invert</span>()
+    <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are full.
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>match_full(<span class="self">self</span>) -&gt; BitMask {
+        <span class="self">self</span>.match_empty_or_deleted().invert()
     }
 
-    <span class="doccomment">/// Performs the following transformation on all bytes in the group:</span>
-    <span class="doccomment">/// - `EMPTY =&gt; EMPTY`</span>
-    <span class="doccomment">/// - `DELETED =&gt; EMPTY`</span>
-    <span class="doccomment">/// - `FULL =&gt; DELETED`</span>
-    <span class="attribute">#[<span class="ident">inline</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">convert_special_to_empty_and_full_to_deleted</span>(<span class="self">self</span>) -&gt; <span class="self">Self</span> {
-        <span class="comment">// Map high_bit = 1 (EMPTY or DELETED) to 1111_1111</span>
-        <span class="comment">// and high_bit = 0 (FULL) to 1000_0000</span>
-        <span class="comment">//</span>
-        <span class="comment">// Here&#39;s this logic expanded to concrete values:</span>
-        <span class="comment">//   let full = 1000_0000 (true) or 0000_0000 (false)</span>
-        <span class="comment">//   !1000_0000 + 1 = 0111_1111 + 1 = 1000_0000 (no carry)</span>
-        <span class="comment">//   !0000_0000 + 0 = 1111_1111 + 0 = 1111_1111 (no carry)</span>
-        <span class="kw">let</span> <span class="ident">full</span> <span class="op">=</span> <span class="op">!</span><span class="self">self</span>.<span class="number">0</span> <span class="op">&amp;</span> <span class="ident">repeat</span>(<span class="number">0x80</span>);
-        <span class="ident">Group</span>(<span class="op">!</span><span class="ident">full</span> <span class="op">+</span> (<span class="ident">full</span> <span class="op">&gt;</span><span class="op">&gt;</span> <span class="number">7</span>))
+    <span class="doccomment">/// Performs the following transformation on all bytes in the group:
+    /// - `EMPTY =&gt; EMPTY`
+    /// - `DELETED =&gt; EMPTY`
+    /// - `FULL =&gt; DELETED`
+    </span><span class="attribute">#[inline]</span>
+    <span class="kw">pub fn </span>convert_special_to_empty_and_full_to_deleted(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
+        <span class="comment">// Map high_bit = 1 (EMPTY or DELETED) to 1111_1111
+        // and high_bit = 0 (FULL) to 1000_0000
+        //
+        // Here&#39;s this logic expanded to concrete values:
+        //   let full = 1000_0000 (true) or 0000_0000 (false)
+        //   !1000_0000 + 1 = 0111_1111 + 1 = 1000_0000 (no carry)
+        //   !0000_0000 + 0 = 1111_1111 + 0 = 1111_1111 (no carry)
+        </span><span class="kw">let </span>full = !<span class="self">self</span>.<span class="number">0 </span>&amp; repeat(<span class="number">0x80</span>);
+        Group(!full + (full &gt;&gt; <span class="number">7</span>))
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hashbrown" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hashbrown" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

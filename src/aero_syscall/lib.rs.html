@@ -983,956 +983,956 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="attribute">#![<span class="ident">no_std</span>]</span>
-<span class="attribute">#![<span class="ident">feature</span>(<span class="ident">decl_macro</span>)]</span>
+</span><span class="attribute">#![no_std]</span>
+<span class="attribute">#![feature(decl_macro)]</span>
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">consts</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">signal</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">socket</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">syscall</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">time</span>;
+<span class="kw">pub mod </span>consts;
+<span class="kw">pub mod </span>signal;
+<span class="kw">pub mod </span>socket;
+<span class="kw">pub mod </span>syscall;
+<span class="kw">pub mod </span>time;
 
-<span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syscall</span>::<span class="kw-2">*</span>;
+<span class="kw">pub use </span><span class="kw">crate</span>::syscall::<span class="kw-2">*</span>;
 
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">prelude</span> {
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::consts</span>::<span class="kw-2">*</span>;
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::syscall</span>::<span class="kw-2">*</span>;
+<span class="kw">pub mod </span>prelude {
+    <span class="kw">pub use </span><span class="kw">crate</span>::consts::<span class="kw-2">*</span>;
+    <span class="kw">pub use </span><span class="kw">crate</span>::syscall::<span class="kw-2">*</span>;
 
-    <span class="kw">pub</span> <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::SyscallError</span>;
+    <span class="kw">pub use </span><span class="kw">crate</span>::SyscallError;
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MMapProt</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">PROT_READ</span> <span class="op">=</span> <span class="number">0x1</span>;
-        <span class="kw">const</span> <span class="ident">PROT_WRITE</span> <span class="op">=</span> <span class="number">0x2</span>;
-        <span class="kw">const</span> <span class="ident">PROT_EXEC</span> <span class="op">=</span> <span class="number">0x4</span>;
-        <span class="kw">const</span> <span class="ident">PROT_NONE</span> <span class="op">=</span> <span class="number">0x0</span>;
-    }
-}
-
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MMapFlags</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">MAP_PRIVATE</span> <span class="op">=</span> <span class="number">0x1</span>;
-        <span class="kw">const</span> <span class="ident">MAP_SHARED</span> <span class="op">=</span> <span class="number">0x2</span>;
-        <span class="kw">const</span> <span class="ident">MAP_FIXED</span> <span class="op">=</span> <span class="number">0x4</span>;
-        <span class="kw">const</span> <span class="ident">MAP_ANONYOMUS</span> <span class="op">=</span> <span class="number">0x8</span>;
+    <span class="kw">pub struct </span>MMapProt: usize {
+        <span class="kw">const </span>PROT_READ = <span class="number">0x1</span>;
+        <span class="kw">const </span>PROT_WRITE = <span class="number">0x2</span>;
+        <span class="kw">const </span>PROT_EXEC = <span class="number">0x4</span>;
+        <span class="kw">const </span>PROT_NONE = <span class="number">0x0</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OpenFlags</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">O_ACCMODE</span>   <span class="op">=</span> <span class="number">0x0007</span>;
-        <span class="kw">const</span> <span class="ident">O_EXEC</span>      <span class="op">=</span> <span class="number">1</span>;
-        <span class="kw">const</span> <span class="ident">O_RDONLY</span>    <span class="op">=</span> <span class="number">2</span>;
-        <span class="kw">const</span> <span class="ident">O_RDWR</span>      <span class="op">=</span> <span class="number">3</span>;
-        <span class="kw">const</span> <span class="ident">O_SEARCH</span>    <span class="op">=</span> <span class="number">4</span>;
-        <span class="kw">const</span> <span class="ident">O_WRONLY</span>    <span class="op">=</span> <span class="number">5</span>;
-        <span class="kw">const</span> <span class="ident">O_APPEND</span>    <span class="op">=</span> <span class="number">0x0008</span>;
-        <span class="kw">const</span> <span class="ident">O_CREAT</span>     <span class="op">=</span> <span class="number">0x0010</span>;
-        <span class="kw">const</span> <span class="ident">O_DIRECTORY</span> <span class="op">=</span>  <span class="number">0x0020</span>;
-        <span class="kw">const</span> <span class="ident">O_EXCL</span>      <span class="op">=</span>  <span class="number">0x0040</span>;
-        <span class="kw">const</span> <span class="ident">O_NOCTTY</span>    <span class="op">=</span> <span class="number">0x0080</span>;
-        <span class="kw">const</span> <span class="ident">O_NOFOLLOW</span>  <span class="op">=</span> <span class="number">0x0100</span>;
-        <span class="kw">const</span> <span class="ident">O_TRUNC</span>     <span class="op">=</span> <span class="number">0x0200</span>;
-        <span class="kw">const</span> <span class="ident">O_NONBLOCK</span>  <span class="op">=</span> <span class="number">0x0400</span>;
-        <span class="kw">const</span> <span class="ident">O_DSYNC</span>     <span class="op">=</span> <span class="number">0x0800</span>;
-        <span class="kw">const</span> <span class="ident">O_RSYNC</span>     <span class="op">=</span> <span class="number">0x1000</span>;
-        <span class="kw">const</span> <span class="ident">O_SYNC</span>      <span class="op">=</span> <span class="number">0x2000</span>;
-        <span class="kw">const</span> <span class="ident">O_CLOEXEC</span>   <span class="op">=</span> <span class="number">0x4000</span>;
-        <span class="kw">const</span> <span class="ident">O_PATH</span>      <span class="op">=</span> <span class="number">0x8000</span>;
+    <span class="kw">pub struct </span>MMapFlags: usize {
+        <span class="kw">const </span>MAP_PRIVATE = <span class="number">0x1</span>;
+        <span class="kw">const </span>MAP_SHARED = <span class="number">0x2</span>;
+        <span class="kw">const </span>MAP_FIXED = <span class="number">0x4</span>;
+        <span class="kw">const </span>MAP_ANONYOMUS = <span class="number">0x8</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Copy</span>, <span class="ident">Clone</span>, <span class="ident">PartialEq</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">isize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SyscallError</span> {
-    <span class="ident">EDOM</span> <span class="op">=</span> <span class="number">1</span>,
-    <span class="ident">EILSEQ</span> <span class="op">=</span> <span class="number">2</span>,
-    <span class="ident">ERANGE</span> <span class="op">=</span> <span class="number">3</span>,
-
-    <span class="ident">E2BIG</span> <span class="op">=</span> <span class="number">1001</span>,
-    <span class="ident">EACCES</span> <span class="op">=</span> <span class="number">1002</span>,
-    <span class="ident">EADDRINUSE</span> <span class="op">=</span> <span class="number">1003</span>,
-    <span class="ident">EADDRNOTAVAIL</span> <span class="op">=</span> <span class="number">1004</span>,
-    <span class="ident">EAFNOSUPPORT</span> <span class="op">=</span> <span class="number">1005</span>,
-    <span class="ident">EAGAIN</span> <span class="op">=</span> <span class="number">1006</span>,
-    <span class="ident">EALREADY</span> <span class="op">=</span> <span class="number">1007</span>,
-    <span class="ident">EBADF</span> <span class="op">=</span> <span class="number">1008</span>,
-    <span class="ident">EBADMSG</span> <span class="op">=</span> <span class="number">1009</span>,
-    <span class="ident">EBUSY</span> <span class="op">=</span> <span class="number">1010</span>,
-    <span class="ident">ECANCELED</span> <span class="op">=</span> <span class="number">1011</span>,
-    <span class="ident">ECHILD</span> <span class="op">=</span> <span class="number">1012</span>,
-    <span class="ident">ECONNABORTED</span> <span class="op">=</span> <span class="number">1013</span>,
-    <span class="ident">ECONNREFUSED</span> <span class="op">=</span> <span class="number">1014</span>,
-    <span class="ident">ECONNRESET</span> <span class="op">=</span> <span class="number">1015</span>,
-    <span class="ident">EDEADLK</span> <span class="op">=</span> <span class="number">1016</span>,
-    <span class="ident">EDESTADDRREQ</span> <span class="op">=</span> <span class="number">1017</span>,
-    <span class="ident">EDQUOT</span> <span class="op">=</span> <span class="number">1018</span>,
-    <span class="ident">EEXIST</span> <span class="op">=</span> <span class="number">1019</span>,
-    <span class="ident">EFAULT</span> <span class="op">=</span> <span class="number">1020</span>,
-    <span class="ident">EFBIG</span> <span class="op">=</span> <span class="number">1021</span>,
-    <span class="ident">EHOSTUNREACH</span> <span class="op">=</span> <span class="number">1022</span>,
-    <span class="ident">EIDRM</span> <span class="op">=</span> <span class="number">1023</span>,
-    <span class="ident">EINPROGRESS</span> <span class="op">=</span> <span class="number">1024</span>,
-    <span class="ident">EINTR</span> <span class="op">=</span> <span class="number">1025</span>,
-    <span class="ident">EINVAL</span> <span class="op">=</span> <span class="number">1026</span>,
-    <span class="ident">EIO</span> <span class="op">=</span> <span class="number">1027</span>,
-    <span class="ident">EISCONN</span> <span class="op">=</span> <span class="number">1028</span>,
-    <span class="ident">EISDIR</span> <span class="op">=</span> <span class="number">1029</span>,
-    <span class="ident">ELOOP</span> <span class="op">=</span> <span class="number">1030</span>,
-    <span class="ident">EMFILE</span> <span class="op">=</span> <span class="number">1031</span>,
-    <span class="ident">EMLINK</span> <span class="op">=</span> <span class="number">1032</span>,
-    <span class="ident">EMSGSIZE</span> <span class="op">=</span> <span class="number">1034</span>,
-    <span class="ident">EMULTIHOP</span> <span class="op">=</span> <span class="number">1035</span>,
-    <span class="ident">ENAMETOOLONG</span> <span class="op">=</span> <span class="number">1036</span>,
-    <span class="ident">ENETDOWN</span> <span class="op">=</span> <span class="number">1037</span>,
-    <span class="ident">ENETRESET</span> <span class="op">=</span> <span class="number">1038</span>,
-    <span class="ident">ENETUNREACH</span> <span class="op">=</span> <span class="number">1039</span>,
-    <span class="ident">ENFILE</span> <span class="op">=</span> <span class="number">1040</span>,
-    <span class="ident">ENOBUFS</span> <span class="op">=</span> <span class="number">1041</span>,
-    <span class="ident">ENODEV</span> <span class="op">=</span> <span class="number">1042</span>,
-    <span class="ident">ENOENT</span> <span class="op">=</span> <span class="number">1043</span>,
-    <span class="ident">ENOEXEC</span> <span class="op">=</span> <span class="number">1044</span>,
-    <span class="ident">ENOLCK</span> <span class="op">=</span> <span class="number">1045</span>,
-    <span class="ident">ENOLINK</span> <span class="op">=</span> <span class="number">1046</span>,
-    <span class="ident">ENOMEM</span> <span class="op">=</span> <span class="number">1047</span>,
-    <span class="ident">ENOMSG</span> <span class="op">=</span> <span class="number">1048</span>,
-    <span class="ident">ENOPROTOOPT</span> <span class="op">=</span> <span class="number">1049</span>,
-    <span class="ident">ENOSPC</span> <span class="op">=</span> <span class="number">1050</span>,
-    <span class="ident">ENOSYS</span> <span class="op">=</span> <span class="number">1051</span>,
-    <span class="ident">ENOTCONN</span> <span class="op">=</span> <span class="number">1052</span>,
-    <span class="ident">ENOTDIR</span> <span class="op">=</span> <span class="number">1053</span>,
-    <span class="ident">ENOTEMPTY</span> <span class="op">=</span> <span class="number">1054</span>,
-    <span class="ident">ENOTRECOVERABLE</span> <span class="op">=</span> <span class="number">1055</span>,
-    <span class="ident">ENOTSOCK</span> <span class="op">=</span> <span class="number">1056</span>,
-    <span class="ident">ENOTSUP</span> <span class="op">=</span> <span class="number">1057</span>,
-    <span class="ident">ENOTTY</span> <span class="op">=</span> <span class="number">1058</span>,
-    <span class="ident">ENXIO</span> <span class="op">=</span> <span class="number">1059</span>,
-    <span class="ident">EOPNOTSUPP</span> <span class="op">=</span> <span class="number">1060</span>,
-    <span class="ident">EOVERFLOW</span> <span class="op">=</span> <span class="number">1061</span>,
-    <span class="ident">EOWNERDEAD</span> <span class="op">=</span> <span class="number">1062</span>,
-    <span class="ident">EPERM</span> <span class="op">=</span> <span class="number">1063</span>,
-    <span class="ident">EPIPE</span> <span class="op">=</span> <span class="number">1064</span>,
-    <span class="ident">EPROTO</span> <span class="op">=</span> <span class="number">1065</span>,
-    <span class="ident">EPROTONOSUPPORT</span> <span class="op">=</span> <span class="number">1066</span>,
-    <span class="ident">EPROTOTYPE</span> <span class="op">=</span> <span class="number">1067</span>,
-    <span class="ident">EROFS</span> <span class="op">=</span> <span class="number">1068</span>,
-    <span class="ident">ESPIPE</span> <span class="op">=</span> <span class="number">1069</span>,
-    <span class="ident">ESRCH</span> <span class="op">=</span> <span class="number">1070</span>,
-    <span class="ident">ESTALE</span> <span class="op">=</span> <span class="number">1071</span>,
-    <span class="ident">ETIMEDOUT</span> <span class="op">=</span> <span class="number">1072</span>,
-    <span class="ident">ETXTBSY</span> <span class="op">=</span> <span class="number">1073</span>,
-    <span class="ident">EXDEV</span> <span class="op">=</span> <span class="number">1075</span>,
-    <span class="ident">ENODATA</span> <span class="op">=</span> <span class="number">1076</span>,
-    <span class="ident">ETIME</span> <span class="op">=</span> <span class="number">1077</span>,
-    <span class="ident">ENOKEY</span> <span class="op">=</span> <span class="number">1078</span>,
-    <span class="ident">ESHUTDOWN</span> <span class="op">=</span> <span class="number">1079</span>,
-    <span class="ident">EHOSTDOWN</span> <span class="op">=</span> <span class="number">1080</span>,
-    <span class="ident">EBADFD</span> <span class="op">=</span> <span class="number">1081</span>,
-    <span class="ident">ENOMEDIUM</span> <span class="op">=</span> <span class="number">1082</span>,
-    <span class="ident">ENOTBLK</span> <span class="op">=</span> <span class="number">1083</span>,
-
-    <span class="ident">Unknown</span> <span class="op">=</span> <span class="ident">isize::MAX</span>,
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall_as_str</span>(<span class="ident">syscall</span>: <span class="ident">usize</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span> {
-    <span class="kw">match</span> <span class="ident">syscall</span> {
-        <span class="ident">prelude::SYS_READ</span> =&gt; <span class="string">&quot;read&quot;</span>,
-        <span class="ident">prelude::SYS_WRITE</span> =&gt; <span class="string">&quot;write&quot;</span>,
-        <span class="ident">prelude::SYS_OPEN</span> =&gt; <span class="string">&quot;open&quot;</span>,
-        <span class="ident">prelude::SYS_CLOSE</span> =&gt; <span class="string">&quot;close&quot;</span>,
-        <span class="ident">prelude::SYS_SHUTDOWN</span> =&gt; <span class="string">&quot;shutdown&quot;</span>,
-        <span class="ident">prelude::SYS_EXIT</span> =&gt; <span class="string">&quot;exit&quot;</span>,
-        <span class="ident">prelude::SYS_FORK</span> =&gt; <span class="string">&quot;fork&quot;</span>,
-        <span class="ident">prelude::SYS_REBOOT</span> =&gt; <span class="string">&quot;reboot&quot;</span>,
-        <span class="ident">prelude::SYS_MMAP</span> =&gt; <span class="string">&quot;mmap&quot;</span>,
-        <span class="ident">prelude::SYS_MUNMAP</span> =&gt; <span class="string">&quot;munmap&quot;</span>,
-        <span class="ident">prelude::SYS_ARCH_PRCTL</span> =&gt; <span class="string">&quot;arch_prctl&quot;</span>,
-        <span class="ident">prelude::SYS_GETDENTS</span> =&gt; <span class="string">&quot;getdents&quot;</span>,
-        <span class="ident">prelude::SYS_GETCWD</span> =&gt; <span class="string">&quot;getcwd&quot;</span>,
-        <span class="ident">prelude::SYS_CHDIR</span> =&gt; <span class="string">&quot;chdir&quot;</span>,
-        <span class="ident">prelude::SYS_MKDIR</span> =&gt; <span class="string">&quot;mkdir&quot;</span>,
-        <span class="ident">prelude::SYS_MKDIR_AT</span> =&gt; <span class="string">&quot;mkdir_at&quot;</span>,
-        <span class="ident">prelude::SYS_RMDIR</span> =&gt; <span class="string">&quot;rmdir&quot;</span>,
-        <span class="ident">prelude::SYS_EXEC</span> =&gt; <span class="string">&quot;exec&quot;</span>,
-        <span class="ident">prelude::SYS_LOG</span> =&gt; <span class="string">&quot;log&quot;</span>,
-        <span class="ident">prelude::SYS_UNAME</span> =&gt; <span class="string">&quot;uname&quot;</span>,
-        <span class="ident">prelude::SYS_WAITPID</span> =&gt; <span class="string">&quot;waitpid&quot;</span>,
-        <span class="ident">prelude::SYS_IOCTL</span> =&gt; <span class="string">&quot;ioctl&quot;</span>,
-        <span class="ident">prelude::SYS_GETPID</span> =&gt; <span class="string">&quot;getpid&quot;</span>,
-        <span class="ident">prelude::SYS_SOCKET</span> =&gt; <span class="string">&quot;socket&quot;</span>,
-        <span class="ident">prelude::SYS_CONNECT</span> =&gt; <span class="string">&quot;connect&quot;</span>,
-        <span class="ident">prelude::SYS_BIND</span> =&gt; <span class="string">&quot;bind&quot;</span>,
-        <span class="ident">prelude::SYS_LISTEN</span> =&gt; <span class="string">&quot;listen&quot;</span>,
-        <span class="ident">prelude::SYS_ACCEPT</span> =&gt; <span class="string">&quot;accept&quot;</span>,
-        <span class="ident">prelude::SYS_SEEK</span> =&gt; <span class="string">&quot;seek&quot;</span>,
-        <span class="ident">prelude::SYS_GETTID</span> =&gt; <span class="string">&quot;gettid&quot;</span>,
-        <span class="ident">prelude::SYS_GETTIME</span> =&gt; <span class="string">&quot;gettime&quot;</span>,
-        <span class="ident">prelude::SYS_SLEEP</span> =&gt; <span class="string">&quot;sleep&quot;</span>,
-        <span class="ident">prelude::SYS_ACCESS</span> =&gt; <span class="string">&quot;access&quot;</span>,
-        <span class="ident">prelude::SYS_PIPE</span> =&gt; <span class="string">&quot;pipe&quot;</span>,
-        <span class="ident">prelude::SYS_UNLINK</span> =&gt; <span class="string">&quot;unlink&quot;</span>,
-        <span class="ident">prelude::SYS_GETHOSTNAME</span> =&gt; <span class="string">&quot;gethostname&quot;</span>,
-        <span class="ident">prelude::SYS_SETHOSTNAME</span> =&gt; <span class="string">&quot;sethostname&quot;</span>,
-        <span class="ident">prelude::SYS_INFO</span> =&gt; <span class="string">&quot;info&quot;</span>,
-        <span class="ident">prelude::SYS_CLONE</span> =&gt; <span class="string">&quot;clone&quot;</span>,
-        <span class="ident">prelude::SYS_SIGRETURN</span> =&gt; <span class="string">&quot;sigreturn&quot;</span>,
-        <span class="ident">prelude::SYS_SIGACTION</span> =&gt; <span class="string">&quot;sigaction&quot;</span>,
-        <span class="ident">prelude::SYS_SIGPROCMASK</span> =&gt; <span class="string">&quot;sigprocmask&quot;</span>,
-        <span class="ident">prelude::SYS_DUP</span> =&gt; <span class="string">&quot;dup&quot;</span>,
-        <span class="ident">prelude::SYS_FCNTL</span> =&gt; <span class="string">&quot;fcntl&quot;</span>,
-        <span class="ident">prelude::SYS_DUP2</span> =&gt; <span class="string">&quot;dup2&quot;</span>,
-        <span class="ident">prelude::SYS_IPC_SEND</span> =&gt; <span class="string">&quot;ipc_send&quot;</span>,
-        <span class="ident">prelude::SYS_IPC_RECV</span> =&gt; <span class="string">&quot;ipc_recv&quot;</span>,
-        <span class="ident">prelude::SYS_IPC_DISCOVER_ROOT</span> =&gt; <span class="string">&quot;ipc_discover_root&quot;</span>,
-        <span class="ident">prelude::SYS_IPC_BECOME_ROOT</span> =&gt; <span class="string">&quot;ipc_become_root&quot;</span>,
-        <span class="ident">prelude::SYS_STAT</span> =&gt; <span class="string">&quot;stat&quot;</span>,
-        <span class="ident">prelude::SYS_FSTAT</span> =&gt; <span class="string">&quot;fstat&quot;</span>,
-        <span class="ident">prelude::SYS_READ_LINK</span> =&gt; <span class="string">&quot;readlink&quot;</span>,
-        <span class="ident">prelude::SYS_EPOLL_CREATE</span> =&gt; <span class="string">&quot;epoll_create&quot;</span>,
-        <span class="ident">prelude::SYS_EPOLL_PWAIT</span> =&gt; <span class="string">&quot;epoll_pwait&quot;</span>,
-        <span class="ident">prelude::SYS_EPOLL_CTL</span> =&gt; <span class="string">&quot;epoll_ctl&quot;</span>,
-        <span class="ident">prelude::SYS_EVENT_FD</span> =&gt; <span class="string">&quot;event_fd&quot;</span>,
-        <span class="ident">prelude::SYS_KILL</span> =&gt; <span class="string">&quot;kill&quot;</span>,
-        <span class="ident">prelude::SYS_FUTEX_WAIT</span> =&gt; <span class="string">&quot;futex_wait&quot;</span>,
-        <span class="ident">prelude::SYS_FUTEX_WAKE</span> =&gt; <span class="string">&quot;futex_wake&quot;</span>,
-        <span class="ident">prelude::SYS_LINK</span> =&gt; <span class="string">&quot;link&quot;</span>,
-        <span class="ident">prelude::SYS_BACKTRACE</span> =&gt; <span class="string">&quot;backtrace&quot;</span>,
-        <span class="ident">prelude::SYS_POLL</span> =&gt; <span class="string">&quot;poll&quot;</span>,
-
-        <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;unknown syscall {syscall}&quot;</span>),
+<span class="macro">bitflags::bitflags!</span> {
+    <span class="kw">pub struct </span>OpenFlags: usize {
+        <span class="kw">const </span>O_ACCMODE   = <span class="number">0x0007</span>;
+        <span class="kw">const </span>O_EXEC      = <span class="number">1</span>;
+        <span class="kw">const </span>O_RDONLY    = <span class="number">2</span>;
+        <span class="kw">const </span>O_RDWR      = <span class="number">3</span>;
+        <span class="kw">const </span>O_SEARCH    = <span class="number">4</span>;
+        <span class="kw">const </span>O_WRONLY    = <span class="number">5</span>;
+        <span class="kw">const </span>O_APPEND    = <span class="number">0x0008</span>;
+        <span class="kw">const </span>O_CREAT     = <span class="number">0x0010</span>;
+        <span class="kw">const </span>O_DIRECTORY =  <span class="number">0x0020</span>;
+        <span class="kw">const </span>O_EXCL      =  <span class="number">0x0040</span>;
+        <span class="kw">const </span>O_NOCTTY    = <span class="number">0x0080</span>;
+        <span class="kw">const </span>O_NOFOLLOW  = <span class="number">0x0100</span>;
+        <span class="kw">const </span>O_TRUNC     = <span class="number">0x0200</span>;
+        <span class="kw">const </span>O_NONBLOCK  = <span class="number">0x0400</span>;
+        <span class="kw">const </span>O_DSYNC     = <span class="number">0x0800</span>;
+        <span class="kw">const </span>O_RSYNC     = <span class="number">0x1000</span>;
+        <span class="kw">const </span>O_SYNC      = <span class="number">0x2000</span>;
+        <span class="kw">const </span>O_CLOEXEC   = <span class="number">0x4000</span>;
+        <span class="kw">const </span>O_PATH      = <span class="number">0x8000</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">usize</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SysFileType</span> {
-    <span class="ident">File</span>,
-    <span class="ident">Directory</span>,
-    <span class="ident">Device</span>,
-    <span class="ident">Socket</span>,
+<span class="attribute">#[derive(Copy, Clone, PartialEq, Debug)]</span>
+<span class="attribute">#[repr(isize)]</span>
+<span class="kw">pub enum </span>SyscallError {
+    EDOM = <span class="number">1</span>,
+    EILSEQ = <span class="number">2</span>,
+    ERANGE = <span class="number">3</span>,
+
+    E2BIG = <span class="number">1001</span>,
+    EACCES = <span class="number">1002</span>,
+    EADDRINUSE = <span class="number">1003</span>,
+    EADDRNOTAVAIL = <span class="number">1004</span>,
+    EAFNOSUPPORT = <span class="number">1005</span>,
+    EAGAIN = <span class="number">1006</span>,
+    EALREADY = <span class="number">1007</span>,
+    EBADF = <span class="number">1008</span>,
+    EBADMSG = <span class="number">1009</span>,
+    EBUSY = <span class="number">1010</span>,
+    ECANCELED = <span class="number">1011</span>,
+    ECHILD = <span class="number">1012</span>,
+    ECONNABORTED = <span class="number">1013</span>,
+    ECONNREFUSED = <span class="number">1014</span>,
+    ECONNRESET = <span class="number">1015</span>,
+    EDEADLK = <span class="number">1016</span>,
+    EDESTADDRREQ = <span class="number">1017</span>,
+    EDQUOT = <span class="number">1018</span>,
+    EEXIST = <span class="number">1019</span>,
+    EFAULT = <span class="number">1020</span>,
+    EFBIG = <span class="number">1021</span>,
+    EHOSTUNREACH = <span class="number">1022</span>,
+    EIDRM = <span class="number">1023</span>,
+    EINPROGRESS = <span class="number">1024</span>,
+    EINTR = <span class="number">1025</span>,
+    EINVAL = <span class="number">1026</span>,
+    EIO = <span class="number">1027</span>,
+    EISCONN = <span class="number">1028</span>,
+    EISDIR = <span class="number">1029</span>,
+    ELOOP = <span class="number">1030</span>,
+    EMFILE = <span class="number">1031</span>,
+    EMLINK = <span class="number">1032</span>,
+    EMSGSIZE = <span class="number">1034</span>,
+    EMULTIHOP = <span class="number">1035</span>,
+    ENAMETOOLONG = <span class="number">1036</span>,
+    ENETDOWN = <span class="number">1037</span>,
+    ENETRESET = <span class="number">1038</span>,
+    ENETUNREACH = <span class="number">1039</span>,
+    ENFILE = <span class="number">1040</span>,
+    ENOBUFS = <span class="number">1041</span>,
+    ENODEV = <span class="number">1042</span>,
+    ENOENT = <span class="number">1043</span>,
+    ENOEXEC = <span class="number">1044</span>,
+    ENOLCK = <span class="number">1045</span>,
+    ENOLINK = <span class="number">1046</span>,
+    ENOMEM = <span class="number">1047</span>,
+    ENOMSG = <span class="number">1048</span>,
+    ENOPROTOOPT = <span class="number">1049</span>,
+    ENOSPC = <span class="number">1050</span>,
+    ENOSYS = <span class="number">1051</span>,
+    ENOTCONN = <span class="number">1052</span>,
+    ENOTDIR = <span class="number">1053</span>,
+    ENOTEMPTY = <span class="number">1054</span>,
+    ENOTRECOVERABLE = <span class="number">1055</span>,
+    ENOTSOCK = <span class="number">1056</span>,
+    ENOTSUP = <span class="number">1057</span>,
+    ENOTTY = <span class="number">1058</span>,
+    ENXIO = <span class="number">1059</span>,
+    EOPNOTSUPP = <span class="number">1060</span>,
+    EOVERFLOW = <span class="number">1061</span>,
+    EOWNERDEAD = <span class="number">1062</span>,
+    EPERM = <span class="number">1063</span>,
+    EPIPE = <span class="number">1064</span>,
+    EPROTO = <span class="number">1065</span>,
+    EPROTONOSUPPORT = <span class="number">1066</span>,
+    EPROTOTYPE = <span class="number">1067</span>,
+    EROFS = <span class="number">1068</span>,
+    ESPIPE = <span class="number">1069</span>,
+    ESRCH = <span class="number">1070</span>,
+    ESTALE = <span class="number">1071</span>,
+    ETIMEDOUT = <span class="number">1072</span>,
+    ETXTBSY = <span class="number">1073</span>,
+    EXDEV = <span class="number">1075</span>,
+    ENODATA = <span class="number">1076</span>,
+    ETIME = <span class="number">1077</span>,
+    ENOKEY = <span class="number">1078</span>,
+    ESHUTDOWN = <span class="number">1079</span>,
+    EHOSTDOWN = <span class="number">1080</span>,
+    EBADFD = <span class="number">1081</span>,
+    ENOMEDIUM = <span class="number">1082</span>,
+    ENOTBLK = <span class="number">1083</span>,
+
+    Unknown = isize::MAX,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>, <span class="ident">packed</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SysDirEntry</span> {
-    <span class="kw">pub</span> <span class="ident">inode</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">offset</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">reclen</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">file_type</span>: <span class="ident">usize</span>,
-    <span class="kw">pub</span> <span class="ident">name</span>: [<span class="ident">u8</span>; <span class="number">0</span>],
+<span class="kw">pub fn </span>syscall_as_str(syscall: usize) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
+    <span class="kw">match </span>syscall {
+        prelude::SYS_READ =&gt; <span class="string">&quot;read&quot;</span>,
+        prelude::SYS_WRITE =&gt; <span class="string">&quot;write&quot;</span>,
+        prelude::SYS_OPEN =&gt; <span class="string">&quot;open&quot;</span>,
+        prelude::SYS_CLOSE =&gt; <span class="string">&quot;close&quot;</span>,
+        prelude::SYS_SHUTDOWN =&gt; <span class="string">&quot;shutdown&quot;</span>,
+        prelude::SYS_EXIT =&gt; <span class="string">&quot;exit&quot;</span>,
+        prelude::SYS_FORK =&gt; <span class="string">&quot;fork&quot;</span>,
+        prelude::SYS_REBOOT =&gt; <span class="string">&quot;reboot&quot;</span>,
+        prelude::SYS_MMAP =&gt; <span class="string">&quot;mmap&quot;</span>,
+        prelude::SYS_MUNMAP =&gt; <span class="string">&quot;munmap&quot;</span>,
+        prelude::SYS_ARCH_PRCTL =&gt; <span class="string">&quot;arch_prctl&quot;</span>,
+        prelude::SYS_GETDENTS =&gt; <span class="string">&quot;getdents&quot;</span>,
+        prelude::SYS_GETCWD =&gt; <span class="string">&quot;getcwd&quot;</span>,
+        prelude::SYS_CHDIR =&gt; <span class="string">&quot;chdir&quot;</span>,
+        prelude::SYS_MKDIR =&gt; <span class="string">&quot;mkdir&quot;</span>,
+        prelude::SYS_MKDIR_AT =&gt; <span class="string">&quot;mkdir_at&quot;</span>,
+        prelude::SYS_RMDIR =&gt; <span class="string">&quot;rmdir&quot;</span>,
+        prelude::SYS_EXEC =&gt; <span class="string">&quot;exec&quot;</span>,
+        prelude::SYS_LOG =&gt; <span class="string">&quot;log&quot;</span>,
+        prelude::SYS_UNAME =&gt; <span class="string">&quot;uname&quot;</span>,
+        prelude::SYS_WAITPID =&gt; <span class="string">&quot;waitpid&quot;</span>,
+        prelude::SYS_IOCTL =&gt; <span class="string">&quot;ioctl&quot;</span>,
+        prelude::SYS_GETPID =&gt; <span class="string">&quot;getpid&quot;</span>,
+        prelude::SYS_SOCKET =&gt; <span class="string">&quot;socket&quot;</span>,
+        prelude::SYS_CONNECT =&gt; <span class="string">&quot;connect&quot;</span>,
+        prelude::SYS_BIND =&gt; <span class="string">&quot;bind&quot;</span>,
+        prelude::SYS_LISTEN =&gt; <span class="string">&quot;listen&quot;</span>,
+        prelude::SYS_ACCEPT =&gt; <span class="string">&quot;accept&quot;</span>,
+        prelude::SYS_SEEK =&gt; <span class="string">&quot;seek&quot;</span>,
+        prelude::SYS_GETTID =&gt; <span class="string">&quot;gettid&quot;</span>,
+        prelude::SYS_GETTIME =&gt; <span class="string">&quot;gettime&quot;</span>,
+        prelude::SYS_SLEEP =&gt; <span class="string">&quot;sleep&quot;</span>,
+        prelude::SYS_ACCESS =&gt; <span class="string">&quot;access&quot;</span>,
+        prelude::SYS_PIPE =&gt; <span class="string">&quot;pipe&quot;</span>,
+        prelude::SYS_UNLINK =&gt; <span class="string">&quot;unlink&quot;</span>,
+        prelude::SYS_GETHOSTNAME =&gt; <span class="string">&quot;gethostname&quot;</span>,
+        prelude::SYS_SETHOSTNAME =&gt; <span class="string">&quot;sethostname&quot;</span>,
+        prelude::SYS_INFO =&gt; <span class="string">&quot;info&quot;</span>,
+        prelude::SYS_CLONE =&gt; <span class="string">&quot;clone&quot;</span>,
+        prelude::SYS_SIGRETURN =&gt; <span class="string">&quot;sigreturn&quot;</span>,
+        prelude::SYS_SIGACTION =&gt; <span class="string">&quot;sigaction&quot;</span>,
+        prelude::SYS_SIGPROCMASK =&gt; <span class="string">&quot;sigprocmask&quot;</span>,
+        prelude::SYS_DUP =&gt; <span class="string">&quot;dup&quot;</span>,
+        prelude::SYS_FCNTL =&gt; <span class="string">&quot;fcntl&quot;</span>,
+        prelude::SYS_DUP2 =&gt; <span class="string">&quot;dup2&quot;</span>,
+        prelude::SYS_IPC_SEND =&gt; <span class="string">&quot;ipc_send&quot;</span>,
+        prelude::SYS_IPC_RECV =&gt; <span class="string">&quot;ipc_recv&quot;</span>,
+        prelude::SYS_IPC_DISCOVER_ROOT =&gt; <span class="string">&quot;ipc_discover_root&quot;</span>,
+        prelude::SYS_IPC_BECOME_ROOT =&gt; <span class="string">&quot;ipc_become_root&quot;</span>,
+        prelude::SYS_STAT =&gt; <span class="string">&quot;stat&quot;</span>,
+        prelude::SYS_FSTAT =&gt; <span class="string">&quot;fstat&quot;</span>,
+        prelude::SYS_READ_LINK =&gt; <span class="string">&quot;readlink&quot;</span>,
+        prelude::SYS_EPOLL_CREATE =&gt; <span class="string">&quot;epoll_create&quot;</span>,
+        prelude::SYS_EPOLL_PWAIT =&gt; <span class="string">&quot;epoll_pwait&quot;</span>,
+        prelude::SYS_EPOLL_CTL =&gt; <span class="string">&quot;epoll_ctl&quot;</span>,
+        prelude::SYS_EVENT_FD =&gt; <span class="string">&quot;event_fd&quot;</span>,
+        prelude::SYS_KILL =&gt; <span class="string">&quot;kill&quot;</span>,
+        prelude::SYS_FUTEX_WAIT =&gt; <span class="string">&quot;futex_wait&quot;</span>,
+        prelude::SYS_FUTEX_WAKE =&gt; <span class="string">&quot;futex_wake&quot;</span>,
+        prelude::SYS_LINK =&gt; <span class="string">&quot;link&quot;</span>,
+        prelude::SYS_BACKTRACE =&gt; <span class="string">&quot;backtrace&quot;</span>,
+        prelude::SYS_POLL =&gt; <span class="string">&quot;poll&quot;</span>,
+
+        <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;unknown syscall {syscall}&quot;</span>),
+    }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Utsname</span> {
-    <span class="kw">pub</span> <span class="ident">name</span>: [<span class="ident">u8</span>; <span class="number">65</span>],
-    <span class="kw">pub</span> <span class="ident">nodename</span>: [<span class="ident">u8</span>; <span class="number">65</span>],
-    <span class="kw">pub</span> <span class="ident">release</span>: [<span class="ident">u8</span>; <span class="number">65</span>],
-    <span class="kw">pub</span> <span class="ident">version</span>: [<span class="ident">u8</span>; <span class="number">65</span>],
-    <span class="kw">pub</span> <span class="ident">machine</span>: [<span class="ident">u8</span>; <span class="number">65</span>],
+<span class="attribute">#[derive(Debug)]</span>
+<span class="attribute">#[repr(usize)]</span>
+<span class="kw">pub enum </span>SysFileType {
+    File,
+    Directory,
+    Device,
+    Socket,
 }
 
-<span class="kw">impl</span> <span class="ident">Utsname</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">unsafe</span> { <span class="ident">core::str::from_utf8_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">name</span>) }
+<span class="attribute">#[repr(C, packed)]</span>
+<span class="kw">pub struct </span>SysDirEntry {
+    <span class="kw">pub </span>inode: usize,
+    <span class="kw">pub </span>offset: usize,
+    <span class="kw">pub </span>reclen: usize,
+    <span class="kw">pub </span>file_type: usize,
+    <span class="kw">pub </span>name: [u8; <span class="number">0</span>],
+}
+
+<span class="attribute">#[derive(Debug)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>Utsname {
+    <span class="kw">pub </span>name: [u8; <span class="number">65</span>],
+    <span class="kw">pub </span>nodename: [u8; <span class="number">65</span>],
+    <span class="kw">pub </span>release: [u8; <span class="number">65</span>],
+    <span class="kw">pub </span>version: [u8; <span class="number">65</span>],
+    <span class="kw">pub </span>machine: [u8; <span class="number">65</span>],
+}
+
+<span class="kw">impl </span>Utsname {
+    <span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.name) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">nodename</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">unsafe</span> { <span class="ident">core::str::from_utf8_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">nodename</span>) }
+    <span class="kw">pub fn </span>nodename(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.nodename) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">release</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">unsafe</span> { <span class="ident">core::str::from_utf8_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">release</span>) }
+    <span class="kw">pub fn </span>release(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.release) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">version</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">unsafe</span> { <span class="ident">core::str::from_utf8_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">version</span>) }
+    <span class="kw">pub fn </span>version(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.version) }
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">machine</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">str</span> {
-        <span class="kw">unsafe</span> { <span class="ident">core::str::from_utf8_unchecked</span>(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">machine</span>) }
+    <span class="kw">pub fn </span>machine(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.machine) }
     }
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Utsname</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">name</span>: [<span class="number">0</span>; <span class="number">65</span>],
-            <span class="ident">nodename</span>: [<span class="number">0</span>; <span class="number">65</span>],
-            <span class="ident">release</span>: [<span class="number">0</span>; <span class="number">65</span>],
-            <span class="ident">version</span>: [<span class="number">0</span>; <span class="number">65</span>],
-            <span class="ident">machine</span>: [<span class="number">0</span>; <span class="number">65</span>],
+<span class="kw">impl </span>Default <span class="kw">for </span>Utsname {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            name: [<span class="number">0</span>; <span class="number">65</span>],
+            nodename: [<span class="number">0</span>; <span class="number">65</span>],
+            release: [<span class="number">0</span>; <span class="number">65</span>],
+            version: [<span class="number">0</span>; <span class="number">65</span>],
+            machine: [<span class="number">0</span>; <span class="number">65</span>],
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>, <span class="ident">Clone</span>, <span class="ident">Debug</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TimeSpec</span> {
-    <span class="kw">pub</span> <span class="ident">tv_sec</span>: <span class="ident">isize</span>,
-    <span class="kw">pub</span> <span class="ident">tv_nsec</span>: <span class="ident">isize</span>,
+<span class="attribute">#[derive(Default, Clone, Debug)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>TimeSpec {
+    <span class="kw">pub </span>tv_sec: isize,
+    <span class="kw">pub </span>tv_nsec: isize,
 }
 
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">usize</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SeekWhence</span> {
-    <span class="ident">SeekCur</span> <span class="op">=</span> <span class="number">1</span>,
-    <span class="ident">SeekEnd</span> <span class="op">=</span> <span class="number">2</span>,
-    <span class="ident">SeekSet</span> <span class="op">=</span> <span class="number">3</span>,
+<span class="attribute">#[repr(usize)]</span>
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub enum </span>SeekWhence {
+    SeekCur = <span class="number">1</span>,
+    SeekEnd = <span class="number">2</span>,
+    SeekSet = <span class="number">3</span>,
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">SeekWhence</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">x</span>: <span class="ident">usize</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">match</span> <span class="ident">x</span> {
-            <span class="number">1</span> =&gt; <span class="ident">SeekWhence::SeekCur</span>,
-            <span class="number">2</span> =&gt; <span class="ident">SeekWhence::SeekEnd</span>,
-            <span class="number">3</span> =&gt; <span class="ident">SeekWhence::SeekSet</span>,
-            <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;invalid seek_whence: {}&quot;</span>, <span class="ident">x</span>),
+<span class="kw">impl </span>From&lt;usize&gt; <span class="kw">for </span>SeekWhence {
+    <span class="kw">fn </span>from(x: usize) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>x {
+            <span class="number">1 </span>=&gt; SeekWhence::SeekCur,
+            <span class="number">2 </span>=&gt; SeekWhence::SeekEnd,
+            <span class="number">3 </span>=&gt; SeekWhence::SeekSet,
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;invalid seek_whence: {}&quot;</span>, x),
         }
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TIOCGWINSZ</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x5413</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TCGETS</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x5401</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">TCSETSF</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">0x5404</span>;
+<span class="kw">pub const </span>TIOCGWINSZ: usize = <span class="number">0x5413</span>;
+<span class="kw">pub const </span>TCGETS: usize = <span class="number">0x5401</span>;
+<span class="kw">pub const </span>TCSETSF: usize = <span class="number">0x5404</span>;
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">WinSize</span> {
-    <span class="kw">pub</span> <span class="ident">ws_row</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">ws_col</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">ws_xpixel</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">ws_ypixel</span>: <span class="ident">u16</span>,
+<span class="attribute">#[derive(Default)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>WinSize {
+    <span class="kw">pub </span>ws_row: u16,
+    <span class="kw">pub </span>ws_col: u16,
+    <span class="kw">pub </span>ws_xpixel: u16,
+    <span class="kw">pub </span>ws_ypixel: u16,
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TermiosLFlag</span>: <span class="ident">u32</span> {
-        <span class="kw">const</span> <span class="ident">ECHO</span>   <span class="op">=</span>  <span class="number">0x0001</span>;
-        <span class="kw">const</span> <span class="ident">ECHOE</span>  <span class="op">=</span>  <span class="number">0x0002</span>;
-        <span class="kw">const</span> <span class="ident">ECHOK</span>  <span class="op">=</span>  <span class="number">0x0004</span>;
-        <span class="kw">const</span> <span class="ident">ECHONL</span> <span class="op">=</span>  <span class="number">0x0008</span>;
-        <span class="kw">const</span> <span class="ident">ICANON</span> <span class="op">=</span>  <span class="number">0x0010</span>;
-        <span class="kw">const</span> <span class="ident">IEXTEN</span> <span class="op">=</span>  <span class="number">0x0020</span>;
-        <span class="kw">const</span> <span class="ident">ISIG</span>   <span class="op">=</span>  <span class="number">0x0040</span>;
-        <span class="kw">const</span> <span class="ident">NOFLSH</span> <span class="op">=</span>  <span class="number">0x0080</span>;
-        <span class="kw">const</span> <span class="ident">TOSTOP</span> <span class="op">=</span>  <span class="number">0x0100</span>;
-        <span class="kw">const</span> <span class="ident">ECHOPRT</span><span class="op">=</span>  <span class="number">0x0200</span>;
-    }
-}
-
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TermiosCFlag</span>: <span class="ident">u32</span> {
-        <span class="kw">const</span> <span class="ident">CSIZE</span>  <span class="op">=</span>  <span class="number">0x0003</span>;
-        <span class="kw">const</span> <span class="ident">CS5</span>    <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">CS6</span>    <span class="op">=</span>  <span class="number">0x0001</span>;
-        <span class="kw">const</span> <span class="ident">CS7</span>    <span class="op">=</span>  <span class="number">0x0002</span>;
-        <span class="kw">const</span> <span class="ident">CS8</span>    <span class="op">=</span>  <span class="number">0x0003</span>;
-        <span class="kw">const</span> <span class="ident">CSTOPB</span> <span class="op">=</span>  <span class="number">0x0004</span>;
-        <span class="kw">const</span> <span class="ident">CREAD</span>  <span class="op">=</span>  <span class="number">0x0008</span>;
-        <span class="kw">const</span> <span class="ident">PARENB</span> <span class="op">=</span>  <span class="number">0x0010</span>;
-        <span class="kw">const</span> <span class="ident">PARODD</span> <span class="op">=</span>  <span class="number">0x0020</span>;
-        <span class="kw">const</span> <span class="ident">HUPCL</span>  <span class="op">=</span>  <span class="number">0x0040</span>;
-        <span class="kw">const</span> <span class="ident">CLOCAL</span> <span class="op">=</span>  <span class="number">0x0080</span>;
+    <span class="attribute">#[derive(Default)]</span>
+    <span class="kw">pub struct </span>TermiosLFlag: u32 {
+        <span class="kw">const </span>ECHO   =  <span class="number">0x0001</span>;
+        <span class="kw">const </span>ECHOE  =  <span class="number">0x0002</span>;
+        <span class="kw">const </span>ECHOK  =  <span class="number">0x0004</span>;
+        <span class="kw">const </span>ECHONL =  <span class="number">0x0008</span>;
+        <span class="kw">const </span>ICANON =  <span class="number">0x0010</span>;
+        <span class="kw">const </span>IEXTEN =  <span class="number">0x0020</span>;
+        <span class="kw">const </span>ISIG   =  <span class="number">0x0040</span>;
+        <span class="kw">const </span>NOFLSH =  <span class="number">0x0080</span>;
+        <span class="kw">const </span>TOSTOP =  <span class="number">0x0100</span>;
+        <span class="kw">const </span>ECHOPRT=  <span class="number">0x0200</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">TermiosOFlag</span>: <span class="ident">u32</span> {
-        <span class="kw">const</span> <span class="ident">OPOST</span>  <span class="op">=</span>  <span class="number">0x0001</span>;
-        <span class="kw">const</span> <span class="ident">ONLCR</span>  <span class="op">=</span>  <span class="number">0x0002</span>;
-        <span class="kw">const</span> <span class="ident">OCRNL</span>  <span class="op">=</span>  <span class="number">0x0004</span>;
-        <span class="kw">const</span> <span class="ident">ONOCR</span>  <span class="op">=</span>  <span class="number">0x0008</span>;
-        <span class="kw">const</span> <span class="ident">ONLRET</span> <span class="op">=</span>  <span class="number">0x0010</span>;
-        <span class="kw">const</span> <span class="ident">OFDEL</span>  <span class="op">=</span>  <span class="number">0x0020</span>;
-        <span class="kw">const</span> <span class="ident">OFILL</span>  <span class="op">=</span>  <span class="number">0x0040</span>;
-        <span class="kw">const</span> <span class="ident">NLDLY</span>  <span class="op">=</span>  <span class="number">0x0080</span>;
-        <span class="kw">const</span> <span class="ident">NL0</span>    <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">NL1</span>    <span class="op">=</span>  <span class="number">0x0080</span>;
-        <span class="kw">const</span> <span class="ident">CRDLY</span>  <span class="op">=</span>  <span class="number">0x0300</span>;
-        <span class="kw">const</span> <span class="ident">CR0</span>    <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">CR1</span>    <span class="op">=</span>  <span class="number">0x0100</span>;
-        <span class="kw">const</span> <span class="ident">CR2</span>    <span class="op">=</span>  <span class="number">0x0200</span>;
-        <span class="kw">const</span> <span class="ident">CR3</span>    <span class="op">=</span>  <span class="number">0x0300</span>;
-        <span class="kw">const</span> <span class="ident">TABDLY</span> <span class="op">=</span>  <span class="number">0x0C00</span>;
-        <span class="kw">const</span> <span class="ident">TAB0</span>   <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">TAB1</span>   <span class="op">=</span>  <span class="number">0x0400</span>;
-        <span class="kw">const</span> <span class="ident">TAB2</span>   <span class="op">=</span>  <span class="number">0x0800</span>;
-        <span class="kw">const</span> <span class="ident">TAB3</span>   <span class="op">=</span>  <span class="number">0x0C00</span>;
-        <span class="kw">const</span> <span class="ident">BSDLY</span>  <span class="op">=</span>  <span class="number">0x1000</span>;
-        <span class="kw">const</span> <span class="ident">BS0</span>    <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">BS1</span>    <span class="op">=</span>  <span class="number">0x1000</span>;
-        <span class="kw">const</span> <span class="ident">VTDLY</span>  <span class="op">=</span>  <span class="number">0x2000</span>;
-        <span class="kw">const</span> <span class="ident">VT0</span>    <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">VT1</span>    <span class="op">=</span>  <span class="number">0x2000</span>;
-        <span class="kw">const</span> <span class="ident">FFDLY</span>  <span class="op">=</span>  <span class="number">0x4000</span>;
-        <span class="kw">const</span> <span class="ident">FF0</span>    <span class="op">=</span>  <span class="number">0x0000</span>;
-        <span class="kw">const</span> <span class="ident">FF1</span>    <span class="op">=</span>  <span class="number">0x4000</span>;
+    <span class="attribute">#[derive(Default)]</span>
+    <span class="kw">pub struct </span>TermiosCFlag: u32 {
+        <span class="kw">const </span>CSIZE  =  <span class="number">0x0003</span>;
+        <span class="kw">const </span>CS5    =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>CS6    =  <span class="number">0x0001</span>;
+        <span class="kw">const </span>CS7    =  <span class="number">0x0002</span>;
+        <span class="kw">const </span>CS8    =  <span class="number">0x0003</span>;
+        <span class="kw">const </span>CSTOPB =  <span class="number">0x0004</span>;
+        <span class="kw">const </span>CREAD  =  <span class="number">0x0008</span>;
+        <span class="kw">const </span>PARENB =  <span class="number">0x0010</span>;
+        <span class="kw">const </span>PARODD =  <span class="number">0x0020</span>;
+        <span class="kw">const </span>HUPCL  =  <span class="number">0x0040</span>;
+        <span class="kw">const </span>CLOCAL =  <span class="number">0x0080</span>;
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Termios</span> {
-    <span class="kw">pub</span> <span class="ident">c_iflag</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">c_oflag</span>: <span class="ident">TermiosOFlag</span>,
-    <span class="kw">pub</span> <span class="ident">c_cflag</span>: <span class="ident">TermiosCFlag</span>,
-    <span class="kw">pub</span> <span class="ident">c_lflag</span>: <span class="ident">TermiosLFlag</span>,
-    <span class="kw">pub</span> <span class="ident">c_line</span>: <span class="ident">u8</span>,
-    <span class="kw">pub</span> <span class="ident">c_cc</span>: [<span class="ident">u8</span>; <span class="number">11</span>],
-    <span class="kw">pub</span> <span class="ident">c_ispeed</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">c_ospeed</span>: <span class="ident">u32</span>,
-}
-
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AT_FDCWD</span>: <span class="ident">isize</span> <span class="op">=</span> <span class="op">-</span><span class="number">100</span>;
-
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SysInfo</span> {
-    <span class="doccomment">/// Seconds since boot</span>
-    <span class="kw">pub</span> <span class="ident">uptime</span>: <span class="ident">i64</span>,
-    <span class="doccomment">/// 1, 5, and 15 minute load averages</span>
-    <span class="kw">pub</span> <span class="ident">loads</span>: [<span class="ident">u64</span>; <span class="number">3</span>],
-    <span class="doccomment">/// Total usable main memory size.</span>
-    <span class="kw">pub</span> <span class="ident">totalram</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Available memory size.</span>
-    <span class="kw">pub</span> <span class="ident">freeram</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Amount of shared memory.</span>
-    <span class="kw">pub</span> <span class="ident">sharedram</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Memory used by buffers.</span>
-    <span class="kw">pub</span> <span class="ident">bufferram</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Total swap space size.</span>
-    <span class="kw">pub</span> <span class="ident">totalswap</span>: <span class="ident">u64</span>,
-    <span class="doccomment">/// Swap space still available.</span>
-    <span class="kw">pub</span> <span class="ident">freeswap</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">procs</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">pad</span>: <span class="ident">u16</span>,
-    <span class="kw">pub</span> <span class="ident">totalhigh</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">freehigh</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">mem_unit</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">_f</span>: [<span class="ident">i8</span>; <span class="number">0</span>],
-}
-
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">syscall_result_as_usize</span>(<span class="ident">result</span>: <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span>) -&gt; <span class="ident">usize</span> {
-    <span class="kw">match</span> <span class="ident">result</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span>) =&gt; <span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>,
-        <span class="prelude-val">Err</span>(<span class="ident">error</span>) =&gt; <span class="op">-</span>(<span class="ident">error</span> <span class="kw">as</span> <span class="ident">isize</span>) <span class="kw">as</span> <span class="kw">_</span>,
+<span class="macro">bitflags::bitflags!</span> {
+    <span class="attribute">#[derive(Default)]</span>
+    <span class="kw">pub struct </span>TermiosOFlag: u32 {
+        <span class="kw">const </span>OPOST  =  <span class="number">0x0001</span>;
+        <span class="kw">const </span>ONLCR  =  <span class="number">0x0002</span>;
+        <span class="kw">const </span>OCRNL  =  <span class="number">0x0004</span>;
+        <span class="kw">const </span>ONOCR  =  <span class="number">0x0008</span>;
+        <span class="kw">const </span>ONLRET =  <span class="number">0x0010</span>;
+        <span class="kw">const </span>OFDEL  =  <span class="number">0x0020</span>;
+        <span class="kw">const </span>OFILL  =  <span class="number">0x0040</span>;
+        <span class="kw">const </span>NLDLY  =  <span class="number">0x0080</span>;
+        <span class="kw">const </span>NL0    =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>NL1    =  <span class="number">0x0080</span>;
+        <span class="kw">const </span>CRDLY  =  <span class="number">0x0300</span>;
+        <span class="kw">const </span>CR0    =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>CR1    =  <span class="number">0x0100</span>;
+        <span class="kw">const </span>CR2    =  <span class="number">0x0200</span>;
+        <span class="kw">const </span>CR3    =  <span class="number">0x0300</span>;
+        <span class="kw">const </span>TABDLY =  <span class="number">0x0C00</span>;
+        <span class="kw">const </span>TAB0   =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>TAB1   =  <span class="number">0x0400</span>;
+        <span class="kw">const </span>TAB2   =  <span class="number">0x0800</span>;
+        <span class="kw">const </span>TAB3   =  <span class="number">0x0C00</span>;
+        <span class="kw">const </span>BSDLY  =  <span class="number">0x1000</span>;
+        <span class="kw">const </span>BS0    =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>BS1    =  <span class="number">0x1000</span>;
+        <span class="kw">const </span>VTDLY  =  <span class="number">0x2000</span>;
+        <span class="kw">const </span>VT0    =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>VT1    =  <span class="number">0x2000</span>;
+        <span class="kw">const </span>FFDLY  =  <span class="number">0x4000</span>;
+        <span class="kw">const </span>FF0    =  <span class="number">0x0000</span>;
+        <span class="kw">const </span>FF1    =  <span class="number">0x4000</span>;
     }
 }
 
-<span class="doccomment">/// Inner helper function that converts the syscall result value into the</span>
-<span class="doccomment">/// Rust [`Result`] type.</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span>: <span class="ident">isize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">if</span> <span class="ident">value</span> <span class="op">&gt;</span><span class="op">=</span> <span class="number">0</span> {
-        <span class="prelude-val">Ok</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="ident">usize</span>)
-    } <span class="kw">else</span> {
-        <span class="kw">let</span> <span class="ident">err</span>: <span class="ident">SyscallError</span> <span class="op">=</span> <span class="kw">unsafe</span> { <span class="ident">core::mem::transmute</span>((<span class="op">-</span><span class="ident">value</span>) <span class="kw">as</span> <span class="ident">u64</span>) };
-        <span class="prelude-val">Err</span>(<span class="ident">err</span>)
+<span class="attribute">#[derive(Debug, Default, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>Termios {
+    <span class="kw">pub </span>c_iflag: u32,
+    <span class="kw">pub </span>c_oflag: TermiosOFlag,
+    <span class="kw">pub </span>c_cflag: TermiosCFlag,
+    <span class="kw">pub </span>c_lflag: TermiosLFlag,
+    <span class="kw">pub </span>c_line: u8,
+    <span class="kw">pub </span>c_cc: [u8; <span class="number">11</span>],
+    <span class="kw">pub </span>c_ispeed: u32,
+    <span class="kw">pub </span>c_ospeed: u32,
+}
+
+<span class="kw">pub const </span>AT_FDCWD: isize = -<span class="number">100</span>;
+
+<span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Debug)]</span>
+<span class="kw">pub struct </span>SysInfo {
+    <span class="doccomment">/// Seconds since boot
+    </span><span class="kw">pub </span>uptime: i64,
+    <span class="doccomment">/// 1, 5, and 15 minute load averages
+    </span><span class="kw">pub </span>loads: [u64; <span class="number">3</span>],
+    <span class="doccomment">/// Total usable main memory size.
+    </span><span class="kw">pub </span>totalram: u64,
+    <span class="doccomment">/// Available memory size.
+    </span><span class="kw">pub </span>freeram: u64,
+    <span class="doccomment">/// Amount of shared memory.
+    </span><span class="kw">pub </span>sharedram: u64,
+    <span class="doccomment">/// Memory used by buffers.
+    </span><span class="kw">pub </span>bufferram: u64,
+    <span class="doccomment">/// Total swap space size.
+    </span><span class="kw">pub </span>totalswap: u64,
+    <span class="doccomment">/// Swap space still available.
+    </span><span class="kw">pub </span>freeswap: u64,
+    <span class="kw">pub </span>procs: u16,
+    <span class="kw">pub </span>pad: u16,
+    <span class="kw">pub </span>totalhigh: u64,
+    <span class="kw">pub </span>freehigh: u64,
+    <span class="kw">pub </span>mem_unit: u32,
+    <span class="kw">pub </span>_f: [i8; <span class="number">0</span>],
+}
+
+<span class="kw">pub fn </span>syscall_result_as_usize(result: <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt;) -&gt; usize {
+    <span class="kw">match </span>result {
+        <span class="prelude-val">Ok</span>(value) =&gt; value <span class="kw">as _</span>,
+        <span class="prelude-val">Err</span>(error) =&gt; -(error <span class="kw">as </span>isize) <span class="kw">as _</span>,
     }
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_exit</span>(<span class="ident">status</span>: <span class="ident">usize</span>) -&gt; <span class="op">!</span> {
-    <span class="ident">syscall1</span>(<span class="ident">prelude::SYS_EXIT</span>, <span class="ident">status</span>);
+<span class="doccomment">/// Inner helper function that converts the syscall result value into the
+/// Rust [`Result`] type.
+</span><span class="kw">pub fn </span>isize_as_syscall_result(value: isize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">if </span>value &gt;= <span class="number">0 </span>{
+        <span class="prelude-val">Ok</span>(value <span class="kw">as </span>usize)
+    } <span class="kw">else </span>{
+        <span class="kw">let </span>err: SyscallError = <span class="kw">unsafe </span>{ core::mem::transmute((-value) <span class="kw">as </span>u64) };
+        <span class="prelude-val">Err</span>(err)
+    }
+}
+
+<span class="kw">pub fn </span>sys_exit(status: usize) -&gt; ! {
+    syscall1(prelude::SYS_EXIT, status);
     <span class="macro">unreachable!</span>()
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_open</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">mode</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall4</span>(
-        <span class="ident">prelude::SYS_OPEN</span>,
+<span class="kw">pub fn </span>sys_open(path: <span class="kw-2">&amp;</span>str, mode: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall4(
+        prelude::SYS_OPEN,
         <span class="number">0x00</span>,
-        <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">len</span>(),
-        <span class="ident">mode</span>.<span class="ident">bits</span>(),
+        path.as_ptr() <span class="kw">as </span>usize,
+        path.len(),
+        mode.bits(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_write</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_WRITE</span>,
-        <span class="ident">fd</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_write(fd: usize, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_WRITE,
+        fd <span class="kw">as </span>usize,
+        buf.as_ptr() <span class="kw">as </span>usize,
+        buf.len(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_read</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_READ</span>,
-        <span class="ident">fd</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_read(fd: usize, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_READ,
+        fd <span class="kw">as </span>usize,
+        buf.as_mut_ptr() <span class="kw">as </span>usize,
+        buf.len(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_chdir</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_CHDIR</span>, <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">path</span>.<span class="ident">len</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_chdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_CHDIR, path.as_ptr() <span class="kw">as </span>usize, path.len());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_close</span>(<span class="ident">fd</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall1</span>(<span class="ident">prelude::SYS_CLOSE</span>, <span class="ident">fd</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_close(fd: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall1(prelude::SYS_CLOSE, fd);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_getcwd</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_GETCWD</span>, <span class="ident">buf</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">buf</span>.<span class="ident">len</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_getcwd(buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_GETCWD, buf.as_mut_ptr() <span class="kw">as </span>usize, buf.len());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_getdents</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_GETDENTS</span>,
-        <span class="ident">fd</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_getdents(fd: usize, buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_GETDENTS,
+        fd <span class="kw">as </span>usize,
+        buf.as_mut_ptr() <span class="kw">as </span>usize,
+        buf.len(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_fork</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_FORK</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_fork() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall0(prelude::SYS_FORK);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_munmap</span>(<span class="ident">address</span>: <span class="ident">usize</span>, <span class="ident">size</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_MUNMAP</span>, <span class="ident">address</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">size</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_munmap(address: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_MUNMAP, address <span class="kw">as </span>usize, size <span class="kw">as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_mkdir</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_MKDIR</span>, <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">path</span>.<span class="ident">len</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_mkdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_MKDIR, path.as_ptr() <span class="kw">as </span>usize, path.len());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_log</span>(<span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_LOG</span>, <span class="ident">message</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">message</span>.<span class="ident">len</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_log(message: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_LOG, message.as_ptr() <span class="kw">as </span>usize, message.len());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_mkdirat</span>(<span class="ident">dfd</span>: <span class="ident">isize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_MKDIR_AT</span>,
-        <span class="ident">dfd</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_mkdirat(dfd: isize, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_MKDIR_AT,
+        dfd <span class="kw">as </span>usize,
+        path.as_ptr() <span class="kw">as </span>usize,
+        path.len(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_exec</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">argv</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>], <span class="ident">envv</span>: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">str</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall6</span>(
-        <span class="ident">prelude::SYS_EXEC</span>,
-        <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">len</span>(),
-        <span class="ident">argv</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">argv</span>.<span class="ident">len</span>(),
-        <span class="ident">envv</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">envv</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_exec(path: <span class="kw-2">&amp;</span>str, argv: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str], envv: <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span>str]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall6(
+        prelude::SYS_EXEC,
+        path.as_ptr() <span class="kw">as </span>usize,
+        path.len(),
+        argv.as_ptr() <span class="kw">as </span>usize,
+        argv.len(),
+        envv.as_ptr() <span class="kw">as </span>usize,
+        envv.len(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_rmdir</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_RMDIR</span>, <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">path</span>.<span class="ident">len</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_rmdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_RMDIR, path.as_ptr() <span class="kw">as </span>usize, path.len());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_uname</span>(<span class="ident">struc</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Utsname</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall1</span>(<span class="ident">prelude::SYS_UNAME</span>, <span class="ident">struc</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Utsname</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_uname(struc: <span class="kw-2">&amp;mut </span>Utsname) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall1(prelude::SYS_UNAME, struc <span class="kw">as </span><span class="kw-2">*mut </span>Utsname <span class="kw">as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_shutdown</span>() -&gt; <span class="op">!</span> {
-    <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_SHUTDOWN</span>);
+<span class="kw">pub fn </span>sys_shutdown() -&gt; ! {
+    syscall0(prelude::SYS_SHUTDOWN);
     <span class="macro">unreachable!</span>()
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_access</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall5</span>(
-        <span class="ident">prelude::SYS_ACCESS</span>,
-        <span class="ident">fd</span>,
-        <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_access(fd: usize, path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall5(
+        prelude::SYS_ACCESS,
+        fd,
+        path.as_ptr() <span class="kw">as </span>usize,
+        path.len(),
         <span class="number">0</span>,
         <span class="number">0</span>,
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_waitpid</span>(<span class="ident">pid</span>: <span class="ident">usize</span>, <span class="ident">status</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u32</span>, <span class="ident">flags</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_WAITPID</span>,
-        <span class="ident">pid</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">status</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">u32</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">flags</span>,
+<span class="kw">pub fn </span>sys_waitpid(pid: usize, status: <span class="kw-2">&amp;mut </span>u32, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_WAITPID,
+        pid <span class="kw">as </span>usize,
+        status <span class="kw">as </span><span class="kw-2">*mut </span>u32 <span class="kw">as </span>usize,
+        flags,
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_ioctl</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">arg</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(<span class="ident">prelude::SYS_IOCTL</span>, <span class="ident">fd</span> <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">command</span>, <span class="ident">arg</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_ioctl(fd: usize, command: usize, arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(prelude::SYS_IOCTL, fd <span class="kw">as </span>usize, command, arg);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_mmap</span>(
-    <span class="ident">address</span>: <span class="ident">usize</span>,
-    <span class="ident">size</span>: <span class="ident">usize</span>,
-    <span class="ident">protection</span>: <span class="ident">MMapProt</span>,
-    <span class="ident">flags</span>: <span class="ident">MMapFlags</span>,
-    <span class="ident">fd</span>: <span class="ident">usize</span>,
-    <span class="ident">offset</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall6</span>(
-        <span class="ident">prelude::SYS_MMAP</span>,
-        <span class="ident">address</span>,
-        <span class="ident">size</span>,
-        <span class="ident">protection</span>.<span class="ident">bits</span>(),
-        <span class="ident">flags</span>.<span class="ident">bits</span>(),
-        <span class="ident">fd</span>,
-        <span class="ident">offset</span>,
+<span class="kw">pub fn </span>sys_mmap(
+    address: usize,
+    size: usize,
+    protection: MMapProt,
+    flags: MMapFlags,
+    fd: usize,
+    offset: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall6(
+        prelude::SYS_MMAP,
+        address,
+        size,
+        protection.bits(),
+        flags.bits(),
+        fd,
+        offset,
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_getpid</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_GETPID</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_getpid() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall0(prelude::SYS_GETPID);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_gettid</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_GETTID</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_gettid() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall0(prelude::SYS_GETTID);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_gethostname</span>(<span class="ident">buf</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(
-        <span class="ident">prelude::SYS_GETHOSTNAME</span>,
-        <span class="ident">buf</span>.<span class="ident">as_mut_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">buf</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_gethostname(buf: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(
+        prelude::SYS_GETHOSTNAME,
+        buf.as_mut_ptr() <span class="kw">as </span>usize,
+        buf.len(),
     );
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_sethostname</span>(<span class="ident">name</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_SETHOSTNAME</span>, <span class="ident">name</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">name</span>.<span class="ident">len</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_sethostname(name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_SETHOSTNAME, name.as_ptr() <span class="kw">as </span>usize, name.len());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="comment">// Sockets</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SocketAddr</span>: <span class="ident">Send</span> <span class="op">+</span> <span class="ident">Sync</span> {}
+<span class="comment">// Sockets
+</span><span class="kw">pub trait </span>SocketAddr: Send + Sync {}
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SocketAddrUnix</span> {
-    <span class="kw">pub</span> <span class="ident">family</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">path</span>: [<span class="ident">u8</span>; <span class="number">108</span>],
+<span class="attribute">#[derive(Debug, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>SocketAddrUnix {
+    <span class="kw">pub </span>family: u32,
+    <span class="kw">pub </span>path: [u8; <span class="number">108</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">SocketAddrUnix</span> {
-    <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
-        <span class="self">Self</span> {
-            <span class="ident">family</span>: <span class="ident">AF_UNIX</span>,
-            <span class="ident">path</span>: [<span class="number">0</span>; <span class="number">108</span>],
+<span class="kw">impl </span>Default <span class="kw">for </span>SocketAddrUnix {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            family: AF_UNIX,
+            path: [<span class="number">0</span>; <span class="number">108</span>],
         }
     }
 }
 
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Clone</span>)]</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SocketAddrInet</span> {
-    <span class="kw">pub</span> <span class="ident">family</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">port</span>: [<span class="ident">u8</span>; <span class="number">2</span>],
-    <span class="kw">pub</span> <span class="ident">address</span>: [<span class="ident">u8</span>; <span class="number">4</span>],
-    <span class="kw">pub</span> <span class="ident">padding</span>: [<span class="ident">u8</span>; <span class="number">8</span>],
+<span class="attribute">#[derive(Debug, Clone)]</span>
+<span class="attribute">#[repr(C)]</span>
+<span class="kw">pub struct </span>SocketAddrInet {
+    <span class="kw">pub </span>family: u32,
+    <span class="kw">pub </span>port: [u8; <span class="number">2</span>],
+    <span class="kw">pub </span>address: [u8; <span class="number">4</span>],
+    <span class="kw">pub </span>padding: [u8; <span class="number">8</span>],
 }
 
-<span class="kw">impl</span> <span class="ident">SocketAddr</span> <span class="kw">for</span> <span class="ident">SocketAddrUnix</span> {}
-<span class="kw">impl</span> <span class="ident">SocketAddr</span> <span class="kw">for</span> <span class="ident">SocketAddrInet</span> {}
+<span class="kw">impl </span>SocketAddr <span class="kw">for </span>SocketAddrUnix {}
+<span class="kw">impl </span>SocketAddr <span class="kw">for </span>SocketAddrInet {}
 
-<span class="comment">// constants for the socket types:</span>
-<span class="comment">//</span>
-<span class="comment">// mlibc/sysdeps/aero/include/abi-bits/socket.h</span>
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SOCK_DGRAM</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SOCK_RAW</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SOCK_SEQPACKET</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">SOCK_STREAM</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4</span>;
+<span class="comment">// constants for the socket types:
+//
+// mlibc/sysdeps/aero/include/abi-bits/socket.h
+</span><span class="kw">pub const </span>SOCK_DGRAM: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>SOCK_RAW: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>SOCK_SEQPACKET: usize = <span class="number">3</span>;
+<span class="kw">pub const </span>SOCK_STREAM: usize = <span class="number">4</span>;
 
 <span class="macro">bitflags::bitflags!</span> {
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">SocketFlags</span>: <span class="ident">usize</span> {
-        <span class="kw">const</span> <span class="ident">NONBLOCK</span> <span class="op">=</span> <span class="number">0x10000</span>;
-        <span class="kw">const</span> <span class="ident">CLOEXEC</span> <span class="op">=</span> <span class="number">0x20000</span>;
+    <span class="kw">pub struct </span>SocketFlags: usize {
+        <span class="kw">const </span>NONBLOCK = <span class="number">0x10000</span>;
+        <span class="kw">const </span>CLOEXEC = <span class="number">0x20000</span>;
     }
 }
 
-<span class="kw">impl</span> <span class="ident">From</span><span class="op">&lt;</span><span class="ident">SocketFlags</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">OpenFlags</span> {
-    <span class="kw">fn</span> <span class="ident">from</span>(<span class="ident">flags</span>: <span class="ident">SocketFlags</span>) -&gt; <span class="self">Self</span> {
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">OpenFlags::empty</span>();
+<span class="kw">impl </span>From&lt;SocketFlags&gt; <span class="kw">for </span>OpenFlags {
+    <span class="kw">fn </span>from(flags: SocketFlags) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span><span class="kw-2">mut </span>result = OpenFlags::empty();
 
-        <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">SocketFlags::NONBLOCK</span>) {
-            <span class="ident">result</span>.<span class="ident">insert</span>(<span class="ident">OpenFlags::O_NONBLOCK</span>);
+        <span class="kw">if </span>flags.contains(SocketFlags::NONBLOCK) {
+            result.insert(OpenFlags::O_NONBLOCK);
         }
 
-        <span class="kw">if</span> <span class="ident">flags</span>.<span class="ident">contains</span>(<span class="ident">SocketFlags::CLOEXEC</span>) {
-            <span class="ident">result</span>.<span class="ident">insert</span>(<span class="ident">OpenFlags::O_CLOEXEC</span>);
+        <span class="kw">if </span>flags.contains(SocketFlags::CLOEXEC) {
+            result.insert(OpenFlags::O_CLOEXEC);
         }
 
-        <span class="ident">result</span>
+        result
     }
 }
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_INET</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_INET6</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">2</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_UNIX</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_LOCAL</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">3</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_UNSPEC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">4</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_NETLINK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">5</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">PF_BRIDGE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">6</span>;
+<span class="kw">pub const </span>PF_INET: u32 = <span class="number">1</span>;
+<span class="kw">pub const </span>PF_INET6: u32 = <span class="number">2</span>;
+<span class="kw">pub const </span>PF_UNIX: u32 = <span class="number">3</span>;
+<span class="kw">pub const </span>PF_LOCAL: u32 = <span class="number">3</span>;
+<span class="kw">pub const </span>PF_UNSPEC: u32 = <span class="number">4</span>;
+<span class="kw">pub const </span>PF_NETLINK: u32 = <span class="number">5</span>;
+<span class="kw">pub const </span>PF_BRIDGE: u32 = <span class="number">6</span>;
 
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_INET</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_INET</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_INET6</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_INET6</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_UNIX</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_UNIX</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_LOCAL</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_LOCAL</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_UNSPEC</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_UNSPEC</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_NETLINK</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_NETLINK</span>;
-<span class="kw">pub</span> <span class="kw">const</span> <span class="ident">AF_BRIDGE</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="ident">PF_BRIDGE</span>;
+<span class="kw">pub const </span>AF_INET: u32 = PF_INET;
+<span class="kw">pub const </span>AF_INET6: u32 = PF_INET6;
+<span class="kw">pub const </span>AF_UNIX: u32 = PF_UNIX;
+<span class="kw">pub const </span>AF_LOCAL: u32 = PF_LOCAL;
+<span class="kw">pub const </span>AF_UNSPEC: u32 = PF_UNSPEC;
+<span class="kw">pub const </span>AF_NETLINK: u32 = PF_NETLINK;
+<span class="kw">pub const </span>AF_BRIDGE: u32 = PF_BRIDGE;
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_socket</span>(
-    <span class="ident">domain</span>: <span class="ident">usize</span>,
-    <span class="ident">socket_type</span>: <span class="ident">usize</span>,
-    <span class="ident">protocol</span>: <span class="ident">usize</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(<span class="ident">prelude::SYS_SOCKET</span>, <span class="ident">domain</span>, <span class="ident">socket_type</span>, <span class="ident">protocol</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_socket(
+    domain: usize,
+    socket_type: usize,
+    protocol: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(prelude::SYS_SOCKET, domain, socket_type, protocol);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_listen</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">backlog</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_LISTEN</span>, <span class="ident">fd</span>, <span class="ident">backlog</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_listen(fd: usize, backlog: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_LISTEN, fd, backlog);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_unlink</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">flags</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall4</span>(
-        <span class="ident">prelude::SYS_UNLINK</span>,
-        <span class="ident">fd</span>,
-        <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">len</span>(),
-        <span class="ident">flags</span>.<span class="ident">bits</span>(),
+<span class="kw">pub fn </span>sys_unlink(fd: usize, path: <span class="kw-2">&amp;</span>str, flags: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall4(
+        prelude::SYS_UNLINK,
+        fd,
+        path.as_ptr() <span class="kw">as </span>usize,
+        path.len(),
+        flags.bits(),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_gettime</span>(<span class="ident">clock</span>: <span class="ident">usize</span>, <span class="ident">timespec</span>: <span class="kw-2">&amp;mut</span> <span class="ident">TimeSpec</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_GETTIME</span>, <span class="ident">clock</span>, <span class="ident">timespec</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_gettime(clock: usize, timespec: <span class="kw-2">&amp;mut </span>TimeSpec) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_GETTIME, clock, timespec <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_seek</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">offset</span>: <span class="ident">usize</span>, <span class="ident">whence</span>: <span class="ident">SeekWhence</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(<span class="ident">prelude::SYS_SEEK</span>, <span class="ident">fd</span>, <span class="ident">offset</span>, <span class="ident">whence</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_seek(fd: usize, offset: usize, whence: SeekWhence) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(prelude::SYS_SEEK, fd, offset, whence <span class="kw">as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_sleep</span>(<span class="ident">timespec</span>: <span class="kw-2">&amp;</span><span class="ident">TimeSpec</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall1</span>(<span class="ident">prelude::SYS_SLEEP</span>, <span class="ident">timespec</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_sleep(timespec: <span class="kw-2">&amp;</span>TimeSpec) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall1(prelude::SYS_SLEEP, timespec <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_pipe</span>(<span class="ident">fds</span>: <span class="kw-2">&amp;mut</span> [<span class="ident">usize</span>; <span class="number">2</span>], <span class="ident">flags</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_PIPE</span>, <span class="ident">fds</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>, <span class="ident">flags</span>.<span class="ident">bits</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_pipe(fds: <span class="kw-2">&amp;mut </span>[usize; <span class="number">2</span>], flags: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_PIPE, fds.as_ptr() <span class="kw">as </span>usize, flags.bits());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_info</span>(<span class="ident">struc</span>: <span class="kw-2">&amp;mut</span> <span class="ident">SysInfo</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall1</span>(<span class="ident">prelude::SYS_INFO</span>, <span class="ident">struc</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="kw">_</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_info(struc: <span class="kw-2">&amp;mut </span>SysInfo) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall1(prelude::SYS_INFO, struc <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_ as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_clone</span>(<span class="ident">entry</span>: <span class="ident">usize</span>, <span class="ident">stack</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_CLONE</span>, <span class="ident">entry</span>, <span class="ident">stack</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_clone(entry: usize, stack: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_CLONE, entry, stack);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_sigreturn</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_SIGRETURN</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_sigreturn() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall0(prelude::SYS_SIGRETURN);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_sigaction</span>(
-    <span class="ident">sig</span>: <span class="ident">usize</span>,
-    <span class="ident">sigaction</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">signal::SigAction</span><span class="op">&gt;</span>,
-    <span class="ident">old_sigaction</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">signal::SigAction</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">sigact</span> <span class="op">=</span> <span class="ident">sigaction</span>;
+<span class="kw">pub fn </span>sys_sigaction(
+    sig: usize,
+    sigaction: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>signal::SigAction&gt;,
+    old_sigaction: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>signal::SigAction&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>sigact = sigaction;
 
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall4</span>(
-        <span class="ident">prelude::SYS_SIGACTION</span>,
-        <span class="ident">sig</span>,
-        <span class="ident">sigact</span>
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">f</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">signal::SigAction</span> <span class="kw">as</span> <span class="ident">usize</span>))
-            .<span class="ident">unwrap_or</span>(<span class="number">0</span>),
-        <span class="ident">sys_sigreturn</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">old_sigaction</span>
-            .<span class="ident">and_then</span>(<span class="op">|</span><span class="ident">f</span><span class="op">|</span> <span class="prelude-val">Some</span>(<span class="ident">f</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">signal::SigAction</span> <span class="kw">as</span> <span class="ident">usize</span>))
-            .<span class="ident">unwrap_or</span>(<span class="number">0</span>),
+    <span class="kw">let </span>value = syscall4(
+        prelude::SYS_SIGACTION,
+        sig,
+        sigact
+            .and_then(|f| <span class="prelude-val">Some</span>(f <span class="kw">as </span><span class="kw-2">*const </span>signal::SigAction <span class="kw">as </span>usize))
+            .unwrap_or(<span class="number">0</span>),
+        sys_sigreturn <span class="kw">as </span>usize,
+        old_sigaction
+            .and_then(|f| <span class="prelude-val">Some</span>(f <span class="kw">as </span><span class="kw-2">*mut </span>signal::SigAction <span class="kw">as </span>usize))
+            .unwrap_or(<span class="number">0</span>),
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_sigprocmask</span>(
-    <span class="ident">how</span>: <span class="ident">signal::SigProcMask</span>,
-    <span class="ident">set</span>: <span class="kw-2">&amp;mut</span> <span class="ident">u64</span>,
-    <span class="ident">old_set</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;mut</span> <span class="ident">u64</span><span class="op">&gt;</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">old_set</span> <span class="op">=</span> <span class="kw">match</span> <span class="ident">old_set</span> {
-        <span class="prelude-val">Some</span>(<span class="ident">e</span>) =&gt; <span class="ident">e</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u64</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="prelude-val">None</span> =&gt; <span class="number">0</span>,
+<span class="kw">pub fn </span>sys_sigprocmask(
+    how: signal::SigProcMask,
+    set: <span class="kw-2">&amp;mut </span>u64,
+    old_set: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>u64&gt;,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>old_set = <span class="kw">match </span>old_set {
+        <span class="prelude-val">Some</span>(e) =&gt; e <span class="kw">as </span><span class="kw-2">*const </span>u64 <span class="kw">as </span>usize,
+        <span class="prelude-val">None </span>=&gt; <span class="number">0</span>,
     };
 
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_SIGPROCMASK</span>,
-        <span class="ident">how</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">set</span> <span class="kw">as</span> <span class="kw-2">*const</span> <span class="ident">u64</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">old_set</span>,
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_SIGPROCMASK,
+        how <span class="kw">as </span>usize,
+        set <span class="kw">as </span><span class="kw-2">*const </span>u64 <span class="kw">as </span>usize,
+        old_set,
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_dup</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_DUP</span>, <span class="ident">fd</span>, <span class="ident">flags</span>.<span class="ident">bits</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_dup(fd: usize, flags: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_DUP, fd, flags.bits());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_fcntl</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">command</span>: <span class="ident">usize</span>, <span class="ident">argument</span>: <span class="ident">usize</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(<span class="ident">prelude::SYS_FCNTL</span>, <span class="ident">fd</span>, <span class="ident">command</span>, <span class="ident">argument</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_fcntl(fd: usize, command: usize, argument: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(prelude::SYS_FCNTL, fd, command, argument);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_dup2</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">new_fd</span>: <span class="ident">usize</span>, <span class="ident">flags</span>: <span class="ident">OpenFlags</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(<span class="ident">prelude::SYS_DUP2</span>, <span class="ident">fd</span>, <span class="ident">new_fd</span>, <span class="ident">flags</span>.<span class="ident">bits</span>());
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_dup2(fd: usize, new_fd: usize, flags: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(prelude::SYS_DUP2, fd, new_fd, flags.bits());
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_ipc_send</span>(<span class="ident">pid</span>: <span class="ident">usize</span>, <span class="ident">message</span>: <span class="kw-2">&amp;</span>[<span class="ident">u8</span>]) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_IPC_SEND</span>,
-        <span class="ident">pid</span>,
-        <span class="ident">message</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">message</span>.<span class="ident">len</span>(),
+<span class="kw">pub fn </span>sys_ipc_send(pid: usize, message: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;(), SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_IPC_SEND,
+        pid,
+        message.as_ptr() <span class="kw">as </span>usize,
+        message.len(),
     );
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+    isize_as_syscall_result(value <span class="kw">as _</span>).map(|<span class="kw">_</span>| ())
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_ipc_recv</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-    <span class="ident">pid</span>: <span class="kw-2">&amp;mut</span> <span class="ident">usize</span>,
-    <span class="ident">message</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u8</span>],
-    <span class="ident">block</span>: <span class="ident">bool</span>,
-) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">u8</span>], <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall4</span>(
-        <span class="ident">prelude::SYS_IPC_RECV</span>,
-        <span class="ident">pid</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">usize</span> <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">message</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">message</span>.<span class="ident">len</span>(),
-        <span class="ident">block</span> <span class="kw">as</span> <span class="ident">usize</span>,
+<span class="kw">pub fn </span>sys_ipc_recv&lt;<span class="lifetime">&#39;a</span>&gt;(
+    pid: <span class="kw-2">&amp;mut </span>usize,
+    message: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u8],
+    block: bool,
+) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[u8], SyscallError&gt; {
+    <span class="kw">let </span>value = syscall4(
+        prelude::SYS_IPC_RECV,
+        pid <span class="kw">as </span><span class="kw-2">*mut </span>usize <span class="kw">as </span>usize,
+        message.as_ptr() <span class="kw">as </span>usize,
+        message.len(),
+        block <span class="kw">as </span>usize,
     );
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">map</span>(<span class="op">|</span><span class="ident">size</span><span class="op">|</span> <span class="kw-2">&amp;mut</span> <span class="ident">message</span>[<span class="number">0</span>..<span class="ident">size</span>])
+    isize_as_syscall_result(value <span class="kw">as _</span>).map(|size| <span class="kw-2">&amp;mut </span>message[<span class="number">0</span>..size])
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_ipc_discover_root</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_IPC_DISCOVER_ROOT</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_ipc_discover_root() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall0(prelude::SYS_IPC_DISCOVER_ROOT);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_ipc_become_root</span>() -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall0</span>(<span class="ident">prelude::SYS_IPC_BECOME_ROOT</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>).<span class="ident">map</span>(<span class="op">|</span><span class="kw">_</span><span class="op">|</span> ())
+<span class="kw">pub fn </span>sys_ipc_become_root() -&gt; <span class="prelude-ty">Result</span>&lt;(), SyscallError&gt; {
+    <span class="kw">let </span>value = syscall0(prelude::SYS_IPC_BECOME_ROOT);
+    isize_as_syscall_result(value <span class="kw">as _</span>).map(|<span class="kw">_</span>| ())
 }
 
-<span class="comment">// sysdeps/aero/include/abi-bits/stat.h</span>
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
-    <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Mode</span>: <span class="ident">u32</span> {
-        <span class="kw">const</span> <span class="ident">S_IFMT</span>   <span class="op">=</span> <span class="number">0x0F000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFBLK</span>  <span class="op">=</span> <span class="number">0x06000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFCHR</span>  <span class="op">=</span> <span class="number">0x02000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFIFO</span>  <span class="op">=</span> <span class="number">0x01000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFREG</span>  <span class="op">=</span> <span class="number">0x08000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFDIR</span>  <span class="op">=</span> <span class="number">0x04000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFLNK</span>  <span class="op">=</span> <span class="number">0x0A000</span>;
-        <span class="kw">const</span> <span class="ident">S_IFSOCK</span> <span class="op">=</span> <span class="number">0x0C000</span>;
+<span class="comment">// sysdeps/aero/include/abi-bits/stat.h
+</span><span class="macro">bitflags::bitflags!</span> {
+    <span class="attribute">#[derive(Default)]</span>
+    <span class="kw">pub struct </span>Mode: u32 {
+        <span class="kw">const </span>S_IFMT   = <span class="number">0x0F000</span>;
+        <span class="kw">const </span>S_IFBLK  = <span class="number">0x06000</span>;
+        <span class="kw">const </span>S_IFCHR  = <span class="number">0x02000</span>;
+        <span class="kw">const </span>S_IFIFO  = <span class="number">0x01000</span>;
+        <span class="kw">const </span>S_IFREG  = <span class="number">0x08000</span>;
+        <span class="kw">const </span>S_IFDIR  = <span class="number">0x04000</span>;
+        <span class="kw">const </span>S_IFLNK  = <span class="number">0x0A000</span>;
+        <span class="kw">const </span>S_IFSOCK = <span class="number">0x0C000</span>;
 
-        <span class="kw">const</span> <span class="ident">S_IRWXU</span> <span class="op">=</span> <span class="number">0700</span>;
-        <span class="kw">const</span> <span class="ident">S_IRUSR</span> <span class="op">=</span> <span class="number">0400</span>;
-        <span class="kw">const</span> <span class="ident">S_IWUSR</span> <span class="op">=</span> <span class="number">0200</span>;
-        <span class="kw">const</span> <span class="ident">S_IXUSR</span> <span class="op">=</span> <span class="number">0100</span>;
-        <span class="kw">const</span> <span class="ident">S_IRWXG</span> <span class="op">=</span> <span class="number">070</span>;
-        <span class="kw">const</span> <span class="ident">S_IRGRP</span> <span class="op">=</span> <span class="number">040</span>;
-        <span class="kw">const</span> <span class="ident">S_IWGRP</span> <span class="op">=</span> <span class="number">020</span>;
-        <span class="kw">const</span> <span class="ident">S_IXGRP</span> <span class="op">=</span> <span class="number">010</span>;
-        <span class="kw">const</span> <span class="ident">S_IRWXO</span> <span class="op">=</span> <span class="number">07</span>;
-        <span class="kw">const</span> <span class="ident">S_IROTH</span> <span class="op">=</span> <span class="number">04</span>;
-        <span class="kw">const</span> <span class="ident">S_IWOTH</span> <span class="op">=</span> <span class="number">02</span>;
-        <span class="kw">const</span> <span class="ident">S_IXOTH</span> <span class="op">=</span> <span class="number">01</span>;
-        <span class="kw">const</span> <span class="ident">S_ISUID</span> <span class="op">=</span> <span class="number">04000</span>;
-        <span class="kw">const</span> <span class="ident">S_ISGID</span> <span class="op">=</span> <span class="number">02000</span>;
-        <span class="kw">const</span> <span class="ident">S_ISVTX</span> <span class="op">=</span> <span class="number">01000</span>;
+        <span class="kw">const </span>S_IRWXU = <span class="number">0700</span>;
+        <span class="kw">const </span>S_IRUSR = <span class="number">0400</span>;
+        <span class="kw">const </span>S_IWUSR = <span class="number">0200</span>;
+        <span class="kw">const </span>S_IXUSR = <span class="number">0100</span>;
+        <span class="kw">const </span>S_IRWXG = <span class="number">070</span>;
+        <span class="kw">const </span>S_IRGRP = <span class="number">040</span>;
+        <span class="kw">const </span>S_IWGRP = <span class="number">020</span>;
+        <span class="kw">const </span>S_IXGRP = <span class="number">010</span>;
+        <span class="kw">const </span>S_IRWXO = <span class="number">07</span>;
+        <span class="kw">const </span>S_IROTH = <span class="number">04</span>;
+        <span class="kw">const </span>S_IWOTH = <span class="number">02</span>;
+        <span class="kw">const </span>S_IXOTH = <span class="number">01</span>;
+        <span class="kw">const </span>S_ISUID = <span class="number">04000</span>;
+        <span class="kw">const </span>S_ISGID = <span class="number">02000</span>;
+        <span class="kw">const </span>S_ISVTX = <span class="number">01000</span>;
 
-        <span class="kw">const</span> <span class="ident">S_IREAD</span>  <span class="op">=</span> <span class="ident"><span class="self">Self</span>::S_IRUSR</span>.<span class="ident">bits</span>();
-        <span class="kw">const</span> <span class="ident">S_IWRITE</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::S_IWUSR</span>.<span class="ident">bits</span>();
-        <span class="kw">const</span> <span class="ident">S_IEXEC</span>  <span class="op">=</span> <span class="ident"><span class="self">Self</span>::S_IXUSR</span>.<span class="ident">bits</span>();
+        <span class="kw">const </span>S_IREAD  = <span class="self">Self</span>::S_IRUSR.bits();
+        <span class="kw">const </span>S_IWRITE = <span class="self">Self</span>::S_IWUSR.bits();
+        <span class="kw">const </span>S_IEXEC  = <span class="self">Self</span>::S_IXUSR.bits();
     }
 }
 
-<span class="comment">// sysdeps/aero/include/abi-bits/stat.h</span>
-<span class="attribute">#[<span class="ident">repr</span>(<span class="ident">C</span>)]</span>
-<span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Debug</span>, <span class="ident">Default</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Stat</span> {
-    <span class="kw">pub</span> <span class="ident">st_dev</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">st_ino</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">st_mode</span>: <span class="ident">Mode</span>,
-    <span class="kw">pub</span> <span class="ident">st_nlink</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">st_uid</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">st_gid</span>: <span class="ident">u32</span>,
-    <span class="kw">pub</span> <span class="ident">st_rdev</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">st_size</span>: <span class="ident">i64</span>,
-    <span class="kw">pub</span> <span class="ident">st_atim</span>: <span class="ident">TimeSpec</span>,
-    <span class="kw">pub</span> <span class="ident">st_mtim</span>: <span class="ident">TimeSpec</span>,
-    <span class="kw">pub</span> <span class="ident">st_ctim</span>: <span class="ident">TimeSpec</span>,
-    <span class="kw">pub</span> <span class="ident">st_blksize</span>: <span class="ident">u64</span>,
-    <span class="kw">pub</span> <span class="ident">st_blocks</span>: <span class="ident">u64</span>,
+<span class="comment">// sysdeps/aero/include/abi-bits/stat.h
+</span><span class="attribute">#[repr(C)]</span>
+<span class="attribute">#[derive(Debug, Default)]</span>
+<span class="kw">pub struct </span>Stat {
+    <span class="kw">pub </span>st_dev: u64,
+    <span class="kw">pub </span>st_ino: u64,
+    <span class="kw">pub </span>st_mode: Mode,
+    <span class="kw">pub </span>st_nlink: u32,
+    <span class="kw">pub </span>st_uid: u32,
+    <span class="kw">pub </span>st_gid: u32,
+    <span class="kw">pub </span>st_rdev: u64,
+    <span class="kw">pub </span>st_size: i64,
+    <span class="kw">pub </span>st_atim: TimeSpec,
+    <span class="kw">pub </span>st_mtim: TimeSpec,
+    <span class="kw">pub </span>st_ctim: TimeSpec,
+    <span class="kw">pub </span>st_blksize: u64,
+    <span class="kw">pub </span>st_blocks: u64,
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_stat</span>(<span class="ident">path</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>, <span class="ident">stat</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Stat</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall3</span>(
-        <span class="ident">prelude::SYS_STAT</span>,
-        <span class="ident">path</span>.<span class="ident">as_ptr</span>() <span class="kw">as</span> <span class="ident">usize</span>,
-        <span class="ident">path</span>.<span class="ident">len</span>(),
-        <span class="ident">stat</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Stat</span> <span class="kw">as</span> <span class="ident">usize</span>,
+<span class="kw">pub fn </span>sys_stat(path: <span class="kw-2">&amp;</span>str, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall3(
+        prelude::SYS_STAT,
+        path.as_ptr() <span class="kw">as </span>usize,
+        path.len(),
+        stat <span class="kw">as </span><span class="kw-2">*mut </span>Stat <span class="kw">as </span>usize,
     );
 
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">sys_fstat</span>(<span class="ident">fd</span>: <span class="ident">usize</span>, <span class="ident">stat</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Stat</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span><span class="ident">usize</span>, <span class="ident">SyscallError</span><span class="op">&gt;</span> {
-    <span class="kw">let</span> <span class="ident">value</span> <span class="op">=</span> <span class="ident">syscall2</span>(<span class="ident">prelude::SYS_FSTAT</span>, <span class="ident">fd</span>, <span class="ident">stat</span> <span class="kw">as</span> <span class="kw-2">*mut</span> <span class="ident">Stat</span> <span class="kw">as</span> <span class="ident">usize</span>);
-    <span class="ident">isize_as_syscall_result</span>(<span class="ident">value</span> <span class="kw">as</span> <span class="kw">_</span>)
+<span class="kw">pub fn </span>sys_fstat(fd: usize, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>value = syscall2(prelude::SYS_FSTAT, fd, stat <span class="kw">as </span><span class="kw-2">*mut </span>Stat <span class="kw">as </span>usize);
+    isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>

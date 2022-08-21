@@ -152,125 +152,125 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
- */</span>
+ */
 
-<span class="kw">use</span> <span class="ident">core::fmt::Write</span>;
-<span class="kw">use</span> <span class="ident">core::sync::atomic</span>::{<span class="ident">AtomicBool</span>, <span class="ident">Ordering</span>};
+</span><span class="kw">use </span>core::fmt::Write;
+<span class="kw">use </span>core::sync::atomic::{AtomicBool, Ordering};
 
-<span class="kw">use</span> <span class="ident">log</span>::{<span class="ident">Level</span>, <span class="ident">LevelFilter</span>, <span class="ident">Metadata</span>, <span class="ident">Record</span>};
-<span class="kw">use</span> <span class="ident">spin::Once</span>;
+<span class="kw">use </span>log::{Level, LevelFilter, Metadata, Record};
+<span class="kw">use </span>spin::Once;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::userland::scheduler</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::buffer::RingBuffer</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::utils::sync::Mutex</span>;
+<span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
+<span class="kw">use </span><span class="kw">crate</span>::utils::buffer::RingBuffer;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
-<span class="kw">const</span> <span class="ident">DEFAULT_LOG_RING_BUFFER_SIZE</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">4096</span>;
+<span class="kw">const </span>DEFAULT_LOG_RING_BUFFER_SIZE: usize = <span class="number">4096</span>;
 
-<span class="kw">static</span> <span class="ident">LOG_RING_BUFFER</span>: <span class="ident">Once</span><span class="op">&lt;</span><span class="ident">Mutex</span><span class="op">&lt;</span><span class="ident">RingBuffer</span><span class="op">&lt;</span>[<span class="ident">u8</span>; <span class="ident">DEFAULT_LOG_RING_BUFFER_SIZE</span>]<span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Once::new</span>();
-<span class="kw">static</span> <span class="ident">LOGGER</span>: <span class="ident">AeroLogger</span> <span class="op">=</span> <span class="ident">AeroLogger</span>;
+<span class="kw">static </span>LOG_RING_BUFFER: Once&lt;Mutex&lt;RingBuffer&lt;[u8; DEFAULT_LOG_RING_BUFFER_SIZE]&gt;&gt;&gt; = Once::new();
+<span class="kw">static </span>LOGGER: AeroLogger = AeroLogger;
 
-<span class="kw">static</span> <span class="ident">RENDY_DEBUG</span>: <span class="ident">AtomicBool</span> <span class="op">=</span> <span class="ident">AtomicBool::new</span>(<span class="bool-val">false</span>);
+<span class="kw">static </span>RENDY_DEBUG: AtomicBool = AtomicBool::new(<span class="bool-val">false</span>);
 
-<span class="kw">struct</span> <span class="ident">AeroLogger</span>;
+<span class="kw">struct </span>AeroLogger;
 
-<span class="kw">impl</span> <span class="ident">log::Log</span> <span class="kw">for</span> <span class="ident">AeroLogger</span> {
-    <span class="kw">fn</span> <span class="ident">enabled</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">metadata</span>: <span class="kw-2">&amp;</span><span class="ident">Metadata</span>) -&gt; <span class="ident">bool</span> {
-        <span class="ident">metadata</span>.<span class="ident">level</span>() <span class="op">&lt;</span><span class="op">=</span> <span class="ident">Level::Trace</span>
+<span class="kw">impl </span>log::Log <span class="kw">for </span>AeroLogger {
+    <span class="kw">fn </span>enabled(<span class="kw-2">&amp;</span><span class="self">self</span>, metadata: <span class="kw-2">&amp;</span>Metadata) -&gt; bool {
+        metadata.level() &lt;= Level::Trace
     }
 
-    <span class="kw">fn</span> <span class="ident">log</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">record</span>: <span class="kw-2">&amp;</span><span class="ident">Record</span>) {
-        <span class="kw">if</span> <span class="self">self</span>.<span class="ident">enabled</span>(<span class="ident">record</span>.<span class="ident">metadata</span>()) {
-            <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::drivers::uart_16550</span>::<span class="kw-2">*</span>;
+    <span class="kw">fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>, record: <span class="kw-2">&amp;</span>Record) {
+        <span class="kw">if </span><span class="self">self</span>.enabled(record.metadata()) {
+            <span class="kw">use </span><span class="kw">crate</span>::drivers::uart_16550::<span class="kw-2">*</span>;
 
-            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">record</span>.<span class="ident">file</span>().<span class="ident">unwrap_or</span>(<span class="string">&quot;unknown&quot;</span>);
-            <span class="kw">let</span> <span class="ident">file</span> <span class="op">=</span> <span class="ident">file</span>.<span class="ident">strip_prefix</span>(<span class="string">&quot;aero_kernel/src/&quot;</span>).<span class="ident">unwrap_or</span>(<span class="ident">file</span>);
+            <span class="kw">let </span>file = record.file().unwrap_or(<span class="string">&quot;unknown&quot;</span>);
+            <span class="kw">let </span>file = file.strip_prefix(<span class="string">&quot;aero_kernel/src/&quot;</span>).unwrap_or(file);
 
-            <span class="kw">let</span> <span class="ident">line</span> <span class="op">=</span> <span class="ident">record</span>.<span class="ident">line</span>().<span class="ident">unwrap_or</span>(<span class="number">0</span>);
+            <span class="kw">let </span>line = record.line().unwrap_or(<span class="number">0</span>);
 
-            <span class="kw">if</span> <span class="kw">let</span> <span class="prelude-val">Some</span>(<span class="ident">pp</span>) <span class="op">=</span> <span class="ident">record</span>.<span class="ident">module_path</span>() {
-                <span class="comment">// Only log the vm logs if the vmlog feature is enabled ;^).</span>
-                <span class="kw">if</span> <span class="ident">pp</span> <span class="op">==</span> <span class="string">&quot;aero_kernel::userland::vm&quot;</span> <span class="op">&amp;&amp;</span> <span class="op">!</span><span class="macro">cfg!</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;vmlog&quot;</span>) {
+            <span class="kw">if let </span><span class="prelude-val">Some</span>(pp) = record.module_path() {
+                <span class="comment">// Only log the vm logs if the vmlog feature is enabled ;^).
+                </span><span class="kw">if </span>pp == <span class="string">&quot;aero_kernel::userland::vm&quot; </span>&amp;&amp; !<span class="macro">cfg!</span>(feature = <span class="string">&quot;vmlog&quot;</span>) {
                     <span class="kw">return</span>;
                 }
             }
 
-            <span class="kw">let</span> <span class="ident">level</span> <span class="op">=</span> <span class="ident">record</span>.<span class="ident">level</span>();
-            <span class="kw">let</span> <span class="ident">rendy_dbg</span> <span class="op">=</span> <span class="ident">RENDY_DEBUG</span>.<span class="ident">load</span>(<span class="ident">Ordering::Relaxed</span>);
+            <span class="kw">let </span>level = record.level();
+            <span class="kw">let </span>rendy_dbg = RENDY_DEBUG.load(Ordering::Relaxed);
 
-            <span class="kw">macro</span> <span class="ident">log_ln</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>:<span class="ident">tt</span>)<span class="kw-2">*</span>) {
-                <span class="macro">serial_println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>));
-                <span class="kw">if</span> <span class="ident">rendy_dbg</span> { <span class="macro-nonterminal">$</span><span class="macro">crate::rendy::println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$</span><span class="macro-nonterminal">arg</span>)<span class="kw-2">*</span>)); }
+            <span class="kw">macro </span>log_ln($(<span class="macro-nonterminal">$arg</span>:tt)<span class="kw-2">*</span>) {
+                <span class="macro">serial_println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$arg</span>)<span class="kw-2">*</span>));
+                <span class="kw">if </span>rendy_dbg { <span class="macro-nonterminal">$</span><span class="macro">crate::rendy::println!</span>(<span class="string">&quot;{}&quot;</span>, <span class="macro">format_args!</span>($(<span class="macro-nonterminal">$arg</span>)<span class="kw-2">*</span>)); }
             }
 
-            <span class="comment">// Append the log message to the log ring buffer.</span>
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">log_ring</span> <span class="op">=</span> <span class="ident">LOG_RING_BUFFER</span>.<span class="ident">get</span>().<span class="ident">unwrap</span>().<span class="ident">lock_irq</span>();
-            <span class="kw">let</span> <span class="kw">_</span> <span class="op">=</span> <span class="macro">writeln!</span>(<span class="ident">log_ring</span>, <span class="string">&quot;[{}] {}&quot;</span>, <span class="ident">level</span>, <span class="ident">record</span>.<span class="ident">args</span>());
+            <span class="comment">// Append the log message to the log ring buffer.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>log_ring = LOG_RING_BUFFER.get().unwrap().lock_irq();
+            <span class="kw">let _ </span>= <span class="macro">writeln!</span>(log_ring, <span class="string">&quot;[{}] {}&quot;</span>, level, record.args());
 
             <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[37;1m{file}:{line} &quot;</span>);
 
-            <span class="kw">if</span> <span class="ident">scheduler::is_initialized</span>() {
-                <span class="comment">// fetch the current task, grab the TID and PID.</span>
-                <span class="ident">scheduler::get_scheduler</span>()
-                    .<span class="ident">inner</span>
-                    .<span class="ident">current_task_optional</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span><span class="ident">task</span><span class="op">|</span> {
+            <span class="kw">if </span>scheduler::is_initialized() {
+                <span class="comment">// fetch the current task, grab the TID and PID.
+                </span>scheduler::get_scheduler()
+                    .inner
+                    .current_task_optional()
+                    .map(|task| {
                         <span class="macro">serial_print!</span>(
                             <span class="string">&quot;(tid={}, pid={}) &quot;</span>,
-                            <span class="ident">task</span>.<span class="ident">tid</span>().<span class="ident">as_usize</span>(),
-                            <span class="ident">task</span>.<span class="ident">pid</span>().<span class="ident">as_usize</span>()
+                            task.tid().as_usize(),
+                            task.pid().as_usize()
                         );
                     });
             }
 
-            <span class="kw">match</span> <span class="ident">record</span>.<span class="ident">level</span>() {
-                <span class="ident">Level::Info</span> =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[32;1minfo &quot;</span>), <span class="comment">// green info</span>
-                <span class="ident">Level::Warn</span> =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[33;1mwarn &quot;</span>), <span class="comment">// yellow warn</span>
-                <span class="ident">Level::Error</span> =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[32;1merror &quot;</span>), <span class="comment">// red error</span>
-                <span class="ident">Level::Debug</span> =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[35;1mdebug &quot;</span>), <span class="comment">// gray debug</span>
-                <span class="ident">Level::Trace</span> =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[34;1mtrace &quot;</span>), <span class="comment">// blue trace</span>
-            }
+            <span class="kw">match </span>record.level() {
+                Level::Info =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[32;1minfo &quot;</span>), <span class="comment">// green info
+                </span>Level::Warn =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[33;1mwarn &quot;</span>), <span class="comment">// yellow warn
+                </span>Level::Error =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[32;1merror &quot;</span>), <span class="comment">// red error
+                </span>Level::Debug =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[35;1mdebug &quot;</span>), <span class="comment">// gray debug
+                </span>Level::Trace =&gt; <span class="macro">serial_print!</span>(<span class="string">&quot;\x1b[34;1mtrace &quot;</span>), <span class="comment">// blue trace
+            </span>}
 
             <span class="macro">crate::drivers::uart_16550::serial_print!</span>(<span class="string">&quot;\x1b[0m&quot;</span>);
-            <span class="macro">log_ln!</span>(<span class="string">&quot;{}&quot;</span>, <span class="ident">record</span>.<span class="ident">args</span>());
+            <span class="macro">log_ln!</span>(<span class="string">&quot;{}&quot;</span>, record.args());
         }
     }
 
-    <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {}
+    <span class="kw">fn </span>flush(<span class="kw-2">&amp;</span><span class="self">self</span>) {}
 }
 
-<span class="doccomment">/// Force-unlocks the logger ring buffer to prevent a deadlock.</span>
-<span class="doccomment">///</span>
-<span class="doccomment">/// ## Saftey</span>
-<span class="doccomment">/// This method is not memory safe and should be only used when absolutely necessary.</span>
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">unsafe</span> <span class="kw">fn</span> <span class="ident">force_unlock</span>() {
-    <span class="ident">LOG_RING_BUFFER</span>.<span class="ident">get</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">l</span>.<span class="ident">force_unlock</span>());
+<span class="doccomment">/// Force-unlocks the logger ring buffer to prevent a deadlock.
+///
+/// ## Saftey
+/// This method is not memory safe and should be only used when absolutely necessary.
+</span><span class="attribute">#[inline]</span>
+<span class="kw">pub unsafe fn </span>force_unlock() {
+    LOG_RING_BUFFER.get().map(|l| l.force_unlock());
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">get_log_buffer</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>() -&gt; <span class="ident">String</span> {
-    <span class="ident">LOG_RING_BUFFER</span>
-        .<span class="ident">get</span>()
-        .<span class="ident">map</span>(<span class="op">|</span><span class="ident">l</span><span class="op">|</span> <span class="ident">String::from</span>(<span class="ident">l</span>.<span class="ident">lock_irq</span>().<span class="ident">extract</span>()))
-        .<span class="ident">expect</span>(<span class="string">&quot;log: attempted to get the log ring buffer before it was initialized&quot;</span>)
-        .<span class="ident">clone</span>()
+<span class="kw">pub fn </span>get_log_buffer&lt;<span class="lifetime">&#39;a</span>&gt;() -&gt; String {
+    LOG_RING_BUFFER
+        .get()
+        .map(|l| String::from(l.lock_irq().extract()))
+        .expect(<span class="string">&quot;log: attempted to get the log ring buffer before it was initialized&quot;</span>)
+        .clone()
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">enabled_rendy_debug</span>() -&gt; <span class="ident">bool</span> {
-    <span class="ident">RENDY_DEBUG</span>.<span class="ident">load</span>(<span class="ident">Ordering::SeqCst</span>)
+<span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>enabled_rendy_debug() -&gt; bool {
+    RENDY_DEBUG.load(Ordering::SeqCst)
 }
 
-<span class="attribute">#[<span class="ident">inline</span>]</span>
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">set_rendy_debug</span>(<span class="ident">yes</span>: <span class="ident">bool</span>) {
-    <span class="ident">RENDY_DEBUG</span>.<span class="ident">store</span>(<span class="ident">yes</span>, <span class="ident">Ordering::SeqCst</span>);
+<span class="attribute">#[inline]</span>
+<span class="kw">pub fn </span>set_rendy_debug(yes: bool) {
+    RENDY_DEBUG.store(yes, Ordering::SeqCst);
 }
 
-<span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">init</span>() {
-    <span class="ident">LOG_RING_BUFFER</span>.<span class="ident">call_once</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">Mutex::new</span>(<span class="ident">RingBuffer::new</span>([<span class="number">0</span>; <span class="ident">DEFAULT_LOG_RING_BUFFER_SIZE</span>])));
+<span class="kw">pub fn </span>init() {
+    LOG_RING_BUFFER.call_once(|| Mutex::new(RingBuffer::new([<span class="number">0</span>; DEFAULT_LOG_RING_BUFFER_SIZE])));
 
-    <span class="ident">log::set_logger</span>(<span class="kw-2">&amp;</span><span class="ident">LOGGER</span>)
-        .<span class="ident">map</span>(<span class="op">|</span>()<span class="op">|</span> <span class="ident">log::set_max_level</span>(<span class="ident">LevelFilter::Trace</span>))
-        .<span class="ident">unwrap</span>();
+    log::set_logger(<span class="kw-2">&amp;</span>LOGGER)
+        .map(|()| log::set_max_level(LevelFilter::Trace))
+        .unwrap();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (0f4bcadb4 2022-07-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
