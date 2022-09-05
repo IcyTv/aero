@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/vmalloc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vmalloc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/vmalloc.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>vmalloc.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -207,7 +207,6 @@
 <span id="207">207</span>
 <span id="208">208</span>
 <span id="209">209</span>
-<span id="210">210</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -236,6 +235,7 @@
 //! at [`VMALLOC_VIRT_START`] and ending at [`VMALLOC_VIRT_END`].
 
 </span><span class="kw">use </span>alloc::boxed::Box;
+<span class="kw">use </span>alloc::collections::VecDeque;
 <span class="kw">use </span>intrusive_collections::<span class="kw-2">*</span>;
 <span class="kw">use </span>spin::Once;
 
@@ -292,17 +292,17 @@
 <span class="macro">intrusive_collections::intrusive_adapter!</span>(VmallocAreaAdaptor = Box&lt;VmallocArea&gt;: VmallocArea { link: RBTreeLink });
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Vmalloc {
-    free_list: RBTree&lt;VmallocAreaAdaptor&gt;,
+    free_list: VecDeque&lt;VmallocArea&gt;,
 }
 
 <span class="kw">impl </span>Vmalloc {
     <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">Self </span>{
-            free_list: RBTree::new(Default::default()),
+            free_list: VecDeque::new(),
         };
 
         this.free_list
-            .insert(<span class="kw">box </span>VmallocArea::new(VMALLOC_START, VMALLOC_MAX_SIZE));
+            .push_back(VmallocArea::new(VMALLOC_START, VMALLOC_MAX_SIZE));
 
         this
     }
@@ -311,10 +311,11 @@
         <span class="comment">// +1: area for the guard page.
         </span><span class="kw">let </span>size_bytes = (npages + <span class="number">1</span>) * Size4KiB::SIZE <span class="kw">as </span>usize;
 
-        <span class="kw">let </span>area = <span class="self">self
+        <span class="kw">let </span>(i, area) = <span class="self">self
             </span>.free_list
             .iter()
-            .find(|area| area.protected.lock().size &gt;= size_bytes)<span class="question-mark">?</span>;
+            .enumerate()
+            .find(|(<span class="kw">_</span>, area)| area.protected.lock().size &gt;= size_bytes)<span class="question-mark">?</span>;
 
         <span class="kw">let </span><span class="kw-2">mut </span>area_p = area.protected.lock();
         <span class="kw">let </span>address = area_p.addr.clone();
@@ -327,11 +328,7 @@
             // from the free list.
             </span>core::mem::drop(area_p); <span class="comment">// unlock
 
-            </span><span class="kw">let </span>area_ptr = area <span class="kw">as </span><span class="kw-2">*const </span>VmallocArea;
-
-            <span class="comment">// SAFETY: The constructed pointer is a valid object that is in the tree,
-            </span><span class="kw">let </span><span class="kw-2">mut </span>area_cursor = <span class="kw">unsafe </span>{ <span class="self">self</span>.free_list.cursor_mut_from_ptr(area_ptr) };
-            area_cursor.remove();
+            </span><span class="self">self</span>.free_list.remove(i);
         }
 
         <span class="comment">// subtract the size of the guard page since we are not required to allocate
@@ -384,8 +381,9 @@
             merge.addr = addr;
             merge.size += size;
         } <span class="kw">else </span>{
-            <span class="comment">// the block cannot be merged, so add it to the free list.
-            </span><span class="self">self</span>.free_list.insert(<span class="kw">box </span>VmallocArea::new(addr, size));
+            <span class="comment">// We add it to the back of the free list since, its more likely
+            // to find larger free areas in the front of the list.
+            </span><span class="self">self</span>.free_list.push_back(VmallocArea::new(addr, size));
         }
 
         <span class="comment">// subtract the size of the guard page since its not mapped.
@@ -419,4 +417,4 @@
     VMALLOC.get().expect(<span class="string">&quot;get_vmalloc: not initialized&quot;</span>).lock()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

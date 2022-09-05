@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/arch/x86_64/gdt.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gdt.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/arch/x86_64/gdt.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>gdt.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -470,14 +470,12 @@
 
 <span class="kw">use </span>alloc::alloc::alloc_zeroed;
 
-<span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
-
 <span class="kw">use </span><span class="kw">crate</span>::arch::tls::PerCpuData;
 
 <span class="kw">use </span><span class="kw">super</span>::tls;
 <span class="kw">use </span><span class="kw">crate</span>::utils::io;
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Specifies which element to load into a segment from
     /// descriptor tables (i.e., is a index to LDT or GDT table
     /// with some additional flags).
@@ -491,7 +489,7 @@
     }
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>GdtEntryFlags: u8 {
         <span class="kw">const </span>NULL = <span class="number">0</span>;
         <span class="kw">const </span>PROTECTED_MODE = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;
@@ -499,8 +497,8 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]</span>
-<span class="kw">pub enum </span>Ring {
+<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]
+</span><span class="kw">pub enum </span>Ring {
     Ring0 = <span class="number">0b00</span>,
 }
 
@@ -639,8 +637,8 @@
     }
 }
 
-<span class="attribute">#[repr(C, packed)]</span>
-<span class="kw">struct </span>GdtDescriptor {
+<span class="attribute">#[repr(C, packed)]
+</span><span class="kw">struct </span>GdtDescriptor {
     <span class="doccomment">/// The size of the table subtracted by 1.
     /// The size of the table is subtracted by 1 as the maximum value
     /// of `size` is 65535, while the GDT can be up to 65536 bytes.
@@ -651,15 +649,15 @@
 
 <span class="kw">impl </span>GdtDescriptor {
     <span class="doccomment">/// Create a new GDT descriptor.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub const fn </span>new(size: u16, offset: u64) -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>new(size: u16, offset: u64) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ size, offset }
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>GdtEntry {
+<span class="attribute">#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+</span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>GdtEntry {
     limit_low: u16,
     base_low: u16,
     base_middle: u8,
@@ -707,8 +705,8 @@
 <span class="doccomment">/// Although hardware task-switching is not supported in 64-bit mode, a task
 /// state segment is required since the it holds information important to 64-bit
 /// mode and its not directly related to task switching mechanism.
-</span><span class="attribute">#[repr(C, packed)]</span>
-<span class="kw">pub struct </span>Tss {
+</span><span class="attribute">#[repr(C, packed)]
+</span><span class="kw">pub struct </span>Tss {
     reserved: u32, <span class="comment">// offset 0x00
 
     </span><span class="doccomment">/// The full 64-bit canonical forms of the stack pointers (RSP) for
@@ -728,8 +726,8 @@
 </span>}
 
 <span class="comment">// Processor Control Region
-</span><span class="attribute">#[repr(C, packed)]</span>
-<span class="kw">pub struct </span>Kpcr {
+</span><span class="attribute">#[repr(C, packed)]
+</span><span class="kw">pub struct </span>Kpcr {
     <span class="kw">pub </span>tss: Tss,
     <span class="kw">pub </span>cpu_local: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PerCpuData,
 }
@@ -768,11 +766,13 @@
     <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(io::rdmsr(io::IA32_GS_BASE) <span class="kw">as </span><span class="kw-2">*mut </span>Kpcr) }
 }
 
+<span class="kw">static </span>STK: [u8; <span class="number">4096 </span>* <span class="number">16</span>] = [<span class="number">0</span>; <span class="number">4096 </span>* <span class="number">16</span>];
+
 <span class="doccomment">/// Initialize the *actual* GDT stored in TLS.
 ///
 /// ## Saftey
 /// The heap must be initialized before this function is called.
-</span><span class="kw">pub fn </span>init(stack_top: VirtAddr) {
+</span><span class="kw">pub fn </span>init() {
     <span class="kw">let </span>gdt = <span class="kw">unsafe </span>{
         <span class="kw">let </span>gdt_ent_size = core::mem::size_of::&lt;GdtEntry&gt;();
         <span class="kw">let </span>gdt_ent_align = core::mem::align_of::&lt;GdtEntry&gt;();
@@ -795,7 +795,7 @@
         gdt[GdtEntryType::TSS <span class="kw">as </span>usize].set_limit(mem::size_of::&lt;Tss&gt;() <span class="kw">as </span>u32);
         gdt[GdtEntryType::TSS_HI <span class="kw">as </span>usize].set_raw((tss_ptr <span class="kw">as </span>u64) &gt;&gt; <span class="number">32</span>);
 
-        tss_ref.rsp[<span class="number">0</span>] = stack_top.as_u64();
+        tss_ref.rsp[<span class="number">0</span>] = STK.as_ptr().offset(<span class="number">4096 </span>* <span class="number">16</span>) <span class="kw">as </span>u64;
 
         <span class="kw">let </span>gdt_descriptor = GdtDescriptor::new(
             (mem::size_of::&lt;[GdtEntry; GDT_ENTRY_COUNT]&gt;() - <span class="number">1</span>) <span class="kw">as </span>u16,
@@ -819,8 +819,8 @@
     </span>tls::get_percpu().gdt = gdt;
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_cs(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_cs(selector: SegmentSelector) {
     <span class="comment">/*
      * NOTE: We cannot directly move into CS since x86 requires the IP
      * and CS set at the same time. To do this, we need push the new segment
@@ -842,39 +842,39 @@
     );
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_ds(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_ds(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov ds, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_es(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_es(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov es, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_fs(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_fs(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov fs, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_gs(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_gs(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov gs, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_ss(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_ss(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov ss, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_tss(selector: SegmentSelector) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_tss(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;ltr {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nostack, nomem));
 }
 
-<span class="attribute">#[inline(always)]</span>
-<span class="kw">unsafe fn </span>load_gdt(gdt_descriptor: <span class="kw-2">&amp;</span>GdtDescriptor) {
+<span class="attribute">#[inline(always)]
+</span><span class="kw">unsafe fn </span>load_gdt(gdt_descriptor: <span class="kw-2">&amp;</span>GdtDescriptor) {
     <span class="macro">asm!</span>(<span class="string">&quot;lgdt [{}]&quot;</span>, <span class="kw">in</span>(reg) gdt_descriptor, options(nostack));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

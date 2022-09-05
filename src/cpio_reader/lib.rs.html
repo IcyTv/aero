@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/cpio_reader-2b85ed30243818d2/8ae88c2/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../cpio_reader/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../cpio_reader/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../cpio_reader/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/cpio_reader-2b85ed30243818d2/8ae88c2/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../cpio_reader/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../cpio_reader/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../cpio_reader/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -492,11 +492,11 @@
 <span id="492">492</span>
 <span id="493">493</span>
 <span id="494">494</span>
-</pre><pre class="rust"><code><span class="attribute">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]</span>
-<span class="attribute">#![no_std]</span>
-<span class="attribute">#![deny(unsafe_code)]</span>
+</pre><pre class="rust"><code><span class="attribute">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
+#![no_std]
+#![deny(unsafe_code)]
 
-<span class="kw">use </span>{
+</span><span class="kw">use </span>{
     bitflags::bitflags,
     core::{convert::TryInto, str},
 };
@@ -510,8 +510,8 @@
 }
 
 <span class="doccomment">/// An entry of a cpio file.
-</span><span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]</span>
-<span class="kw">pub struct </span>Entry&lt;<span class="lifetime">&#39;a</span>&gt; {
+</span><span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub struct </span>Entry&lt;<span class="lifetime">&#39;a</span>&gt; {
     dev: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     devmajor: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     devminor: <span class="prelude-ty">Option</span>&lt;u32&gt;,
@@ -532,8 +532,8 @@
     ///
     /// This method returns [`None`] if the cpio file format is either New ASCII Format or New CRC
     /// Format. For these formats, use [`Entry::devmajor`] and [`Entry::devminor`].
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>dev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>dev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.dev
     }
 
@@ -541,8 +541,8 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::dev`].
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>devmajor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>devmajor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.devmajor
     }
 
@@ -550,39 +550,39 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::dev`].
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>devminor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>devminor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.devminor
     }
 
     <span class="doccomment">/// Returns the inode number of the file.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>ino(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>ino(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.ino
     }
 
     <span class="doccomment">/// Returns the [`Mode`] value of the file, which contains the file&#39;s permission information
     /// and file type.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>mode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Mode {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>mode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Mode {
         <span class="self">self</span>.mode
     }
 
     <span class="doccomment">/// Returns the user id of the owner of the file.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>uid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>uid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.uid
     }
 
     <span class="doccomment">/// Returns the group id of the owner of the file.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>gid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>gid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.gid
     }
 
     <span class="doccomment">/// Returns the number of links to this file.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>nlink(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>nlink(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.nlink
     }
 
@@ -591,8 +591,8 @@
     ///
     /// This method returns [`None`] if the entry format is either New ASCII Format or New CRC
     /// Format. For these formats, use [`Entry::rdevmajor`] and [`Entry::rdevminor`].
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>rdev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>rdev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.rdev
     }
 
@@ -602,8 +602,8 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::rdev`].
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>rdevmajor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>rdevmajor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.rdevmajor
     }
 
@@ -613,20 +613,20 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::rdev`].
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>rdevminor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>rdevminor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.rdevminor
     }
 
     <span class="doccomment">/// Returns the modification time of this file.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>mtime(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>mtime(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.mtime
     }
 
     <span class="doccomment">/// Returns the filename.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
         <span class="self">self</span>.name
     }
 
@@ -635,8 +635,8 @@
     /// This method returns the path to the original file if the file is a symbolic link. For the
     /// New ASCII Format and New CRC Format, this method returns an empty slice if the file is a
     /// hard link and is not the last entry of the multiple duplicate files.
-    </span><span class="attribute">#[must_use]</span>
-    <span class="kw">pub fn </span>file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8] {
+    </span><span class="attribute">#[must_use]
+    </span><span class="kw">pub fn </span>file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8] {
         <span class="self">self</span>.file
     }
 
@@ -839,7 +839,7 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
+<span class="macro">bitflags! </span>{
     <span class="doccomment">/// File information.
     </span><span class="kw">pub struct </span>Mode: u32 {
         <span class="doccomment">/// User executable bit.
@@ -973,8 +973,8 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]</span>
-<span class="kw">enum </span>Endianness {
+<span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">enum </span>Endianness {
     Big,
     Little,
 }
@@ -987,4 +987,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cpio_reader" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cpio_reader" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

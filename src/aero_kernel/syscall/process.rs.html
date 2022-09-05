@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/syscall/process.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>process.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/syscall/process.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>process.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -381,13 +381,13 @@
     HOSTNAME.call_once(|| Mutex::new(String::from(<span class="string">&quot;aero&quot;</span>)))
 }
 
-<span class="attribute">#[syscall(no_return)]</span>
-<span class="kw">pub fn </span>exit(status: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
-    <span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;ci&quot;</span>))]</span>
-    <span class="kw">crate</span>::emu::exit_qemu(<span class="kw">crate</span>::emu::ExitStatus::Success);
+<span class="attribute">#[syscall(no_return)]
+</span><span class="kw">pub fn </span>exit(status: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;ci&quot;</span>))]
+    </span><span class="kw">crate</span>::emu::exit_qemu(<span class="kw">crate</span>::emu::ExitStatus::Success);
 
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;ci&quot;</span>))]</span>
-    {
+    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;ci&quot;</span>))]
+    </span>{
         <span class="macro">log::trace!</span>(
             <span class="string">&quot;exiting the process (pid={pid}) with status: {status}&quot;</span>,
             pid = scheduler::get_scheduler().current_task().pid().as_usize(),
@@ -400,8 +400,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>uname(buffer: <span class="kw-2">&amp;mut </span>Utsname) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>uname(buffer: <span class="kw-2">&amp;mut </span>Utsname) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">fn </span>init_array(fixed: <span class="kw-2">&amp;mut </span>[u8; <span class="number">65</span>], init: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) {
         <span class="kw">let </span>init_bytes = init.as_bytes();
         <span class="kw">let </span>len = init.len();
@@ -417,17 +417,17 @@
         <span class="macro">concat!</span>(<span class="macro">env!</span>(<span class="string">&quot;CARGO_PKG_VERSION&quot;</span>), <span class="string">&quot;-aero&quot;</span>),
     );
 
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]</span>
-    init_array(<span class="kw-2">&amp;mut </span>buffer.machine, <span class="string">&quot;x86_64&quot;</span>);
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span>init_array(<span class="kw-2">&amp;mut </span>buffer.machine, <span class="string">&quot;x86_64&quot;</span>);
 
-    <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;x86_64&quot;</span>))]</span>
-    init_array(<span class="kw-2">&amp;mut </span>buffer.machine, <span class="string">&quot;unknown&quot;</span>);
+    <span class="attribute">#[cfg(not(target_arch = <span class="string">&quot;x86_64&quot;</span>))]
+    </span>init_array(<span class="kw-2">&amp;mut </span>buffer.machine, <span class="string">&quot;unknown&quot;</span>);
 
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>fork() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>fork() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>scheduler = scheduler::get_scheduler();
     <span class="kw">let </span>forked = scheduler.current_task().fork();
 
@@ -435,8 +435,8 @@
     <span class="prelude-val">Ok</span>(forked.pid().as_usize())
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>clone(entry: usize, stack: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>clone(entry: usize, stack: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>scheduler = scheduler::get_scheduler();
     <span class="kw">let </span>cloned = scheduler.current_task().clone_process(entry, stack);
 
@@ -444,8 +444,8 @@
     <span class="prelude-val">Ok</span>(cloned.pid().as_usize())
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>kill(pid: usize, signal: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>kill(pid: usize, signal: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// If pid is positive, then signal is sent to the process with that pid.
     </span><span class="kw">if </span>pid &gt; <span class="number">0 </span>{
         <span class="kw">let </span>task = scheduler::get_scheduler()
@@ -459,8 +459,8 @@
     }
 }
 
-<span class="attribute">#[syscall(no_return)]</span>
-<span class="kw">pub fn </span>exec(
+<span class="attribute">#[syscall(no_return)]
+</span><span class="kw">pub fn </span>exec(
     path: <span class="kw-2">&amp;</span>Path,
     args: usize,
     argc: usize,
@@ -501,22 +501,22 @@
     <span class="macro">unreachable!</span>()
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>log(msg: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>log(msg: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="macro">log::debug!</span>(<span class="string">&quot;{}&quot;</span>, msg);
 
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>waitpid(pid: usize, status: <span class="kw-2">&amp;mut </span>u32, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>waitpid(pid: usize, status: <span class="kw-2">&amp;mut </span>u32, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
 
     <span class="prelude-val">Ok</span>(current_task.waitpid(pid <span class="kw">as </span>isize, status)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>mmap(
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>mmap(
     address: usize,
     size: usize,
     protection: usize,
@@ -552,8 +552,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>munmap(address: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>munmap(address: usize, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>address = VirtAddr::new(address <span class="kw">as </span>u64);
 
     <span class="kw">if </span>scheduler::get_scheduler()
@@ -567,24 +567,24 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>backtrace() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>backtrace() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">crate</span>::unwind::unwind_stack_trace();
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>getpid() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>getpid() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="prelude-val">Ok</span>(scheduler::get_scheduler().current_task().pid().as_usize())
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>gettid() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>gettid() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="prelude-val">Ok</span>(scheduler::get_scheduler().current_task().tid().as_usize())
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>gethostname(buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>gethostname(buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>hostname = hostname().lock();
     <span class="kw">let </span>bytes = hostname.as_bytes();
 
@@ -597,15 +597,15 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>info(struc: <span class="kw-2">&amp;mut </span>SysInfo) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>info(struc: <span class="kw-2">&amp;mut </span>SysInfo) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     struc.uptime = <span class="kw">crate</span>::time::get_uptime_ticks() <span class="kw">as </span>i64;
 
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>sethostname(name: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>sethostname(name: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">match </span>core::str::from_utf8(name) {
         <span class="prelude-val">Ok</span>(name) =&gt; {
             <span class="kw-2">*</span>hostname().lock() = name.into();
@@ -616,8 +616,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>sigprocmask(how: usize, set: <span class="kw-2">*const </span>u64, old_set: <span class="kw-2">*mut </span>u64) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>sigprocmask(how: usize, set: <span class="kw-2">*const </span>u64, old_set: <span class="kw-2">*mut </span>u64) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>set = <span class="kw">if </span>set.is_null() {
         <span class="prelude-val">None
     </span>} <span class="kw">else </span>{
@@ -640,8 +640,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>sigaction(
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>sigaction(
     sig: usize,
     sigact: <span class="kw-2">*mut </span>SigAction,
     sigreturn: usize,
@@ -674,8 +674,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall(no_return)]</span>
-<span class="kw">pub fn </span>shutdown() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall(no_return)]
+</span><span class="kw">pub fn </span>shutdown() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     fs::cache::dcache().log();
 
     fs::cache::clear_inode_cache();
@@ -687,4 +687,4 @@
     <span class="macro">unreachable!</span>(<span class="string">&quot;aml: failed to shutdown (enter state S5)&quot;</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

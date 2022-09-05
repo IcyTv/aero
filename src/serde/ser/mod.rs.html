@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.133/src/ser/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.133/src/ser/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -2101,16 +2101,16 @@
 
 <span class="kw">pub use </span><span class="self">self</span>::impossible::Impossible;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="attribute">#[doc(no_inline)]</span>
-<span class="kw">pub use </span>std::error::Error <span class="kw">as </span>StdError;
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]</span>
-<span class="attribute">#[doc(no_inline)]</span>
-<span class="kw">pub use </span>std_error::Error <span class="kw">as </span>StdError;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+#[doc(no_inline)]
+</span><span class="kw">pub use </span>std::error::Error <span class="kw">as </span>StdError;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+#[doc(no_inline)]
+</span><span class="kw">pub use </span>std_error::Error <span class="kw">as </span>StdError;
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="macro">macro_rules!</span> declare_error_trait {
+</span><span class="macro">macro_rules! </span>declare_error_trait {
     (Error: Sized $(+ $(<span class="macro-nonterminal">$supertrait</span>:ident)::+)<span class="kw-2">*</span>) =&gt; {
         <span class="doccomment">/// Trait used by `Serialize` implementations to generically construct
         /// errors belonging to the `Serializer` against which they are
@@ -2165,11 +2165,11 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">declare_error_trait!</span>(Error: Sized + StdError);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">declare_error_trait!</span>(Error: Sized + StdError);
 
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]</span>
-<span class="macro">declare_error_trait!</span>(Error: Sized + Debug + Display);
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="macro">declare_error_trait!</span>(Error: Sized + Debug + Display);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
@@ -2472,7 +2472,7 @@
     /// ```
     </span><span class="kw">fn </span>serialize_i64(<span class="self">self</span>, v: i64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;;
 
-    <span class="macro">serde_if_integer128!</span> {
+    <span class="macro">serde_if_integer128! </span>{
         <span class="doccomment">/// Serialize an `i128` value.
         ///
         /// ```edition2018
@@ -2582,7 +2582,7 @@
     /// ```
     </span><span class="kw">fn </span>serialize_u64(<span class="self">self</span>, v: u64) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;;
 
-    <span class="macro">serde_if_integer128!</span> {
+    <span class="macro">serde_if_integer128! </span>{
         <span class="doccomment">/// Serialize a `u128` value.
         ///
         /// ```edition2018
@@ -3266,14 +3266,14 @@
         <span class="kw">let </span>iter = iter.into_iter();
         <span class="kw">let </span><span class="kw-2">mut </span>serializer = <span class="macro">try!</span>(<span class="self">self</span>.serialize_seq(iterator_len_hint(<span class="kw-2">&amp;</span>iter)));
 
-        <span class="attribute">#[cfg(iterator_try_fold)]</span>
-        {
+        <span class="attribute">#[cfg(iterator_try_fold)]
+        </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>iter = iter;
             <span class="macro">try!</span>(iter.try_for_each(|item| serializer.serialize_element(<span class="kw-2">&amp;</span>item)));
         }
 
-        <span class="attribute">#[cfg(not(iterator_try_fold))]</span>
-        {
+        <span class="attribute">#[cfg(not(iterator_try_fold))]
+        </span>{
             <span class="kw">for </span>item <span class="kw">in </span>iter {
                 <span class="macro">try!</span>(serializer.serialize_element(<span class="kw-2">&amp;</span>item));
             }
@@ -3317,14 +3317,14 @@
         <span class="kw">let </span>iter = iter.into_iter();
         <span class="kw">let </span><span class="kw-2">mut </span>serializer = <span class="macro">try!</span>(<span class="self">self</span>.serialize_map(iterator_len_hint(<span class="kw-2">&amp;</span>iter)));
 
-        <span class="attribute">#[cfg(iterator_try_fold)]</span>
-        {
+        <span class="attribute">#[cfg(iterator_try_fold)]
+        </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>iter = iter;
             <span class="macro">try!</span>(iter.try_for_each(|(key, value)| serializer.serialize_entry(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>value)));
         }
 
-        <span class="attribute">#[cfg(not(iterator_try_fold))]</span>
-        {
+        <span class="attribute">#[cfg(not(iterator_try_fold))]
+        </span>{
             <span class="kw">for </span>(key, value) <span class="kw">in </span>iter {
                 <span class="macro">try!</span>(serializer.serialize_entry(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>value));
             }
@@ -3363,8 +3363,8 @@
     ///
     /// [`String`]: https://doc.rust-lang.org/std/string/struct.String.html
     /// [`serialize_str`]: #tymethod.serialize_str
-    </span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-    <span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
+    </span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    </span><span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>T: Display,
     {
@@ -3398,8 +3398,8 @@
     ///     }
     /// }
     /// ```
-    </span><span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-    <span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
+    </span><span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    </span><span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>T: Display;
 
@@ -3451,8 +3451,8 @@
     /// human-readable to compact or vice versa should be regarded as a breaking
     /// change, as a value serialized in human-readable mode is not required to
     /// deserialize from the same data in compact mode.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>is_human_readable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>is_human_readable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">true
     </span>}
 }
@@ -3885,8 +3885,8 @@
         </span>T: Serialize;
 
     <span class="doccomment">/// Indicate that a struct field has been skipped.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>skip_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>skip_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let _ </span>= key;
         <span class="prelude-val">Ok</span>(())
     }
@@ -3951,8 +3951,8 @@
         </span>T: Serialize;
 
     <span class="doccomment">/// Indicate that a struct variant field has been skipped.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>skip_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>skip_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let _ </span>= key;
         <span class="prelude-val">Ok</span>(())
     }
@@ -3971,4 +3971,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

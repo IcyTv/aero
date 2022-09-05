@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/rendy.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rendy.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../aero_kernel/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/rendy.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rendy.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../aero_kernel/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -966,10 +966,6 @@
 <span id="966">966</span>
 <span id="967">967</span>
 <span id="968">968</span>
-<span id="969">969</span>
-<span id="970">970</span>
-<span id="971">971</span>
-<span id="972">972</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -996,14 +992,12 @@
 
 <span class="kw">use </span>alloc::boxed::Box;
 
+<span class="kw">use </span>limine::LimineFramebuffer;
 <span class="kw">use </span>spin::Once;
 
 <span class="kw">use </span><span class="kw">crate</span>::cmdline::CommandLine;
 <span class="kw">use </span><span class="kw">crate</span>::mem;
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::align_up;
-<span class="kw">use </span><span class="kw">crate</span>::mem::paging::PhysAddr;
-
-<span class="kw">use </span>stivale_boot::v2::StivaleFramebufferTag;
 
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
@@ -1041,22 +1035,22 @@
 
 <span class="kw">pub const </span>DEFAULT_THEME_BACKGROUND: u32 = <span class="number">0x50000000</span>;
 
-<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]</span>
-<span class="kw">struct </span>Character {
+<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
+</span><span class="kw">struct </span>Character {
     char: char,
     fg: u32,
     bg: u32,
 }
 
-<span class="attribute">#[derive(Debug, PartialEq, Clone)]</span>
-<span class="kw">struct </span>QueueCharacter {
+<span class="attribute">#[derive(Debug, PartialEq, Clone)]
+</span><span class="kw">struct </span>QueueCharacter {
     char: Character,
     x: usize,
     y: usize,
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
-<span class="kw">pub struct </span>ColorCode(u32, u32);
+<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+</span><span class="kw">pub struct </span>ColorCode(u32, u32);
 
 <span class="kw">impl </span>ColorCode {
     <span class="kw">pub fn </span>new(foreground: u32, background: u32) -&gt; ColorCode {
@@ -1073,9 +1067,9 @@
 }
 
 <span class="doccomment">/// Color format of pixels in the framebuffer.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="attribute">#[allow(warnings)]</span> <span class="comment">// FIXME: Construct the other variants of this enum.
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[repr(C)]
+#[allow(warnings)] </span><span class="comment">// FIXME: Construct the other variants of this enum.
 </span><span class="kw">pub enum </span>PixelFormat {
     <span class="doccomment">/// One byte red, then one byte green, then one byte blue.
     </span>RGB,
@@ -1085,9 +1079,9 @@
     </span>U8,
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>RendyInfo {
+<span class="attribute">#[derive(Debug, Clone, Copy)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>RendyInfo {
     <span class="doccomment">/// The total size in bytes.
     </span><span class="kw">pub </span>byte_len: usize,
     <span class="doccomment">/// The width in pixels.
@@ -1115,8 +1109,8 @@
     <span class="kw">pub </span>blue_mask_size: u8,
 }
 
-<span class="attribute">#[repr(C, packed)]</span>
-<span class="kw">struct </span>BmpHeader {
+<span class="attribute">#[repr(C, packed)]
+</span><span class="kw">struct </span>BmpHeader {
     bf_signature: [u8; <span class="number">2</span>],
     bf_size: u32,
     reserved: u32,
@@ -1138,8 +1132,8 @@
     blue_mask: u32,
 }
 
-<span class="attribute">#[derive(Debug)]</span>
-<span class="kw">struct </span>Image {
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>Image {
     image: Box&lt;[u8]&gt;,
 
     img_width: usize,
@@ -1763,8 +1757,8 @@
     DEBUG_RENDY.get().is_some()
 }
 
-<span class="attribute">#[doc(hidden)]</span>
-<span class="kw">pub fn </span>_print(args: fmt::Arguments) {
+<span class="attribute">#[doc(hidden)]
+</span><span class="kw">pub fn </span>_print(args: fmt::Arguments) {
     DEBUG_RENDY.get().map(|l| l.lock_irq().write_fmt(args));
 }
 
@@ -1910,14 +1904,14 @@
     DEBUG_RENDY.get().map(|l| l.force_unlock());
 }
 
-<span class="kw">pub fn </span>init(framebuffer_tag: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleFramebufferTag, cmdline: <span class="kw-2">&amp;</span>CommandLine) {
+<span class="kw">pub fn </span>init(framebuffer_tag: <span class="kw-2">&amp;</span>LimineFramebuffer, cmdline: <span class="kw-2">&amp;</span>CommandLine) {
     <span class="kw">let </span>framebuffer_info = RendyInfo {
         byte_len: framebuffer_tag.size(),
-        bits_per_pixel: framebuffer_tag.framebuffer_bpp <span class="kw">as </span>usize,
-        horizontal_resolution: framebuffer_tag.framebuffer_width <span class="kw">as </span>usize,
-        vertical_resolution: framebuffer_tag.framebuffer_height <span class="kw">as </span>usize,
+        bits_per_pixel: framebuffer_tag.bpp <span class="kw">as </span>usize,
+        horizontal_resolution: framebuffer_tag.width <span class="kw">as </span>usize,
+        vertical_resolution: framebuffer_tag.height <span class="kw">as </span>usize,
         pixel_format: PixelFormat::BGR,
-        stride: framebuffer_tag.framebuffer_pitch <span class="kw">as </span>usize,
+        stride: framebuffer_tag.pitch <span class="kw">as </span>usize,
 
         red_mask_shift: framebuffer_tag.red_mask_shift,
         red_mask_size: framebuffer_tag.red_mask_size,
@@ -1929,11 +1923,9 @@
         blue_mask_size: framebuffer_tag.blue_mask_size,
     };
 
-    <span class="kw">let </span>framebuffer_addr = PhysAddr::new(framebuffer_tag.framebuffer_addr).as_hhdm_virt();
-
     <span class="kw">let </span>framebuffer = <span class="kw">unsafe </span>{
         core::slice::from_raw_parts_mut::&lt;u32&gt;(
-            framebuffer_addr.as_mut_ptr(),
+            framebuffer_tag.address.as_ptr().unwrap() <span class="kw">as </span><span class="kw-2">*mut </span>u32,
             framebuffer_info.byte_len,
         )
     };
@@ -1943,4 +1935,4 @@
     DEBUG_RENDY.call_once(|| Mutex::new(rendy));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

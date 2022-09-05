@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/drivers/block/nvme/command.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>command.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script><script defer src="../../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/drivers/block/nvme/command.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>command.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../../normalize.css"><link rel="stylesheet" href="../../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../../dark.css" disabled><link rel="stylesheet" href="../../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../../storage.js"></script><script defer src="../../../../../source-script.js"></script><script defer src="../../../../../source-files.js"></script><script defer src="../../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -386,55 +386,55 @@
 
 </span><span class="kw">use </span>bit_field::BitField;
 
-<span class="attribute">#[repr(u8)]</span>
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="kw">pub enum </span>IdentifyCns {
+<span class="attribute">#[repr(u8)]
+#[derive(Default, Copy, Clone)]
+</span><span class="kw">pub enum </span>IdentifyCns {
     Namespace = <span class="number">0x00</span>,
     Controller = <span class="number">0x01</span>,
     ActivateList = <span class="number">0x2</span>,
 
-    <span class="attribute">#[default]</span>
-    Unknown = u8::MAX,
+    <span class="attribute">#[default]
+    </span>Unknown = u8::MAX,
 }
 
-<span class="macro">bitflags::bitflags!</span> {
-    <span class="attribute">#[derive(Default)]</span>
-    <span class="kw">pub struct </span>CommandFlags: u16 {
+<span class="macro">bitflags::bitflags! </span>{
+    <span class="attribute">#[derive(Default)]
+    </span><span class="kw">pub struct </span>CommandFlags: u16 {
         <span class="kw">const </span>QUEUE_PHYS_CONTIG = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>CQ_IRQ_ENABLED = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
     }
 }
 
-<span class="attribute">#[repr(u8)]</span>
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="kw">pub enum </span>CommandOpcode {
+<span class="attribute">#[repr(u8)]
+#[derive(Default, Copy, Clone)]
+</span><span class="kw">pub enum </span>CommandOpcode {
     Read = <span class="number">0x2</span>,
 
-    <span class="attribute">#[default]</span>
-    Unknown = u8::MAX,
+    <span class="attribute">#[default]
+    </span>Unknown = u8::MAX,
 }
 
-<span class="attribute">#[repr(u8)]</span>
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="kw">pub enum </span>AdminOpcode {
+<span class="attribute">#[repr(u8)]
+#[derive(Default, Copy, Clone)]
+</span><span class="kw">pub enum </span>AdminOpcode {
     CreateSq = <span class="number">0x1</span>,
     CreateCq = <span class="number">0x5</span>,
     Identify = <span class="number">0x6</span>,
 
-    <span class="attribute">#[default]</span>
-    Unknown = u8::MAX,
+    <span class="attribute">#[default]
+    </span>Unknown = u8::MAX,
 }
 
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DataPointer {
+<span class="attribute">#[derive(Default, Copy, Clone)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>DataPointer {
     <span class="kw">pub </span>prp1: u64,
     <span class="kw">pub </span>prp2: u64,
 }
 
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>CommonCommand {
+<span class="attribute">#[derive(Default, Copy, Clone)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>CommonCommand {
     <span class="kw">pub </span>opcode: u8,
     <span class="kw">pub </span>flags: u8,
     <span class="kw">pub </span>command_id: u16,
@@ -452,9 +452,9 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;CommonCommand&gt;(), <span class="number">64</span>);
 
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>IdentifyCommand {
+<span class="attribute">#[derive(Default, Copy, Clone)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>IdentifyCommand {
     <span class="kw">pub </span>opcode: u8,
     <span class="kw">pub </span>flags: u8,
     <span class="kw">pub </span>command_id: u16,
@@ -475,9 +475,9 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;IdentifyCommand&gt;(), <span class="number">64</span>);
 
-<span class="attribute">#[derive(Debug)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>PowerState {
+<span class="attribute">#[derive(Debug)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>PowerState {
     <span class="kw">pub </span>max_power: u16,
     <span class="kw">pub </span>rsvd1: u8,
     <span class="kw">pub </span>flags: u8,
@@ -497,9 +497,9 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;PowerState&gt;(), <span class="number">32</span>);
 
-<span class="attribute">#[derive(Debug)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>IdentifyController {
+<span class="attribute">#[derive(Debug)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>IdentifyController {
     <span class="kw">pub </span>vid: u16,
     <span class="kw">pub </span>ssvid: u16,
     <span class="kw">pub </span>sn: [u8; <span class="number">20</span>],
@@ -584,9 +584,9 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;IdentifyController&gt;(), <span class="number">0x1000</span>);
 
-<span class="attribute">#[repr(C)]</span>
-<span class="attribute">#[derive(Debug)]</span>
-<span class="kw">pub struct </span>LbaFormat {
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LbaFormat {
     <span class="kw">pub </span>ms: u16,
     <span class="kw">pub </span>ds: u8,
     <span class="kw">pub </span>rp: u8,
@@ -594,9 +594,9 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;LbaFormat&gt;(), <span class="number">4</span>);
 
-<span class="attribute">#[derive(Debug)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>IdentifyNamespace {
+<span class="attribute">#[derive(Debug)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>IdentifyNamespace {
     <span class="kw">pub </span>nsze: u64,
     <span class="kw">pub </span>ncap: u64,
     <span class="kw">pub </span>nuse: u64,
@@ -638,9 +638,9 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;IdentifyNamespace&gt;(), <span class="number">0x1000</span>);
 
-<span class="attribute">#[repr(C)]</span>
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="kw">pub struct </span>ReadWriteCommand {
+<span class="attribute">#[repr(C)]
+#[derive(Default, Copy, Clone)]
+</span><span class="kw">pub struct </span>ReadWriteCommand {
     <span class="kw">pub </span>opcode: u8,
     <span class="kw">pub </span>flags: u8,
     <span class="kw">pub </span>command_id: u16,
@@ -663,9 +663,9 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="kw">pub struct </span>CreateSQCommand {
+<span class="attribute">#[repr(C)]
+#[derive(Default, Copy, Clone)]
+</span><span class="kw">pub struct </span>CreateSQCommand {
     <span class="kw">pub </span>opcode: u8,
     <span class="kw">pub </span>flags: u8,
     <span class="kw">pub </span>command_id: u16,
@@ -685,9 +685,9 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="attribute">#[derive(Default, Copy, Clone)]</span>
-<span class="kw">pub struct </span>CreateCQCommand {
+<span class="attribute">#[repr(C)]
+#[derive(Default, Copy, Clone)]
+</span><span class="kw">pub struct </span>CreateCQCommand {
     <span class="kw">pub </span>opcode: u8,
     <span class="kw">pub </span>flags: u8,
     <span class="kw">pub </span>command_id: u16,
@@ -707,9 +707,9 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy, Debug)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>CompletionEntry {
+<span class="attribute">#[derive(Clone, Copy, Debug)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>CompletionEntry {
     dw0: u32,
     dw1: u32,
     dw2: u32,
@@ -722,8 +722,8 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub union </span>Command {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub union </span>Command {
     common: CommonCommand,
     identify: IdentifyCommand,
     rw: ReadWriteCommand,
@@ -733,4 +733,4 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;Command&gt;(), <span class="number">64</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/lai-rs-cfbd9520fedc57ae/dd82efe/src/host.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>host.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../lai/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../lai/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../lai/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/lai-rs-cfbd9520fedc57ae/dd82efe/src/host.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>host.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../lai/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../lai/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../lai/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -186,7 +186,7 @@
     }
 }
 
-<span class="macro">macro_rules!</span> marker {
+<span class="macro">macro_rules! </span>marker {
     ($(<span class="kw">fn </span><span class="macro-nonterminal">$name</span>:tt(<span class="kw-2">&amp;</span><span class="self">self</span>, $(<span class="macro-nonterminal">$pname</span>:tt: <span class="macro-nonterminal">$ptyp</span>:ty),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$ret</span>:ty);<span class="kw-2">*</span>;) =&gt; {
         $(<span class="kw">fn </span><span class="macro-nonterminal">$name</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, $(<span class="macro-nonterminal">$pname</span>: <span class="macro-nonterminal">$ptyp</span>),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$ret </span>{ <span class="macro">unimplemented!</span>() })*
     };
@@ -243,8 +243,8 @@
 </span><span class="kw">const </span>LAI_DEBUG_LOG: i32 = <span class="number">1</span>;
 <span class="kw">const </span>LAI_WARN_LOG: i32 = <span class="number">2</span>;
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_log(level: i32, message: <span class="kw-2">*const </span>u8) {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_log(level: i32, message: <span class="kw-2">*const </span>u8) {
     <span class="kw">let </span>message = <span class="kw">unsafe </span>{ c_str_as_str(message) };
 
     <span class="kw">match </span>level {
@@ -255,90 +255,90 @@
     };
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_panic(message: <span class="kw-2">*const </span>u8) -&gt; ! {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_panic(message: <span class="kw-2">*const </span>u8) -&gt; ! {
     <span class="kw">let </span>message = <span class="kw">unsafe </span>{ c_str_as_str(message) };
     <span class="macro">panic!</span>(<span class="string">&quot;{message}&quot;</span>);
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_malloc(size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_malloc(size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
     get_laihost().alloc(size)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_free(ptr: <span class="kw-2">*mut </span>u8, size: usize) {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_free(ptr: <span class="kw-2">*mut </span>u8, size: usize) {
     get_laihost().dealloc(ptr, size)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_realloc(ptr: <span class="kw-2">*mut </span>u8, old_size: usize, new_size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_realloc(ptr: <span class="kw-2">*mut </span>u8, old_size: usize, new_size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
     get_laihost().realloc(ptr, old_size, new_size)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_scan(signature: <span class="kw-2">*const </span>u8, index: usize) -&gt; <span class="kw-2">*const </span>u8 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_scan(signature: <span class="kw-2">*const </span>u8, index: usize) -&gt; <span class="kw-2">*const </span>u8 {
     <span class="kw">let </span>signature = c_str_as_str(signature);
     get_laihost().scan(signature, index)
 }
 
 <span class="comment">// Port I/O functions:
-</span><span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outb(port: u16, value: u8) {
+</span><span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outb(port: u16, value: u8) {
     get_laihost().outb(port, value)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outw(port: u16, value: u16) {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outw(port: u16, value: u16) {
     get_laihost().outw(port, value)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outd(port: u16, value: u32) {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outd(port: u16, value: u32) {
     get_laihost().outd(port, value)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inb(port: u16) -&gt; u8 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inb(port: u16) -&gt; u8 {
     get_laihost().inb(port)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inw(port: u16) -&gt; u16 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inw(port: u16) -&gt; u16 {
     get_laihost().inw(port)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_ind(port: u16) -&gt; u32 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_ind(port: u16) -&gt; u32 {
     get_laihost().ind(port)
 }
 
 <span class="comment">// Thread functions:
-</span><span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_sleep(ms: u64) {
+</span><span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_sleep(ms: u64) {
     get_laihost().sleep(ms)
 }
 
 <span class="comment">// PCI read functions:
-</span><span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readb(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u8 {
+</span><span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readb(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u8 {
     get_laihost().pci_readb(seg, bus, slot, fun, offset)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readw(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u16 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readw(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u16 {
     get_laihost().pci_readw(seg, bus, slot, fun, offset)
 }
 
-<span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readd(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u32 {
+<span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readd(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u32 {
     get_laihost().pci_readd(seg, bus, slot, fun, offset)
 }
 
 <span class="comment">// Memory functions:
-</span><span class="attribute">#[no_mangle]</span>
-<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_map(address: usize, count: usize) -&gt; <span class="kw-2">*mut </span>u8 {
+</span><span class="attribute">#[no_mangle]
+</span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_map(address: usize, count: usize) -&gt; <span class="kw-2">*mut </span>u8 {
     get_laihost().map(address, count)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

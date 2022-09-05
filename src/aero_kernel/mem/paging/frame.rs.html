@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/paging/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/paging/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -648,27 +648,6 @@
 <span id="648">648</span>
 <span id="649">649</span>
 <span id="650">650</span>
-<span id="651">651</span>
-<span id="652">652</span>
-<span id="653">653</span>
-<span id="654">654</span>
-<span id="655">655</span>
-<span id="656">656</span>
-<span id="657">657</span>
-<span id="658">658</span>
-<span id="659">659</span>
-<span id="660">660</span>
-<span id="661">661</span>
-<span id="662">662</span>
-<span id="663">663</span>
-<span id="664">664</span>
-<span id="665">665</span>
-<span id="666">666</span>
-<span id="667">667</span>
-<span id="668">668</span>
-<span id="669">669</span>
-<span id="670">670</span>
-<span id="671">671</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -693,9 +672,8 @@
 <span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
 <span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>limine::{LimineMemmapEntry, LimineMemoryMapEntryType, NonNullPtr};
 <span class="kw">use </span>spin::Once;
-<span class="kw">use </span>stivale_boot::v2::StivaleMemoryMapEntry;
-<span class="kw">use </span>stivale_boot::v2::{StivaleMemoryMapEntryType, StivaleMemoryMapIter, StivaleMemoryMapTag};
 
 <span class="kw">use </span><span class="kw">super</span>::mapper::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">super</span>::page::<span class="kw-2">*</span>;
@@ -718,15 +696,15 @@
     }
 
     <span class="doccomment">/// Initializes the inner locked global frame allocator.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>init(<span class="kw-2">&amp;</span><span class="self">self</span>, memory_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMemoryMapTag) {
+    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>init(<span class="kw-2">&amp;</span><span class="self">self</span>, memory_map: <span class="kw-2">&amp;mut </span>[NonNullPtr&lt;LimineMemmapEntry&gt;]) {
         <span class="self">self</span>.<span class="number">0
             </span>.call_once(|| Mutex::new(GlobalFrameAllocator::new(memory_map)));
     }
 }
 
 <span class="kw">unsafe impl </span>FrameAllocator&lt;Size4KiB&gt; <span class="kw">for </span>LockedFrameAllocator {
-    <span class="attribute">#[track_caller]</span>
-    <span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size4KiB&gt;&gt; {
+    <span class="attribute">#[track_caller]
+    </span><span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size4KiB&gt;&gt; {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;allocation request of 4KiB by {:?}&quot;, caller);
 
@@ -744,8 +722,8 @@
             })
     }
 
-    <span class="attribute">#[track_caller]</span>
-    <span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size4KiB&gt;) {
+    <span class="attribute">#[track_caller]
+    </span><span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size4KiB&gt;) {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;deallocation request of 4KiB by {:?}&quot;, caller);
 
@@ -757,8 +735,8 @@
 }
 
 <span class="kw">unsafe impl </span>FrameAllocator&lt;Size2MiB&gt; <span class="kw">for </span>LockedFrameAllocator {
-    <span class="attribute">#[track_caller]</span>
-    <span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size2MiB&gt;&gt; {
+    <span class="attribute">#[track_caller]
+    </span><span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size2MiB&gt;&gt; {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;allocation request of 2MiB by {:?}&quot;, caller);
 
@@ -776,8 +754,8 @@
             })
     }
 
-    <span class="attribute">#[track_caller]</span>
-    <span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size2MiB&gt;) {
+    <span class="attribute">#[track_caller]
+    </span><span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size2MiB&gt;) {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;deallocation request of 2MiB by {:?}&quot;, caller);
 
@@ -788,14 +766,14 @@
     }
 }
 
-<span class="kw">struct </span>RangeMemoryIter {
-    iter: StivaleMemoryMapIter&lt;<span class="lifetime">&#39;static</span>&gt;,
+<span class="kw">struct </span>RangeMemoryIter&lt;<span class="lifetime">&#39;a</span>&gt; {
+    iter: core::slice::Iter&lt;<span class="lifetime">&#39;a</span>, NonNullPtr&lt;LimineMemmapEntry&gt;&gt;,
 
     cursor_base: PhysAddr,
     cursor_end: PhysAddr,
 }
 
-<span class="kw">impl </span>Iterator <span class="kw">for </span>RangeMemoryIter {
+<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Iterator <span class="kw">for </span>RangeMemoryIter&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">type </span>Item = MemoryRange;
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
@@ -805,24 +783,19 @@
                 // the memory map and set the cursor to the start of it.
                 </span><span class="kw">let </span>next = <span class="self">self</span>.iter.next()<span class="question-mark">?</span>;
 
-                <span class="kw">if </span>next.entry_type == StivaleMemoryMapEntryType::Usable {
+                <span class="kw">if </span>next.typ == LimineMemoryMapEntryType::Usable {
                     <span class="kw">break </span><span class="prelude-val">Some</span>(next);
                 }
             } {
                 <span class="self">self</span>.cursor_base = PhysAddr::new(entry.base).align_up(Size4KiB::SIZE);
-                <span class="self">self</span>.cursor_end = PhysAddr::new(entry.base + entry.length);
+                <span class="self">self</span>.cursor_end = PhysAddr::new(entry.base + entry.len);
             } <span class="kw">else </span>{
                 <span class="comment">// We reached the end of the memory map.
                 </span><span class="kw">return </span><span class="prelude-val">None</span>;
             }
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>typee = MemoryRangeType::Usable;
-
-        <span class="kw">if </span>(CONVENTIONAL_MEM_START..CONVENTIONAL_MEM_END).contains(<span class="kw-2">&amp;</span><span class="self">self</span>.cursor_base) {
-            <span class="self">self</span>.cursor_base = CONVENTIONAL_MEM_END;
-            typee = MemoryRangeType::Conventional;
-        }
+        <span class="kw">let </span>typee = MemoryRangeType::Usable;
 
         <span class="kw">let </span>range = MemoryRange {
             addr: <span class="self">self</span>.cursor_base,
@@ -835,8 +808,8 @@
     }
 }
 
-<span class="attribute">#[repr(usize)]</span>
-<span class="kw">pub enum </span>BuddyOrdering {
+<span class="attribute">#[repr(usize)]
+</span><span class="kw">pub enum </span>BuddyOrdering {
     Size4KiB = <span class="number">0</span>,
     Size8KiB = <span class="number">2</span>,
 }
@@ -864,17 +837,16 @@
     addr
 }
 
-<span class="attribute">#[derive(Debug)]</span>
-<span class="kw">struct </span>MemoryRange {
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">struct </span>MemoryRange {
     addr: PhysAddr,
     size: u64,
     typee: MemoryRangeType,
 }
 
-<span class="attribute">#[derive(Debug, PartialEq)]</span>
-<span class="kw">enum </span>MemoryRangeType {
+<span class="attribute">#[derive(Debug, PartialEq)]
+</span><span class="kw">enum </span>MemoryRangeType {
     Usable,
-    Conventional,
 }
 
 <span class="kw">struct </span>BootAlloc {
@@ -891,10 +863,6 @@
     <span class="kw">fn </span>allocate_inner(<span class="kw-2">&amp;</span><span class="self">self</span>, size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
         <span class="kw">let </span>size = align_up(size <span class="kw">as </span>u64, Size4KiB::SIZE);
         <span class="kw">for </span>range <span class="kw">in </span><span class="self">self</span>.memory_ranges.lock().iter_mut().rev() {
-            <span class="kw">if </span>range.typee == MemoryRangeType::Conventional {
-                <span class="kw">continue</span>;
-            }
-
             <span class="kw">if </span>range.size &gt;= size {
                 <span class="kw">let </span>addr = range.addr;
 
@@ -909,8 +877,8 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone)]</span>
-<span class="kw">struct </span>BootAllocRef {
+<span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">struct </span>BootAllocRef {
     inner: <span class="kw-2">*const </span>BootAlloc,
 }
 
@@ -945,13 +913,6 @@
 
 <span class="kw">unsafe impl </span>Send <span class="kw">for </span>BootAllocRef {}
 
-<span class="kw">const </span>CONVENTIONAL_MEM_START: PhysAddr = <span class="kw">unsafe </span>{ PhysAddr::new_unchecked(<span class="number">0x00</span>) };
-
-<span class="comment">// NOTE: Even though conventional memory is till `0x100000` (which is 4KiB * 256), we only
-// reserve the first 4 4KiB pages (as conventional memory) which is mainly used to startup
-// the APs.
-</span><span class="kw">const </span>CONVENTIONAL_MEM_END: PhysAddr = <span class="kw">unsafe </span>{ PhysAddr::new_unchecked(Size4KiB::SIZE * <span class="number">4</span>) };
-
 <span class="kw">static </span>VM_FRAMES: Once&lt;Vec&lt;VmFrame&gt;&gt; = Once::new();
 
 <span class="doccomment">/// Buddy allocator combines power-of-two allocator with free buffer
@@ -983,41 +944,38 @@
 
 <span class="kw">impl </span>GlobalFrameAllocator {
     <span class="doccomment">/// Create a new global frame allocator from the memory map provided by the bootloader.
-    </span><span class="kw">fn </span>new(memory_map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>StivaleMemoryMapTag) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>iter = memory_map.iter();
-        <span class="kw">let </span>cursor = iter
-            .next()
-            .expect(<span class="string">&quot;stivale2: unexpected end of the memory map&quot;</span>);
-
+    </span><span class="kw">fn </span>new(memory_map: <span class="kw-2">&amp;mut </span>[NonNullPtr&lt;LimineMemmapEntry&gt;]) -&gt; <span class="self">Self </span>{
         <span class="comment">// Find a memory map entry that is big enough to fit all of the items in
         // range memory iter.
-        </span><span class="kw">let </span>requested_size = core::mem::size_of::&lt;MemoryRange&gt;() <span class="kw">as </span>u64 * memory_map.entries_len;
+        </span><span class="kw">let </span>requested_size = (core::mem::size_of::&lt;MemoryRange&gt;() * memory_map.len()) <span class="kw">as </span>u64;
         <span class="kw">let </span><span class="kw-2">mut </span>region = <span class="prelude-val">None</span>;
 
-        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..memory_map.entries_len {
-            <span class="kw">let </span>entry = <span class="kw-2">&amp;</span>memory_map.as_slice()[i <span class="kw">as </span>usize];
+        <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..memory_map.len() {
+            <span class="kw">let </span>entry = <span class="kw-2">&amp;mut </span>memory_map[i];
 
             <span class="comment">// Make sure that the memory map entry is marked as usable.
-            </span><span class="kw">if </span>entry.entry_type != StivaleMemoryMapEntryType::Usable {
+            </span><span class="kw">if </span>entry.typ != LimineMemoryMapEntryType::Usable {
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">if </span>entry.length &gt;= requested_size &amp;&amp; entry.base &gt; CONVENTIONAL_MEM_END.as_u64() {
-                <span class="comment">// Found a big enough memory map entry.
-                //
-                // SAFETY: Its safe for us to mutate the memory map entry &amp; life is ment to be
-                // unsafe. We use the power of holy transmutes here.
-                </span><span class="kw">let </span>entry_mut = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(entry <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*mut </span>StivaleMemoryMapEntry) };
-                <span class="kw">let </span>base = entry_mut.base;
+            <span class="comment">// Found a big enough memory map entry.
+            </span><span class="kw">if </span>entry.len &gt;= requested_size {
+                <span class="kw">let </span>base = entry.base;
 
-                entry_mut.base += requested_size;
-                entry_mut.length -= requested_size;
+                entry.base += requested_size;
+                entry.len -= requested_size;
 
                 region = <span class="prelude-val">Some</span>(PhysAddr::new(base));
 
                 <span class="kw">break</span>;
             }
         }
+
+        <span class="kw">let </span><span class="kw-2">mut </span>iter = memory_map.iter();
+
+        <span class="kw">let </span>cursor = iter
+            .next()
+            .expect(<span class="string">&quot;stivale2: unexpected end of the memory map&quot;</span>);
 
         <span class="kw">let </span>ranges = <span class="kw">unsafe </span>{
             <span class="kw">let </span>virt_addr = region.expect(<span class="string">&quot;stivale2: out of memory&quot;</span>).as_hhdm_virt();
@@ -1032,7 +990,7 @@
             iter,
 
             cursor_base: PhysAddr::new(cursor.base),
-            cursor_end: PhysAddr::new(cursor.base + cursor.length),
+            cursor_end: PhysAddr::new(cursor.base + cursor.len),
         };
 
         <span class="comment">// Lets goo! Now lets initialize the bootstrap allocator so we can initialize
@@ -1126,8 +1084,8 @@
         change
     }
 
-    <span class="attribute">#[cfg(test)]</span>
-    <span class="kw">fn </span>is_free(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; bool {
+    <span class="attribute">#[cfg(test)]
+    </span><span class="kw">fn </span>is_free(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; bool {
         <span class="kw">let </span>idx = <span class="self">self</span>.get_bit_idx(addr, order);
 
         <span class="kw">let </span>buddy = <span class="kw-2">&amp;</span><span class="self">self</span>.buddies[order];
@@ -1284,15 +1242,15 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
     <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use </span><span class="kw">crate</span>::mem::AddressSpace;
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>vm_frame_ref_count() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>vm_frame_ref_count() {
         <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
         <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
@@ -1341,4 +1299,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

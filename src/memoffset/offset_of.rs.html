@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memoffset-0.5.6/src/offset_of.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>offset_of.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../memoffset/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../memoffset/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../memoffset/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/memoffset-0.5.6/src/offset_of.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>offset_of.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../memoffset/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../memoffset/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../memoffset/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -232,10 +232,10 @@
 
 </span><span class="doccomment">/// Macro to create a local `base_ptr` raw pointer of the given type, avoiding UB as
 /// much as is possible currently.
-</span><span class="attribute">#[cfg(maybe_uninit)]</span>
-<span class="attribute">#[macro_export]</span>
-<span class="attribute">#[doc(hidden)]</span>
-<span class="macro">macro_rules!</span> _memoffset__let_base_ptr {
+</span><span class="attribute">#[cfg(maybe_uninit)]
+#[macro_export]
+#[doc(hidden)]
+</span><span class="macro">macro_rules! </span>_memoffset__let_base_ptr {
     (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">path</span>) =&gt; {
         <span class="comment">// No UB here, and the pointer does not dangle, either.
         // But we have to make sure that `uninit` lives long enough,
@@ -246,10 +246,10 @@
         <span class="kw">let </span><span class="macro-nonterminal">$name</span>: <span class="kw-2">*const </span><span class="macro-nonterminal">$</span><span class="kw">type </span>= <span class="macro-nonterminal">uninit</span>.as_ptr();
     };
 }
-<span class="attribute">#[cfg(not(maybe_uninit))]</span>
-<span class="attribute">#[macro_export]</span>
-<span class="attribute">#[doc(hidden)]</span>
-<span class="macro">macro_rules!</span> _memoffset__let_base_ptr {
+<span class="attribute">#[cfg(not(maybe_uninit))]
+#[macro_export]
+#[doc(hidden)]
+</span><span class="macro">macro_rules! </span>_memoffset__let_base_ptr {
     (<span class="macro-nonterminal">$name</span>:ident, <span class="macro-nonterminal">$</span><span class="kw">type</span>:<span class="macro-nonterminal">path</span>) =&gt; {
         <span class="comment">// No UB right here, but we will later dereference this pointer to
         // offset into a field, and that is UB because the pointer is dangling.
@@ -258,20 +258,20 @@
 }
 
 <span class="doccomment">/// Macro to compute the distance between two pointers.
-</span><span class="attribute">#[<span class="macro-nonterminal">cfg</span>(feature = <span class="string">&quot;unstable_const&quot;</span>)]</span>
-<span class="attribute">#[macro_export]</span>
-<span class="attribute">#[doc(hidden)]</span>
-<span class="macro">macro_rules!</span> _memoffset_offset_from {
+</span><span class="attribute">#[<span class="macro-nonterminal">cfg</span>(feature = <span class="string">&quot;unstable_const&quot;</span>)]
+#[macro_export]
+#[doc(hidden)]
+</span><span class="macro">macro_rules! </span>_memoffset_offset_from {
     (<span class="macro-nonterminal">$field</span>:expr, <span class="macro-nonterminal">$base</span>:expr) =&gt; {
         <span class="comment">// Compute offset, with unstable `offset_from` for const-compatibility.
         // (Requires the pointers to not dangle, but we already need that for `raw_field!` anyway.)
         </span><span class="kw">unsafe </span>{ (<span class="macro-nonterminal">$field </span><span class="kw">as </span><span class="kw-2">*const </span>u8).offset_from(<span class="macro-nonterminal">$base </span><span class="kw">as </span><span class="kw-2">*const </span>u8) <span class="kw">as </span>usize }
     };
 }
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;unstable_const&quot;</span>))]</span>
-<span class="attribute">#[macro_export]</span>
-<span class="attribute">#[doc(hidden)]</span>
-<span class="macro">macro_rules!</span> _memoffset_offset_from {
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;unstable_const&quot;</span>))]
+#[macro_export]
+#[doc(hidden)]
+</span><span class="macro">macro_rules! </span>_memoffset_offset_from {
     (<span class="macro-nonterminal">$field</span>:expr, <span class="macro-nonterminal">$base</span>:expr) =&gt; {
         <span class="comment">// Compute offset.
         </span>(<span class="macro-nonterminal">$field </span><span class="kw">as </span>usize) - (<span class="macro-nonterminal">$base </span><span class="kw">as </span>usize)
@@ -297,8 +297,8 @@
 ///     assert_eq!(offset_of!(Foo, b), 4);
 /// }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]</span>
-<span class="macro">macro_rules!</span> offset_of {
+</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="macro">macro_rules! </span>offset_of {
     (<span class="macro-nonterminal">$parent</span>:path, <span class="macro-nonterminal">$field</span>:tt) =&gt; {{
         <span class="comment">// Get a base pointer (non-dangling if rustc supports `MaybeUninit`).
         </span><span class="macro">_memoffset__let_base_ptr!</span>(base_ptr, <span class="macro-nonterminal">$parent</span>);
@@ -309,12 +309,12 @@
     }};
 }
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>offset_simple() {
-        <span class="attribute">#[repr(C)]</span>
-        <span class="kw">struct </span>Foo {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>offset_simple() {
+        <span class="attribute">#[repr(C)]
+        </span><span class="kw">struct </span>Foo {
             a: u32,
             b: [u8; <span class="number">2</span>],
             c: i64,
@@ -325,11 +325,11 @@
         <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(Foo, c), <span class="number">8</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="attribute">#[cfg_attr(miri, ignore)]</span> <span class="comment">// this creates unaligned references
+    <span class="attribute">#[test]
+    #[cfg_attr(miri, ignore)] </span><span class="comment">// this creates unaligned references
     </span><span class="kw">fn </span>offset_simple_packed() {
-        <span class="attribute">#[repr(C, packed)]</span>
-        <span class="kw">struct </span>Foo {
+        <span class="attribute">#[repr(C, packed)]
+        </span><span class="kw">struct </span>Foo {
             a: u32,
             b: [u8; <span class="number">2</span>],
             c: i64,
@@ -340,20 +340,20 @@
         <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(Foo, c), <span class="number">6</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>tuple_struct() {
-        <span class="attribute">#[repr(C)]</span>
-        <span class="kw">struct </span>Tup(i32, i32);
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>tuple_struct() {
+        <span class="attribute">#[repr(C)]
+        </span><span class="kw">struct </span>Tup(i32, i32);
 
         <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(Tup, <span class="number">0</span>), <span class="number">0</span>);
         <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(Tup, <span class="number">1</span>), <span class="number">4</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>path() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>path() {
         <span class="kw">mod </span>sub {
-            <span class="attribute">#[repr(C)]</span>
-            <span class="kw">pub struct </span>Foo {
+            <span class="attribute">#[repr(C)]
+            </span><span class="kw">pub struct </span>Foo {
                 <span class="kw">pub </span>x: u32,
             }
         }
@@ -361,8 +361,8 @@
         <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(sub::Foo, x), <span class="number">0</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>inside_generic_method() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>inside_generic_method() {
         <span class="kw">struct </span>Pair&lt;T, U&gt;(T, U);
 
         <span class="kw">fn </span>foo&lt;T, U&gt;(<span class="kw">_</span>: Pair&lt;T, U&gt;) -&gt; usize {
@@ -372,10 +372,10 @@
         <span class="macro">assert_eq!</span>(foo(Pair(<span class="number">0</span>, <span class="number">0</span>)), <span class="number">4</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_raw_field() {
-        <span class="attribute">#[repr(C)]</span>
-        <span class="kw">struct </span>Foo {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_raw_field() {
+        <span class="attribute">#[repr(C)]
+        </span><span class="kw">struct </span>Foo {
             a: u32,
             b: [u8; <span class="number">2</span>],
             c: i64,
@@ -392,11 +392,11 @@
         <span class="macro">assert_eq!</span>(f_ptr <span class="kw">as </span>usize + <span class="number">8</span>, <span class="macro">raw_field!</span>(f_ptr, Foo, c) <span class="kw">as </span>usize);
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;unstable_const&quot;</span>)]</span>
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>const_offset() {
-        <span class="attribute">#[repr(C)]</span>
-        <span class="kw">struct </span>Foo {
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;unstable_const&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>const_offset() {
+        <span class="attribute">#[repr(C)]
+        </span><span class="kw">struct </span>Foo {
             a: u32,
             b: [u8; <span class="number">2</span>],
             c: i64,
@@ -405,12 +405,12 @@
         <span class="macro">assert_eq!</span>([<span class="number">0</span>; <span class="macro">offset_of!</span>(Foo, b)].len(), <span class="number">4</span>);
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;unstable_const&quot;</span>)]</span>
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>const_fn_offset() {
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;unstable_const&quot;</span>)]
+    #[test]
+    </span><span class="kw">fn </span>const_fn_offset() {
         <span class="kw">const fn </span>test_fn() -&gt; usize {
-            <span class="attribute">#[repr(C)]</span>
-            <span class="kw">struct </span>Foo {
+            <span class="attribute">#[repr(C)]
+            </span><span class="kw">struct </span>Foo {
                 a: u32,
                 b: [u8; <span class="number">2</span>],
                 c: i64,
@@ -423,4 +423,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

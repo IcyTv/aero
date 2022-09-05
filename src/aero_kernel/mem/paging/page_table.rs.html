@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/paging/page_table.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>page_table.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/paging/page_table.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>page_table.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -501,8 +501,8 @@
 <span class="kw">use </span>bitflags::bitflags;
 
 <span class="doccomment">/// The error returned by the `PageTableEntry::frame` method.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]</span>
-<span class="kw">pub enum </span>FrameError {
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]
+</span><span class="kw">pub enum </span>FrameError {
     <span class="doccomment">/// The entry does not have the `PRESENT` flag set, so it isn&#39;t currently mapped to a frame.
     </span>FrameNotPresent,
     <span class="doccomment">/// The entry does have the `HUGE_PAGE` flag set. The `frame` method has a standard 4KiB frame
@@ -511,9 +511,9 @@
 }
 
 <span class="doccomment">/// A 64-bit page table entry.
-</span><span class="attribute">#[derive(Clone)]</span>
-<span class="attribute">#[repr(transparent)]</span>
-<span class="kw">pub struct </span>PageTableEntry {
+</span><span class="attribute">#[derive(Clone)]
+#[repr(transparent)]
+</span><span class="kw">pub struct </span>PageTableEntry {
     entry: u64,
 }
 
@@ -654,7 +654,7 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
+<span class="macro">bitflags! </span>{
     <span class="doccomment">/// Possible flags for a page table entry.
     </span><span class="kw">pub struct </span>PageTableFlags: u64 {
         <span class="doccomment">/// Specifies whether the mapped frame or page table is loaded in memory.
@@ -730,17 +730,17 @@
 ///
 /// Note that while this type implements [`Clone`], the users must be careful not to introduce
 /// mutable aliasing by using the cloned page tables.
-</span><span class="attribute">#[repr(align(<span class="number">4096</span>))]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="attribute">#[derive(Clone)]</span>
-<span class="kw">pub struct </span>PageTable {
+</span><span class="attribute">#[repr(align(<span class="number">4096</span>))]
+#[repr(C)]
+#[derive(Clone)]
+</span><span class="kw">pub struct </span>PageTable {
     <span class="kw">pub</span>(<span class="kw">super</span>) entries: [PageTableEntry; ENTRY_COUNT],
 }
 
 <span class="kw">impl </span>PageTable {
     <span class="doccomment">/// Creates an empty page table.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="kw">const </span>EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
             entries: [EMPTY; ENTRY_COUNT],
@@ -748,8 +748,8 @@
     }
 
     <span class="doccomment">/// Clears all entries.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub fn </span>zero(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>zero(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>entry <span class="kw">in </span><span class="self">self</span>.entries.iter_mut() {
             entry.set_unused();
         }
@@ -799,15 +799,15 @@
 <span class="kw">impl </span>Index&lt;usize&gt; <span class="kw">for </span>PageTable {
     <span class="kw">type </span>Output = PageTableEntry;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;</span><span class="self">self</span>.entries[index]
     }
 }
 
 <span class="kw">impl </span>IndexMut&lt;usize&gt; <span class="kw">for </span>PageTable {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[index]
     }
 }
@@ -815,15 +815,15 @@
 <span class="kw">impl </span>Index&lt;PageTableIndex&gt; <span class="kw">for </span>PageTable {
     <span class="kw">type </span>Output = PageTableEntry;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;</span><span class="self">self</span>.entries[usize::from(index)]
     }
 }
 
 <span class="kw">impl </span>IndexMut&lt;PageTableIndex&gt; <span class="kw">for </span>PageTable {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[usize::from(index)]
     }
 }
@@ -835,8 +835,8 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PageTable {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="self">self</span>.entries[..].fmt(f)
     }
 }
@@ -846,48 +846,48 @@
 /// Can be used to select one of the 512 entries of a page table.
 ///
 /// Guaranteed to only ever contain 0..512.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
-<span class="kw">pub struct </span>PageTableIndex(u16);
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="kw">pub struct </span>PageTableIndex(u16);
 
 <span class="kw">impl </span>PageTableIndex {
     <span class="doccomment">/// Creates a new index from the given `u16`. Panics if the given value is &gt;=512.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub fn </span>new(index: u16) -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new(index: u16) -&gt; <span class="self">Self </span>{
         <span class="macro">assert!</span>(usize::from(index) &lt; ENTRY_COUNT);
         <span class="self">Self</span>(index)
     }
 
     <span class="doccomment">/// Creates a new index from the given `u16`. Throws away bits if the value is &gt;=512.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub const fn </span>new_truncate(index: u16) -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>new_truncate(index: u16) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(index % ENTRY_COUNT <span class="kw">as </span>u16)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u16 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         index.<span class="number">0
     </span>}
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u32 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         u32::from(index.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u64 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         u64::from(index.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>usize {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         usize::from(index.<span class="number">0</span>)
     }
 }
@@ -897,50 +897,50 @@
 /// This type is returned by the `VirtAddr::page_offset` method.
 ///
 /// Guaranteed to only ever contain 0..4096.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]</span>
-<span class="kw">pub struct </span>PageOffset(u16);
+</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="kw">pub struct </span>PageOffset(u16);
 
 <span class="kw">impl </span>PageOffset {
     <span class="doccomment">/// Creates a new offset from the given `u16`. Panics if the passed value is &gt;=4096.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub fn </span>new(offset: u16) -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>new(offset: u16) -&gt; <span class="self">Self </span>{
         <span class="macro">assert!</span>(offset &lt; (<span class="number">1 </span>&lt;&lt; <span class="number">12</span>));
         <span class="self">Self</span>(offset)
     }
 
     <span class="doccomment">/// Creates a new offset from the given `u16`. Throws away bits if the value is &gt;=4096.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub const fn </span>new_truncate(offset: u16) -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>new_truncate(offset: u16) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(offset % (<span class="number">1 </span>&lt;&lt; <span class="number">12</span>))
     }
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u16 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         offset.<span class="number">0
     </span>}
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u32 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         u32::from(offset.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u64 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         u64::from(offset.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>usize {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         usize::from(offset.<span class="number">0</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

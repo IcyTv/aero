@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/raw-cpuid-10.2.0/src/extended.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>extended.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../raw_cpuid/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../raw_cpuid/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../raw_cpuid/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/raw-cpuid-10.2.0/src/extended.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>extended.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../raw_cpuid/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../raw_cpuid/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../raw_cpuid/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1567,8 +1567,8 @@
 ///
 /// # Platforms
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>ExtendedProcessorFeatureIdentifiers {
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>ExtendedProcessorFeatureIdentifiers {
     vendor: Vendor,
     eax: u32,
     ebx: u32,
@@ -1941,9 +1941,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>ExtendedFunctionInfoEcx: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>ExtendedFunctionInfoEcx: u32 {
         <span class="kw">const </span>LAHF_SAHF = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>CMP_LEGACY =  <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="kw">const </span>SVM = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
@@ -1972,9 +1972,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>ExtendedFunctionInfoEdx: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>ExtendedFunctionInfoEdx: u32 {
         <span class="kw">const </span>SYSCALL_SYSRET = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
         <span class="kw">const </span>EXECUTE_DISABLE = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
         <span class="kw">const </span>MMXEXT = <span class="number">1 </span>&lt;&lt; <span class="number">22</span>;
@@ -1993,8 +1993,8 @@
 ///
 /// # Platforms
 /// ✅ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>ProcessorBrandString {
+</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>ProcessorBrandString {
     data: [CpuIdResult; <span class="number">3</span>],
 }
 
@@ -2037,9 +2037,9 @@
 ///
 /// # Availability
 /// ✅ AMD ❌ Intel (reserved=0)
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>L1CacheTlbInfo {
+</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>L1CacheTlbInfo {
     eax: u32,
     ebx: u32,
     ecx: u32,
@@ -2155,9 +2155,9 @@
 ///
 /// # Availability
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>L2And3CacheTlbInfo {
+</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>L2And3CacheTlbInfo {
     eax: u32,
     ebx: u32,
     ecx: u32,
@@ -2320,9 +2320,9 @@
 }
 
 <span class="doccomment">/// Info about cache Associativity.
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub enum </span>Associativity {
+</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub enum </span>Associativity {
     Disabled,
     DirectMapped,
     NWay(u8),
@@ -2387,9 +2387,9 @@
 ///
 /// # Platforms
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>ApmInfo {
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>ApmInfo {
     <span class="doccomment">/// Reserved on AMD and Intel.
     </span>_eax: u32,
     ebx: RasCapabilities,
@@ -2565,9 +2565,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>ApmInfoEdx: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>ApmInfoEdx: u32 {
         <span class="kw">const </span>TS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>FID = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="kw">const </span>VID = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
@@ -2583,9 +2583,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>RasCapabilities: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>RasCapabilities: u32 {
         <span class="kw">const </span>MCAOVFLRECOV = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>SUCCOR = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="kw">const </span>HWA = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
@@ -2601,9 +2601,9 @@
 ///
 /// # Platforms
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>ProcessorCapacityAndFeatureInfo {
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>ProcessorCapacityAndFeatureInfo {
     eax: u32,
     ebx: ProcessorCapacityAndFeatureEbx,
     ecx: u32,
@@ -2811,9 +2811,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>ProcessorCapacityAndFeatureEbx: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>ProcessorCapacityAndFeatureEbx: u32 {
         <span class="kw">const </span>CLZERO = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>INST_RETCNT_MSR = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="kw">const </span>RSTR_FP_ERR_PTRS = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
@@ -2831,9 +2831,9 @@
 ///
 /// # Platforms
 /// ✅ AMD ❌ Intel
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>MemoryEncryptionInfo {
+</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>MemoryEncryptionInfo {
     eax: MemoryEncryptionInfoEax,
     ebx: u32,
     ecx: u32,
@@ -2936,9 +2936,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>MemoryEncryptionInfoEax: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>MemoryEncryptionInfoEax: u32 {
         <span class="kw">const </span>SME = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>SEV = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="kw">const </span>PAGE_FLUSH_MSR = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
@@ -2963,9 +2963,9 @@
 ///
 /// # Platforms
 /// ✅ AMD ❌ Intel
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]</span>
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-<span class="kw">pub struct </span>SvmFeatures {
+</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="kw">pub struct </span>SvmFeatures {
     eax: u32,
     ebx: u32,
     <span class="doccomment">/// Reserved
@@ -3089,9 +3089,9 @@
     }
 }
 
-<span class="macro">bitflags!</span> {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]</span>
-    <span class="kw">struct </span>SvmFeaturesEdx: u32 {
+<span class="macro">bitflags! </span>{
+    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    </span><span class="kw">struct </span>SvmFeaturesEdx: u32 {
         <span class="kw">const </span>NP = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>LBR_VIRT = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
         <span class="kw">const </span>SVML = <span class="number">1 </span>&lt;&lt; <span class="number">2</span>;
@@ -3113,4 +3113,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="raw_cpuid" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="raw_cpuid" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/syscall/fs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/syscall/fs.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>fs.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -661,8 +661,8 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::Path;
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>write(fd: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>write(fd: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -681,8 +681,8 @@
     // }
 </span>}
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>read(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>read(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -699,8 +699,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>open(_fd: usize, path: <span class="kw-2">&amp;</span>Path, mode: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>open(_fd: usize, path: <span class="kw-2">&amp;</span>Path, mode: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>flags = OpenFlags::from_bits(mode).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!flags.intersects(OpenFlags::O_RDONLY | OpenFlags::O_RDWR | OpenFlags::O_WRONLY) {
@@ -729,16 +729,16 @@
         .open_file(inode, flags)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>dup(fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>dup(fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
     <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">? </span>&amp; OpenFlags::O_CLOEXEC;
 
     task.file_table.duplicate(fd, DuplicateHint::Any, flags)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>dup2(fd: usize, new_fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>dup2(fd: usize, new_fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
     <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">? </span>&amp; OpenFlags::O_CLOEXEC;
 
@@ -746,8 +746,8 @@
         .duplicate(fd, DuplicateHint::Exact(new_fd), flags)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>getdents(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>getdents(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -757,8 +757,8 @@
     <span class="prelude-val">Ok</span>(handle.get_dents(buffer)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>close(fd: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>close(fd: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>res = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -772,8 +772,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>chdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>chdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>inode = fs::lookup_path(Path::new(path))<span class="question-mark">?</span>;
 
     <span class="kw">if </span>!inode.inode().metadata()<span class="question-mark">?</span>.is_directory() {
@@ -785,8 +785,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>mkdirat(dfd: usize, path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>mkdirat(dfd: usize, path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// NOTE: If the pathname given in pathname is relative, then it is interpreted
     // relative to the directory referred to by the file descriptor (rather than relative
     // to the current working directory of the calling task, as is done by mkdir() for a
@@ -826,8 +826,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>rmdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>rmdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>path = Path::new(path);
 
     <span class="kw">let </span>(<span class="kw">_</span>, child) = path.parent_and_basename();
@@ -844,16 +844,16 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>getcwd(buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>getcwd(buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>cwd = scheduler::get_scheduler().current_task().get_cwd();
 
     buffer[..cwd.len()].copy_from_slice(cwd.as_bytes());
     <span class="prelude-val">Ok</span>(cwd.len())
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>ioctl(fd: usize, command: usize, argument: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>ioctl(fd: usize, command: usize, argument: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -873,8 +873,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>seek(fd: usize, offset: usize, whence: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>seek(fd: usize, offset: usize, whence: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -884,8 +884,8 @@
     <span class="prelude-val">Ok</span>(handle.seek(offset <span class="kw">as </span>isize, aero_syscall::SeekWhence::from(whence))<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>pipe(fds: <span class="kw-2">&amp;mut </span>[i32; <span class="number">2</span>], flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>pipe(fds: <span class="kw-2">&amp;mut </span>[i32; <span class="number">2</span>], flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
     <span class="kw">let </span>pipe = Pipe::new();
 
@@ -916,8 +916,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>unlink(fd: usize, path: <span class="kw-2">&amp;</span>Path, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>unlink(fd: usize, path: <span class="kw-2">&amp;</span>Path, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// TODO: Make use of the open flags.
     </span><span class="kw">let </span>_flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
     <span class="kw">let </span>name = path.container();
@@ -940,8 +940,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>access(fd: usize, path: <span class="kw-2">&amp;</span>Path, _mode: usize, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>access(fd: usize, path: <span class="kw-2">&amp;</span>Path, _mode: usize, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">if </span>fd <span class="kw">as </span>isize == aero_syscall::AT_FDCWD {
         lookup_path(path)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
@@ -951,8 +951,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>fcntl(fd: usize, command: usize, arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>fcntl(fd: usize, command: usize, arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -1004,8 +1004,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>fstat(fd: usize, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>fstat(fd: usize, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>file = scheduler::get_scheduler()
         .current_task()
         .file_table
@@ -1017,8 +1017,8 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>stat(path: <span class="kw-2">&amp;</span>Path, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>stat(path: <span class="kw-2">&amp;</span>Path, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>file = fs::lookup_path(path)<span class="question-mark">?</span>;
 
     <span class="kw-2">*</span>stat = file.inode().stat()<span class="question-mark">?</span>;
@@ -1026,16 +1026,16 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>read_link(path: <span class="kw-2">&amp;</span>Path, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>read_link(path: <span class="kw-2">&amp;</span>Path, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="macro">log::warn!</span>(<span class="string">&quot;read_link: is a stub! (path={path:?})&quot;</span>);
 
     <span class="prelude-val">Err</span>(SyscallError::EINVAL)
 }
 
 <span class="doccomment">/// Returns a file descriptor referring to the new epoll instance.
-</span><span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>epoll_create(flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+</span><span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>epoll_create(flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>_flags = EPollFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>epoll_file = EPoll::new();
@@ -1050,8 +1050,8 @@
 <span class="doccomment">/// Used to add, modify, or remove entries in the interest list of the
 /// epoll instance referred to by the file descriptor. It requests that
 /// the operation be performed for the target file descriptor.
-</span><span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>epoll_ctl(
+</span><span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>epoll_ctl(
     epfd: usize,
     mode: usize,
     fd: usize,
@@ -1088,8 +1088,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>epoll_pwait(
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>epoll_pwait(
     epfd: usize,
     event: <span class="kw-2">&amp;mut </span>[<span class="kw-2">&amp;mut </span>EPollEvent],
     timeout: usize,
@@ -1122,8 +1122,8 @@
     <span class="prelude-val">Ok</span>(result)
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>event_fd(_initval: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>event_fd(_initval: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>flags = EventFdFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
     <span class="macro">assert!</span>(!flags.contains(EventFdFlags::SEMAPHORE)); <span class="comment">// todo: implement event fd semaphore support.
 
@@ -1139,8 +1139,8 @@
 
 <span class="doccomment">/// Creates a new link (also known as a hard link) to an existing
 /// file.
-</span><span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>link(src_path: <span class="kw-2">&amp;</span>Path, dest_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+</span><span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>link(src_path: <span class="kw-2">&amp;</span>Path, dest_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>src = fs::lookup_path(src_path)<span class="question-mark">?</span>.inode();
     <span class="kw">let </span>(dest_dir, dest_name) = dest_path.parent_and_basename();
 
@@ -1230,8 +1230,8 @@
     }
 }
 
-<span class="attribute">#[syscall]</span>
-<span class="kw">pub fn </span>poll(fds: <span class="kw-2">&amp;mut </span>[PollFd], timeout: usize, sigmask: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+<span class="attribute">#[syscall]
+</span><span class="kw">pub fn </span>poll(fds: <span class="kw-2">&amp;mut </span>[PollFd], timeout: usize, sigmask: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// Nothing to poll on.
     </span><span class="kw">if </span>fds.len() == <span class="number">0 </span>{
         <span class="kw">return </span><span class="prelude-val">Ok</span>(<span class="number">0</span>);
@@ -1259,4 +1259,4 @@
     <span class="prelude-val">Ok</span>(n)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

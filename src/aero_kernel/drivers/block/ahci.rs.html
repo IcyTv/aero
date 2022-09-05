@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/drivers/block/ahci.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ahci.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/drivers/block/ahci.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>ahci.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1020,7 +1020,7 @@
 
 <span class="kw">static </span>DRIVER: Once&lt;Arc&lt;AhciDriver&gt;&gt; = Once::new();
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaEnclosureCtrl: u32 {
         <span class="kw">const </span>STS_MR =      <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;  <span class="comment">// Message Received
         </span><span class="kw">const </span>CTL_TM =      <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;  <span class="comment">// Transmit Message
@@ -1036,7 +1036,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaCapabilities2: u32 {
         <span class="kw">const </span>BOH   = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>; <span class="comment">// BIOS/OS Handoff
         </span><span class="kw">const </span>NVMP  = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>; <span class="comment">// NVMHCI Present
@@ -1047,7 +1047,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaBohc: u32 {
         <span class="kw">const </span>BOS =     <span class="number">1 </span>&lt;&lt; <span class="number">0</span>; <span class="comment">// BIOS Owned Semaphore
         </span><span class="kw">const </span>OOS =     <span class="number">1 </span>&lt;&lt; <span class="number">1</span>; <span class="comment">// OS Owned Semaphore
@@ -1057,7 +1057,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaCapabilities: u32 {
         <span class="kw">const </span>SXS           = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>;  <span class="comment">// Supports External SATA
         </span><span class="kw">const </span>EMS           = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>;  <span class="comment">// Enclosure Management Supported
@@ -1079,7 +1079,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaHostCont: u32 {
         <span class="kw">const </span>HR =   <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;  <span class="comment">// HBA Reset
         </span><span class="kw">const </span>IE =   <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;  <span class="comment">// Interrupt Enable
@@ -1088,7 +1088,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaPortIS: u32 {
         <span class="kw">const </span>DHRS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>; <span class="comment">// Device to Host Register FIS Interrupt
         </span><span class="kw">const </span>PSS = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>; <span class="comment">// PIO Setup FIS Interrupt
@@ -1110,7 +1110,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaPortIE: u32 {
         <span class="kw">const </span>DHRE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>; <span class="comment">// Device to Host Register FIS Interrupt
         </span><span class="kw">const </span>PSE = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>; <span class="comment">// PIO Setup FIS Interrupt
@@ -1132,7 +1132,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaPortCmd: u32 {
         <span class="kw">const </span>ST = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>; <span class="comment">// Start
         </span><span class="kw">const </span>SUD = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>; <span class="comment">// Spin-Up Device
@@ -1157,7 +1157,7 @@
     </span>}
 }
 
-<span class="macro">bitflags::bitflags!</span> {
+<span class="macro">bitflags::bitflags! </span>{
     <span class="kw">struct </span>HbaCmdHeaderFlags: u16 {
         <span class="kw">const </span>A = <span class="number">1 </span>&lt;&lt; <span class="number">5</span>; <span class="comment">// ATAPI
         </span><span class="kw">const </span>W = <span class="number">1 </span>&lt;&lt; <span class="number">6</span>; <span class="comment">// Write
@@ -1171,8 +1171,8 @@
 <span class="kw">impl </span>HbaCmdHeaderFlags {
     <span class="doccomment">/// Sets the length of the command FIS. The HBA uses this field to know the
     /// length of the FIS it shall send to the device.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>set_command_fis_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>set_command_fis_size(<span class="kw-2">&amp;mut </span><span class="self">self</span>, size: usize) {
         <span class="self">self</span>.bits.set_bits(<span class="number">0</span>..=<span class="number">4</span>, size <span class="kw">as _</span>);
     }
 }
@@ -1280,10 +1280,10 @@
     }
 }
 
-<span class="attribute">#[allow(unused)]</span>
-<span class="attribute">#[derive(Debug, PartialEq, Copy, Clone)]</span>
-<span class="attribute">#[repr(u8)]</span>
-<span class="kw">pub enum </span>AtaCommand {
+<span class="attribute">#[allow(unused)]
+#[derive(Debug, PartialEq, Copy, Clone)]
+#[repr(u8)]
+</span><span class="kw">pub enum </span>AtaCommand {
     AtaCommandWriteDma = <span class="number">0xCA</span>,
     AtaCommandWriteDmaQueued = <span class="number">0xCC</span>,
     AtaCommandWriteMultiple = <span class="number">0xC5</span>,
@@ -1346,8 +1346,8 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">struct </span>HbaMemory {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">struct </span>HbaMemory {
     host_capability: VolatileCell&lt;HbaCapabilities&gt;,
     global_host_control: VolatileCell&lt;HbaHostCont&gt;,
     interrupt_status: VolatileCell&lt;u32&gt;,
@@ -1363,8 +1363,8 @@
     vendor: [u8; <span class="number">0x100 </span>- <span class="number">0xa0</span>],
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">struct </span>FisRegH2D {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">struct </span>FisRegH2D {
     fis_type: VolatileCell&lt;FisType&gt;,
     flags: VolatileCell&lt;u8&gt;,
     command: VolatileCell&lt;AtaCommand&gt;,
@@ -1407,8 +1407,8 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">struct </span>HbaCmdTbl {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">struct </span>HbaCmdTbl {
     cfis: [u8; <span class="number">64</span>],
     acmd: [u8; <span class="number">16</span>],
     _reserved: [u8; <span class="number">48</span>],
@@ -1426,8 +1426,8 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">struct </span>HbaPrdtEntry {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">struct </span>HbaPrdtEntry {
     dba: VolatileCell&lt;PhysAddr&gt;,
     _reserved: u32,
     flags: VolatileCell&lt;u32&gt;,
@@ -1435,8 +1435,8 @@
 
 <span class="kw">impl </span>HbaPrdtEntry {
     <span class="doccomment">/// Sets the data byte count that indicates the length in bytes of the data block.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>set_data_byte_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>set_data_byte_count(<span class="kw-2">&amp;mut </span><span class="self">self</span>, count: usize) {
         <span class="kw">let </span><span class="kw-2">mut </span>old_flags = <span class="self">self</span>.flags.get();
         old_flags.set_bits(<span class="number">0</span>..<span class="number">21</span>, count <span class="kw">as _</span>);
 
@@ -1447,8 +1447,8 @@
     /// assert an interrupt when the data block for this entry has transferred. The
     /// HBA shall set the PxIS.DPS bit after completing the data transfer and if enabled,
     /// generate an interrupt.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>set_interrupt_on_completion(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>set_interrupt_on_completion(<span class="kw-2">&amp;mut </span><span class="self">self</span>, yes: bool) {
         <span class="kw">let </span><span class="kw-2">mut </span>old_flags = <span class="self">self</span>.flags.get();
         old_flags.set_bit(<span class="number">31</span>, yes);
 
@@ -1456,9 +1456,9 @@
     }
 }
 
-<span class="attribute">#[repr(u8)]</span>
-<span class="attribute">#[derive(Copy, Clone)]</span>
-<span class="kw">enum </span>FisType {
+<span class="attribute">#[repr(u8)]
+#[derive(Copy, Clone)]
+</span><span class="kw">enum </span>FisType {
     RegH2D = <span class="number">0x27</span>,
 }
 
@@ -1477,9 +1477,9 @@
     DevSleep = <span class="number">8</span>,
 }
 
-<span class="attribute">#[repr(transparent)]</span>
-<span class="attribute">#[derive(Clone, Copy)]</span>
-<span class="kw">struct </span>HbaSataStatus(u64);
+<span class="attribute">#[repr(transparent)]
+#[derive(Clone, Copy)]
+</span><span class="kw">struct </span>HbaSataStatus(u64);
 
 <span class="kw">impl </span>HbaSataStatus {
     <span class="kw">fn </span>device_detection(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HbaPortDd {
@@ -1504,8 +1504,8 @@
     }
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">struct </span>HbaPort {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">struct </span>HbaPort {
     clb: VolatileCell&lt;PhysAddr&gt;,
     fb: VolatileCell&lt;PhysAddr&gt;,
     is: VolatileCell&lt;HbaPortIS&gt;,
@@ -1526,8 +1526,8 @@
     vendor: [u32; <span class="number">4</span>],
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">struct </span>HbaCmdHeader {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">struct </span>HbaCmdHeader {
     flags: VolatileCell&lt;HbaCmdHeaderFlags&gt;,
     prdtl: VolatileCell&lt;u16&gt;,
     prdbc: VolatileCell&lt;u32&gt;,
@@ -1783,8 +1783,8 @@
 }
 
 <span class="kw">impl </span>AhciPort {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>new(address: VirtAddr) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>new(address: VirtAddr) -&gt; <span class="self">Self </span>{
         <span class="kw">const </span>EMPTY: <span class="prelude-ty">Option</span>&lt;AhciCommand&gt; = <span class="prelude-val">None</span>;
 
         <span class="self">Self </span>{
@@ -1827,8 +1827,8 @@
 }
 
 <span class="kw">impl </span>AhciProtected {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>hba_mem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>HbaMemory {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>hba_mem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>HbaMemory {
         <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(<span class="self">self</span>.hba.as_u64() <span class="kw">as </span><span class="kw-2">*mut </span>HbaMemory) }
     }
 
@@ -1975,4 +1975,4 @@
 
 <span class="macro">crate::module_init!</span>(ahci_init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

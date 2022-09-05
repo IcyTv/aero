@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/intrusive-collections-0.9.2/src/pointer_ops.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pointer_ops.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../intrusive_collections/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../intrusive_collections/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../intrusive_collections/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/intrusive-collections-0.9.2/src/pointer_ops.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>pointer_ops.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../intrusive_collections/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../intrusive_collections/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../intrusive_collections/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -516,12 +516,12 @@
 // http://opensource.org/licenses/MIT&gt;, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">use </span><span class="kw">crate</span>::alloc::boxed::Box;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">use </span><span class="kw">crate</span>::alloc::rc::Rc;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">use </span><span class="kw">crate</span>::alloc::sync::Arc;
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::alloc::boxed::Box;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::alloc::rc::Rc;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::alloc::sync::Arc;
 <span class="kw">use </span><span class="kw">crate</span>::UnsafeRef;
 <span class="kw">use </span>core::marker::PhantomData;
 <span class="kw">use </span>core::mem::ManuallyDrop;
@@ -559,15 +559,15 @@
 
 <span class="kw">impl</span>&lt;Pointer&gt; DefaultPointerOps&lt;Pointer&gt; {
     <span class="doccomment">/// Constructs an instance of `DefaultPointerOps`.
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub const fn </span>new() -&gt; DefaultPointerOps&lt;Pointer&gt; {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>new() -&gt; DefaultPointerOps&lt;Pointer&gt; {
         DefaultPointerOps(PhantomData)
     }
 }
 
 <span class="kw">impl</span>&lt;Pointer&gt; Clone <span class="kw">for </span>DefaultPointerOps&lt;Pointer&gt; {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="kw-2">*</span><span class="self">self
     </span>}
 }
@@ -575,8 +575,8 @@
 <span class="kw">impl</span>&lt;Pointer&gt; Copy <span class="kw">for </span>DefaultPointerOps&lt;Pointer&gt; {}
 
 <span class="kw">impl</span>&lt;Pointer&gt; Default <span class="kw">for </span>DefaultPointerOps&lt;Pointer&gt; {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new()
     }
 }
@@ -585,13 +585,13 @@
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T {
         <span class="kw-2">&amp;*</span>raw
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T) -&gt; <span class="kw-2">*const </span>T {
         ptr
     }
 }
@@ -600,13 +600,13 @@
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Pin&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
         Pin::new_unchecked(<span class="kw-2">&amp;*</span>raw)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt;) -&gt; <span class="kw-2">*const </span>T {
         <span class="kw">unsafe </span>{ Pin::into_inner_unchecked(ptr) <span class="kw">as </span><span class="kw-2">*const </span>T }
     }
 }
@@ -615,13 +615,13 @@
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = UnsafeRef&lt;T&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; UnsafeRef&lt;T&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; UnsafeRef&lt;T&gt; {
         UnsafeRef::from_raw(raw <span class="kw">as </span><span class="kw-2">*mut </span>T)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: UnsafeRef&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: UnsafeRef&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
         UnsafeRef::into_raw(ptr) <span class="kw">as </span><span class="kw-2">*const </span>T
     }
 }
@@ -630,109 +630,109 @@
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Pin&lt;UnsafeRef&lt;T&gt;&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;UnsafeRef&lt;T&gt;&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;UnsafeRef&lt;T&gt;&gt; {
         Pin::new_unchecked(UnsafeRef::from_raw(raw <span class="kw">as </span><span class="kw-2">*mut </span>T))
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;UnsafeRef&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;UnsafeRef&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
         UnsafeRef::into_raw(<span class="kw">unsafe </span>{ Pin::into_inner_unchecked(ptr) }) <span class="kw">as </span><span class="kw-2">*const </span>T
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Box&lt;T&gt;&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Box&lt;T&gt;&gt; {
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Box&lt;T&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Box&lt;T&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Box&lt;T&gt; {
         Box::from_raw(raw <span class="kw">as </span><span class="kw-2">*mut </span>T)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Box&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Box&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
         Box::into_raw(ptr) <span class="kw">as </span><span class="kw-2">*const </span>T
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Pin&lt;Box&lt;T&gt;&gt;&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Pin&lt;Box&lt;T&gt;&gt;&gt; {
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Pin&lt;Box&lt;T&gt;&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;Box&lt;T&gt;&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;Box&lt;T&gt;&gt; {
         Pin::new_unchecked(Box::from_raw(raw <span class="kw">as </span><span class="kw-2">*mut </span>T))
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;Box&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;Box&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
         Box::into_raw(<span class="kw">unsafe </span>{ Pin::into_inner_unchecked(ptr) }) <span class="kw">as </span><span class="kw-2">*const </span>T
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Rc&lt;T&gt;&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Rc&lt;T&gt;&gt; {
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Rc&lt;T&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Rc&lt;T&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Rc&lt;T&gt; {
         Rc::from_raw(raw)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Rc&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Rc&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
         Rc::into_raw(ptr)
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Pin&lt;Rc&lt;T&gt;&gt;&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Pin&lt;Rc&lt;T&gt;&gt;&gt; {
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Pin&lt;Rc&lt;T&gt;&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;Rc&lt;T&gt;&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;Rc&lt;T&gt;&gt; {
         Pin::new_unchecked(Rc::from_raw(raw))
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;Rc&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;Rc&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
         Rc::into_raw(<span class="kw">unsafe </span>{ Pin::into_inner_unchecked(ptr) })
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Arc&lt;T&gt;&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Arc&lt;T&gt;&gt; {
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Arc&lt;T&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Arc&lt;T&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Arc&lt;T&gt; {
         Arc::from_raw(raw)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Arc&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Arc&lt;T&gt;) -&gt; <span class="kw-2">*const </span>T {
         Arc::into_raw(ptr)
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Pin&lt;Arc&lt;T&gt;&gt;&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; PointerOps <span class="kw">for </span>DefaultPointerOps&lt;Pin&lt;Arc&lt;T&gt;&gt;&gt; {
     <span class="kw">type </span>Value = T;
     <span class="kw">type </span>Pointer = Pin&lt;Arc&lt;T&gt;&gt;;
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;Arc&lt;T&gt;&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">unsafe fn </span>from_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, raw: <span class="kw-2">*const </span>T) -&gt; Pin&lt;Arc&lt;T&gt;&gt; {
         Pin::new_unchecked(Arc::from_raw(raw))
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;Arc&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>into_raw(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: Pin&lt;Arc&lt;T&gt;&gt;) -&gt; <span class="kw-2">*const </span>T {
         Arc::into_raw(<span class="kw">unsafe </span>{ Pin::into_inner_unchecked(ptr) })
     }
 }
@@ -741,8 +741,8 @@
 ///
 /// This method is only safe to call if the raw pointer is known to be
 /// managed by the provided `PointerOps` type.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>clone_pointer_from_raw&lt;T: PointerOps&gt;(
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">unsafe fn </span>clone_pointer_from_raw&lt;T: PointerOps&gt;(
     pointer_ops: <span class="kw-2">&amp;</span>T,
     ptr: <span class="kw-2">*const </span>T::Value,
 ) -&gt; T::Pointer
@@ -758,8 +758,8 @@
     }
 
     <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T: PointerOps&gt; Drop <span class="kw">for </span>PointerGuard&lt;<span class="lifetime">&#39;a</span>, T&gt; {
-        <span class="attribute">#[inline]</span>
-        <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="attribute">#[inline]
+        </span><span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
             <span class="comment">// Prevent shared pointers from being released by converting them
             // back into the raw pointers
             // SAFETY: `pointer` is never dropped. `ManuallyDrop::take` is not stable until 1.42.0.
@@ -776,8 +776,8 @@
     holder.pointer.deref().clone()
 }
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::{DefaultPointerOps, PointerOps};
     <span class="kw">use </span>std::boxed::Box;
     <span class="kw">use </span>std::fmt::Debug;
@@ -786,8 +786,8 @@
     <span class="kw">use </span>std::rc::Rc;
     <span class="kw">use </span>std::sync::Arc;
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_box() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_box() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Box&lt;<span class="kw">_</span>&gt;&gt;::new();
             <span class="kw">let </span>p = Box::new(<span class="number">1</span>);
@@ -800,8 +800,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_rc() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rc() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Rc&lt;<span class="kw">_</span>&gt;&gt;::new();
             <span class="kw">let </span>p = Rc::new(<span class="number">1</span>);
@@ -814,8 +814,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_arc() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_arc() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Arc&lt;<span class="kw">_</span>&gt;&gt;::new();
             <span class="kw">let </span>p = Arc::new(<span class="number">1</span>);
@@ -828,8 +828,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_box_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_box_unsized() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Box&lt;<span class="kw">_</span>&gt;&gt;::new();
             <span class="kw">let </span>p = Box::new(<span class="number">1</span>) <span class="kw">as </span>Box&lt;<span class="kw">dyn </span>Debug&gt;;
@@ -845,8 +845,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_rc_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_rc_unsized() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Rc&lt;<span class="kw">_</span>&gt;&gt;::new();
             <span class="kw">let </span>p = Rc::new(<span class="number">1</span>) <span class="kw">as </span>Rc&lt;<span class="kw">dyn </span>Debug&gt;;
@@ -862,8 +862,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_arc_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_arc_unsized() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Arc&lt;<span class="kw">_</span>&gt;&gt;::new();
             <span class="kw">let </span>p = Arc::new(<span class="number">1</span>) <span class="kw">as </span>Arc&lt;<span class="kw">dyn </span>Debug&gt;;
@@ -879,8 +879,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>clone_arc_from_raw() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>clone_arc_from_raw() {
         <span class="kw">use </span><span class="kw">super</span>::clone_pointer_from_raw;
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Arc&lt;<span class="kw">_</span>&gt;&gt;::new();
@@ -891,8 +891,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>clone_rc_from_raw() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>clone_rc_from_raw() {
         <span class="kw">use </span><span class="kw">super</span>::clone_pointer_from_raw;
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Rc&lt;<span class="kw">_</span>&gt;&gt;::new();
@@ -903,8 +903,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_pin_box() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_pin_box() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Box&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
             <span class="kw">let </span>p = Pin::new(Box::new(<span class="number">1</span>));
@@ -917,8 +917,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_pin_rc() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_pin_rc() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Rc&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
             <span class="kw">let </span>p = Pin::new(Rc::new(<span class="number">1</span>));
@@ -931,8 +931,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_pin_arc() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_pin_arc() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Arc&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
             <span class="kw">let </span>p = Pin::new(Arc::new(<span class="number">1</span>));
@@ -945,8 +945,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_pin_box_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_pin_box_unsized() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Box&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
             <span class="kw">let </span>p = Pin::new(Box::new(<span class="number">1</span>)) <span class="kw">as </span>Pin&lt;Box&lt;<span class="kw">dyn </span>Debug&gt;&gt;;
@@ -962,8 +962,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_pin_rc_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_pin_rc_unsized() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Rc&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
             <span class="kw">let </span>p = Pin::new(Rc::new(<span class="number">1</span>)) <span class="kw">as </span>Pin&lt;Rc&lt;<span class="kw">dyn </span>Debug&gt;&gt;;
@@ -979,8 +979,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_pin_arc_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_pin_arc_unsized() {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Arc&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
             <span class="kw">let </span>p = Pin::new(Arc::new(<span class="number">1</span>)) <span class="kw">as </span>Pin&lt;Arc&lt;<span class="kw">dyn </span>Debug&gt;&gt;;
@@ -996,8 +996,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>clone_pin_arc_from_raw() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>clone_pin_arc_from_raw() {
         <span class="kw">use </span><span class="kw">super</span>::clone_pointer_from_raw;
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Arc&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
@@ -1008,8 +1008,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>clone_pin_rc_from_raw() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>clone_pin_rc_from_raw() {
         <span class="kw">use </span><span class="kw">super</span>::clone_pointer_from_raw;
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>pointer_ops = DefaultPointerOps::&lt;Pin&lt;Rc&lt;<span class="kw">_</span>&gt;&gt;&gt;::new();
@@ -1021,4 +1021,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

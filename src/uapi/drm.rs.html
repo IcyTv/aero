@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `uapi/src/drm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>drm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../uapi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../uapi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../uapi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `uapi/src/drm.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>drm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../uapi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../uapi/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../uapi/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -294,29 +294,29 @@
 <span class="kw">pub const </span>DRM_IOCTL_BASE: usize = <span class="string">&#39;d&#39; </span><span class="kw">as </span>usize;
 
 <span class="comment">// Functions to generate the IOCTl numbers:
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub const fn </span>drm_io(nr: usize) -&gt; usize {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub const fn </span>drm_io(nr: usize) -&gt; usize {
     ioctl::io(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[inline]</span>
-<span class="kw">pub const fn </span>drm_ior&lt;T&gt;(nr: usize) -&gt; usize {
+<span class="attribute">#[inline]
+</span><span class="kw">pub const fn </span>drm_ior&lt;T&gt;(nr: usize) -&gt; usize {
     ioctl::ior::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[inline]</span>
-<span class="kw">pub const fn </span>drm_iow&lt;T&gt;(nr: usize) -&gt; usize {
+<span class="attribute">#[inline]
+</span><span class="kw">pub const fn </span>drm_iow&lt;T&gt;(nr: usize) -&gt; usize {
     ioctl::iow::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[inline]</span>
-<span class="kw">pub const fn </span>drm_iowr&lt;T&gt;(nr: usize) -&gt; usize {
+<span class="attribute">#[inline]
+</span><span class="kw">pub const fn </span>drm_iowr&lt;T&gt;(nr: usize) -&gt; usize {
     ioctl::iowr::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
 <span class="comment">// DRM structures:
-</span><span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmVersion {
+</span><span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmVersion {
     <span class="kw">pub </span>version_major: ffi::c_int,
     <span class="kw">pub </span>version_minor: ffi::c_int,
     <span class="kw">pub </span>version_patch_level: ffi::c_int,
@@ -350,14 +350,14 @@
 <span class="kw">pub const </span>DRM_CAP_SYNCOBJ: u64 = <span class="number">0x13</span>;
 <span class="kw">pub const </span>DRM_CAP_SYNCOBJ_TIMELINE: u64 = <span class="number">0x14</span>;
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmGetCap {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmGetCap {
     <span class="kw">pub </span>capability: u64,
     <span class="kw">pub </span>value: u64,
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeCardRes {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeCardRes {
     <span class="kw">pub </span>fb_id_ptr: u64,
     <span class="kw">pub </span>crtc_id_ptr: u64,
     <span class="kw">pub </span>connector_id_ptr: u64,
@@ -372,8 +372,8 @@
     <span class="kw">pub </span>max_height: u32,
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeCrtc {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeCrtc {
     <span class="kw">pub </span>set_connectors_ptr: u64,
     <span class="kw">pub </span>count_connectors: u32,
 
@@ -389,16 +389,16 @@
     <span class="kw">pub </span>mode: DrmModeInfo,
 }
 
-<span class="attribute">#[repr(u32)]</span>
-<span class="attribute">#[derive(Copy, Clone, Debug)]</span>
-<span class="kw">pub enum </span>DrmModeConStatus {
+<span class="attribute">#[repr(u32)]
+#[derive(Copy, Clone, Debug)]
+</span><span class="kw">pub enum </span>DrmModeConStatus {
     Connected = <span class="number">1</span>, <span class="comment">// connector has the sink plugged in
     </span>Disconnected = <span class="number">2</span>,
     Unknown = <span class="number">3</span>,
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeGetEncoder {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeGetEncoder {
     <span class="kw">pub </span>encoder_id: u32,
     <span class="kw">pub </span>encoder_typ: u32,
 
@@ -427,9 +427,9 @@
 
 <span class="kw">pub const </span>DRM_DISPLAY_MODE_LEN: usize = <span class="number">32</span>;
 
-<span class="attribute">#[derive(Clone)]</span>
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeInfo {
+<span class="attribute">#[derive(Clone)]
+#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeInfo {
     <span class="kw">pub </span>clock: u32,                                <span class="comment">// pixel clock in kHz
     </span><span class="kw">pub </span>hdisplay: u16,                             <span class="comment">// horizontal display size
     </span><span class="kw">pub </span>hsync_start: u16,                          <span class="comment">// horizontal sync start
@@ -447,8 +447,8 @@
     </span><span class="kw">pub </span>name: [ffi::c_char; DRM_DISPLAY_MODE_LEN], <span class="comment">// string describing the mode resolution
 </span>}
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeGetConnector {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeGetConnector {
     <span class="kw">pub </span>encoders_ptr: u64,    <span class="comment">// pointer to `u32` array of object IDs
     </span><span class="kw">pub </span>modes_ptr: u64,       <span class="comment">// pointer to `DrmModeInfo` array
     </span><span class="kw">pub </span>props_ptr: u64,       <span class="comment">// pointer to `u32` array of property IDs
@@ -478,8 +478,8 @@
     </span><span class="kw">pub </span>pad: u32, <span class="comment">// padding; must be zero
 </span>}
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeFbCmd {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeFbCmd {
     <span class="kw">pub </span>fb_id: u32,
     <span class="kw">pub </span>width: u32,
     <span class="kw">pub </span>height: u32,
@@ -489,8 +489,8 @@
     <span class="kw">pub </span>handle: u32, <span class="comment">// driver specific handle
 </span>}
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeCreateDumb {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeCreateDumb {
     <span class="kw">pub </span>height: u32,
     <span class="kw">pub </span>width: u32,
     <span class="kw">pub </span>bpp: u32,
@@ -502,8 +502,8 @@
     <span class="kw">pub </span>size: u64,
 }
 
-<span class="attribute">#[repr(C)]</span>
-<span class="kw">pub struct </span>DrmModeMapDumb {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>DrmModeMapDumb {
     <span class="kw">pub </span>handle: u32, <span class="comment">// handle for the object being mapped
     </span><span class="kw">pub </span>pad: u32,
     <span class="comment">// Fake offset to use for subsequent mmap call. This is a fixed-size
@@ -525,4 +525,4 @@
 <span class="kw">pub const </span>DRM_IOCTL_MODE_CREATE_DUMB: usize = drm_iowr::&lt;DrmModeCreateDumb&gt;(<span class="number">0xb2</span>);
 <span class="kw">pub const </span>DRM_IOCTL_MODE_MAP_DUMB: usize = drm_iowr::&lt;DrmModeMapDumb&gt;(<span class="number">0xb3</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

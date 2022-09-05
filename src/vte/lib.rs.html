@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/vte-4836a27d3fc728a4/a9d8bf8/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../vte/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../vte/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../vte/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/vte-4836a27d3fc728a4/a9d8bf8/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../vte/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../vte/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../vte/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -1003,14 +1003,14 @@
 //! [`Parser`]: struct.Parser.html
 //! [`Perform`]: trait.Perform.html
 //! [Paul Williams&#39; ANSI parser state machine]: https://vt100.net/emu/dec_ansi_parser
-</span><span class="attribute">#![deny(clippy::all, clippy::if_not_else, clippy::enum_glob_use, clippy::wrong_pub_self_convention)]</span>
-<span class="attribute">#![cfg_attr(all(feature = <span class="string">&quot;nightly&quot;</span>, test), feature(test))]</span>
-<span class="attribute">#![cfg_attr(feature = <span class="string">&quot;no_std&quot;</span>, no_std)]</span>
+</span><span class="attribute">#![deny(clippy::all, clippy::if_not_else, clippy::enum_glob_use, clippy::wrong_pub_self_convention)]
+#![cfg_attr(all(feature = <span class="string">&quot;nightly&quot;</span>, test), feature(test))]
+#![cfg_attr(feature = <span class="string">&quot;no_std&quot;</span>, no_std)]
 
-<span class="kw">use </span>core::mem::MaybeUninit;
+</span><span class="kw">use </span>core::mem::MaybeUninit;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]</span>
-<span class="kw">use </span>arrayvec::ArrayVec;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]
+</span><span class="kw">use </span>arrayvec::ArrayVec;
 <span class="kw">use </span>utf8parse <span class="kw">as </span>utf8;
 
 <span class="kw">mod </span>definitions;
@@ -1023,8 +1023,8 @@
 
 <span class="kw">const </span>MAX_INTERMEDIATES: usize = <span class="number">2</span>;
 <span class="kw">const </span>MAX_OSC_PARAMS: usize = <span class="number">16</span>;
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;no_std&quot;</span>, test))]</span>
-<span class="kw">const </span>MAX_OSC_RAW: usize = <span class="number">1024</span>;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;no_std&quot;</span>, test))]
+</span><span class="kw">const </span>MAX_OSC_RAW: usize = <span class="number">1024</span>;
 
 <span class="kw">struct </span>VtUtf8Receiver&lt;<span class="lifetime">&#39;a</span>, P: Perform&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>P, <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>State);
 
@@ -1043,17 +1043,17 @@
 <span class="doccomment">/// Parser for raw _VTE_ protocol which delegates actions to a [`Perform`]
 ///
 /// [`Perform`]: trait.Perform.html
-</span><span class="attribute">#[derive(Default)]</span>
-<span class="kw">pub struct </span>Parser {
+</span><span class="attribute">#[derive(Default)]
+</span><span class="kw">pub struct </span>Parser {
     state: State,
     intermediates: [u8; MAX_INTERMEDIATES],
     intermediate_idx: usize,
     params: Params,
     param: u16,
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]</span>
-    osc_raw: ArrayVec&lt;u8, MAX_OSC_RAW&gt;,
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;no_std&quot;</span>))]</span>
-    osc_raw: Vec&lt;u8&gt;,
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]
+    </span>osc_raw: ArrayVec&lt;u8, MAX_OSC_RAW&gt;,
+    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;no_std&quot;</span>))]
+    </span>osc_raw: Vec&lt;u8&gt;,
     osc_params: [(usize, usize); MAX_OSC_PARAMS],
     osc_num_params: usize,
     ignoring: bool,
@@ -1066,13 +1066,13 @@
         Parser::default()
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Params {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>params(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Params {
         <span class="kw-2">&amp;</span><span class="self">self</span>.params
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>intermediates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>intermediates(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u8] {
         <span class="kw-2">&amp;</span><span class="self">self</span>.intermediates[..<span class="self">self</span>.intermediate_idx]
     }
 
@@ -1081,8 +1081,8 @@
     /// Requires a [`Perform`] in case `byte` triggers an action
     ///
     /// [`Perform`]: trait.Perform.html
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">pub fn </span>advance&lt;P: Perform&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, byte: u8) {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>advance&lt;P: Perform&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, byte: u8) {
         <span class="comment">// Utf8 characters are handled out-of-band.
         </span><span class="kw">if let </span>State::Utf8 = <span class="self">self</span>.state {
             <span class="self">self</span>.process_utf8(performer, byte);
@@ -1103,8 +1103,8 @@
         <span class="self">self</span>.perform_state_change(performer, state, action, byte);
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>process_utf8&lt;P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, byte: u8)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>process_utf8&lt;P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, byte: u8)
     <span class="kw">where
         </span>P: Perform,
     {
@@ -1113,12 +1113,12 @@
         utf8_parser.advance(<span class="kw-2">&amp;mut </span>receiver, byte);
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>perform_state_change&lt;P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, state: State, action: Action, byte: u8)
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>perform_state_change&lt;P&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, state: State, action: Action, byte: u8)
     <span class="kw">where
         </span>P: Perform,
     {
-        <span class="macro">macro_rules!</span> maybe_action {
+        <span class="macro">macro_rules! </span>maybe_action {
             (<span class="macro-nonterminal">$action</span>:expr, <span class="macro-nonterminal">$arg</span>:expr) =&gt; {
                 <span class="kw">match </span><span class="macro-nonterminal">$action </span>{
                     Action::None =&gt; (),
@@ -1169,8 +1169,8 @@
     <span class="doccomment">/// Separate method for osc_dispatch that borrows self as read-only
     ///
     /// The aliasing is needed here for multiple slices into self.osc_raw
-    </span><span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>osc_dispatch&lt;P: Perform&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, byte: u8) {
+    </span><span class="attribute">#[inline]
+    </span><span class="kw">fn </span>osc_dispatch&lt;P: Perform&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, byte: u8) {
         <span class="kw">let </span><span class="kw-2">mut </span>slices: [MaybeUninit&lt;<span class="kw-2">&amp;</span>[u8]&gt;; MAX_OSC_PARAMS] =
             <span class="kw">unsafe </span>{ MaybeUninit::uninit().assume_init() };
 
@@ -1186,8 +1186,8 @@
         }
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>perform_action&lt;P: Perform&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, action: Action, byte: u8) {
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>perform_action&lt;P: Perform&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, performer: <span class="kw-2">&amp;mut </span>P, action: Action, byte: u8) {
         <span class="kw">match </span>action {
             Action::Print =&gt; performer.print(byte <span class="kw">as </span>char),
             Action::Execute =&gt; performer.execute(byte),
@@ -1206,8 +1206,8 @@
                 <span class="self">self</span>.osc_num_params = <span class="number">0</span>;
             },
             Action::OscPut =&gt; {
-                <span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]</span>
-                {
+                <span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]
+                </span>{
                     <span class="kw">if </span><span class="self">self</span>.osc_raw.is_full() {
                         <span class="kw">return</span>;
                     }
@@ -1385,12 +1385,12 @@
     </span><span class="kw">fn </span>esc_dispatch(<span class="kw-2">&amp;mut </span><span class="self">self</span>, _intermediates: <span class="kw-2">&amp;</span>[u8], _ignore: bool, _byte: u8) {}
 }
 
-<span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;no_std&quot;</span>))]</span>
-<span class="attribute">#[macro_use]</span>
-<span class="kw">extern crate </span>std;
+<span class="attribute">#[cfg(all(test, feature = <span class="string">&quot;no_std&quot;</span>))]
+#[macro_use]
+</span><span class="kw">extern crate </span>std;
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use </span>std::string::String;
@@ -1403,13 +1403,13 @@
         <span class="string">b&#39;c&#39;</span>, <span class="string">b&#39;r&#39;</span>, <span class="string">b&#39;i&#39;</span>, <span class="string">b&#39;t&#39;</span>, <span class="string">b&#39;t&#39;</span>, <span class="string">b&#39;y&#39;</span>, <span class="number">0x07</span>, <span class="comment">// End OSC
     </span>];
 
-    <span class="attribute">#[derive(Default)]</span>
-    <span class="kw">struct </span>Dispatcher {
+    <span class="attribute">#[derive(Default)]
+    </span><span class="kw">struct </span>Dispatcher {
         dispatched: Vec&lt;Sequence&gt;,
     }
 
-    <span class="attribute">#[derive(Debug, PartialEq, Eq)]</span>
-    <span class="kw">enum </span>Sequence {
+    <span class="attribute">#[derive(Debug, PartialEq, Eq)]
+    </span><span class="kw">enum </span>Sequence {
         Osc(Vec&lt;Vec&lt;u8&gt;&gt;, bool),
         Csi(Vec&lt;Vec&lt;u16&gt;&gt;, Vec&lt;u8&gt;, bool, char),
         Esc(Vec&lt;u8&gt;, bool, u8),
@@ -1450,8 +1450,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_osc() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_osc() {
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
 
@@ -1470,8 +1470,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_empty_osc() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_empty_osc() {
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
 
@@ -1486,8 +1486,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_osc_max_params() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_osc_max_params() {
         <span class="kw">let </span>params = std::iter::repeat(<span class="string">&quot;;&quot;</span>).take(params::MAX_PARAMS + <span class="number">1</span>).collect::&lt;String&gt;();
         <span class="kw">let </span>input = <span class="macro">format!</span>(<span class="string">&quot;\x1b]{}\x1b&quot;</span>, <span class="kw-2">&amp;</span>params[..]).into_bytes();
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
@@ -1507,8 +1507,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>osc_bell_terminated() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>osc_bell_terminated() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b]11;ff/00/ff\x07&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1524,8 +1524,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>osc_c0_st_terminated() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>osc_c0_st_terminated() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b]11;ff/00/ff\x1b\\&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1541,8 +1541,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_osc_with_utf8_arguments() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_osc_with_utf8_arguments() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[
             <span class="number">0x0d</span>, <span class="number">0x1b</span>, <span class="number">0x5d</span>, <span class="number">0x32</span>, <span class="number">0x3b</span>, <span class="number">0x65</span>, <span class="number">0x63</span>, <span class="number">0x68</span>, <span class="number">0x6f</span>, <span class="number">0x20</span>, <span class="number">0x27</span>, <span class="number">0xc2</span>, <span class="number">0xaf</span>, <span class="number">0x5c</span>,
             <span class="number">0x5f</span>, <span class="number">0x28</span>, <span class="number">0xe3</span>, <span class="number">0x83</span>, <span class="number">0x84</span>, <span class="number">0x29</span>, <span class="number">0x5f</span>, <span class="number">0x2f</span>, <span class="number">0xc2</span>, <span class="number">0xaf</span>, <span class="number">0x27</span>, <span class="number">0x20</span>, <span class="number">0x26</span>, <span class="number">0x26</span>,
@@ -1565,8 +1565,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>osc_containing_string_terminator() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>osc_containing_string_terminator() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b]2;\xe6\x9c\xab\x1b\\&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1584,8 +1584,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>exceed_max_buffer_size() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>exceed_max_buffer_size() {
         <span class="kw">static </span>NUM_BYTES: usize = MAX_OSC_RAW + <span class="number">100</span>;
         <span class="kw">static </span>INPUT_START: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="number">0x1b</span>, <span class="string">b&#39;]&#39;</span>, <span class="string">b&#39;5&#39;</span>, <span class="string">b&#39;2&#39;</span>, <span class="string">b&#39;;&#39;</span>, <span class="string">b&#39;s&#39;</span>];
         <span class="kw">static </span>INPUT_END: <span class="kw-2">&amp;</span>[u8] = <span class="kw-2">&amp;</span>[<span class="string">b&#39;\x07&#39;</span>];
@@ -1614,18 +1614,18 @@
                 <span class="macro">assert_eq!</span>(params.len(), <span class="number">2</span>);
                 <span class="macro">assert_eq!</span>(params[<span class="number">0</span>], <span class="string">b&quot;52&quot;</span>);
 
-                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;no_std&quot;</span>))]</span>
-                <span class="macro">assert_eq!</span>(params[<span class="number">1</span>].len(), NUM_BYTES + INPUT_END.len());
+                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;no_std&quot;</span>))]
+                </span><span class="macro">assert_eq!</span>(params[<span class="number">1</span>].len(), NUM_BYTES + INPUT_END.len());
 
-                <span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]</span>
-                <span class="macro">assert_eq!</span>(params[<span class="number">1</span>].len(), MAX_OSC_RAW - params[<span class="number">0</span>].len());
+                <span class="attribute">#[cfg(feature = <span class="string">&quot;no_std&quot;</span>)]
+                </span><span class="macro">assert_eq!</span>(params[<span class="number">1</span>].len(), MAX_OSC_RAW - params[<span class="number">0</span>].len());
             },
             <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;expected osc sequence&quot;</span>),
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_csi_max_params() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_csi_max_params() {
         <span class="comment">// This will build a list of repeating &#39;1;&#39;s
         // The length is MAX_PARAMS - 1 because the last semicolon is interpreted
         // as an implicit zero, making the total number of parameters MAX_PARAMS
@@ -1649,8 +1649,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_csi_params_ignore_long_params() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_csi_params_ignore_long_params() {
         <span class="comment">// This will build a list of repeating &#39;1;&#39;s
         // The length is MAX_PARAMS because the last semicolon is interpreted
         // as an implicit zero, making the total number of parameters MAX_PARAMS + 1
@@ -1674,8 +1674,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_csi_params_trailing_semicolon() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_csi_params_trailing_semicolon() {
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
 
@@ -1690,8 +1690,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_csi_params_leading_semicolon() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_csi_params_leading_semicolon() {
         <span class="comment">// Create dispatcher and check state
         </span><span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1707,8 +1707,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_long_csi_param() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_long_csi_param() {
         <span class="comment">// The important part is the parameter, which is (i64::MAX + 1)
         </span><span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b[9223372036854775808m&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
@@ -1725,8 +1725,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>csi_reset() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>csi_reset() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b[3;1\x1b[?1049h&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1746,8 +1746,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>csi_subparameters() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>csi_subparameters() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b[38:2:255:0:255;1m&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1767,8 +1767,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_dcs_max_params() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_dcs_max_params() {
         <span class="kw">let </span>params = std::iter::repeat(<span class="string">&quot;1;&quot;</span>).take(params::MAX_PARAMS + <span class="number">1</span>).collect::&lt;String&gt;();
         <span class="kw">let </span>input = <span class="macro">format!</span>(<span class="string">&quot;\x1bP{}p&quot;</span>, <span class="kw-2">&amp;</span>params[..]).into_bytes();
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
@@ -1789,8 +1789,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>dcs_reset() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>dcs_reset() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b[3;1\x1bP1$tx\x9c&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1812,8 +1812,8 @@
         <span class="macro">assert_eq!</span>(dispatcher.dispatched[<span class="number">2</span>], Sequence::DcsUnhook);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>parse_dcs() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>parse_dcs() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1bP0;1|17/ab\x9c&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1836,8 +1836,8 @@
         <span class="macro">assert_eq!</span>(dispatcher.dispatched[<span class="number">6</span>], Sequence::DcsUnhook);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>intermediate_reset_on_dcs_exit() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>intermediate_reset_on_dcs_exit() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1bP=1sZZZ\x1b+\x5c&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1853,8 +1853,8 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>esc_reset() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>esc_reset() {
         <span class="kw">static </span>INPUT: <span class="kw-2">&amp;</span>[u8] = <span class="string">b&quot;\x1b[3;1\x1b(A&quot;</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = Dispatcher::default();
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1875,8 +1875,8 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;nightly&quot;</span>, test))]</span>
-<span class="kw">mod </span>bench {
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;nightly&quot;</span>, test))]
+</span><span class="kw">mod </span>bench {
     <span class="kw">extern crate </span>std;
     <span class="kw">extern crate </span>test;
 
@@ -1917,8 +1917,8 @@
         }
     }
 
-    <span class="attribute">#[bench]</span>
-    <span class="kw">fn </span>testfile(b: <span class="kw-2">&amp;mut </span>Bencher) {
+    <span class="attribute">#[bench]
+    </span><span class="kw">fn </span>testfile(b: <span class="kw-2">&amp;mut </span>Bencher) {
         b.iter(|| {
             <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = BenchDispatcher;
             <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
@@ -1929,8 +1929,8 @@
         });
     }
 
-    <span class="attribute">#[bench]</span>
-    <span class="kw">fn </span>state_changes(b: <span class="kw-2">&amp;mut </span>Bencher) {
+    <span class="attribute">#[bench]
+    </span><span class="kw">fn </span>state_changes(b: <span class="kw-2">&amp;mut </span>Bencher) {
         <span class="kw">let </span>input = <span class="string">b&quot;\x1b]2;X\x1b\\ \x1b[0m \x1bP0@\x1b\\&quot;</span>;
         b.iter(|| {
             <span class="kw">let </span><span class="kw-2">mut </span>dispatcher = BenchDispatcher;
@@ -1945,4 +1945,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="vte" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="vte" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

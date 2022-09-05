@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.2/src/mutex/spin.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spin.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spin/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../spin/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spin/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex/spin.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>spin.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../spin/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../spin/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../spin/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -511,6 +511,8 @@
 <span id="511">511</span>
 <span id="512">512</span>
 <span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
 </pre><pre class="rust"><code><span class="doccomment">//! A naïve spinning mutex.
 //!
 //! Waiting threads hammer an atomic variable until it becomes available. Best-case latency is low, but worst-case
@@ -520,10 +522,12 @@
     cell::UnsafeCell,
     fmt,
     ops::{Deref, DerefMut},
-    sync::atomic::{AtomicBool, Ordering},
     marker::PhantomData,
 };
-<span class="kw">use crate</span>::{RelaxStrategy, Spin};
+<span class="kw">use crate</span>::{
+    atomic::{AtomicBool, Ordering},
+    RelaxStrategy, Spin
+};
 
 <span class="doccomment">/// A [spin lock](https://en.m.wikipedia.org/wiki/Spinlock) providing mutually exclusive access to data.
 ///
@@ -587,8 +591,8 @@
 }
 
 <span class="comment">// Same unsafe impls as `std::sync::Mutex`
-</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized + Send&gt; Sync <span class="kw">for </span>SpinMutex&lt;T&gt; {}
-<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized + Send&gt; Send <span class="kw">for </span>SpinMutex&lt;T&gt; {}
+</span><span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized + Send, R&gt; Sync <span class="kw">for </span>SpinMutex&lt;T, R&gt; {}
+<span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized + Send, R&gt; Send <span class="kw">for </span>SpinMutex&lt;T, R&gt; {}
 
 <span class="kw">impl</span>&lt;T, R&gt; SpinMutex&lt;T, R&gt; {
     <span class="doccomment">/// Creates a new [`SpinMutex`] wrapping the supplied data.
@@ -606,8 +610,8 @@
     ///     drop(lock);
     /// }
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub const fn </span>new(data: T) -&gt; <span class="self">Self </span>{
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub const fn </span>new(data: T) -&gt; <span class="self">Self </span>{
         SpinMutex {
             lock: AtomicBool::new(<span class="bool-val">false</span>),
             data: UnsafeCell::new(data),
@@ -623,8 +627,8 @@
     /// let lock = spin::mutex::SpinMutex::&lt;_&gt;::new(42);
     /// assert_eq!(42, lock.into_inner());
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; T {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; T {
         <span class="comment">// We know statically that there are no outstanding references to
         // `self` so there&#39;s no need to lock.
         </span><span class="kw">let </span>SpinMutex { data, .. } = <span class="self">self</span>;
@@ -642,7 +646,7 @@
     ///
     /// unsafe {
     ///     core::mem::forget(lock.lock());
-    ///     
+    ///
     ///     assert_eq!(lock.as_mut_ptr().read(), 42);
     ///     lock.as_mut_ptr().write(58);
     ///
@@ -652,8 +656,8 @@
     /// assert_eq!(*lock.lock(), 58);
     ///
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>as_mut_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>T {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>as_mut_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>T {
         <span class="self">self</span>.data.get()
     }
 }
@@ -673,8 +677,8 @@
     ///     // The lock is implicitly dropped at the end of the scope
     /// }
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SpinMutexGuard&lt;T&gt; {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SpinMutexGuard&lt;T&gt; {
         <span class="comment">// Can fail to lock even if the spinlock is not locked. May be more efficient than `try_lock`
         // when called in a loop.
         </span><span class="kw">while </span><span class="self">self</span>.lock.compare_exchange_weak(<span class="bool-val">false</span>, <span class="bool-val">true</span>, Ordering::Acquire, Ordering::Relaxed).is_err() {
@@ -698,8 +702,8 @@
     ///
     /// This function provides no synchronization guarantees and so its result should be considered &#39;out of date&#39;
     /// the instant it is called. Do not use it for synchronization purposes. However, it may be useful as a heuristic.
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>is_locked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>is_locked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.lock.load(Ordering::Relaxed)
     }
 
@@ -710,8 +714,8 @@
     /// This is *extremely* unsafe if the lock is not held by the current
     /// thread. However, this can be useful in some instances for exposing the
     /// lock to FFI that doesn&#39;t know how to deal with RAII.
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub unsafe fn </span>force_unlock(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub unsafe fn </span>force_unlock(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.lock.store(<span class="bool-val">false</span>, Ordering::Release);
     }
 
@@ -729,8 +733,8 @@
     /// let maybe_guard2 = lock.try_lock();
     /// assert!(maybe_guard2.is_none());
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>try_lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;SpinMutexGuard&lt;T&gt;&gt; {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>try_lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;SpinMutexGuard&lt;T&gt;&gt; {
         <span class="comment">// The reason for using a strong compare_exchange is explained here:
         // https://github.com/Amanieu/parking_lot/pull/207#issuecomment-575869107
         </span><span class="kw">if </span><span class="self">self</span>.lock.compare_exchange(<span class="bool-val">false</span>, <span class="bool-val">true</span>, Ordering::Acquire, Ordering::Relaxed).is_ok() {
@@ -756,8 +760,8 @@
     /// *lock.get_mut() = 10;
     /// assert_eq!(*lock.lock(), 10);
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
         <span class="comment">// We know statically that there are no other references to `self`, so
         // there&#39;s no need to lock the inner mutex.
         </span><span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span><span class="self">self</span>.data.get() }
@@ -800,8 +804,8 @@
     /// *data = 1;
     /// assert_eq!(*data, 1);
     /// ```
-    </span><span class="attribute">#[inline(always)]</span>
-    <span class="kw">pub fn </span>leak(this: <span class="self">Self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T {
+    </span><span class="attribute">#[inline(always)]
+    </span><span class="kw">pub fn </span>leak(this: <span class="self">Self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T {
         <span class="kw">let </span>data = this.data <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>; <span class="comment">// Keep it in pointer form temporarily to avoid double-aliasing
         </span>core::mem::forget(this);
         <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>data }
@@ -840,8 +844,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;lock_api&quot;</span>)]</span>
-<span class="kw">unsafe impl</span>&lt;R: RelaxStrategy&gt; lock_api_crate::RawMutex <span class="kw">for </span>SpinMutex&lt;(), R&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;lock_api&quot;</span>)]
+</span><span class="kw">unsafe impl</span>&lt;R: RelaxStrategy&gt; lock_api_crate::RawMutex <span class="kw">for </span>SpinMutex&lt;(), R&gt; {
     <span class="kw">type </span>GuardMarker = lock_api_crate::GuardSend;
 
     <span class="kw">const </span>INIT: <span class="self">Self </span>= <span class="self">Self</span>::new(());
@@ -865,8 +869,8 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
     <span class="kw">use </span>std::prelude::v1::<span class="kw-2">*</span>;
 
     <span class="kw">use </span>std::sync::atomic::{AtomicUsize, Ordering};
@@ -876,18 +880,18 @@
 
     <span class="kw">type </span>SpinMutex&lt;T&gt; = <span class="kw">super</span>::SpinMutex&lt;T&gt;;
 
-    <span class="attribute">#[derive(Eq, PartialEq, Debug)]</span>
-    <span class="kw">struct </span>NonCopy(i32);
+    <span class="attribute">#[derive(Eq, PartialEq, Debug)]
+    </span><span class="kw">struct </span>NonCopy(i32);
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>smoke() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>smoke() {
         <span class="kw">let </span>m = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(());
         drop(m.lock());
         drop(m.lock());
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>lots_and_lots() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>lots_and_lots() {
         <span class="kw">static </span>M: SpinMutex&lt;()&gt; = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(());
         <span class="kw">static </span><span class="kw-2">mut </span>CNT: u32 = <span class="number">0</span>;
         <span class="kw">const </span>J: u32 = <span class="number">1000</span>;
@@ -923,8 +927,8 @@
         <span class="macro">assert_eq!</span>(<span class="kw">unsafe </span>{ CNT }, J * K * <span class="number">2</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>try_lock() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>try_lock() {
         <span class="kw">let </span>mutex = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(<span class="number">42</span>);
 
         <span class="comment">// First lock succeeds
@@ -941,14 +945,14 @@
         <span class="macro">assert_eq!</span>(c.as_ref().map(|r| <span class="kw-2">**</span>r), <span class="prelude-val">Some</span>(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_into_inner() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_into_inner() {
         <span class="kw">let </span>m = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(NonCopy(<span class="number">10</span>));
         <span class="macro">assert_eq!</span>(m.into_inner(), NonCopy(<span class="number">10</span>));
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_into_inner_drop() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_into_inner_drop() {
         <span class="kw">struct </span>Foo(Arc&lt;AtomicUsize&gt;);
         <span class="kw">impl </span>Drop <span class="kw">for </span>Foo {
             <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
@@ -965,8 +969,8 @@
         <span class="macro">assert_eq!</span>(num_drops.load(Ordering::SeqCst), <span class="number">1</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_mutex_arc_nested() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_mutex_arc_nested() {
         <span class="comment">// Tests nested mutexes and access
         // to underlying data.
         </span><span class="kw">let </span>arc = Arc::new(SpinMutex::&lt;<span class="kw">_</span>&gt;::new(<span class="number">1</span>));
@@ -981,8 +985,8 @@
         rx.recv().unwrap();
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_mutex_arc_access_in_unwind() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_mutex_arc_access_in_unwind() {
         <span class="kw">let </span>arc = Arc::new(SpinMutex::&lt;<span class="kw">_</span>&gt;::new(<span class="number">1</span>));
         <span class="kw">let </span>arc2 = arc.clone();
         <span class="kw">let _ </span>= thread::spawn(<span class="kw">move </span>|| -&gt; () {
@@ -1002,8 +1006,8 @@
         <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>lock, <span class="number">2</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_mutex_unsized() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_mutex_unsized() {
         <span class="kw">let </span>mutex: <span class="kw-2">&amp;</span>SpinMutex&lt;[i32]&gt; = <span class="kw-2">&amp;</span>SpinMutex::&lt;<span class="kw">_</span>&gt;::new([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
         {
             <span class="kw">let </span>b = <span class="kw-2">&amp;mut *</span>mutex.lock();
@@ -1014,8 +1018,8 @@
         <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;*</span>mutex.lock(), comp);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>test_mutex_force_lock() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>test_mutex_force_lock() {
         <span class="kw">let </span>lock = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(());
         ::std::mem::forget(lock.lock());
         <span class="kw">unsafe </span>{
@@ -1025,4 +1029,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

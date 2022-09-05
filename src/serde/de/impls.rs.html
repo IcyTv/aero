@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.133/src/de/impls.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>impls.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.133/src/de/impls.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>impls.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../serde/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -2668,13 +2668,13 @@
     Deserialize, Deserializer, EnumAccess, Error, SeqAccess, Unexpected, VariantAccess, Visitor,
 };
 
-<span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">use </span>de::MapAccess;
+<span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">use </span>de::MapAccess;
 
 <span class="kw">use </span>seed::InPlaceSeed;
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">use </span>__private::size_hint;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">use </span>__private::size_hint;
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
@@ -2704,8 +2704,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;unstable&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>! {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;unstable&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>! {
     <span class="kw">fn </span>deserialize&lt;D&gt;(_deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -2744,11 +2744,11 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="macro">macro_rules!</span> impl_deserialize_num {
+</span><span class="macro">macro_rules! </span>impl_deserialize_num {
     (<span class="macro-nonterminal">$ty</span>:ident, <span class="macro-nonterminal">$deserialize</span>:ident $(<span class="macro-nonterminal">$methods</span>:tt)<span class="kw-2">*</span>) =&gt; {
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
             <span class="kw">where
                 </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
@@ -2770,10 +2770,10 @@
     };
 }
 
-<span class="macro">macro_rules!</span> num_self {
+<span class="macro">macro_rules! </span>num_self {
     (<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
-        <span class="attribute">#[inline]</span>
-        <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="attribute">#[inline]
+        </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
         <span class="kw">where
             </span>E: Error,
         {
@@ -2782,11 +2782,11 @@
     };
 }
 
-<span class="macro">macro_rules!</span> num_as_self {
+<span class="macro">macro_rules! </span>num_as_self {
     ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
             <span class="kw">where
                 </span>E: Error,
             {
@@ -2796,11 +2796,11 @@
     };
 }
 
-<span class="macro">macro_rules!</span> int_to_int {
+<span class="macro">macro_rules! </span>int_to_int {
     ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
             <span class="kw">where
                 </span>E: Error,
             {
@@ -2814,11 +2814,11 @@
     };
 }
 
-<span class="macro">macro_rules!</span> int_to_uint {
+<span class="macro">macro_rules! </span>int_to_uint {
     ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
             <span class="kw">where
                 </span>E: Error,
             {
@@ -2832,11 +2832,11 @@
     };
 }
 
-<span class="macro">macro_rules!</span> uint_to_self {
+<span class="macro">macro_rules! </span>uint_to_self {
     ($(<span class="macro-nonterminal">$ty</span>:ident : <span class="macro-nonterminal">$visit</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span><span class="macro-nonterminal">$visit</span>&lt;E&gt;(<span class="self">self</span>, v: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
             <span class="kw">where
                 </span>E: Error,
             {
@@ -2850,14 +2850,14 @@
     };
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     i8, deserialize_i8
     <span class="macro">num_self!</span>(i8:visit_i8);
     <span class="macro">int_to_int!</span>(i16:visit_i16 i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     i16, deserialize_i16
     <span class="macro">num_self!</span>(i16:visit_i16);
     <span class="macro">num_as_self!</span>(i8:visit_i8);
@@ -2865,7 +2865,7 @@
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     i32, deserialize_i32
     <span class="macro">num_self!</span>(i32:visit_i32);
     <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16);
@@ -2873,28 +2873,28 @@
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     i64, deserialize_i64
     <span class="macro">num_self!</span>(i64:visit_i64);
     <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32);
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     isize, deserialize_i64
     <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16);
     <span class="macro">int_to_int!</span>(i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     u8, deserialize_u8
     <span class="macro">num_self!</span>(u8:visit_u8);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     u16, deserialize_u16
     <span class="macro">num_self!</span>(u16:visit_u16);
     <span class="macro">num_as_self!</span>(u8:visit_u8);
@@ -2902,7 +2902,7 @@
     <span class="macro">uint_to_self!</span>(u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     u32, deserialize_u32
     <span class="macro">num_self!</span>(u32:visit_u32);
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16);
@@ -2910,21 +2910,21 @@
     <span class="macro">uint_to_self!</span>(u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     u64, deserialize_u64
     <span class="macro">num_self!</span>(u64:visit_u64);
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     usize, deserialize_u64
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16);
     <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
     <span class="macro">uint_to_self!</span>(u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     f32, deserialize_f32
     <span class="macro">num_self!</span>(f32:visit_f32);
     <span class="macro">num_as_self!</span>(f64:visit_f64);
@@ -2932,7 +2932,7 @@
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">impl_deserialize_num!</span> {
+<span class="macro">impl_deserialize_num! </span>{
     f64, deserialize_f64
     <span class="macro">num_self!</span>(f64:visit_f64);
     <span class="macro">num_as_self!</span>(f32:visit_f32);
@@ -2940,15 +2940,15 @@
     <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 }
 
-<span class="macro">serde_if_integer128!</span> {
-    <span class="macro">impl_deserialize_num!</span> {
+<span class="macro">serde_if_integer128! </span>{
+    <span class="macro">impl_deserialize_num! </span>{
         i128, deserialize_i128
         <span class="macro">num_self!</span>(i128:visit_i128);
         <span class="macro">num_as_self!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
         <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
 
-        <span class="attribute">#[inline]</span>
-        <span class="kw">fn </span>visit_u128&lt;E&gt;(<span class="self">self</span>, v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="attribute">#[inline]
+        </span><span class="kw">fn </span>visit_u128&lt;E&gt;(<span class="self">self</span>, v: u128) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
         <span class="kw">where
             </span>E: Error,
         {
@@ -2960,14 +2960,14 @@
         }
     }
 
-    <span class="macro">impl_deserialize_num!</span> {
+    <span class="macro">impl_deserialize_num! </span>{
         u128, deserialize_u128
         <span class="macro">num_self!</span>(u128:visit_u128);
         <span class="macro">num_as_self!</span>(u8:visit_u8 u16:visit_u16 u32:visit_u32 u64:visit_u64);
         <span class="macro">int_to_uint!</span>(i8:visit_i8 i16:visit_i16 i32:visit_i32 i64:visit_i64);
 
-        <span class="attribute">#[inline]</span>
-        <span class="kw">fn </span>visit_i128&lt;E&gt;(<span class="self">self</span>, v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+        <span class="attribute">#[inline]
+        </span><span class="kw">fn </span>visit_i128&lt;E&gt;(<span class="self">self</span>, v: i128) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
         <span class="kw">where
             </span>E: Error,
         {
@@ -2991,16 +2991,16 @@
         formatter.write_str(<span class="string">&quot;a character&quot;</span>)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_char&lt;E&gt;(<span class="self">self</span>, v: char) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_char&lt;E&gt;(<span class="self">self</span>, v: char) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: Error,
     {
         <span class="prelude-val">Ok</span>(v)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_str&lt;E&gt;(<span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_str&lt;E&gt;(<span class="self">self</span>, v: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: Error,
     {
@@ -3013,8 +3013,8 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>char {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -3024,13 +3024,13 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">struct </span>StringVisitor;
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">struct </span>StringInPlaceVisitor&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>String);
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">struct </span>StringVisitor;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">struct </span>StringInPlaceVisitor&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>String);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringVisitor {
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringVisitor {
     <span class="kw">type </span>Value = String;
 
     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
@@ -3075,8 +3075,8 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringInPlaceVisitor&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>StringInPlaceVisitor&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">type </span>Value = ();
 
     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
@@ -3131,8 +3131,8 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>String {
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>String {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -3220,11 +3220,11 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">struct </span>CStringVisitor;
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">struct </span>CStringVisitor;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CStringVisitor {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CStringVisitor {
     <span class="kw">type </span>Value = CString;
 
     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
@@ -3274,8 +3274,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CString {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>CString {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -3284,7 +3284,7 @@
     }
 }
 
-<span class="macro">macro_rules!</span> forwarded_impl {
+<span class="macro">macro_rules! </span>forwarded_impl {
     (
         $(<span class="attribute">#[doc = <span class="macro-nonterminal">$doc</span>:tt]</span>)*
         ( $(<span class="macro-nonterminal">$id</span>: ident),* ), <span class="macro-nonterminal">$ty</span>: ty, <span class="macro-nonterminal">$func</span>: expr
@@ -3301,11 +3301,11 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, de_boxed_c_str))]</span>
-<span class="macro">forwarded_impl!</span>((), Box&lt;CStr&gt;, CString::into_boxed_c_str);
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, de_boxed_c_str))]
+</span><span class="macro">forwarded_impl!</span>((), Box&lt;CStr&gt;, CString::into_boxed_c_str);
 
-<span class="attribute">#[cfg(core_reverse)]</span>
-<span class="macro">forwarded_impl!</span>((T), Reverse&lt;T&gt;, Reverse);
+<span class="attribute">#[cfg(core_reverse)]
+</span><span class="macro">forwarded_impl!</span>((T), Reverse&lt;T&gt;, Reverse);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
@@ -3323,32 +3323,32 @@
         formatter.write_str(<span class="string">&quot;option&quot;</span>)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_unit&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_unit&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: Error,
     {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_none&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_none&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: Error,
     {
         <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_some&lt;D&gt;(<span class="self">self</span>, deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, D::Error&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_some&lt;D&gt;(<span class="self">self</span>, deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
         T::deserialize(deserializer).map(<span class="prelude-val">Some</span>)
     }
 
-    <span class="attribute">#[doc(hidden)]</span>
-    <span class="kw">fn </span>__private_visit_untagged_option&lt;D&gt;(<span class="self">self</span>, deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, ()&gt;
+    <span class="attribute">#[doc(hidden)]
+    </span><span class="kw">fn </span>__private_visit_untagged_option&lt;D&gt;(<span class="self">self</span>, deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, ()&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -3389,8 +3389,8 @@
         formatter.write_str(<span class="string">&quot;unit&quot;</span>)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_unit&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_unit&lt;E&gt;(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, E&gt;
     <span class="kw">where
         </span>E: Error,
     {
@@ -3412,8 +3412,8 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">macro_rules!</span> seq_impl {
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">macro_rules! </span>seq_impl {
     (
         <span class="macro-nonterminal">$ty</span>:ident &lt; T $(: <span class="macro-nonterminal">$tbound1</span>:ident $(+ <span class="macro-nonterminal">$tbound2</span>:ident)<span class="kw-2">*</span>)* $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound1</span>:ident $(+ <span class="macro-nonterminal">$bound2</span>:ident)<span class="kw-2">*</span>)* &gt;,
         <span class="macro-nonterminal">$access</span>:ident,
@@ -3446,8 +3446,8 @@
                         formatter.write_str(<span class="string">&quot;a sequence&quot;</span>)
                     }
 
-                    <span class="attribute">#[inline]</span>
-                    <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span><span class="macro-nonterminal">$access</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                    <span class="attribute">#[inline]
+                    </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span><span class="macro-nonterminal">$access</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                     <span class="kw">where
                         </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                     {
@@ -3482,8 +3482,8 @@
                         formatter.write_str(<span class="string">&quot;a sequence&quot;</span>)
                     }
 
-                    <span class="attribute">#[inline]</span>
-                    <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="kw-2">mut </span><span class="self">self</span>, <span class="kw-2">mut </span><span class="macro-nonterminal">$access</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                    <span class="attribute">#[inline]
+                    </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="kw-2">mut </span><span class="self">self</span>, <span class="kw-2">mut </span><span class="macro-nonterminal">$access</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                     <span class="kw">where
                         </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                     {
@@ -3506,11 +3506,11 @@
 }
 
 <span class="comment">// Dummy impl of reserve
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">fn </span>nop_reserve&lt;T&gt;(_seq: T, _n: usize) {}
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">fn </span>nop_reserve&lt;T&gt;(_seq: T, _n: usize) {}
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">seq_impl!</span>(
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">seq_impl!</span>(
     BinaryHeap&lt;T: Ord&gt;,
     seq,
     BinaryHeap::clear,
@@ -3519,8 +3519,8 @@
     BinaryHeap::push
 );
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">seq_impl!</span>(
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">seq_impl!</span>(
     BTreeSet&lt;T: Eq + Ord&gt;,
     seq,
     BTreeSet::clear,
@@ -3529,8 +3529,8 @@
     BTreeSet::insert
 );
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">seq_impl!</span>(
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">seq_impl!</span>(
     LinkedList&lt;T&gt;,
     seq,
     LinkedList::clear,
@@ -3539,8 +3539,8 @@
     LinkedList::push_back
 );
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">seq_impl!</span>(
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">seq_impl!</span>(
     HashSet&lt;T: Eq + Hash, S: BuildHasher + Default&gt;,
     seq,
     HashSet::clear,
@@ -3548,8 +3548,8 @@
     HashSet::reserve,
     HashSet::insert);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">seq_impl!</span>(
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">seq_impl!</span>(
     VecDeque&lt;T&gt;,
     seq,
     VecDeque::clear,
@@ -3560,8 +3560,8 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Vec&lt;T&gt;
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Vec&lt;T&gt;
 <span class="kw">where
     </span>T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
@@ -3673,8 +3673,8 @@
         formatter.write_str(<span class="string">&quot;an empty array&quot;</span>)
     }
 
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw">_</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw">_</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
     <span class="kw">where
         </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -3692,7 +3692,7 @@
     }
 }
 
-<span class="macro">macro_rules!</span> array_impls {
+<span class="macro">macro_rules! </span>array_impls {
     ($(<span class="macro-nonterminal">$len</span>:expr =&gt; ($(<span class="macro-nonterminal">$n</span>:tt)+))+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ArrayVisitor&lt;[T; <span class="macro-nonterminal">$len</span>]&gt;
@@ -3705,8 +3705,8 @@
                     formatter.write_str(<span class="macro">concat!</span>(<span class="string">&quot;an array of length &quot;</span>, <span class="macro-nonterminal">$len</span>))
                 }
 
-                <span class="attribute">#[inline]</span>
-                <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                <span class="attribute">#[inline]
+                </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                 <span class="kw">where
                     </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                 {
@@ -3729,8 +3729,8 @@
                     formatter.write_str(<span class="macro">concat!</span>(<span class="string">&quot;an array of length &quot;</span>, <span class="macro-nonterminal">$len</span>))
                 }
 
-                <span class="attribute">#[inline]</span>
-                <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                <span class="attribute">#[inline]
+                </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                 <span class="kw">where
                     </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                 {
@@ -3770,7 +3770,7 @@
     }
 }
 
-<span class="macro">array_impls!</span> {
+<span class="macro">array_impls! </span>{
     <span class="number">1 </span>=&gt; (<span class="number">0</span>)
     <span class="number">2 </span>=&gt; (<span class="number">0 1</span>)
     <span class="number">3 </span>=&gt; (<span class="number">0 1 2</span>)
@@ -3807,12 +3807,12 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="macro">macro_rules!</span> tuple_impls {
+</span><span class="macro">macro_rules! </span>tuple_impls {
     ($(<span class="macro-nonterminal">$len</span>:tt =&gt; ($(<span class="macro-nonterminal">$n</span>:tt <span class="macro-nonterminal">$name</span>:ident)+))+) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, $(<span class="macro-nonterminal">$name</span>: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;),+&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>($(<span class="macro-nonterminal">$name</span>,)+) {
-                <span class="attribute">#[inline]</span>
-                <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+                <span class="attribute">#[inline]
+                </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
                 <span class="kw">where
                     </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
                 {
@@ -3827,9 +3827,9 @@
                             formatter.write_str(<span class="macro">concat!</span>(<span class="string">&quot;a tuple of size &quot;</span>, <span class="macro-nonterminal">$len</span>))
                         }
 
-                        <span class="attribute">#[inline]</span>
-                        <span class="attribute">#[allow(non_snake_case)]</span>
-                        <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                        <span class="attribute">#[inline]
+                        #[allow(non_snake_case)]
+                        </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                         <span class="kw">where
                             </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                         {
@@ -3847,8 +3847,8 @@
                     deserializer.deserialize_tuple(<span class="macro-nonterminal">$len</span>, TupleVisitor { marker: PhantomData })
                 }
 
-                <span class="attribute">#[inline]</span>
-                <span class="kw">fn </span>deserialize_in_place&lt;D&gt;(deserializer: D, place: <span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), D::Error&gt;
+                <span class="attribute">#[inline]
+                </span><span class="kw">fn </span>deserialize_in_place&lt;D&gt;(deserializer: D, place: <span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), D::Error&gt;
                 <span class="kw">where
                     </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
                 {
@@ -3861,9 +3861,9 @@
                             formatter.write_str(<span class="macro">concat!</span>(<span class="string">&quot;a tuple of size &quot;</span>, <span class="macro-nonterminal">$len</span>))
                         }
 
-                        <span class="attribute">#[inline]</span>
-                        <span class="attribute">#[allow(non_snake_case)]</span>
-                        <span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                        <span class="attribute">#[inline]
+                        #[allow(non_snake_case)]
+                        </span><span class="kw">fn </span>visit_seq&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>seq: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                         <span class="kw">where
                             </span>A: SeqAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                         {
@@ -3884,7 +3884,7 @@
     }
 }
 
-<span class="macro">tuple_impls!</span> {
+<span class="macro">tuple_impls! </span>{
     <span class="number">1  </span>=&gt; (<span class="number">0 </span>T0)
     <span class="number">2  </span>=&gt; (<span class="number">0 </span>T0 <span class="number">1 </span>T1)
     <span class="number">3  </span>=&gt; (<span class="number">0 </span>T0 <span class="number">1 </span>T1 <span class="number">2 </span>T2)
@@ -3905,8 +3905,8 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">macro_rules!</span> map_impl {
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">macro_rules! </span>map_impl {
     (
         <span class="macro-nonterminal">$ty</span>:ident &lt; K $(: <span class="macro-nonterminal">$kbound1</span>:ident $(+ <span class="macro-nonterminal">$kbound2</span>:ident)<span class="kw-2">*</span>)<span class="kw-2">*</span>, V $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound1</span>:ident $(+ <span class="macro-nonterminal">$bound2</span>:ident)<span class="kw-2">*</span>)* &gt;,
         <span class="macro-nonterminal">$access</span>:ident,
@@ -3938,8 +3938,8 @@
                         formatter.write_str(<span class="string">&quot;a map&quot;</span>)
                     }
 
-                    <span class="attribute">#[inline]</span>
-                    <span class="kw">fn </span>visit_map&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span><span class="macro-nonterminal">$access</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+                    <span class="attribute">#[inline]
+                    </span><span class="kw">fn </span>visit_map&lt;A&gt;(<span class="self">self</span>, <span class="kw-2">mut </span><span class="macro-nonterminal">$access</span>: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
                     <span class="kw">where
                         </span>A: MapAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
                     {
@@ -3960,22 +3960,22 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">map_impl!</span>(
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">map_impl!</span>(
     BTreeMap&lt;K: Ord, V&gt;,
     map,
     BTreeMap::new());
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">map_impl!</span>(
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">map_impl!</span>(
     HashMap&lt;K: Eq + Hash, V, S: BuildHasher + Default&gt;,
     map,
     HashMap::with_capacity_and_hasher(size_hint::cautious(map.size_hint()), S::default()));
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">macro_rules!</span> parse_ip_impl {
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">macro_rules! </span>parse_ip_impl {
     (<span class="macro-nonterminal">$expecting</span>:tt <span class="macro-nonterminal">$ty</span>:ty; <span class="macro-nonterminal">$size</span>:tt) =&gt; {
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
             <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
@@ -3992,8 +3992,8 @@
     };
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">macro_rules!</span> variant_identifier {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">macro_rules! </span>variant_identifier {
     (
         <span class="macro-nonterminal">$name_kind</span>: ident ( $(<span class="macro-nonterminal">$variant</span>: ident; <span class="macro-nonterminal">$bytes</span>: expr; <span class="macro-nonterminal">$index</span>: expr),* )
         <span class="macro-nonterminal">$expecting_message</span>: expr,
@@ -4067,8 +4067,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">macro_rules!</span> deserialize_enum {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">macro_rules! </span>deserialize_enum {
     (
         <span class="macro-nonterminal">$name</span>: ident <span class="macro-nonterminal">$name_kind</span>: ident ( $(<span class="macro-nonterminal">$variant</span>: ident; <span class="macro-nonterminal">$bytes</span>: expr; <span class="macro-nonterminal">$index</span>: expr),* )
         <span class="macro-nonterminal">$expecting_message</span>: expr,
@@ -4104,8 +4104,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>net::IpAddr {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>net::IpAddr {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4114,7 +4114,7 @@
             deserializer.deserialize_str(FromStrVisitor::new(<span class="string">&quot;IP address&quot;</span>))
         } <span class="kw">else </span>{
             <span class="kw">use </span>lib::net::IpAddr;
-            <span class="macro">deserialize_enum!</span> {
+            <span class="macro">deserialize_enum! </span>{
                 IpAddr IpAddrKind (V4; <span class="string">b&quot;V4&quot;</span>; <span class="number">0</span>, V6; <span class="string">b&quot;V6&quot;</span>; <span class="number">1</span>)
                 <span class="string">&quot;`V4` or `V6`&quot;</span>,
                 deserializer
@@ -4123,14 +4123,14 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">parse_ip_impl!</span>(<span class="string">&quot;IPv4 address&quot; </span>net::Ipv4Addr; <span class="number">4</span>);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">parse_ip_impl!</span>(<span class="string">&quot;IPv4 address&quot; </span>net::Ipv4Addr; <span class="number">4</span>);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">parse_ip_impl!</span>(<span class="string">&quot;IPv6 address&quot; </span>net::Ipv6Addr; <span class="number">16</span>);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">parse_ip_impl!</span>(<span class="string">&quot;IPv6 address&quot; </span>net::Ipv6Addr; <span class="number">16</span>);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">macro_rules!</span> parse_socket_impl {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">macro_rules! </span>parse_socket_impl {
     (<span class="macro-nonterminal">$expecting</span>:tt <span class="macro-nonterminal">$ty</span>:ty, <span class="macro-nonterminal">$new</span>:expr) =&gt; {
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
             <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
@@ -4147,8 +4147,8 @@
     };
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>net::SocketAddr {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>net::SocketAddr {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4157,7 +4157,7 @@
             deserializer.deserialize_str(FromStrVisitor::new(<span class="string">&quot;socket address&quot;</span>))
         } <span class="kw">else </span>{
             <span class="kw">use </span>lib::net::SocketAddr;
-            <span class="macro">deserialize_enum!</span> {
+            <span class="macro">deserialize_enum! </span>{
                 SocketAddr SocketAddrKind (V4; <span class="string">b&quot;V4&quot;</span>; <span class="number">0</span>, V6; <span class="string">b&quot;V6&quot;</span>; <span class="number">1</span>)
                 <span class="string">&quot;`V4` or `V6`&quot;</span>,
                 deserializer
@@ -4166,21 +4166,21 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">parse_socket_impl!</span>(<span class="string">&quot;IPv4 socket address&quot; </span>net::SocketAddrV4, net::SocketAddrV4::new);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">parse_socket_impl!</span>(<span class="string">&quot;IPv4 socket address&quot; </span>net::SocketAddrV4, net::SocketAddrV4::new);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">parse_socket_impl!</span>(<span class="string">&quot;IPv6 socket address&quot; </span>net::SocketAddrV6, |ip, port| net::SocketAddrV6::new(
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">parse_socket_impl!</span>(<span class="string">&quot;IPv6 socket address&quot; </span>net::SocketAddrV6, |ip, port| net::SocketAddrV6::new(
     ip, port, <span class="number">0</span>, <span class="number">0
 </span>));
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">struct </span>PathVisitor;
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">struct </span>PathVisitor;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Visitor&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>PathVisitor {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Visitor&lt;<span class="lifetime">&#39;a</span>&gt; <span class="kw">for </span>PathVisitor {
     <span class="kw">type </span>Value = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Path;
 
     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
@@ -4204,8 +4204,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Path {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Path {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4214,11 +4214,11 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">struct </span>PathBufVisitor;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">struct </span>PathBufVisitor;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>PathBufVisitor {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>PathBufVisitor {
     <span class="kw">type </span>Value = PathBuf;
 
     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
@@ -4258,8 +4258,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>PathBuf {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>PathBuf {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4268,8 +4268,8 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, de_boxed_path))]</span>
-<span class="macro">forwarded_impl!</span>((), Box&lt;Path&gt;, PathBuf::into_boxed_path);
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, de_boxed_path))]
+</span><span class="macro">forwarded_impl!</span>((), Box&lt;Path&gt;, PathBuf::into_boxed_path);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
@@ -4277,26 +4277,26 @@
 //
 //    #[derive(Deserialize)]
 //    #[serde(variant_identifier)]
-</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]</span>
-<span class="macro">variant_identifier!</span> {
+</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
+</span><span class="macro">variant_identifier! </span>{
     OsStringKind (Unix; <span class="string">b&quot;Unix&quot;</span>; <span class="number">0</span>, Windows; <span class="string">b&quot;Windows&quot;</span>; <span class="number">1</span>)
     <span class="string">&quot;`Unix` or `Windows`&quot;</span>,
     OSSTR_VARIANTS
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]</span>
-<span class="kw">struct </span>OsStringVisitor;
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
+</span><span class="kw">struct </span>OsStringVisitor;
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>OsStringVisitor {
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>OsStringVisitor {
     <span class="kw">type </span>Value = OsString;
 
     <span class="kw">fn </span>expecting(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         formatter.write_str(<span class="string">&quot;os string&quot;</span>)
     }
 
-    <span class="attribute">#[cfg(unix)]</span>
-    <span class="kw">fn </span>visit_enum&lt;A&gt;(<span class="self">self</span>, data: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+    <span class="attribute">#[cfg(unix)]
+    </span><span class="kw">fn </span>visit_enum&lt;A&gt;(<span class="self">self</span>, data: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
     <span class="kw">where
         </span>A: EnumAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -4310,8 +4310,8 @@
         }
     }
 
-    <span class="attribute">#[cfg(windows)]</span>
-    <span class="kw">fn </span>visit_enum&lt;A&gt;(<span class="self">self</span>, data: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
+    <span class="attribute">#[cfg(windows)]
+    </span><span class="kw">fn </span>visit_enum&lt;A&gt;(<span class="self">self</span>, data: A) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Value, A::Error&gt;
     <span class="kw">where
         </span>A: EnumAccess&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -4328,8 +4328,8 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>OsString {
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>OsString {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4340,21 +4340,21 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">forwarded_impl!</span>((T), Box&lt;T&gt;, Box::new);
+</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">forwarded_impl!</span>((T), Box&lt;T&gt;, Box::new);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">forwarded_impl!</span>((T), Box&lt;[T]&gt;, Vec::into_boxed_slice);
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">forwarded_impl!</span>((T), Box&lt;[T]&gt;, Vec::into_boxed_slice);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="macro">forwarded_impl!</span>((), Box&lt;str&gt;, String::into_boxed_str);
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="macro">forwarded_impl!</span>((), Box&lt;str&gt;, String::into_boxed_str);
 
 <span class="attribute">#[cfg(all(
     not(de_rc_dst),
     feature = <span class="string">&quot;rc&quot;</span>,
     any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
-))]</span>
-<span class="macro">forwarded_impl!</span> {
+))]
+</span><span class="macro">forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
     /// Deserializing a data structure containing `Arc` will not attempt to
@@ -4369,8 +4369,8 @@
     not(de_rc_dst),
     feature = <span class="string">&quot;rc&quot;</span>,
     any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)
-))]</span>
-<span class="macro">forwarded_impl!</span> {
+))]
+</span><span class="macro">forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
     /// Deserializing a data structure containing `Rc` will not attempt to
@@ -4381,14 +4381,14 @@
     </span>(T), Rc&lt;T&gt;, Rc::new
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span>, T: <span class="question-mark">?</span>Sized&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Cow&lt;<span class="lifetime">&#39;a</span>, T&gt;
+<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, <span class="lifetime">&#39;a</span>, T: <span class="question-mark">?</span>Sized&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Cow&lt;<span class="lifetime">&#39;a</span>, T&gt;
 <span class="kw">where
     </span>T: ToOwned,
     T::Owned: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
-    <span class="attribute">#[inline]</span>
-    <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+    <span class="attribute">#[inline]
+    </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
     {
@@ -4402,8 +4402,8 @@
 /// `Weak&lt;T&gt;` has a reference count of 0 and cannot be upgraded.
 ///
 /// [`&quot;rc&quot;`]: https://serde.rs/feature-flags.html#-features-rc
-</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T: <span class="question-mark">?</span>Sized&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>RcWeak&lt;T&gt;
+</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T: <span class="question-mark">?</span>Sized&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>RcWeak&lt;T&gt;
 <span class="kw">where
     </span>T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
@@ -4420,8 +4420,8 @@
 /// `Weak&lt;T&gt;` has a reference count of 0 and cannot be upgraded.
 ///
 /// [`&quot;rc&quot;`]: https://serde.rs/feature-flags.html#-features-rc
-</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T: <span class="question-mark">?</span>Sized&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ArcWeak&lt;T&gt;
+</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T: <span class="question-mark">?</span>Sized&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>ArcWeak&lt;T&gt;
 <span class="kw">where
     </span>T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
@@ -4436,8 +4436,8 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="macro">macro_rules!</span> box_forwarded_impl {
+</span><span class="attribute">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="macro">macro_rules! </span>box_forwarded_impl {
     (
         $(<span class="attribute">#[doc = <span class="macro-nonterminal">$doc</span>:tt]</span>)*
         <span class="macro-nonterminal">$t</span>:ident
@@ -4457,8 +4457,8 @@
     };
 }
 
-<span class="attribute">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="macro">box_forwarded_impl!</span> {
+<span class="attribute">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="macro">box_forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
     /// Deserializing a data structure containing `Rc` will not attempt to
@@ -4469,8 +4469,8 @@
     </span>Rc
 }
 
-<span class="attribute">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="macro">box_forwarded_impl!</span> {
+<span class="attribute">#[cfg(all(de_rc_dst, feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="macro">box_forwarded_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
     /// Deserializing a data structure containing `Arc` will not attempt to
@@ -4497,11 +4497,11 @@
 
 <span class="macro">forwarded_impl!</span>((T), RefCell&lt;T&gt;, RefCell::new);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">forwarded_impl!</span>((T), Mutex&lt;T&gt;, Mutex::new);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">forwarded_impl!</span>((T), Mutex&lt;T&gt;, Mutex::new);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="macro">forwarded_impl!</span>((T), RwLock&lt;T&gt;, RwLock::new);
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="macro">forwarded_impl!</span>((T), RwLock&lt;T&gt;, RwLock::new);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
@@ -4513,8 +4513,8 @@
 //         secs: u64,
 //         nanos: u32,
 //     }
-</span><span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Duration {
+</span><span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Duration {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4654,8 +4654,8 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>SystemTime {
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>SystemTime {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4791,12 +4791,12 @@
 
         <span class="kw">const </span>FIELDS: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str] = <span class="kw-2">&amp;</span>[<span class="string">&quot;secs_since_epoch&quot;</span>, <span class="string">&quot;nanos_since_epoch&quot;</span>];
         <span class="kw">let </span>duration = <span class="macro">try!</span>(deserializer.deserialize_struct(<span class="string">&quot;SystemTime&quot;</span>, FIELDS, DurationVisitor));
-        <span class="attribute">#[cfg(systemtime_checked_add)]</span>
-        <span class="kw">let </span>ret = UNIX_EPOCH
+        <span class="attribute">#[cfg(systemtime_checked_add)]
+        </span><span class="kw">let </span>ret = UNIX_EPOCH
             .checked_add(duration)
             .ok_or_else(|| D::Error::custom(<span class="string">&quot;overflow deserializing SystemTime&quot;</span>));
-        <span class="attribute">#[cfg(not(systemtime_checked_add))]</span>
-        <span class="kw">let </span>ret = <span class="prelude-val">Ok</span>(UNIX_EPOCH + duration);
+        <span class="attribute">#[cfg(not(systemtime_checked_add))]
+        </span><span class="kw">let </span>ret = <span class="prelude-val">Ok</span>(UNIX_EPOCH + duration);
         ret
     }
 }
@@ -4831,8 +4831,8 @@
     }
 }
 
-<span class="attribute">#[cfg(range_inclusive)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, Idx&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>RangeInclusive&lt;Idx&gt;
+<span class="attribute">#[cfg(range_inclusive)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, Idx&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>RangeInclusive&lt;Idx&gt;
 <span class="kw">where
     </span>Idx: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
@@ -4983,8 +4983,8 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(ops_bound, collections_bound))]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Bound&lt;T&gt;
+</span><span class="attribute">#[cfg(any(ops_bound, collections_bound))]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Bound&lt;T&gt;
 <span class="kw">where
     </span>T: Deserialize&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
@@ -4999,8 +4999,8 @@
         }
 
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Field {
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
             <span class="kw">where
                 </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
@@ -5091,11 +5091,11 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="macro">macro_rules!</span> nonzero_integers {
+</span><span class="macro">macro_rules! </span>nonzero_integers {
     ( $( <span class="macro-nonterminal">$T</span>: ident, )+ ) =&gt; {
         $(
-            <span class="attribute">#[cfg(num_nonzero)]</span>
-            <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>num::<span class="macro-nonterminal">$T </span>{
+            <span class="attribute">#[cfg(num_nonzero)]
+            </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>num::<span class="macro-nonterminal">$T </span>{
                 <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
                 <span class="kw">where
                     </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -5111,7 +5111,7 @@
     };
 }
 
-<span class="macro">nonzero_integers!</span> {
+<span class="macro">nonzero_integers! </span>{
     NonZeroU8,
     NonZeroU16,
     NonZeroU32,
@@ -5119,8 +5119,8 @@
     NonZeroUsize,
 }
 
-<span class="attribute">#[cfg(num_nonzero_signed)]</span>
-<span class="macro">nonzero_integers!</span> {
+<span class="attribute">#[cfg(num_nonzero_signed)]
+</span><span class="macro">nonzero_integers! </span>{
     NonZeroI8,
     NonZeroI16,
     NonZeroI32,
@@ -5130,13 +5130,13 @@
 
 <span class="comment">// Currently 128-bit integers do not work on Emscripten targets so we need an
 // additional `#[cfg]`
-</span><span class="macro">serde_if_integer128!</span> {
-    <span class="macro">nonzero_integers!</span> {
+</span><span class="macro">serde_if_integer128! </span>{
+    <span class="macro">nonzero_integers! </span>{
         NonZeroU128,
     }
 
-    <span class="attribute">#[cfg(num_nonzero_signed)]</span>
-    <span class="macro">nonzero_integers!</span> {
+    <span class="attribute">#[cfg(num_nonzero_signed)]
+    </span><span class="macro">nonzero_integers! </span>{
         NonZeroI128,
     }
 }
@@ -5162,8 +5162,8 @@
         }
 
         <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Field {
-            <span class="attribute">#[inline]</span>
-            <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
+            <span class="attribute">#[inline]
+            </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, D::Error&gt;
             <span class="kw">where
                 </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
             {
@@ -5263,8 +5263,8 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]</span>
-<span class="macro">macro_rules!</span> atomic_impl {
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+</span><span class="macro">macro_rules! </span>atomic_impl {
     ($(<span class="macro-nonterminal">$ty</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(
             <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
@@ -5279,26 +5279,26 @@
     };
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]</span>
-<span class="macro">atomic_impl!</span> {
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+</span><span class="macro">atomic_impl! </span>{
     AtomicBool
     AtomicI8 AtomicI16 AtomicI32 AtomicIsize
     AtomicU8 AtomicU16 AtomicU32 AtomicUsize
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]</span>
-<span class="macro">atomic_impl!</span> {
+<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]
+</span><span class="macro">atomic_impl! </span>{
     AtomicI64 AtomicU64
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">struct </span>FromStrVisitor&lt;T&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">struct </span>FromStrVisitor&lt;T&gt; {
     expecting: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     ty: PhantomData&lt;T&gt;,
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;T&gt; FromStrVisitor&lt;T&gt; {
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;T&gt; FromStrVisitor&lt;T&gt; {
     <span class="kw">fn </span>new(expecting: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="self">Self </span>{
         FromStrVisitor {
             expecting: expecting,
@@ -5307,8 +5307,8 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-<span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>FromStrVisitor&lt;T&gt;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>, T&gt; Visitor&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>FromStrVisitor&lt;T&gt;
 <span class="kw">where
     </span>T: str::FromStr,
     T::Err: fmt::Display,
@@ -5327,4 +5327,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

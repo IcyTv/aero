@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rustc-demangle-0.1.21/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rustc_demangle/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../rustc_demangle/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_demangle/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/rustc-demangle-0.1.21/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../rustc_demangle/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../rustc_demangle/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../rustc_demangle/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -516,16 +516,16 @@
 //! assert_eq!(format!(&quot;{:#}&quot;, demangle(&quot;_ZN3foo17h05af221e174051e9E&quot;)), &quot;foo&quot;);
 //! ```
 
-</span><span class="attribute">#![no_std]</span>
-<span class="attribute">#![deny(missing_docs)]</span>
+</span><span class="attribute">#![no_std]
+#![deny(missing_docs)]
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="attribute">#[macro_use]</span>
-<span class="kw">extern crate </span>std;
+#[cfg(test)]
+#[macro_use]
+</span><span class="kw">extern crate </span>std;
 
 <span class="comment">// HACK(eddyb) helper macros for tests.
-</span><span class="attribute">#[cfg(test)]</span>
-<span class="macro">macro_rules!</span> assert_contains {
+</span><span class="attribute">#[cfg(test)]
+</span><span class="macro">macro_rules! </span>assert_contains {
     (<span class="macro-nonterminal">$s</span>:expr, <span class="macro-nonterminal">$needle</span>:expr) =&gt; {{
         <span class="kw">let </span>(s, needle) = (<span class="macro-nonterminal">$s</span>, <span class="macro-nonterminal">$needle</span>);
         <span class="macro">assert!</span>(
@@ -536,8 +536,8 @@
         );
     }};
 }
-<span class="attribute">#[cfg(test)]</span>
-<span class="macro">macro_rules!</span> assert_ends_with {
+<span class="attribute">#[cfg(test)]
+</span><span class="macro">macro_rules! </span>assert_ends_with {
     (<span class="macro-nonterminal">$s</span>:expr, <span class="macro-nonterminal">$suffix</span>:expr) =&gt; {{
         <span class="kw">let </span>(s, suffix) = (<span class="macro-nonterminal">$s</span>, <span class="macro-nonterminal">$suffix</span>);
         <span class="macro">assert!</span>(
@@ -638,8 +638,8 @@
 }
 
 <span class="doccomment">/// Error returned from the `try_demangle` function below when demangling fails.
-</span><span class="attribute">#[derive(Debug, Clone)]</span>
-<span class="kw">pub struct </span>TryDemangleError {
+</span><span class="attribute">#[derive(Debug, Clone)]
+</span><span class="kw">pub struct </span>TryDemangleError {
     _priv: (),
 }
 
@@ -712,8 +712,8 @@
 <span class="comment">// Maximum size of the symbol that we&#39;ll print.
 </span><span class="kw">const </span>MAX_SIZE: usize = <span class="number">1_000_000</span>;
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]</span>
-<span class="kw">struct </span>SizeLimitExhausted;
+<span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="kw">struct </span>SizeLimitExhausted;
 
 <span class="kw">struct </span>SizeLimitedFmtAdapter&lt;F&gt; {
     remaining: <span class="prelude-ty">Result</span>&lt;usize, SizeLimitExhausted&gt;,
@@ -774,23 +774,23 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]</span>
-<span class="kw">mod </span>tests {
+<span class="attribute">#[cfg(test)]
+</span><span class="kw">mod </span>tests {
     <span class="kw">use </span>std::prelude::v1::<span class="kw-2">*</span>;
 
-    <span class="macro">macro_rules!</span> t {
+    <span class="macro">macro_rules! </span>t {
         (<span class="macro-nonterminal">$a</span>:expr, <span class="macro-nonterminal">$b</span>:expr) =&gt; {
             <span class="macro">assert!</span>(ok(<span class="macro-nonterminal">$a</span>, <span class="macro-nonterminal">$b</span>))
         };
     }
 
-    <span class="macro">macro_rules!</span> t_err {
+    <span class="macro">macro_rules! </span>t_err {
         (<span class="macro-nonterminal">$a</span>:expr) =&gt; {
             <span class="macro">assert!</span>(ok_err(<span class="macro-nonterminal">$a</span>))
         };
     }
 
-    <span class="macro">macro_rules!</span> t_nohash {
+    <span class="macro">macro_rules! </span>t_nohash {
         (<span class="macro-nonterminal">$a</span>:expr, <span class="macro-nonterminal">$b</span>:expr) =&gt; {{
             <span class="macro">assert_eq!</span>(<span class="macro">format!</span>(<span class="string">&quot;{:#}&quot;</span>, <span class="kw">super</span>::demangle(<span class="macro-nonterminal">$a</span>)), <span class="macro-nonterminal">$b</span>);
         }};
@@ -823,16 +823,16 @@
         }
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle() {
         <span class="macro">t_err!</span>(<span class="string">&quot;test&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN4testE&quot;</span>, <span class="string">&quot;test&quot;</span>);
         <span class="macro">t_err!</span>(<span class="string">&quot;_ZN4test&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN4test1a2bcE&quot;</span>, <span class="string">&quot;test::a::bc&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_dollars() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_dollars() {
         <span class="macro">t!</span>(<span class="string">&quot;_ZN4$RP$E&quot;</span>, <span class="string">&quot;)&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN8$RF$testE&quot;</span>, <span class="string">&quot;&amp;test&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN8$BP$test4foobE&quot;</span>, <span class="string">&quot;*test::foob&quot;</span>);
@@ -840,14 +840,14 @@
         <span class="macro">t!</span>(<span class="string">&quot;_ZN35Bar$LT$$u5b$u32$u3b$$u20$4$u5d$$GT$E&quot;</span>, <span class="string">&quot;Bar&lt;[u32; 4]&gt;&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_many_dollars() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_many_dollars() {
         <span class="macro">t!</span>(<span class="string">&quot;_ZN13test$u20$test4foobE&quot;</span>, <span class="string">&quot;test test::foob&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN12test$BP$test4foobE&quot;</span>, <span class="string">&quot;test*test::foob&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_osx() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_osx() {
         <span class="macro">t!</span>(
             <span class="string">&quot;__ZN5alloc9allocator6Layout9for_value17h02a996811f781011E&quot;</span>,
             <span class="string">&quot;alloc::allocator::Layout::for_value::h02a996811f781011&quot;
@@ -856,37 +856,37 @@
         <span class="macro">t!</span>(<span class="string">&quot;__ZN4core5slice89_$LT$impl$u20$core..iter..traits..IntoIterator$u20$for$u20$$RF$$u27$a$u20$$u5b$T$u5d$$GT$9into_iter17h450e234d27262170E&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::iter::traits::IntoIterator for &amp;&#39;a [T]&gt;::into_iter::h450e234d27262170&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_windows() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_windows() {
         <span class="macro">t!</span>(<span class="string">&quot;ZN4testE&quot;</span>, <span class="string">&quot;test&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;ZN13test$u20$test4foobE&quot;</span>, <span class="string">&quot;test test::foob&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;ZN12test$RF$test4foobE&quot;</span>, <span class="string">&quot;test&amp;test::foob&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_elements_beginning_with_underscore() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_elements_beginning_with_underscore() {
         <span class="macro">t!</span>(<span class="string">&quot;_ZN13_$LT$test$GT$E&quot;</span>, <span class="string">&quot;&lt;test&gt;&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN28_$u7b$$u7b$closure$u7d$$u7d$E&quot;</span>, <span class="string">&quot;{{closure}}&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN15__STATIC_FMTSTRE&quot;</span>, <span class="string">&quot;__STATIC_FMTSTR&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_trait_impls() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_trait_impls() {
         <span class="macro">t!</span>(
             <span class="string">&quot;_ZN71_$LT$Test$u20$$u2b$$u20$$u27$static$u20$as$u20$foo..Bar$LT$Test$GT$$GT$3barE&quot;</span>,
             <span class="string">&quot;&lt;Test + &#39;static as foo::Bar&lt;Test&gt;&gt;::bar&quot;
         </span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_without_hash() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_without_hash() {
         <span class="kw">let </span>s = <span class="string">&quot;_ZN3foo17h05af221e174051e9E&quot;</span>;
         <span class="macro">t!</span>(s, <span class="string">&quot;foo::h05af221e174051e9&quot;</span>);
         <span class="macro">t_nohash!</span>(s, <span class="string">&quot;foo&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_without_hash_edgecases() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_without_hash_edgecases() {
         <span class="comment">// One element, no hash.
         </span><span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3fooE&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="comment">// Two elements, no hash.
@@ -903,8 +903,8 @@
         </span><span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN3foo17hg5af221e174051e9E&quot;</span>, <span class="string">&quot;foo::hg5af221e174051e9&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_thinlto() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_thinlto() {
         <span class="comment">// One element, no hash.
         </span><span class="macro">t!</span>(<span class="string">&quot;_ZN3fooE.llvm.9D1C9369&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="macro">t!</span>(<span class="string">&quot;_ZN3fooE.llvm.9D1C9369@@16&quot;</span>, <span class="string">&quot;foo&quot;</span>);
@@ -914,19 +914,19 @@
         </span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_llvm_ir_branch_labels() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_llvm_ir_branch_labels() {
         <span class="macro">t!</span>(<span class="string">&quot;_ZN4core5slice77_$LT$impl$u20$core..ops..index..IndexMut$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$9index_mut17haf9727c2edfbc47bE.exit.i.i&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::ops::index::IndexMut&lt;I&gt; for [T]&gt;::index_mut::haf9727c2edfbc47b.exit.i.i&quot;</span>);
         <span class="macro">t_nohash!</span>(<span class="string">&quot;_ZN4core5slice77_$LT$impl$u20$core..ops..index..IndexMut$LT$I$GT$$u20$for$u20$$u5b$T$u5d$$GT$9index_mut17haf9727c2edfbc47bE.exit.i.i&quot;</span>, <span class="string">&quot;core::slice::&lt;impl core::ops::index::IndexMut&lt;I&gt; for [T]&gt;::index_mut.exit.i.i&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>demangle_ignores_suffix_that_doesnt_look_like_a_symbol() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>demangle_ignores_suffix_that_doesnt_look_like_a_symbol() {
         <span class="macro">t_err!</span>(<span class="string">&quot;_ZN3fooE.llvm moocow&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>dont_panic() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>dont_panic() {
         <span class="kw">super</span>::demangle(<span class="string">&quot;_ZN2222222222222222222222EE&quot;</span>).to_string();
         <span class="kw">super</span>::demangle(<span class="string">&quot;_ZN5*70527e27.ll34csaғE&quot;</span>).to_string();
         <span class="kw">super</span>::demangle(<span class="string">&quot;_ZN5*70527a54.ll34_$b.1E&quot;</span>).to_string();
@@ -940,26 +940,26 @@
         .to_string();
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>invalid_no_chop() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>invalid_no_chop() {
         <span class="macro">t_err!</span>(<span class="string">&quot;_ZNfooE&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>handle_assoc_types() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>handle_assoc_types() {
         <span class="macro">t!</span>(<span class="string">&quot;_ZN151_$LT$alloc..boxed..Box$LT$alloc..boxed..FnBox$LT$A$C$$u20$Output$u3d$R$GT$$u20$$u2b$$u20$$u27$a$GT$$u20$as$u20$core..ops..function..FnOnce$LT$A$GT$$GT$9call_once17h69e8f44b3723e1caE&quot;</span>, <span class="string">&quot;&lt;alloc::boxed::Box&lt;alloc::boxed::FnBox&lt;A, Output=R&gt; + &#39;a&gt; as core::ops::function::FnOnce&lt;A&gt;&gt;::call_once::h69e8f44b3723e1ca&quot;</span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>handle_bang() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>handle_bang() {
         <span class="macro">t!</span>(
             <span class="string">&quot;_ZN88_$LT$core..result..Result$LT$$u21$$C$$u20$E$GT$$u20$as$u20$std..process..Termination$GT$6report17hfc41d0da4a40b3e8E&quot;</span>,
             <span class="string">&quot;&lt;core::result::Result&lt;!, E&gt; as std::process::Termination&gt;::report::hfc41d0da4a40b3e8&quot;
         </span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>limit_recursion() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>limit_recursion() {
         <span class="macro">assert_contains!</span>(
             <span class="kw">super</span>::demangle(<span class="string">&quot;_RNvB_1a&quot;</span>).to_string(),
             <span class="string">&quot;{recursion limit reached}&quot;
@@ -970,8 +970,8 @@
         </span>);
     }
 
-    <span class="attribute">#[test]</span>
-    <span class="kw">fn </span>limit_output() {
+    <span class="attribute">#[test]
+    </span><span class="kw">fn </span>limit_output() {
         <span class="macro">assert_ends_with!</span>(
             <span class="kw">super</span>::demangle(<span class="string">&quot;RYFG_FGyyEvRYFF_EvRYFFEvERLB_B_B_ERLRjB_B_B_&quot;</span>).to_string(),
             <span class="string">&quot;{size limit reached}&quot;
@@ -985,4 +985,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_demangle" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_demangle" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

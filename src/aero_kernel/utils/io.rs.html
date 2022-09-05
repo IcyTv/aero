@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/utils/io.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>io.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/utils/io.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>io.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -284,8 +284,8 @@
 
 <span class="doccomment">/// Wrapper function to the `outb` assembly instruction used to do the
 /// 8-bit low level port output.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>outb(port: u16, value: u8) {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>outb(port: u16, value: u8) {
     <span class="macro">asm!</span>(
        <span class="string">&quot;out dx, al&quot;</span>,
        <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
@@ -296,8 +296,8 @@
 
 <span class="doccomment">/// Wrapper function to the `inb` assembly instruction used to do the
 /// 8-bit low level port input.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>inb(port: u16) -&gt; u8 {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>inb(port: u16) -&gt; u8 {
     <span class="kw">let </span>ret: u8;
 
     <span class="macro">asm!</span>(
@@ -312,8 +312,8 @@
 
 <span class="doccomment">/// Wrapper function to the `outw` assembly instruction used to do the
 /// 16-bit low level port output.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>outw(port: u16, value: u16) {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>outw(port: u16, value: u16) {
     <span class="macro">asm!</span>(
         <span class="string">&quot;out dx, ax&quot;</span>,
         <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
@@ -324,8 +324,8 @@
 
 <span class="doccomment">/// Wrapper function to the `outl` assembly instruction used to do the
 /// 32-bit low level port output.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>outl(port: u16, value: u32) {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>outl(port: u16, value: u32) {
     <span class="macro">asm!</span>(
         <span class="string">&quot;out dx, eax&quot;</span>,
         <span class="kw">in</span>(<span class="string">&quot;dx&quot;</span>) port,
@@ -336,8 +336,8 @@
 
 <span class="doccomment">/// Wrapper function to the `inl` assembly instruction used to do the
 /// 32-bit low level port input.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>inl(port: u16) -&gt; u32 {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>inl(port: u16) -&gt; u32 {
     <span class="kw">let </span>ret: u32;
 
     <span class="macro">asm!</span>(
@@ -352,8 +352,8 @@
 
 <span class="doccomment">/// Wrapper function to the `inw` assembly instruction used to do the
 /// 16-bit low level port input.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>inw(port: u16) -&gt; u16 {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>inw(port: u16) -&gt; u16 {
     <span class="kw">let </span>ret: u16;
 
     <span class="macro">asm!</span>(
@@ -369,8 +369,8 @@
 <span class="doccomment">/// This function is called after every `outb` and `outl` instruction as on older machines
 /// its necessary to give the PIC some time to react to commands as they might not
 /// be processed quickly.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>wait() {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>wait() {
     outb(<span class="number">0x80</span>, <span class="number">0</span>)
 }
 
@@ -385,8 +385,8 @@
 
 <span class="doccomment">/// Wrapper function to the `rdmsr` assembly instruction used
 </span><span class="comment">// to read 64 bits msr register.
-</span><span class="attribute">#[inline]</span>
-<span class="kw">pub unsafe fn </span>rdmsr(msr: u32) -&gt; u64 {
+</span><span class="attribute">#[inline]
+</span><span class="kw">pub unsafe fn </span>rdmsr(msr: u32) -&gt; u64 {
     <span class="kw">let </span>(high, low): (u32, u32);
 
     <span class="macro">asm!</span>(<span class="string">&quot;rdmsr&quot;</span>, out(<span class="string">&quot;eax&quot;</span>) low, out(<span class="string">&quot;edx&quot;</span>) high, <span class="kw">in</span>(<span class="string">&quot;ecx&quot;</span>) msr, options(nomem));
@@ -394,8 +394,8 @@
     ((high <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>) | (low <span class="kw">as </span>u64)
 }
 
-<span class="attribute">#[inline]</span>
-<span class="kw">pub fn </span>delay(cycles: usize) {
+<span class="attribute">#[inline]
+</span><span class="kw">pub fn </span>delay(cycles: usize) {
     <span class="kw">unsafe </span>{
         <span class="kw">for _ in </span><span class="number">0</span>..cycles {
             inb(<span class="number">0x80</span>);
@@ -440,8 +440,8 @@
 
 <span class="comment">// based :^)
 
-</span><span class="attribute">#[derive(Copy, Clone)]</span>
-<span class="kw">pub struct </span>BasedPort {
+</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="kw">pub struct </span>BasedPort {
     base: u16,
 }
 
@@ -459,4 +459,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

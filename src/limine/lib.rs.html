@@ -1,0 +1,1326 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/git/checkouts/limine-rs-b6d755f12037e8bb/a7abcd3/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../limine/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../limine/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../limine/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+<span id="87">87</span>
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+<span id="113">113</span>
+<span id="114">114</span>
+<span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
+<span id="126">126</span>
+<span id="127">127</span>
+<span id="128">128</span>
+<span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
+<span id="132">132</span>
+<span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
+<span id="181">181</span>
+<span id="182">182</span>
+<span id="183">183</span>
+<span id="184">184</span>
+<span id="185">185</span>
+<span id="186">186</span>
+<span id="187">187</span>
+<span id="188">188</span>
+<span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
+<span id="208">208</span>
+<span id="209">209</span>
+<span id="210">210</span>
+<span id="211">211</span>
+<span id="212">212</span>
+<span id="213">213</span>
+<span id="214">214</span>
+<span id="215">215</span>
+<span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
+<span id="220">220</span>
+<span id="221">221</span>
+<span id="222">222</span>
+<span id="223">223</span>
+<span id="224">224</span>
+<span id="225">225</span>
+<span id="226">226</span>
+<span id="227">227</span>
+<span id="228">228</span>
+<span id="229">229</span>
+<span id="230">230</span>
+<span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
+<span id="241">241</span>
+<span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
+<span id="262">262</span>
+<span id="263">263</span>
+<span id="264">264</span>
+<span id="265">265</span>
+<span id="266">266</span>
+<span id="267">267</span>
+<span id="268">268</span>
+<span id="269">269</span>
+<span id="270">270</span>
+<span id="271">271</span>
+<span id="272">272</span>
+<span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
+<span id="278">278</span>
+<span id="279">279</span>
+<span id="280">280</span>
+<span id="281">281</span>
+<span id="282">282</span>
+<span id="283">283</span>
+<span id="284">284</span>
+<span id="285">285</span>
+<span id="286">286</span>
+<span id="287">287</span>
+<span id="288">288</span>
+<span id="289">289</span>
+<span id="290">290</span>
+<span id="291">291</span>
+<span id="292">292</span>
+<span id="293">293</span>
+<span id="294">294</span>
+<span id="295">295</span>
+<span id="296">296</span>
+<span id="297">297</span>
+<span id="298">298</span>
+<span id="299">299</span>
+<span id="300">300</span>
+<span id="301">301</span>
+<span id="302">302</span>
+<span id="303">303</span>
+<span id="304">304</span>
+<span id="305">305</span>
+<span id="306">306</span>
+<span id="307">307</span>
+<span id="308">308</span>
+<span id="309">309</span>
+<span id="310">310</span>
+<span id="311">311</span>
+<span id="312">312</span>
+<span id="313">313</span>
+<span id="314">314</span>
+<span id="315">315</span>
+<span id="316">316</span>
+<span id="317">317</span>
+<span id="318">318</span>
+<span id="319">319</span>
+<span id="320">320</span>
+<span id="321">321</span>
+<span id="322">322</span>
+<span id="323">323</span>
+<span id="324">324</span>
+<span id="325">325</span>
+<span id="326">326</span>
+<span id="327">327</span>
+<span id="328">328</span>
+<span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
+<span id="335">335</span>
+<span id="336">336</span>
+<span id="337">337</span>
+<span id="338">338</span>
+<span id="339">339</span>
+<span id="340">340</span>
+<span id="341">341</span>
+<span id="342">342</span>
+<span id="343">343</span>
+<span id="344">344</span>
+<span id="345">345</span>
+<span id="346">346</span>
+<span id="347">347</span>
+<span id="348">348</span>
+<span id="349">349</span>
+<span id="350">350</span>
+<span id="351">351</span>
+<span id="352">352</span>
+<span id="353">353</span>
+<span id="354">354</span>
+<span id="355">355</span>
+<span id="356">356</span>
+<span id="357">357</span>
+<span id="358">358</span>
+<span id="359">359</span>
+<span id="360">360</span>
+<span id="361">361</span>
+<span id="362">362</span>
+<span id="363">363</span>
+<span id="364">364</span>
+<span id="365">365</span>
+<span id="366">366</span>
+<span id="367">367</span>
+<span id="368">368</span>
+<span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
+<span id="408">408</span>
+<span id="409">409</span>
+<span id="410">410</span>
+<span id="411">411</span>
+<span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
+<span id="649">649</span>
+<span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
+<span id="654">654</span>
+<span id="655">655</span>
+<span id="656">656</span>
+<span id="657">657</span>
+<span id="658">658</span>
+<span id="659">659</span>
+<span id="660">660</span>
+<span id="661">661</span>
+<span id="662">662</span>
+</pre><pre class="rust"><code><span class="doccomment">//! Rust crate for parsing the limine boot protocol structures.
+//!
+//! ## Resources
+//! * [Limine Boot Protocol Specification](https://github.com/limine-bootloader/limine/blob/trunk/PROTOCOL.md)
+
+</span><span class="attribute">#![no_std]
+#![feature(const_nonnull_new)]
+
+#[cfg(feature = <span class="string">&quot;requests-section&quot;</span>)]
+</span><span class="kw">pub use </span>limine_proc::<span class="kw-2">*</span>;
+
+<span class="kw">use </span>core::cell::UnsafeCell;
+<span class="kw">use </span>core::ffi::{c_char, CStr};
+<span class="kw">use </span>core::fmt::Debug;
+<span class="kw">use </span>core::marker::PhantomData;
+<span class="kw">use </span>core::ops::{Deref, DerefMut};
+<span class="kw">use </span>core::ptr::NonNull;
+
+<span class="attribute">#[derive(Debug)]
+#[repr(transparent)]
+</span><span class="kw">pub struct </span>LimineEntryPoint(<span class="kw-2">*const </span>());
+
+<span class="doccomment">/// [`NonNull`] with the dereference traits implemented.
+</span><span class="attribute">#[repr(transparent)]
+</span><span class="kw">pub struct </span>NonNullPtr&lt;T&gt; {
+    ptr: NonNull&lt;T&gt;,
+    <span class="comment">// This marker does not affect the variance but is required for
+    // dropck to undestand that we logically own a `T`.
+    //
+    // TODO: Use `Unique&lt;T&gt;` when stabalized!
+    </span>_phantom: PhantomData&lt;T&gt;,
+}
+
+<span class="kw">impl</span>&lt;T&gt; NonNullPtr&lt;T&gt; {
+    <span class="kw">pub fn </span>as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>T {
+        <span class="self">self</span>.ptr.as_ptr()
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; Deref <span class="kw">for </span>NonNullPtr&lt;T&gt; {
+    <span class="kw">type </span>Target = T;
+
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="comment">// SAFETY: We have shared reference to the data.
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.ptr.as_ref() }
+    }
+}
+
+<span class="kw">impl</span>&lt;T&gt; DerefMut <span class="kw">for </span>NonNullPtr&lt;T&gt; {
+    <span class="kw">fn </span>deref_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Target {
+        <span class="comment">// SAFETY: We have exclusive reference to the data.
+        </span><span class="kw">unsafe </span>{ <span class="self">self</span>.ptr.as_mut() }
+    }
+}
+
+<span class="kw">impl</span>&lt;T: Debug&gt; Debug <span class="kw">for </span>NonNullPtr&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
+        <span class="kw">let </span>value: <span class="kw-2">&amp;</span>T = <span class="kw-2">&amp;*</span><span class="self">self</span>;
+
+        f.debug_tuple(<span class="string">&quot;NonNullPtr&quot;</span>)
+            .field(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;{:#x?}&quot;</span>, value))
+            .finish()
+    }
+}
+
+<span class="attribute">#[repr(transparent)]
+</span><span class="kw">pub struct </span>LiminePtr&lt;T&gt; {
+    ptr: <span class="prelude-ty">Option</span>&lt;NonNull&lt;T&gt;&gt;,
+    <span class="comment">// This marker does not affect the variance but is required for
+    // dropck to undestand that we logically own a `T`.
+    //
+    // TODO: Use `Unique&lt;T&gt;` when stabalized!
+    </span>_phantom: PhantomData&lt;T&gt;,
+}
+
+<span class="kw">impl</span>&lt;T&gt; LiminePtr&lt;T&gt; {
+    <span class="kw">const </span>DEFAULT: LiminePtr&lt;T&gt; = <span class="self">Self </span>{
+        ptr: <span class="prelude-val">None</span>,
+        _phantom: PhantomData,
+    };
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">*mut </span>T&gt; {
+        <span class="prelude-val">Some</span>(<span class="self">self</span>.ptr<span class="question-mark">?</span>.as_ptr())
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>get&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T&gt; {
+        <span class="comment">// SAFETY: According to the specication the bootloader provides
+        // a aligned pointer and there is no public API to construct a [`LiminePtr`]
+        // so, its safe to assume that the [`NonNull::as_ref`] are applied. If not,
+        // its the bootloader&#39;s fault that they have violated the
+        // specification!.
+        //
+        // Also, we have a shared reference to the data and there is no
+        // legal way to mutate it, unless through [`LiminePtr::as_ptr`]
+        // (requires pointer dereferencing which is unsafe) or [`LiminePtr::get_mut`]
+        // (requires exclusive access to the [`LiminePtr`]).
+        </span><span class="self">self</span>.ptr.map(|e| <span class="kw">unsafe </span>{ e.as_ref() })
+    }
+
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub fn </span>get_mut&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T&gt; {
+        <span class="comment">// SAFETY: Check the safety for [`LiminePtr::get`] and we have
+        // exclusive access to the data.
+        </span><span class="self">self</span>.ptr.as_mut().map(|e| <span class="kw">unsafe </span>{ e.as_mut() })
+    }
+}
+
+<span class="kw">impl </span>LiminePtr&lt;c_char&gt; {
+    <span class="doccomment">/// Converts the limine string pointer into a rust string.
+    </span><span class="kw">pub fn </span>to_str(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>CStr&gt; {
+        <span class="comment">// SAFETY: According to the limine specification, the pointer points
+        // to a valid C string with a NULL terminator of size less than
+        // `isize::MAX`. Also we know that the `LiminePtr` is a valid C string,
+        // because it has a `T` of `c_char`. See the [`LiminePtr::get`] for more
+        // details.
+        </span><span class="kw">unsafe </span>{ <span class="prelude-val">Some</span>(CStr::from_ptr(<span class="self">self</span>.as_ptr()<span class="question-mark">?</span>)) }
+    }
+}
+
+<span class="kw">impl </span>LiminePtr&lt;LimineEntryPoint&gt; {
+    <span class="attribute">#[inline]
+    </span><span class="kw">pub const fn </span>new(entry_point: <span class="kw">fn</span>() -&gt; !) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            ptr: NonNull::new(entry_point <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>),
+            _phantom: PhantomData,
+        }
+    }
+}
+
+<span class="kw">impl</span>&lt;T: Debug&gt; Debug <span class="kw">for </span>LiminePtr&lt;T&gt; {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>core::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; core::fmt::Result {
+        f.debug_tuple(<span class="string">&quot;LiminePtr&quot;</span>)
+            .field(<span class="kw-2">&amp;</span><span class="macro">format_args!</span>(<span class="string">&quot;{:#x?}&quot;</span>, <span class="self">self</span>.get()))
+            .finish()
+    }
+}
+
+<span class="kw">unsafe impl</span>&lt;T: Sync&gt; Sync <span class="kw">for </span>LiminePtr&lt;T&gt; {}
+
+<span class="kw">type </span>ArrayPtr&lt;T&gt; = NonNullPtr&lt;NonNullPtr&lt;T&gt;&gt;;
+
+<span class="kw">impl</span>&lt;T&gt; ArrayPtr&lt;T&gt; {
+    <span class="kw">fn </span>into_slice&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, len: usize) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[NonNullPtr&lt;T&gt;] {
+        <span class="comment">// SAFETY: We have shared reference to the array.
+        </span><span class="kw">unsafe </span>{ core::slice::from_raw_parts(<span class="self">self</span>.as_ptr(), len) }
+    }
+
+    <span class="kw">fn </span>into_slice_mut&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, len: usize) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[NonNullPtr&lt;T&gt;] {
+        <span class="comment">// SAFETY: We have exculusive access to the array.
+        </span><span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(<span class="self">self</span>.as_ptr(), len) }
+    }
+}
+
+<span class="doccomment">/// Used to create the limine request struct.
+</span><span class="macro">macro_rules! </span>make_struct {
+    (
+        $(<span class="attribute">#[<span class="macro-nonterminal">$meta</span>:meta]</span>)*
+        <span class="kw">struct </span><span class="macro-nonterminal">$name</span>:ident: [<span class="macro-nonterminal">$id1</span>:expr, <span class="macro-nonterminal">$id2</span>:expr] =&gt; <span class="macro-nonterminal">$response_ty</span>:ty {
+            $($(<span class="attribute">#[<span class="macro-nonterminal">$field_meta</span>:meta]</span>)* <span class="macro-nonterminal">$field_name</span>:ident : <span class="macro-nonterminal">$field_ty</span>:ty = <span class="macro-nonterminal">$field_default</span>:expr),*
+        };
+    ) =&gt; {
+        $(<span class="attribute">#[<span class="macro-nonterminal">$meta</span>]</span>)*
+        <span class="attribute">#[repr(C)]
+        #[derive(Debug)]
+        </span><span class="kw">pub struct </span><span class="macro-nonterminal">$name </span>{
+            id: [u64; <span class="number">4</span>],
+            revision: u64,
+
+            <span class="comment">// NOTE: The response is required to be wrapped inside an unsafe cell, since
+            // by default the response is set to NULL and when the compiler does not see
+            // any writes to the field, it is free to assume that the response is NULL. In
+            // our situation the bootloader mutates the field and we need to ensure that
+            // the compiler does not optimize the read away.
+            </span>response: UnsafeCell&lt;LiminePtr&lt;<span class="macro-nonterminal">$response_ty</span>&gt;&gt;,
+            $(<span class="kw">pub </span><span class="macro-nonterminal">$field_name</span>: <span class="macro-nonterminal">$field_ty</span>),*
+        }
+
+        <span class="kw">impl </span><span class="macro-nonterminal">$name </span>{
+            <span class="comment">// NOTE: The request ID is composed of 4 64-bit wide unsigned integers but the first
+            // two remain constant. This is refered as `LIMINE_COMMON_MAGIC` in the limine protocol
+            // header.
+            </span><span class="kw">pub const </span>ID: [u64; <span class="number">4</span>] = [<span class="number">0xc7b1dd30df4c8b88</span>, <span class="number">0x0a82e883a194f07b</span>, <span class="macro-nonterminal">$id1</span>, <span class="macro-nonterminal">$id2</span>];
+
+            <span class="kw">pub const fn </span>new(revision: u64) -&gt; <span class="self">Self </span>{
+                <span class="self">Self </span>{
+                    id: <span class="self">Self</span>::ID,
+                    revision,
+
+                    response: UnsafeCell::new(LiminePtr::DEFAULT),
+                    $(<span class="macro-nonterminal">$field_name</span>: <span class="macro-nonterminal">$field_default</span>),*
+                }
+            }
+
+            <span class="kw">pub fn </span>get_response(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LiminePtr&lt;<span class="macro-nonterminal">$response_ty</span>&gt; {
+                <span class="kw">unsafe </span>{ core::ptr::read_volatile(<span class="self">self</span>.response.get()) }
+            }
+
+            <span class="comment">// generate a getter method for each field:
+            </span>$($(<span class="attribute">#[<span class="macro-nonterminal">$field_meta</span>]</span>)* <span class="kw">pub const fn </span><span class="macro-nonterminal">$field_name</span>(<span class="kw-2">mut </span><span class="self">self</span>, value: <span class="macro-nonterminal">$field_ty</span>) -&gt; <span class="self">Self </span>{
+                <span class="self">self</span>.<span class="macro-nonterminal">$field_name </span>= value;
+                <span class="self">self
+            </span>})*
+        }
+
+        <span class="comment">// maker trait implementations for limine request struct:
+        </span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span><span class="macro-nonterminal">$name </span>{}
+    };
+}
+
+<span class="comment">// misc structures:
+
+</span><span class="attribute">#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+</span><span class="kw">pub struct </span>LimineUuid {
+    <span class="kw">pub </span>a: u32,
+    <span class="kw">pub </span>b: u16,
+    <span class="kw">pub </span>c: u16,
+    <span class="kw">pub </span>d: [u8; <span class="number">8</span>],
+}
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;into-uuid&quot;</span>)]
+</span><span class="kw">impl </span>From&lt;LimineUuid&gt; <span class="kw">for </span>uuid::Uuid {
+    <span class="kw">fn </span>from(lim: LimineUuid) -&gt; <span class="self">Self </span>{
+        <span class="self">Self</span>::from_fields(lim.a, lim.b, lim.c, <span class="kw-2">&amp;</span>lim.d)
+    }
+}
+
+<span class="attribute">#[cfg(feature = <span class="string">&quot;into-uuid&quot;</span>)]
+</span><span class="kw">impl </span>From&lt;uuid::Uuid&gt; <span class="kw">for </span>LimineUuid {
+    <span class="kw">fn </span>from(uuid: uuid::Uuid) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>(a, b, c, d) = uuid.as_fields();
+        <span class="self">Self </span>{
+            a,
+            b,
+            c,
+            d: d.clone(),
+        }
+    }
+}
+
+<span class="attribute">#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineFile {
+    <span class="doccomment">/// Revision of this structure.
+    </span><span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// The address of the file.
+    </span><span class="kw">pub </span>base: LiminePtr&lt;u8&gt;,
+    <span class="doccomment">/// The size of the file.
+    </span><span class="kw">pub </span>length: u64,
+    <span class="doccomment">/// The path of the file within the volume, with a leading slash.
+    </span><span class="kw">pub </span>path: LiminePtr&lt;c_char&gt;,
+    <span class="doccomment">/// A command line associated with the file.
+    </span><span class="kw">pub </span>cmdline: LiminePtr&lt;c_char&gt;,
+    <span class="doccomment">/// Type of media file resides on.
+    </span><span class="kw">pub </span>media_type: u64,
+    <span class="kw">pub </span>unused: u32,
+    <span class="doccomment">/// If non-0, this is the IP of the TFTP server the file was loaded from.
+    </span><span class="kw">pub </span>tftp_ip: u32,
+    <span class="doccomment">/// Likewise, but port.
+    </span><span class="kw">pub </span>tftp_port: u32,
+    <span class="doccomment">/// 1-based partition index of the volume from which the file was loaded. If 0, it
+    /// means invalid or unpartitioned.
+    </span><span class="kw">pub </span>partition_index: u32,
+    <span class="doccomment">/// If non-0, this is the ID of the disk the file was loaded from as reported in its MBR.
+    </span><span class="kw">pub </span>mbr_disk_id: u32,
+    <span class="doccomment">/// If non-0, this is the UUID of the disk the file was loaded from as reported in its GPT.
+    </span><span class="kw">pub </span>gpt_disk_uuid: LimineUuid,
+    <span class="doccomment">/// If non-0, this is the UUID of the partition the file was loaded from as reported in the GPT.
+    </span><span class="kw">pub </span>gpt_part_uuid: LimineUuid,
+    <span class="doccomment">/// If non-0, this is the UUID of the filesystem of the partition the file was loaded from.
+    </span><span class="kw">pub </span>part_uuid: LimineUuid,
+}
+
+<span class="comment">// boot info request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineBootInfoResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// Null-terminated string containing the name of the bootloader.
+    </span><span class="kw">pub </span>name: LiminePtr&lt;c_char&gt;,
+    <span class="doccomment">/// Null-terminated string containg the version of the bootloader.
+    </span><span class="kw">pub </span>version: LiminePtr&lt;c_char&gt;,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineBootInfoRequest: [<span class="number">0xf55038d8e2a1202f</span>, <span class="number">0x279426fcf5f59740</span>] =&gt; LimineBootInfoResponse {};
+);
+
+<span class="comment">// stack size request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineStackSizeResponse {
+    <span class="kw">pub </span>revision: u64,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineStackSizeRequest: [<span class="number">0x224ef0460a8e8926</span>, <span class="number">0xe1cb0fc25f46ea3d</span>] =&gt; LimineStackSizeResponse {
+        <span class="doccomment">/// The requested stack size (also used for SMP processors).
+        </span>stack_size: u64 = <span class="number">0
+    </span>};
+);
+
+<span class="comment">// HHDM request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineHhdmResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// The virtual address offset of the beginning of the higher half direct map.
+    </span><span class="kw">pub </span>offset: u64,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineHhdmRequest: [<span class="number">0x48dcf1cb8ad2b852</span>, <span class="number">0x63984e959a98244b</span>] =&gt; LimineHhdmResponse {};
+);
+
+<span class="comment">// framebuffer request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineFramebuffer {
+    <span class="kw">pub </span>address: LiminePtr&lt;u8&gt;,
+    <span class="kw">pub </span>width: u64,
+    <span class="kw">pub </span>height: u64,
+    <span class="kw">pub </span>pitch: u64,
+    <span class="kw">pub </span>bpp: u16,
+    <span class="kw">pub </span>memory_model: u8,
+    <span class="kw">pub </span>red_mask_size: u8,
+    <span class="kw">pub </span>red_mask_shift: u8,
+    <span class="kw">pub </span>green_mask_size: u8,
+    <span class="kw">pub </span>green_mask_shift: u8,
+    <span class="kw">pub </span>blue_mask_size: u8,
+    <span class="kw">pub </span>blue_mask_shift: u8,
+    <span class="kw">pub </span>reserved: [u8; <span class="number">7</span>],
+    <span class="kw">pub </span>edid_size: u64,
+    <span class="kw">pub </span>edid: LiminePtr&lt;u8&gt;,
+}
+
+<span class="kw">impl </span>LimineFramebuffer {
+    <span class="doccomment">/// Returns the size of the framebuffer.
+    </span><span class="kw">pub fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.pitch <span class="kw">as </span>usize * <span class="self">self</span>.height <span class="kw">as </span>usize * (<span class="self">self</span>.bpp <span class="kw">as </span>usize / <span class="number">8</span>)
+    }
+}
+
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineFramebufferResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// How many framebuffers are present.
+    </span><span class="kw">pub </span>framebuffer_count: u64,
+    <span class="doccomment">/// Pointer to an array of `framebuffer_count` pointers to struct [`LimineFramebuffer`] structures.
+    </span><span class="kw">pub </span>framebuffers: ArrayPtr&lt;LimineFramebuffer&gt;,
+}
+
+<span class="kw">impl </span>LimineFramebufferResponse {
+    <span class="kw">pub fn </span>framebuffers&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[NonNullPtr&lt;LimineFramebuffer&gt;] {
+        <span class="self">self</span>.framebuffers
+            .into_slice(<span class="self">self</span>.framebuffer_count <span class="kw">as </span>usize)
+    }
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineFramebufferRequest: [<span class="number">0x9d5827dcd881dd75</span>, <span class="number">0xa3148604f6fab11b</span>] =&gt; LimineFramebufferResponse {};
+);
+
+<span class="comment">// terminal request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineTerminal {
+    <span class="doccomment">/// Number of columns provided by the terminal.
+    </span><span class="kw">pub </span>cols: u64,
+    <span class="doccomment">/// Number of rows provided by the terminal.
+    </span><span class="kw">pub </span>rows: u64,
+    <span class="doccomment">/// The framebuffer associated with this terminal.
+    </span><span class="kw">pub </span>framebuffer: LiminePtr&lt;LimineFramebuffer&gt;,
+}
+
+<span class="kw">type </span>LimineTerminalWrite =
+    <span class="prelude-ty">Option</span>&lt;<span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(terminal: <span class="kw-2">*const </span>LimineTerminal, string: <span class="kw-2">*const </span>u8, length: u64)&gt;;
+
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineTerminalResponse {
+    <span class="kw">pub </span>revision: u64,
+
+    <span class="doccomment">/// How many terminals are present.
+    </span><span class="kw">pub </span>terminal_count: u64,
+    <span class="doccomment">/// Pointer to an array of `terminal_count` pointers to struct `limine_terminal` structures.
+    </span><span class="kw">pub </span>terminals: ArrayPtr&lt;LimineTerminal&gt;,
+    <span class="doccomment">/// Physical pointer to the terminal `write()` function. The function is not thread-safe, nor
+    /// reentrant, per-terminal. This means multiple terminals may be called simultaneously, and
+    /// multiple callbacks may be handled simultaneously. The terminal parameter points to the
+    /// [`LimineTerminal`] structure to use to output the string; the string parameter points to
+    /// a string to print; the length paremeter contains the length, in bytes, of the string to print.
+    </span>write_fn: LimineTerminalWrite,
+}
+
+<span class="kw">impl </span>LimineTerminalResponse {
+    <span class="kw">pub fn </span>terminals&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[NonNullPtr&lt;LimineTerminal&gt;] {
+        <span class="self">self</span>.terminals.into_slice(<span class="self">self</span>.terminal_count <span class="kw">as </span>usize)
+    }
+
+    <span class="kw">pub fn </span>write(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw">impl </span>Fn(<span class="kw-2">&amp;</span>LimineTerminal, <span class="kw-2">&amp;</span>str)&gt; {
+        <span class="kw">let </span>term_func = <span class="self">self</span>.write_fn<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Some</span>(<span class="kw">move </span>|terminal: <span class="kw-2">&amp;</span>LimineTerminal, txt: <span class="kw-2">&amp;</span>str| <span class="kw">unsafe </span>{
+            term_func(terminal <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, txt.as_ptr(), txt.len() <span class="kw">as </span>u64);
+        })
+    }
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="doccomment">/// Omitting this request will cause the bootloader to not initialise the terminal service.
+    </span><span class="kw">struct </span>LimineTerminalRequest: [<span class="number">0xc8ac59310c2b0844</span>, <span class="number">0xa68d0c7265d38878</span>] =&gt; LimineTerminalResponse {
+        callback: LiminePtr&lt;()&gt; = LiminePtr::DEFAULT
+    };
+);
+
+<span class="comment">// 5-level paging request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>Limine5LevelPagingResponse {
+    <span class="kw">pub </span>revision: u64,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="doccomment">/// The presence of this request will prompt the bootloader to turn on x86_64 5-level paging. It will not be
+    /// turned on if this request is not present. If the response pointer is unchanged, 5-level paging is engaged.
+    </span><span class="kw">struct </span>Limine5LevelPagingRequest: [<span class="number">0x94469551da9b3192</span>, <span class="number">0xebe5e86db7382888</span>] =&gt; Limine5LevelPagingResponse {};
+);
+
+<span class="comment">// smp request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineSmpInfo {
+    <span class="doccomment">/// ACPI Processor UID as specified by the MADT.
+    </span><span class="kw">pub </span>processor_id: u32,
+    <span class="doccomment">/// Local APIC ID of the processor as specified by the MADT.
+    </span><span class="kw">pub </span>lapic_id: u32,
+    <span class="kw">pub </span>reserved: u64,
+    <span class="doccomment">/// An atomic write to this field causes the parked CPU to jump to the
+    /// written address, on a 64KiB (or Stack Size Request size) stack. A pointer
+    /// to the struct [`LimineSmpInfo`] structure of the CPU is passed in RDI. Other
+    /// than that, the CPU state will be the same as described for the bootstrap
+    /// processor. This field is unused for the structure describing the bootstrap
+    /// processor.
+    </span><span class="kw">pub </span>goto_address: <span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn</span>(info: <span class="kw-2">*const </span>LimineSmpInfo) -&gt; !,
+    <span class="doccomment">/// A free for use field.
+    </span><span class="kw">pub </span>extra_argument: u64,
+}
+
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineSmpResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// Bit 0: X2APIC has been enabled.
+    </span><span class="kw">pub </span>flags: u32,
+    <span class="doccomment">/// The Local APIC ID of the bootstrap processor.
+    </span><span class="kw">pub </span>bsp_lapic_id: u32,
+    <span class="doccomment">/// How many CPUs are present. It includes the bootstrap processor.
+    </span><span class="kw">pub </span>cpu_count: u64,
+    <span class="doccomment">/// Pointer to an array of `cpu_count` pointers to struct [`LimineSmpInfo`]
+    /// structures.
+    </span><span class="kw">pub </span>cpus: ArrayPtr&lt;LimineSmpInfo&gt;,
+}
+
+<span class="kw">impl </span>LimineSmpResponse {
+    <span class="doccomment">/// Return&#39;s the SMP info array pointer as a mutable rust slice.
+    ///
+    /// ## Safety
+    ///
+    /// If this tag was returned by a bootloader mutating the slice must conform to the following
+    /// rules in order to not trigger UB:
+    ///
+    /// - Writing to [`LimineSmpInfo::goto_address`] will cause it to start executing at the
+    /// provided address.
+    /// - The address pointed by [`LimineSmpInfo::goto_address`] must be that of a
+    /// `extern &quot;C&quot; fn(&amp;&#39;static LimineSmpInfo) -&gt; !`, this also means that once written this
+    /// struct must not be mutated any further.
+    </span><span class="kw">pub fn </span>cpus&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[NonNullPtr&lt;LimineSmpInfo&gt;] {
+        <span class="self">self</span>.cpus.into_slice_mut(<span class="self">self</span>.cpu_count <span class="kw">as </span>usize)
+    }
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="doccomment">/// The presence of this request will prompt the bootloader to bootstrap the
+    /// secondary processors. This will not be done if this request is not present.
+    </span><span class="kw">struct </span>LimineSmpRequest: [<span class="number">0x95a67b819a1b857e</span>, <span class="number">0xa0b61b723b6a73e0</span>] =&gt; LimineSmpResponse {
+        <span class="doccomment">/// Bit 0: Enable X2APIC, if possible.
+        </span>flags: u32 = <span class="number">0
+    </span>};
+);
+
+<span class="comment">// memory map request tag:
+</span><span class="attribute">#[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq)]
+</span><span class="kw">pub enum </span>LimineMemoryMapEntryType {
+    Usable = <span class="number">0</span>,
+    Reserved = <span class="number">1</span>,
+    AcpiReclaimable = <span class="number">2</span>,
+    AcpiNvs = <span class="number">3</span>,
+    BadMemory = <span class="number">4</span>,
+    BootloaderReclaimable = <span class="number">5</span>,
+    <span class="doccomment">/// The kernel and modules loaded are not marked as usable memory. They are
+    /// marked as Kernel/Modules. The entries are guaranteed to be sorted by base
+    /// address, lowest to highest. Usable and bootloader reclaimable entries are
+    /// guaranteed to be 4096 byte aligned for both base and length. Usable and
+    /// bootloader reclaimable entries are guaranteed not to overlap with any
+    /// other entry. To the contrary, all non-usable entries (including kernel/modules)
+    /// are not guaranteed any alignment, nor is it guaranteed that they do not
+    /// overlap other entries.
+    </span>KernelAndModules = <span class="number">6</span>,
+    Framebuffer = <span class="number">7</span>,
+}
+
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineMemmapEntry {
+    <span class="kw">pub </span>base: u64,
+    <span class="kw">pub </span>len: u64,
+    <span class="kw">pub </span>typ: LimineMemoryMapEntryType,
+}
+
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineMemmapResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// How many memory map entries are present.
+    </span><span class="kw">pub </span>entry_count: u64,
+    <span class="doccomment">/// Pointer to an array of `entry_count` pointers to struct [`LimineMemmapEntry`] structures.
+    </span><span class="kw">pub </span>entries: ArrayPtr&lt;LimineMemmapEntry&gt;,
+}
+
+<span class="kw">impl </span>LimineMemmapResponse {
+    <span class="kw">pub fn </span>memmap&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[NonNullPtr&lt;LimineMemmapEntry&gt;] {
+        <span class="self">self</span>.entries.into_slice(<span class="self">self</span>.entry_count <span class="kw">as </span>usize)
+    }
+
+    <span class="kw">pub fn </span>memmap_mut&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[NonNullPtr&lt;LimineMemmapEntry&gt;] {
+        <span class="self">self</span>.entries.into_slice_mut(<span class="self">self</span>.entry_count <span class="kw">as </span>usize)
+    }
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineMemmapRequest: [<span class="number">0x67cf3d9d378a806f</span>, <span class="number">0xe304acdfc50c3c62</span>] =&gt; LimineMemmapResponse {};
+);
+
+<span class="comment">// entry point request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineEntryPointResponse {
+    <span class="kw">pub </span>revision: u64,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineEntryPointRequest: [<span class="number">0x13d86c035a1cd3e1</span>, <span class="number">0x2b0caa89d8f3026a</span>] =&gt; LimineEntryPointResponse {
+        <span class="doccomment">/// The requested entry point.
+        </span>entry: LiminePtr&lt;LimineEntryPoint&gt; = LiminePtr::DEFAULT
+    };
+);
+
+<span class="comment">// kernel file request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineKernelFileResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// Pointer to the struct [`LimineFile`] structure for the kernel file.
+    </span><span class="kw">pub </span>kernel_file: LiminePtr&lt;LimineFile&gt;,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineKernelFileRequest: [<span class="number">0xad97e90e83f1ed67</span>, <span class="number">0x31eb5d1c5ff23b69</span>] =&gt; LimineKernelFileResponse {};
+);
+
+<span class="comment">// module request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineModuleResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// How many modules are present.
+    </span><span class="kw">pub </span>module_count: u64,
+    <span class="doccomment">/// Pointer to an array of `module_count` pointers to struct [`LimineFile`] structures
+    </span><span class="kw">pub </span>modules: ArrayPtr&lt;LimineFile&gt;,
+}
+
+<span class="kw">impl </span>LimineModuleResponse {
+    <span class="kw">pub fn </span>modules&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[NonNullPtr&lt;LimineFile&gt;] {
+        <span class="self">self</span>.modules.into_slice(<span class="self">self</span>.module_count <span class="kw">as </span>usize)
+    }
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineModuleRequest: [<span class="number">0x3e7e279702be32af</span>, <span class="number">0xca1c4f3bd1280cee</span>] =&gt; LimineModuleResponse {};
+);
+
+<span class="comment">// RSDP request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineRsdpResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// Address of the RSDP table.
+    </span><span class="kw">pub </span>address: LiminePtr&lt;u8&gt;,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineRsdpRequest: [<span class="number">0xc5e77b6b397e7b43</span>, <span class="number">0x27637845accdcf3c</span>] =&gt; LimineRsdpResponse {};
+);
+
+<span class="comment">// SMBIOS request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineSmbiosResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// Address of the 32-bit SMBIOS entry point. NULL if not present.
+    </span><span class="kw">pub </span>entry_32: LiminePtr&lt;u8&gt;,
+    <span class="doccomment">/// Address of the 64-bit SMBIOS entry point. NULL if not present.
+    </span><span class="kw">pub </span>entry_64: LiminePtr&lt;u8&gt;,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineSmbiosRequest: [<span class="number">0x9e9046f11e095391</span>, <span class="number">0xaa4a520fefbde5ee</span>] =&gt; LimineSmbiosResponse {};
+);
+
+<span class="comment">// EFI system table request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineEfiSystemTableResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// Address of EFI system table.
+    </span><span class="kw">pub </span>address: LiminePtr&lt;u8&gt;,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineEfiSystemTableRequest: [<span class="number">0x5ceba5163eaaf6d6</span>, <span class="number">0x0a6981610cf65fcc</span>] =&gt; LimineEfiSystemTableResponse {};
+);
+
+<span class="comment">// boot time request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineBootTimeResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// The UNIX time on boot, in seconds, taken from the system RTC.
+    </span><span class="kw">pub </span>boot_time: i64,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineBootTimeRequest: [<span class="number">0x502746e184c088aa</span>, <span class="number">0xfbc5ec83e6327893</span>] =&gt; LimineBootTimeResponse {};
+);
+
+<span class="comment">// kernel address request tag:
+</span><span class="attribute">#[repr(C)]
+#[derive(Debug)]
+</span><span class="kw">pub struct </span>LimineKernelAddressResponse {
+    <span class="kw">pub </span>revision: u64,
+    <span class="doccomment">/// The physical base address of the kernel.
+    </span><span class="kw">pub </span>physical_base: u64,
+    <span class="doccomment">/// The virtual base address of the kernel.
+    </span><span class="kw">pub </span>virtual_base: u64,
+}
+
+<span class="macro">make_struct!</span>(
+    <span class="kw">struct </span>LimineKernelAddressRequest: [<span class="number">0x71ba76863cc55f63</span>, <span class="number">0xb2644a48c516a487</span>] =&gt; LimineKernelAddressResponse {};
+);
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="limine" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>

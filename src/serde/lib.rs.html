@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.133/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../normalize.css"><link rel="stylesheet" type="text/css" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../serde/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/serde-1.0.133/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../serde/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../serde/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -386,17 +386,17 @@
 </span><span class="comment">////////////////////////////////////////////////////////////////////////////////
 
 // Serde types in rustdoc of other crates get linked to here.
-</span><span class="attribute">#![doc(html_root_url = <span class="string">&quot;https://docs.rs/serde/1.0.133&quot;</span>)]</span>
-<span class="comment">// Support using Serde without the standard library!
-</span><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]</span>
-<span class="comment">// Unstable functionality only if the user asks for it. For tracking and
+</span><span class="attribute">#![doc(html_root_url = <span class="string">&quot;https://docs.rs/serde/1.0.133&quot;</span>)]
+</span><span class="comment">// Support using Serde without the standard library!
+</span><span class="attribute">#![cfg_attr(not(feature = <span class="string">&quot;std&quot;</span>), no_std)]
+</span><span class="comment">// Unstable functionality only if the user asks for it. For tracking and
 // discussion of these features please refer to this issue:
 //
 //    https://github.com/serde-rs/serde/issues/812
-</span><span class="attribute">#![cfg_attr(feature = <span class="string">&quot;unstable&quot;</span>, feature(never_type))]</span>
-<span class="attribute">#![allow(unknown_lints, bare_trait_objects, deprecated)]</span>
-<span class="attribute">#![cfg_attr(feature = <span class="string">&quot;cargo-clippy&quot;</span>, allow(renamed_and_removed_lints))]</span>
-<span class="comment">// Ignored clippy and clippy_pedantic lints
+</span><span class="attribute">#![cfg_attr(feature = <span class="string">&quot;unstable&quot;</span>, feature(never_type))]
+#![allow(unknown_lints, bare_trait_objects, deprecated)]
+#![cfg_attr(feature = <span class="string">&quot;cargo-clippy&quot;</span>, allow(renamed_and_removed_lints))]
+</span><span class="comment">// Ignored clippy and clippy_pedantic lints
 </span><span class="attribute">#![cfg_attr(
     feature = <span class="string">&quot;cargo-clippy&quot;</span>,
     allow(
@@ -440,24 +440,24 @@
         </span>missing_errors_doc,
         must_use_candidate,
     )
-)]</span>
-<span class="comment">// Rustc lints.
-</span><span class="attribute">#![deny(missing_docs, unused_imports)]</span>
+)]
+</span><span class="comment">// Rustc lints.
+</span><span class="attribute">#![deny(missing_docs, unused_imports)]
 
-<span class="comment">////////////////////////////////////////////////////////////////////////////////
+</span><span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]</span>
-<span class="kw">extern crate </span>alloc;
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="kw">extern crate </span>alloc;
 
 <span class="doccomment">/// A facade around all the types we need from the `std`, `core`, and `alloc`
 /// crates. This avoids elaborate import wrangling having to happen in every
 /// module.
 </span><span class="kw">mod </span>lib {
     <span class="kw">mod </span>core {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]</span>
-        <span class="kw">pub use </span>core::<span class="kw-2">*</span>;
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-        <span class="kw">pub use </span>std::<span class="kw-2">*</span>;
+        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+        </span><span class="kw">pub use </span>core::<span class="kw-2">*</span>;
+        <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+        </span><span class="kw">pub use </span>std::<span class="kw-2">*</span>;
     }
 
     <span class="kw">pub use </span><span class="self">self</span>::core::{cmp, iter, mem, num, ptr, slice, str};
@@ -476,131 +476,131 @@
     <span class="kw">pub use </span><span class="self">self</span>::core::option::{<span class="self">self</span>, <span class="prelude-ty">Option</span>};
     <span class="kw">pub use </span><span class="self">self</span>::core::result::{<span class="self">self</span>, <span class="prelude-ty">Result</span>};
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::borrow::{Cow, ToOwned};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::borrow::{Cow, ToOwned};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::borrow::{Cow, ToOwned};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::borrow::{Cow, ToOwned};
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::string::{String, ToString};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::string::{String, ToString};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::string::{String, ToString};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::string::{String, ToString};
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::vec::Vec;
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::vec::Vec;
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::vec::Vec;
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::vec::Vec;
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::boxed::Box;
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::boxed::Box;
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::boxed::Box;
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::boxed::Box;
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::rc::{Rc, Weak <span class="kw">as </span>RcWeak};
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;std&quot;</span>))]</span>
-    <span class="kw">pub use </span>std::rc::{Rc, Weak <span class="kw">as </span>RcWeak};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::rc::{Rc, Weak <span class="kw">as </span>RcWeak};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;std&quot;</span>))]
+    </span><span class="kw">pub use </span>std::rc::{Rc, Weak <span class="kw">as </span>RcWeak};
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::sync::{Arc, Weak <span class="kw">as </span>ArcWeak};
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;std&quot;</span>))]</span>
-    <span class="kw">pub use </span>std::sync::{Arc, Weak <span class="kw">as </span>ArcWeak};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::sync::{Arc, Weak <span class="kw">as </span>ArcWeak};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, feature = <span class="string">&quot;std&quot;</span>))]
+    </span><span class="kw">pub use </span>std::sync::{Arc, Weak <span class="kw">as </span>ArcWeak};
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]</span>
-    <span class="kw">pub use </span>alloc::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;alloc&quot;</span>, not(feature = <span class="string">&quot;std&quot;</span>)))]
+    </span><span class="kw">pub use </span>alloc::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::collections::{BTreeMap, BTreeSet, BinaryHeap, LinkedList, VecDeque};
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::{error, net};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::{error, net};
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::collections::{HashMap, HashSet};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::ffi::{CStr, CString, OsStr, OsString};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::hash::{BuildHasher, Hash};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::io::Write;
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::path::{Path, PathBuf};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::sync::{Mutex, RwLock};
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]</span>
-    <span class="kw">pub use </span>std::time::{SystemTime, UNIX_EPOCH};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::collections::{HashMap, HashSet};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::ffi::{CStr, CString, OsStr, OsString};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::hash::{BuildHasher, Hash};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::io::Write;
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::path::{Path, PathBuf};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::sync::{Mutex, RwLock};
+    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    </span><span class="kw">pub use </span>std::time::{SystemTime, UNIX_EPOCH};
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, collections_bound))]</span>
-    <span class="kw">pub use </span>std::collections::Bound;
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, collections_bound))]
+    </span><span class="kw">pub use </span>std::collections::Bound;
 
-    <span class="attribute">#[cfg(core_reverse)]</span>
-    <span class="kw">pub use </span><span class="self">self</span>::core::cmp::Reverse;
+    <span class="attribute">#[cfg(core_reverse)]
+    </span><span class="kw">pub use </span><span class="self">self</span>::core::cmp::Reverse;
 
-    <span class="attribute">#[cfg(ops_bound)]</span>
-    <span class="kw">pub use </span><span class="self">self</span>::core::ops::Bound;
+    <span class="attribute">#[cfg(ops_bound)]
+    </span><span class="kw">pub use </span><span class="self">self</span>::core::ops::Bound;
 
-    <span class="attribute">#[cfg(range_inclusive)]</span>
-    <span class="kw">pub use </span><span class="self">self</span>::core::ops::RangeInclusive;
+    <span class="attribute">#[cfg(range_inclusive)]
+    </span><span class="kw">pub use </span><span class="self">self</span>::core::ops::RangeInclusive;
 
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]</span>
-    <span class="kw">pub use </span>std::sync::atomic::{
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+    </span><span class="kw">pub use </span>std::sync::atomic::{
         AtomicBool, AtomicI16, AtomicI32, AtomicI8, AtomicIsize, AtomicU16, AtomicU32, AtomicU8,
         AtomicUsize, Ordering,
     };
-    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]</span>
-    <span class="kw">pub use </span>std::sync::atomic::{AtomicI64, AtomicU64};
+    <span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]
+    </span><span class="kw">pub use </span>std::sync::atomic::{AtomicI64, AtomicU64};
 
-    <span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]</span>
-    <span class="kw">pub use </span><span class="self">self</span>::core::time::Duration;
+    <span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]
+    </span><span class="kw">pub use </span><span class="self">self</span>::core::time::Duration;
 }
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[macro_use]</span>
-<span class="kw">mod </span>macros;
+</span><span class="attribute">#[macro_use]
+</span><span class="kw">mod </span>macros;
 
-<span class="attribute">#[macro_use]</span>
-<span class="kw">mod </span>integer128;
+<span class="attribute">#[macro_use]
+</span><span class="kw">mod </span>integer128;
 
 <span class="kw">pub mod </span>de;
 <span class="kw">pub mod </span>ser;
 
-<span class="attribute">#[doc(inline)]</span>
-<span class="kw">pub use </span>de::{Deserialize, Deserializer};
-<span class="attribute">#[doc(inline)]</span>
-<span class="kw">pub use </span>ser::{Serialize, Serializer};
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span>de::{Deserialize, Deserializer};
+<span class="attribute">#[doc(inline)]
+</span><span class="kw">pub use </span>ser::{Serialize, Serializer};
 
 <span class="comment">// Used by generated code and doc tests. Not public API.
-</span><span class="attribute">#[doc(hidden)]</span>
-<span class="attribute">#[path = <span class="string">&quot;private/mod.rs&quot;</span>]</span>
-<span class="kw">pub mod </span>__private;
+</span><span class="attribute">#[doc(hidden)]
+#[path = <span class="string">&quot;private/mod.rs&quot;</span>]
+</span><span class="kw">pub mod </span>__private;
 
-<span class="attribute">#[allow(unused_imports)]</span>
-<span class="kw">use </span><span class="self">self</span>::__private <span class="kw">as </span>export;
-<span class="attribute">#[allow(unused_imports)]</span>
-<span class="kw">use </span><span class="self">self</span>::__private <span class="kw">as </span>private;
+<span class="attribute">#[allow(unused_imports)]
+</span><span class="kw">use </span><span class="self">self</span>::__private <span class="kw">as </span>export;
+<span class="attribute">#[allow(unused_imports)]
+</span><span class="kw">use </span><span class="self">self</span>::__private <span class="kw">as </span>private;
 
-<span class="attribute">#[path = <span class="string">&quot;de/seed.rs&quot;</span>]</span>
-<span class="kw">mod </span>seed;
+<span class="attribute">#[path = <span class="string">&quot;de/seed.rs&quot;</span>]
+</span><span class="kw">mod </span>seed;
 
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]</span>
-<span class="kw">mod </span>std_error;
+<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="kw">mod </span>std_error;
 
 <span class="comment">// Re-export #[derive(Serialize, Deserialize)].
 //
 // The reason re-exporting is not enabled by default is that disabling it would
 // be annoying for crates that provide handwritten impls or data formats. They
 // would need to disable default features and then explicitly re-enable std.
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;serde_derive&quot;</span>)]</span>
-<span class="attribute">#[allow(unused_imports)]</span>
-<span class="attribute">#[macro_use]</span>
-<span class="kw">extern crate </span>serde_derive;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;serde_derive&quot;</span>)]</span>
-<span class="attribute">#[doc(hidden)]</span>
-<span class="kw">pub use </span>serde_derive::<span class="kw-2">*</span>;
+</span><span class="attribute">#[cfg(feature = <span class="string">&quot;serde_derive&quot;</span>)]
+#[allow(unused_imports)]
+#[macro_use]
+</span><span class="kw">extern crate </span>serde_derive;
+<span class="attribute">#[cfg(feature = <span class="string">&quot;serde_derive&quot;</span>)]
+#[doc(hidden)]
+</span><span class="kw">pub use </span>serde_derive::<span class="kw-2">*</span>;
 
-<span class="attribute">#[cfg(all(serde_derive, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]</span>
-<span class="kw">mod </span>actually_private {
+<span class="attribute">#[cfg(all(serde_derive, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="kw">mod </span>actually_private {
     <span class="kw">pub struct </span>T;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
