@@ -240,6 +240,10 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -262,14 +266,18 @@
 </span><span class="kw">use </span>alloc::{alloc::alloc_zeroed, sync::Arc};
 <span class="kw">use </span>core::{alloc::Layout, any::Any, cell::UnsafeCell, mem, ptr::Unique};
 
-<span class="kw">use crate</span>::{
-    apic::get_cpu_count,
-    mem::paging::{align_down, VirtAddr},
-};
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::{align_down, VirtAddr};
+
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="kw">use </span><span class="kw">crate</span>::arch::apic::get_cpu_count;
+
+<span class="attribute">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
+</span><span class="kw">fn </span>get_cpu_count() -&gt; usize {
+    <span class="number">1
+</span>}
 
 <span class="kw">pub mod </span>bitmap;
 <span class="kw">pub mod </span>buffer;
-<span class="kw">pub mod </span>io;
 <span class="kw">pub mod </span>linker;
 <span class="kw">pub mod </span>sync;
 
@@ -483,4 +491,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

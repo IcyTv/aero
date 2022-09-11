@@ -186,7 +186,6 @@
 <span id="186">186</span>
 <span id="187">187</span>
 <span id="188">188</span>
-<span id="189">189</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -206,14 +205,13 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="kw">use </span><span class="kw">super</span>::InterruptErrorStack;
+</span><span class="kw">use super</span>::{io, InterruptErrorStack};
 
 <span class="kw">use </span><span class="kw">crate</span>::arch::controlregs;
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::PageFaultErrorCode;
 
 <span class="kw">use </span><span class="kw">crate</span>::unwind;
 <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
-<span class="kw">use </span><span class="kw">crate</span>::utils::io;
 
 <span class="kw">const </span>LOG_PF_PTABLE: bool = <span class="bool-val">true</span>;
 
@@ -377,4 +375,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

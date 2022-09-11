@@ -599,7 +599,7 @@
 
 <span class="attribute">#[syscall]
 </span><span class="kw">pub fn </span>info(struc: <span class="kw-2">&amp;mut </span>SysInfo) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
-    struc.uptime = <span class="kw">crate</span>::time::get_uptime_ticks() <span class="kw">as </span>i64;
+    struc.uptime = <span class="kw">crate</span>::arch::time::get_uptime_ticks() <span class="kw">as </span>i64;
 
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
@@ -687,4 +687,4 @@
     <span class="macro">unreachable!</span>(<span class="string">&quot;aml: failed to shutdown (enter state S5)&quot;</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

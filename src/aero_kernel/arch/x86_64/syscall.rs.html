@@ -176,10 +176,10 @@
 <span class="kw">use </span><span class="kw">crate</span>::arch::gdt::GdtEntryType;
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
 <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
-<span class="kw">use </span><span class="kw">crate</span>::utils::io;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::IrqGuard;
 
 <span class="kw">use </span><span class="kw">super</span>::interrupts::InterruptErrorStack;
+<span class="kw">use </span><span class="kw">super</span>::io;
 
 <span class="kw">extern </span><span class="string">&quot;C&quot; </span>{
     <span class="kw">fn </span>x86_64_syscall_handler();
@@ -343,4 +343,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

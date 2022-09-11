@@ -4,7 +4,7 @@ Then sums of the absolute differences are returned according to the bit
 fields in the immediate operand.</p>
 <p>The following algorithm is performed:</p>
 
-<div class='information'><div class='tooltip ignore'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered ignore"><code>i = IMM8[<span class="number">2</span>] * <span class="number">4
+<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code>i = IMM8[<span class="number">2</span>] * <span class="number">4
 </span>j = IMM8[<span class="number">1</span>:<span class="number">0</span>] * <span class="number">4
 </span><span class="kw">for </span>k := <span class="number">0 </span>to <span class="number">7
     </span>d0 = abs(a[i + k + <span class="number">0</span>] - b[j + <span class="number">0</span>])
@@ -30,4 +30,4 @@ differences are to be calculated
 differences between both operands.</li>
 </ul>
 <p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_mpsadbw_epu8">Intel’s documentation</a></p>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

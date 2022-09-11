@@ -171,6 +171,12 @@
 <span id="171">171</span>
 <span id="172">172</span>
 <span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -195,8 +201,7 @@
 
 <span class="kw">use </span>alloc::sync::Arc;
 
-<span class="kw">use </span><span class="kw">crate</span>::apic;
-<span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::{<span class="self">self</span>, InterruptStack, INTERRUPT_CONTROLLER};
+<span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::{<span class="self">self</span>, InterruptStack};
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 <span class="kw">use crate</span>::{fs::cache::DirCacheItem, syscall::ExecArgs};
 
@@ -329,8 +334,14 @@
 <span class="kw">const </span>SCHEDULER_TIMER_US: usize = <span class="number">20000</span>;
 
 <span class="kw">fn </span>scheduler_irq_handler(_stack: <span class="kw-2">&amp;mut </span>InterruptStack) {
-    apic::get_local_apic().timer_oneshot(<span class="kw-2">*</span>SCHEDULER_VECTOR.get().unwrap(), SCHEDULER_TIMER_US);
-    INTERRUPT_CONTROLLER.eoi();
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span>{
+        <span class="kw">crate</span>::arch::apic::get_local_apic()
+            .timer_oneshot(<span class="kw-2">*</span>SCHEDULER_VECTOR.get().unwrap(), SCHEDULER_TIMER_US);
+
+        <span class="kw">crate</span>::arch::interrupts::INTERRUPT_CONTROLLER.eoi();
+    }
+
     <span class="self">self</span>::get_scheduler().inner.preempt();
 }
 
@@ -341,8 +352,9 @@
     <span class="kw">let </span>scheduler_vector = interrupts::allocate_vector();
     interrupts::register_handler(scheduler_vector, scheduler_irq_handler);
 
-    apic::get_local_apic().timer_oneshot(scheduler_vector, SCHEDULER_TIMER_US);
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span><span class="kw">crate</span>::arch::apic::get_local_apic().timer_oneshot(scheduler_vector, SCHEDULER_TIMER_US);
     SCHEDULER_VECTOR.call_once(|| scheduler_vector);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

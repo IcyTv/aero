@@ -233,6 +233,8 @@
 <span id="233">233</span>
 <span id="234">234</span>
 <span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -267,11 +269,13 @@
     }
 
     <span class="kw">fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: Layout) -&gt; <span class="kw-2">*mut </span>u8 {
-        <span class="kw">if </span>layout.size() &lt;= <span class="number">4096 </span>{
+        <span class="kw">let </span>size = align_up(layout.size() <span class="kw">as _</span>, layout.align() <span class="kw">as _</span>);
+
+        <span class="kw">if </span>size &lt;= <span class="number">4096 </span>{
             <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR.allocate_frame().unwrap();
             frame.start_address().as_hhdm_virt().as_mut_ptr()
         } <span class="kw">else </span>{
-            <span class="kw">let </span>size = align_up(layout.size() <span class="kw">as _</span>, Size4KiB::SIZE) / Size4KiB::SIZE;
+            <span class="kw">let </span>size = align_up(size, Size4KiB::SIZE) / Size4KiB::SIZE;
 
             vmalloc::get_vmalloc()
                 .alloc(size <span class="kw">as </span>usize)
@@ -469,4 +473,4 @@
     </span>kmemleak::MEM_LEAK_CATCHER.init();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

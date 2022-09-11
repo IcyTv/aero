@@ -181,6 +181,7 @@
 <span id="181">181</span>
 <span id="182">182</span>
 <span id="183">183</span>
+<span id="184">184</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -256,7 +257,6 @@
 <span class="kw">extern crate </span>alloc;
 
 <span class="kw">mod </span>acpi;
-<span class="kw">mod </span>apic;
 <span class="kw">mod </span>arch;
 <span class="kw">mod </span>cmdline;
 <span class="kw">mod </span>drivers;
@@ -271,7 +271,6 @@
 <span class="kw">mod </span>syscall;
 <span class="attribute">#[cfg(test)]
 </span><span class="kw">mod </span>tests;
-<span class="kw">mod </span>time;
 <span class="kw">mod </span>unwind;
 <span class="kw">mod </span>userland;
 <span class="kw">mod </span>utils;
@@ -299,13 +298,14 @@
     </span>fs::init().unwrap();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded filesystem&quot;</span>);
 
-    time::init();
+    <span class="kw">crate</span>::arch::time::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded timer&quot;</span>);
 
     userland::scheduler::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded scheduler&quot;</span>);
 
-    apic::mark_bsp_ready(<span class="bool-val">true</span>);
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span><span class="kw">crate</span>::arch::apic::mark_bsp_ready(<span class="bool-val">true</span>);
 
     <span class="macro">log::info!</span>(<span class="string">&quot;initialized kernel&quot;</span>);
 
@@ -332,9 +332,11 @@
     modules::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded kernel modules&quot;</span>);
 
-    arch::enable_acpi();
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span>arch::enable_acpi();
 
-    drivers::pci::init(<span class="kw-2">&amp;mut </span>offset_table);
+    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span>drivers::pci::init(<span class="kw-2">&amp;mut </span>offset_table);
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded PCI driver&quot;</span>);
 
     fs::block::launch().unwrap();
@@ -365,4 +367,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

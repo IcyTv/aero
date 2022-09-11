@@ -415,7 +415,7 @@
         <span class="macro">debug_assert_eq!</span>(task.link.is_linked(), <span class="bool-val">false</span>); <span class="comment">// Make sure the task is not already linked
 
         </span>task.update_state(TaskState::AwaitingIo);
-        task.set_sleep_duration(<span class="kw">crate</span>::time::get_uptime_ticks() + duration);
+        task.set_sleep_duration(<span class="kw">crate</span>::arch::time::get_uptime_ticks() + duration);
 
         <span class="self">self</span>.deadline_awaiting.push_back(task);
     }
@@ -464,7 +464,7 @@
         <span class="kw">let </span>_guard = IrqGuard::new();
         <span class="kw">let </span>queue = <span class="self">self</span>.queue.get_mut();
 
-        <span class="kw">let </span>time = <span class="kw">crate</span>::time::get_uptime_ticks();
+        <span class="kw">let </span>time = <span class="kw">crate</span>::arch::time::get_uptime_ticks();
 
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = queue.deadline_awaiting.front_mut();
 
@@ -671,4 +671,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

@@ -836,6 +836,7 @@
 <span id="836">836</span>
 <span id="837">837</span>
 <span id="838">838</span>
+<span id="839">839</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -859,13 +860,14 @@
 <span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>alloc::vec::Vec;
 
-<span class="kw">use </span><span class="kw">crate</span>::apic;
 <span class="kw">use </span><span class="kw">crate</span>::utils::bitmap::Bitmap;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
 <span class="kw">use </span><span class="kw">crate</span>::acpi::mcfg;
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::OffsetPageTable;
-<span class="kw">use </span><span class="kw">crate</span>::utils::{io, VolatileCell};
+<span class="kw">use </span><span class="kw">crate</span>::utils::VolatileCell;
+
+<span class="kw">use </span><span class="kw">crate</span>::arch::{apic, io};
 
 <span class="kw">use </span>bit_field::BitField;
 
@@ -1675,4 +1677,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

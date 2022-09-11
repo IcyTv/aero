@@ -313,6 +313,7 @@
 <span id="313">313</span>
 <span id="314">314</span>
 <span id="315">315</span>
+<span id="316">316</span>
 </pre><pre class="rust"><code><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
 <span class="kw">use </span>alloc::collections::BTreeMap;
@@ -366,7 +367,8 @@
             .map(|processors| {
                 <span class="kw">let </span><span class="kw-2">mut </span>cpu_info = <span class="macro">vec!</span>[];
 
-                tls::for_cpu_info_cached(|info| {
+                <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+                </span>tls::for_cpu_info_cached(|info| {
                     <span class="kw">let </span><span class="kw-2">mut </span>processor = <span class="macro">json!</span>({});
 
                     processor[<span class="string">&quot;id&quot;</span>] = Value::Number(Number::from(info.cpuid));
@@ -629,4 +631,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

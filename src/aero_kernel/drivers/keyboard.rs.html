@@ -447,11 +447,11 @@
 <span class="kw">use </span>spin::RwLock;
 
 <span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::{<span class="self">self</span>, InterruptStack};
-<span class="kw">use crate</span>::{apic, fs};
+<span class="kw">use </span><span class="kw">crate</span>::fs;
 
+<span class="kw">use </span><span class="kw">crate</span>::arch::{apic, io};
 <span class="kw">use </span><span class="kw">crate</span>::fs::devfs::{<span class="self">self</span>, Device};
 <span class="kw">use </span><span class="kw">crate</span>::fs::inode::INodeInterface;
-<span class="kw">use </span><span class="kw">crate</span>::utils::io;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
 <span class="kw">pub trait </span>KeyboardListener: Send + Sync {
@@ -849,4 +849,4 @@
 
 <span class="macro">crate::module_init!</span>(ps2_keyboard_init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

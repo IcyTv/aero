@@ -727,11 +727,11 @@
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;deallocation request of 4KiB by {:?}&quot;, caller);
 
-        </span><span class="self">self</span>.<span class="number">0
-            </span>.get()
-            .map(|m| m.lock().deallocate_frame_inner(frame.start_address(), <span class="number">0</span>))
-            .unwrap_or(());
-    }
+        // self.0
+        //     .get()
+        //     .map(|m| m.lock().deallocate_frame_inner(frame.start_address(), 0))
+        //     .unwrap_or(());
+    </span>}
 }
 
 <span class="kw">unsafe impl </span>FrameAllocator&lt;Size2MiB&gt; <span class="kw">for </span>LockedFrameAllocator {
@@ -1299,4 +1299,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

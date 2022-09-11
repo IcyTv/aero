@@ -131,6 +131,9 @@
 <span id="131">131</span>
 <span id="132">132</span>
 <span id="133">133</span>
+<span id="134">134</span>
+<span id="135">135</span>
+<span id="136">136</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -155,8 +158,6 @@
 <span class="kw">use </span>alloc::vec::Vec;
 <span class="kw">use </span>spin::RwLock;
 
-<span class="kw">use </span><span class="kw">crate</span>::apic::IoApicHeader;
-
 <span class="kw">use </span><span class="kw">super</span>::sdt::Sdt;
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">const </span>SIGNATURE: <span class="kw-2">&amp;</span>str = <span class="string">&quot;APIC&quot;</span>;
@@ -173,11 +174,7 @@
 
 <span class="kw">impl </span>Madt {
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>init(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">self</span>) {
-        <span class="comment">// log::debug!(&quot;storing AP trampoline at 0x1000&quot;);
-
-        // let page_index = unsafe { smp_prepare_trampoline() };
-
-        </span><span class="kw">for </span>entry <span class="kw">in </span><span class="self">self</span>.iter() {
+        <span class="kw">for </span>entry <span class="kw">in </span><span class="self">self</span>.iter() {
             <span class="kw">match </span>entry {
                 MadtEntry::IoApic(e) =&gt; IO_APICS.write().push(e),
                 MadtEntry::IntSrcOverride(e) =&gt; ISOS.write().push(e),
@@ -218,6 +215,15 @@
     <span class="kw">pub </span>irq: u8,
     <span class="kw">pub </span>global_system_interrupt: u32,
     <span class="kw">pub </span>flags: u16,
+}
+
+<span class="attribute">#[repr(C, packed)]
+</span><span class="kw">pub struct </span>IoApicHeader {
+    <span class="kw">pub </span>header: EntryHeader,
+    <span class="kw">pub </span>io_apic_id: u8,
+    <span class="kw">pub </span>reserved: u8,
+    <span class="kw">pub </span>io_apic_address: u32,
+    <span class="kw">pub </span>global_system_interrupt_base: u32,
 }
 
 <span class="kw">enum </span>MadtEntry {
@@ -265,4 +271,4 @@
     </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

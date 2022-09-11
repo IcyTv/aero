@@ -180,15 +180,6 @@
 <span id="180">180</span>
 <span id="181">181</span>
 <span id="182">182</span>
-<span id="183">183</span>
-<span id="184">184</span>
-<span id="185">185</span>
-<span id="186">186</span>
-<span id="187">187</span>
-<span id="188">188</span>
-<span id="189">189</span>
-<span id="190">190</span>
-<span id="191">191</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -222,8 +213,8 @@
 <span class="kw">use </span>alloc::vec::Vec;
 
 <span class="kw">use </span><span class="kw">super</span>::gdt::<span class="kw-2">*</span>;
+<span class="kw">use </span><span class="kw">super</span>::io;
 
-<span class="kw">use </span><span class="kw">crate</span>::utils::io;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
 <span class="kw">use </span>raw_cpuid::FeatureInfo;
@@ -302,7 +293,8 @@
     <span class="kw">pub </span>features: Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str&gt;,
 }
 
-<span class="kw">pub struct </span>PerCpuData {
+<span class="attribute">#[repr(C)]
+</span><span class="kw">pub struct </span>PerCpuData {
     <span class="kw">pub </span>cpuid: usize,
     <span class="kw">pub </span>lapic_timer_frequency: u32,
 
@@ -316,27 +308,17 @@
 
 <span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.
 </span><span class="kw">pub fn </span>get_percpu() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PerCpuData {
-    <span class="kw">unsafe </span>{ (<span class="kw-2">&amp;mut *</span>(io::rdmsr(io::IA32_GS_BASE) <span class="kw">as </span><span class="kw-2">*mut </span>Kpcr)).cpu_local }
+    <span class="kw-2">&amp;mut </span>get_kpcr().cpu_local
 }
 
 <span class="kw">pub fn </span>init(cpuid: usize) {
-    <span class="kw">let </span>size = core::mem::size_of::&lt;PerCpuData&gt;();
-
     <span class="comment">// NOTE: Inside kernel space, the GS base will always point to the CPU local data and when
     // jumping to userland `swapgs` is called making the GS base point to the userland TLS data.
     </span><span class="kw">unsafe </span>{
-        <span class="kw">let </span>tss_layout = Layout::from_size_align_unchecked(
-            core::mem::size_of::&lt;Kpcr&gt;(),
-            core::mem::align_of::&lt;Kpcr&gt;(),
-        );
+        <span class="kw">let </span>kpcr_layout = Layout::new::&lt;Kpcr&gt;();
 
-        <span class="kw">let </span>tss_ptr = alloc_zeroed(tss_layout) <span class="kw">as </span><span class="kw-2">*mut </span>Tss;
-        io::wrmsr(io::IA32_GS_BASE, tss_ptr <span class="kw">as </span>u64);
-
-        <span class="kw">let </span>tls_layout = Layout::from_size_align_unchecked(size, <span class="number">8</span>);
-        <span class="kw">let </span>tls_raw_ptr = alloc_zeroed(tls_layout);
-
-        <span class="kw">crate</span>::arch::gdt::get_kpcr().cpu_local = <span class="kw-2">&amp;mut *</span>(tls_raw_ptr <span class="kw">as </span><span class="kw-2">*mut </span>PerCpuData);
+        <span class="kw">let </span>kpcr_ptr = alloc_zeroed(kpcr_layout) <span class="kw">as </span><span class="kw-2">*mut </span>Kpcr;
+        io::wrmsr(io::IA32_GS_BASE, kpcr_ptr <span class="kw">as </span>u64);
     }
 
     get_percpu().cpuid = cpuid;
@@ -381,4 +363,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

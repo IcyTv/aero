@@ -11,7 +11,7 @@ but emits an error during <em>compilation</em> rather than at <em>runtime</em>.<
 the compiler would still emit an error, but the error’s message would not mention the two
 valid values.</p>
 
-<div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail"><code><span class="macro">macro_rules! </span>give_me_foo_or_bar {
+<div class="example-wrap"><div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><pre class="rust rust-example-rendered compile_fail"><code><span class="macro">macro_rules! </span>give_me_foo_or_bar {
     (foo) =&gt; {};
     (bar) =&gt; {};
     (<span class="macro-nonterminal">$x</span>:ident) =&gt; {
@@ -23,6 +23,6 @@ valid values.</p>
 <span class="comment">// ^ will fail at compile time with message &quot;This macro only accepts `foo` or `bar`&quot;</span></code></pre></div>
 <p>Emit a compiler error if one of a number of features isn’t available.</p>
 
-<div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered compile_fail"><code><span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;foo&quot;</span>, feature = <span class="string">&quot;bar&quot;</span>)))]
+<div class="example-wrap"><div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><pre class="rust rust-example-rendered compile_fail"><code><span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;foo&quot;</span>, feature = <span class="string">&quot;bar&quot;</span>)))]
 </span><span class="macro">compile_error!</span>(<span class="string">&quot;Either feature \&quot;foo\&quot; or \&quot;bar\&quot; must be enabled for this crate.&quot;</span>);</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

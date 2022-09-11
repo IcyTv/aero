@@ -292,20 +292,21 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="kw">pub mod </span>controlregs;
+</span><span class="kw">pub mod </span>apic;
+<span class="kw">pub mod </span>controlregs;
 <span class="kw">pub mod </span>gdt;
 <span class="kw">pub mod </span>interrupts;
+<span class="kw">pub mod </span>io;
 <span class="kw">pub mod </span>signals;
 <span class="kw">pub mod </span>syscall;
 <span class="kw">pub mod </span>task;
+<span class="kw">pub mod </span>time;
 <span class="kw">pub mod </span>tls;
 
 <span class="kw">use </span>core::sync::atomic::Ordering;
 
 <span class="kw">use </span><span class="kw">crate</span>::acpi;
 <span class="kw">use </span><span class="kw">crate</span>::acpi::aml;
-<span class="kw">use </span><span class="kw">crate</span>::apic;
-<span class="kw">use </span><span class="kw">crate</span>::apic::CPU_COUNT;
 <span class="kw">use </span><span class="kw">crate</span>::cmdline;
 
 <span class="kw">use </span><span class="kw">crate</span>::mem;
@@ -315,7 +316,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::drivers;
 <span class="kw">use </span><span class="kw">crate</span>::logger;
 <span class="kw">use </span><span class="kw">crate</span>::rendy;
-<span class="kw">use </span><span class="kw">crate</span>::utils::io;
 
 <span class="kw">use </span>raw_cpuid::CpuId;
 
@@ -334,7 +334,7 @@
 </span><span class="kw">static </span>HHDM: LimineHhdmRequest = LimineHhdmRequest::new(<span class="number">0</span>);
 
 <span class="attribute">#[no_mangle]
-</span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>x86_64_aero_main() -&gt; ! {
+</span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>arch_aero_main() -&gt; ! {
     <span class="kw">unsafe </span>{
         core::ptr::read_volatile(STACK.get_response().as_ptr().unwrap());
     }
@@ -386,7 +386,7 @@
     <span class="comment">// Now that we have unwind info, we can initialize the COM ports. This
     // will be used to print panic messages/logs before the debug renderer is
     // initialized to the serial output (if avaliable).
-    </span>drivers::uart_16550::init();
+    </span>drivers::uart::init();
     logger::init();
 
     <span class="comment">// Initialize the CPU specific features.
@@ -423,7 +423,7 @@
     <span class="kw">let </span>bsp_lapic_id = smp_response.bsp_lapic_id;
 
     <span class="kw">for </span>cpu <span class="kw">in </span>smp_response.cpus().iter_mut() {
-        CPU_COUNT.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
+        apic::CPU_COUNT.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
 
         <span class="kw">if </span>cpu.lapic_id == bsp_lapic_id {
             <span class="kw">continue</span>;
@@ -477,7 +477,7 @@
     });
 
     <span class="kw">let </span>boot_time = BOOT_TIME.get_response().get().unwrap();
-    <span class="kw">crate</span>::time::EPOCH.store(boot_time.boot_time <span class="kw">as _</span>, Ordering::SeqCst);
+    time::EPOCH.store(boot_time.boot_time <span class="kw">as _</span>, Ordering::SeqCst);
 
     <span class="comment">// Architecture init is done. Now we can initialize and start the init
     // process in the non-architecture specific part of the kernel.
@@ -549,4 +549,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

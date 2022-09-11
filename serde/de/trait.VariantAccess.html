@@ -24,7 +24,7 @@ deserialization. Must match the error type of our <code>EnumAccess</code>.</p>
 <p>If the data contains a different type of variant, the following
 <code>invalid_type</code> error should be constructed:</p>
 
-<div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>unit_variant(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
+<div class="example-wrap"><div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>unit_variant(<span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
     <span class="comment">// What the data actually contained; suppose it is a tuple variant.
     </span><span class="kw">let </span>unexp = Unexpected::TupleVariant;
     <span class="prelude-val">Err</span>(de::Error::invalid_type(unexp, <span class="kw-2">&amp;</span><span class="string">&quot;unit variant&quot;</span>))
@@ -35,7 +35,7 @@ deserialization. Must match the error type of our <code>EnumAccess</code>.</p>
 <p>If the data contains a different type of variant, the following
 <code>invalid_type</code> error should be constructed:</p>
 
-<div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>newtype_variant_seed&lt;T&gt;(<span class="self">self</span>, _seed: T) -&gt; <span class="prelude-ty">Result</span>&lt;T::Value, <span class="self">Self</span>::Error&gt;
+<div class="example-wrap"><div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>newtype_variant_seed&lt;T&gt;(<span class="self">self</span>, _seed: T) -&gt; <span class="prelude-ty">Result</span>&lt;T::Value, <span class="self">Self</span>::Error&gt;
 <span class="kw">where
     </span>T: DeserializeSeed&lt;<span class="lifetime">&#39;de</span>&gt;,
 {
@@ -48,7 +48,7 @@ deserialization. Must match the error type of our <code>EnumAccess</code>.</p>
 <p>If the data contains a different type of variant, the following
 <code>invalid_type</code> error should be constructed:</p>
 
-<div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>tuple_variant&lt;V&gt;(
+<div class="example-wrap"><div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>tuple_variant&lt;V&gt;(
     <span class="self">self</span>,
     _len: usize,
     _visitor: V,
@@ -65,7 +65,7 @@ deserialization. Must match the error type of our <code>EnumAccess</code>.</p>
 <p>If the data contains a different type of variant, the following
 <code>invalid_type</code> error should be constructed:</p>
 
-<div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><div class="example-wrap"><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>struct_variant&lt;V&gt;(
+<div class="example-wrap"><div class='information'><div class='tooltip edition' data-edition="2018">ⓘ</div></div><pre class="rust rust-example-rendered edition"><code><span class="kw">fn </span>struct_variant&lt;V&gt;(
     <span class="self">self</span>,
     _fields: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str],
     _visitor: V,
@@ -81,4 +81,4 @@ deserialization. Must match the error type of our <code>EnumAccess</code>.</p>
 <p>This method exists as a convenience for <code>Deserialize</code> implementations.
 <code>VariantAccess</code> implementations should not override the default
 behavior.</p>
-</div></details></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div class="item-list" id="implementors-list"></div><script src="../../implementors/serde/de/trait.VariantAccess.js" async></script></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</div></details></div><h2 id="implementors" class="small-section-header">Implementors<a href="#implementors" class="anchor"></a></h2><div class="item-list" id="implementors-list"></div><script src="../../implementors/serde/de/trait.VariantAccess.js" async></script></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

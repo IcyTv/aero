@@ -119,7 +119,7 @@
 </span><span class="kw">pub fn </span>gettime(clock: usize, timespec: <span class="kw-2">&amp;mut </span>TimeSpec) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">match </span>clock {
         CLOCK_TYPE_REALTIME =&gt; {
-            <span class="kw">let </span>clock = <span class="kw">crate</span>::time::get_realtime_clock();
+            <span class="kw">let </span>clock = <span class="kw">crate</span>::arch::time::get_realtime_clock();
 
             timespec.tv_sec = clock.tv_sec;
             timespec.tv_nsec = clock.tv_nsec;
@@ -129,7 +129,7 @@
 
         CLOCK_TYPE_MONOTONIC =&gt; {
             <span class="comment">// FIXME: implement
-            </span><span class="kw">let </span>clock = <span class="kw">crate</span>::time::get_realtime_clock();
+            </span><span class="kw">let </span>clock = <span class="kw">crate</span>::arch::time::get_realtime_clock();
 
             timespec.tv_sec = clock.tv_sec;
             timespec.tv_nsec = clock.tv_nsec;
@@ -159,4 +159,4 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>

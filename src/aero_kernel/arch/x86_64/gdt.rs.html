@@ -434,9 +434,6 @@
 <span id="434">434</span>
 <span id="435">435</span>
 <span id="436">436</span>
-<span id="437">437</span>
-<span id="438">438</span>
-<span id="439">439</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -472,8 +469,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::arch::tls::PerCpuData;
 
-<span class="kw">use </span><span class="kw">super</span>::tls;
-<span class="kw">use </span><span class="kw">crate</span>::utils::io;
+<span class="kw">use super</span>::{io, tls};
 
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Specifies which element to load into a segment from
@@ -726,10 +722,10 @@
 </span>}
 
 <span class="comment">// Processor Control Region
-</span><span class="attribute">#[repr(C, packed)]
+</span><span class="attribute">#[repr(C)]
 </span><span class="kw">pub struct </span>Kpcr {
     <span class="kw">pub </span>tss: Tss,
-    <span class="kw">pub </span>cpu_local: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PerCpuData,
+    <span class="kw">pub </span>cpu_local: PerCpuData,
 }
 
 <span class="doccomment">/// Initialize the bootstrap GDT which is required to initialize TLS (Thread Local Storage)
@@ -756,13 +752,11 @@
     }
 }
 
-<span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.
-</span><span class="kw">pub fn </span>get_task_state_segement() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>Tss {
-    <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(io::rdmsr(io::IA32_GS_BASE) <span class="kw">as </span><span class="kw-2">*mut </span>Tss) }
+<span class="kw">pub fn </span>get_task_state_segement() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>Tss {
+    <span class="kw-2">&amp;mut </span>get_kpcr().tss
 }
 
-<span class="doccomment">/// SAFETY: The GS base should point to the kernel PCR.
-</span><span class="kw">pub fn </span>get_kpcr() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>Kpcr {
+<span class="kw">pub fn </span>get_kpcr() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>Kpcr {
     <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(io::rdmsr(io::IA32_GS_BASE) <span class="kw">as </span><span class="kw-2">*mut </span>Kpcr) }
 }
 
@@ -877,4 +871,4 @@
     <span class="macro">asm!</span>(<span class="string">&quot;lgdt [{}]&quot;</span>, <span class="kw">in</span>(reg) gdt_descriptor, options(nostack));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (289279de1 2022-09-04)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
