@@ -41,7 +41,7 @@ and (b) ensure that the CPU feature is available</p>
 <code>#[cfg]</code> attribute. CPU features correspond to the <code>target_feature</code> cfg
 available, and can be used like so:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code><span class="attribute">#[cfg(
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#[cfg(
     all(
         any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>),
         target_feature = <span class="string">&quot;avx2&quot;
@@ -81,7 +81,7 @@ sections more optimized for different CPUs.</p>
 <em>without</em> AVX2 support, but we’d like to enable it for just one function.
 We can do that in a manner like:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code><span class="kw">fn </span>foo() {
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>foo() {
     <span class="attribute">#[cfg(any(target_arch = <span class="string">&quot;x86&quot;</span>, target_arch = <span class="string">&quot;x86_64&quot;</span>))]
     </span>{
         <span class="kw">if </span><span class="macro">is_x86_feature_detected!</span>(<span class="string">&quot;avx2&quot;</span>) {
@@ -289,4 +289,4 @@ we’ll be using SSE4.1 features to implement hex encoding.</p>
 </div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="x86_64/index.html" title="aero_kernel::prelude::rust_2021::_core::arch::x86_64 mod">x86_64</a><span class="stab portability" title="Available on x86-64 only">x86-64</span></div><div class="item-right docblock-short"><p>Platform-specific intrinsics for the <code>x86_64</code> platform.</p>
 </div></div></div><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.asm.html" title="aero_kernel::prelude::rust_2021::_core::arch::asm macro">asm</a></div><div class="item-right docblock-short"><p>Inline assembly.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.global_asm.html" title="aero_kernel::prelude::rust_2021::_core::arch::global_asm macro">global_asm</a></div><div class="item-right docblock-short"><p>Module-level inline assembly.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>

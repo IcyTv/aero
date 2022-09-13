@@ -19,21 +19,21 @@ be a <a href="../ops/struct.RangeTo.html"><code>RangeTo</code></a> range that en
 <span class="macro">assert_eq!</span>(<span class="number">1</span>..<span class="number">3</span>, slice::range(<span class="number">1</span>.., ..v.len()));</code></pre></div>
 <p>Panics when <a href="../ops/trait.Index.html#tymethod.index"><code>Index::index</code></a> would panic:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip should_panic'>ⓘ</div></div><pre class="rust rust-example-rendered should_panic"><code><span class="attribute">#![feature(slice_range)]
+<div class="example-wrap should_panic"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(slice_range)]
 
 </span><span class="kw">use </span>std::slice;
 
 <span class="kw">let _ </span>= slice::range(<span class="number">2</span>..<span class="number">1</span>, ..<span class="number">3</span>);</code></pre></div>
 
-<div class="example-wrap"><div class='information'><div class='tooltip should_panic'>ⓘ</div></div><pre class="rust rust-example-rendered should_panic"><code><span class="attribute">#![feature(slice_range)]
+<div class="example-wrap should_panic"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(slice_range)]
 
 </span><span class="kw">use </span>std::slice;
 
 <span class="kw">let _ </span>= slice::range(<span class="number">1</span>..<span class="number">4</span>, ..<span class="number">3</span>);</code></pre></div>
 
-<div class="example-wrap"><div class='information'><div class='tooltip should_panic'>ⓘ</div></div><pre class="rust rust-example-rendered should_panic"><code><span class="attribute">#![feature(slice_range)]
+<div class="example-wrap should_panic"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(slice_range)]
 
 </span><span class="kw">use </span>std::slice;
 
 <span class="kw">let _ </span>= slice::range(<span class="number">1</span>..=usize::MAX, ..<span class="number">3</span>);</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>

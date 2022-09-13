@@ -76,7 +76,7 @@ stuff(pinned_foo);
 reference ends up borrowing a local tied to that block: it can’t escape it.</p>
 <p>The following, for instance, fails to compile:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip compile_fail'>ⓘ</div></div><pre class="rust rust-example-rendered compile_fail"><code><span class="attribute">#![feature(pin_macro)]
+<div class="example-wrap compile_fail"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(pin_macro)]
 </span><span class="kw">use </span>core::pin::{pin, Pin};
 
 <span class="kw">let </span>x: Pin&lt;<span class="kw-2">&amp;mut </span>Foo&gt; = {
@@ -114,4 +114,4 @@ See <a href="index.html#unpin" title="self">the <code>Unpin</code> section of th
 in the stack (<em>e.g.</em>, when within the body of a non-<code>async</code> function), the truth is that inside
 the body of an <code>async fn</code> or block —more generally, the body of a generator— any locals crossing
 an <code>.await</code> point —a <code>yield</code> point— end up being part of the state captured by the <code>Future</code> —by
-the <code>Generator</code>—, and thus will be stored wherever that one is.&nbsp;<a href="#fnref2">↩</a></p></li></ol></div></div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+the <code>Generator</code>—, and thus will be stored wherever that one is.&nbsp;<a href="#fnref2">↩</a></p></li></ol></div></div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>

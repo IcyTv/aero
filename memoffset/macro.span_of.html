@@ -17,11 +17,11 @@
 <p>This macro provides 2 forms of differing functionalities.</p>
 <p>The first form is identical to the appearance of the <code>offset_of!</code> macro.</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code><span class="macro">span_of!</span>(Struct, member)</code></pre></div>
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="macro">span_of!</span>(Struct, member)</code></pre></div>
 <p>The second form of <code>span_of!</code> returns a sub-slice which starts at one field, and ends at another.
 The general pattern of this form is:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code><span class="comment">// Exclusive
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="comment">// Exclusive
 </span><span class="macro">span_of!</span>(Struct, member_a .. member_b)
 <span class="comment">// Inclusive
 </span><span class="macro">span_of!</span>(Struct, member_a ..= member_b)
@@ -59,4 +59,4 @@ In order to raise the limit, the compiler’s recursion limit should be lifted.<
     <span class="macro">assert_eq!</span>(<span class="number">0</span>..<span class="number">8</span>,   <span class="macro">span_of!</span>(Blarg, x .. y));
     <span class="macro">assert_eq!</span>(<span class="number">0</span>..<span class="number">64</span>,  <span class="macro">span_of!</span>(Blarg, x ..= y));
 }</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>

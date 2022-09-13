@@ -61,7 +61,7 @@ raised. Precision exceptions are very common, so they are usually masked.</p>
 <code>_MM_GET_EXCEPTION_STATE</code> and <code>_MM_SET_EXCEPTION_STATE</code>. For example, to
 check if an operation caused some overflow:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code>_MM_SET_EXCEPTION_STATE(<span class="number">0</span>); <span class="comment">// clear all exception flags
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code>_MM_SET_EXCEPTION_STATE(<span class="number">0</span>); <span class="comment">// clear all exception flags
                             // perform calculations
 </span><span class="kw">if </span>_MM_GET_EXCEPTION_STATE() &amp; _MM_EXCEPT_OVERFLOW != <span class="number">0 </span>{
     <span class="comment">// handle overflow
@@ -72,12 +72,12 @@ check if an operation caused some overflow:</p>
 <code>_MM_MASK_UNDERFLOW</code>, <code>_MM_MASK_INEXACT</code>.</p>
 <p>A single masking bit can be set via</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code>_MM_SET_EXCEPTION_MASK(_MM_MASK_UNDERFLOW);</code></pre></div>
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code>_MM_SET_EXCEPTION_MASK(_MM_MASK_UNDERFLOW);</code></pre></div>
 <p>However, since mask bits are by default all set to 1, it is more common to
 want to <em>disable</em> certain bits. For example, to unmask the underflow
 exception, use:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code>_mm_setcsr(_mm_getcsr() &amp; !_MM_MASK_UNDERFLOW); <span class="comment">// unmask underflow
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code>_mm_setcsr(_mm_getcsr() &amp; !_MM_MASK_UNDERFLOW); <span class="comment">// unmask underflow
 </span>exception</code></pre></div>
 <p>Warning: an unmasked exception will cause an exception handler to be
 called.
@@ -107,14 +107,14 @@ significant bit will be zero).</p>
 </ul>
 <p>Example:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code>_MM_SET_ROUNDING_MODE(_MM_ROUND_DOWN)</code></pre></div>
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code>_MM_SET_ROUNDING_MODE(_MM_ROUND_DOWN)</code></pre></div>
 <h3 id="denormals-are-zeroflush-to-zero-mode"><a href="#denormals-are-zeroflush-to-zero-mode">Denormals-are-zero/Flush-to-zero Mode</a></h3>
 <p>If this bit is set, values that would be denormalized will be set to zero
 instead. This is turned off by default.</p>
 <p>You can read and enable/disable this mode via the helper functions
 <code>_MM_GET_FLUSH_ZERO_MODE()</code> and <code>_MM_SET_FLUSH_ZERO_MODE()</code>:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code>_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF); <span class="comment">// turn off (default)
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code>_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_OFF); <span class="comment">// turn off (default)
 </span>_MM_SET_FLUSH_ZERO_MODE(_MM_FLUSH_ZERO_ON); <span class="comment">// turn on</span></code></pre></div>
 <p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_setcsr">Intel’s documentation</a></p>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>

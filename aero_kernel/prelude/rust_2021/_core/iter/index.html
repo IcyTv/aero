@@ -152,7 +152,7 @@ that point, we <code>break</code> out of the loop, and we’re done iterating.</
 <p>There’s one more subtle bit here: the standard library contains an
 interesting implementation of <a href="trait.IntoIterator.html" title="IntoIterator"><code>IntoIterator</code></a>:</p>
 
-<div class="example-wrap"><div class='information'><div class='tooltip ignore'>ⓘ</div></div><pre class="rust rust-example-rendered ignore"><code><span class="kw">impl</span>&lt;I: Iterator&gt; IntoIterator <span class="kw">for </span>I</code></pre></div>
+<div class="example-wrap ignore"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="kw">impl</span>&lt;I: Iterator&gt; IntoIterator <span class="kw">for </span>I</code></pre></div>
 <p>In other words, all <a href="trait.Iterator.html" title="Iterator"><code>Iterator</code></a>s implement <a href="trait.IntoIterator.html" title="IntoIterator"><code>IntoIterator</code></a>, by just
 returning themselves. This means two things:</p>
 <ol>
@@ -318,4 +318,4 @@ the provided closure.</p>
 applying the provided closure, the repeater, <code>F: FnMut() -&gt; A</code>.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.successors.html" title="aero_kernel::prelude::rust_2021::_core::iter::successors fn">successors</a></div><div class="item-right docblock-short"><p>Creates a new iterator where each successive item is computed based on the preceding one.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.zip.html" title="aero_kernel::prelude::rust_2021::_core::iter::zip fn">zip</a></div><div class="item-right docblock-short"><p>Converts the arguments to iterators and zips them.</p>
-</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (228710758 2022-09-10)" ></div></body></html>
+</div></div></div></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>
