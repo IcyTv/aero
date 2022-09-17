@@ -1,0 +1,174 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/ext2/mod.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../../normalize.css"><link rel="stylesheet" href="../../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../../ayu.css" disabled><link rel="stylesheet" href="../../../../dark.css" disabled><link rel="stylesheet" href="../../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../../storage.js"></script><script defer src="../../../../source-script.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../main.js"></script><noscript><link rel="stylesheet" href="../../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<span id="2">2</span>
+<span id="3">3</span>
+<span id="4">4</span>
+<span id="5">5</span>
+<span id="6">6</span>
+<span id="7">7</span>
+<span id="8">8</span>
+<span id="9">9</span>
+<span id="10">10</span>
+<span id="11">11</span>
+<span id="12">12</span>
+<span id="13">13</span>
+<span id="14">14</span>
+<span id="15">15</span>
+<span id="16">16</span>
+<span id="17">17</span>
+<span id="18">18</span>
+<span id="19">19</span>
+<span id="20">20</span>
+<span id="21">21</span>
+<span id="22">22</span>
+<span id="23">23</span>
+<span id="24">24</span>
+<span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
+<span id="28">28</span>
+<span id="29">29</span>
+<span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
+<span id="40">40</span>
+<span id="41">41</span>
+<span id="42">42</span>
+<span id="43">43</span>
+<span id="44">44</span>
+<span id="45">45</span>
+<span id="46">46</span>
+<span id="47">47</span>
+<span id="48">48</span>
+<span id="49">49</span>
+<span id="50">50</span>
+<span id="51">51</span>
+<span id="52">52</span>
+<span id="53">53</span>
+<span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
+<span id="78">78</span>
+<span id="79">79</span>
+<span id="80">80</span>
+<span id="81">81</span>
+<span id="82">82</span>
+<span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
+</pre><pre class="rust"><code><span class="kw">use </span>alloc::{boxed::Box, sync::Arc};
+
+<span class="kw">use super</span>::{block::BlockDevice, FileSystem};
+
+<span class="attribute">#[derive(Debug, Copy, Clone)]
+#[repr(C, packed)]
+</span><span class="kw">pub struct </span>SuperBlock {
+    <span class="kw">pub </span>inodes_count: u32,
+    <span class="kw">pub </span>blocks_count: u32,
+    <span class="kw">pub </span>r_blocks_count: u32,
+    <span class="kw">pub </span>free_blocks_count: u32,
+    <span class="kw">pub </span>free_inodes_count: u32,
+    <span class="kw">pub </span>first_data_block: u32,
+    <span class="kw">pub </span>log_block_size: u32,
+    <span class="kw">pub </span>log_frag_size: u32,
+    <span class="kw">pub </span>blocks_per_group: u32,
+    <span class="kw">pub </span>frags_per_group: u32,
+    <span class="kw">pub </span>inodes_per_group: u32,
+    <span class="kw">pub </span>mtime: u32,
+    <span class="kw">pub </span>wtime: u32,
+    <span class="kw">pub </span>mnt_count: u16,
+    <span class="kw">pub </span>max_mnt_count: u16,
+    <span class="kw">pub </span>magic: u16,
+    <span class="kw">pub </span>state: u16,
+    <span class="kw">pub </span>errors: u16,
+    <span class="kw">pub </span>minor_rev_level: u16,
+    <span class="kw">pub </span>lastcheck: u32,
+    <span class="kw">pub </span>checkinterval: u32,
+    <span class="kw">pub </span>creator_os: u32,
+    <span class="kw">pub </span>rev_level: u32,
+    <span class="kw">pub </span>def_resuid: u16,
+    <span class="kw">pub </span>def_gid: u16,
+
+    <span class="comment">// Extended Superblock fields
+    //
+    // XXX: If version number &gt;= 1, we have to use the ext2 extended superblock as well :)
+    </span><span class="kw">pub </span>first_ino: u32,
+    <span class="kw">pub </span>inode_size: u16,
+    <span class="kw">pub </span>block_group_nr: u16,
+    <span class="kw">pub </span>feature_compat: u32,
+    <span class="kw">pub </span>feature_incompat: u32,
+    <span class="kw">pub </span>feature_ro_compat: u32,
+    <span class="kw">pub </span>uuid: [u64; <span class="number">2usize</span>],
+    <span class="kw">pub </span>volume_name: [u8; <span class="number">16usize</span>],
+    <span class="kw">pub </span>last_mounted: [u64; <span class="number">8usize</span>],
+    <span class="kw">pub </span>compression_info: u32,
+    <span class="kw">pub </span>prealloc_blocks: u8,
+    <span class="kw">pub </span>prealloc_dir_blocks: u8,
+    <span class="kw">pub </span>reserved_gdt_blocks: u16,
+    <span class="kw">pub </span>journal_uuid: [u8; <span class="number">16usize</span>],
+    <span class="kw">pub </span>journal_inum: u32,
+    <span class="kw">pub </span>journal_dev: u32,
+    <span class="kw">pub </span>last_orphan: u32,
+    <span class="kw">pub </span>hash_seed: [u32; <span class="number">4usize</span>],
+    <span class="kw">pub </span>def_hash_version: u8,
+    <span class="kw">pub </span>jnl_backup_type: u8,
+    <span class="kw">pub </span>group_desc_size: u16,
+    <span class="kw">pub </span>default_mount_opts: u32,
+    <span class="kw">pub </span>first_meta_bg: u32,
+    <span class="kw">pub </span>mkfs_time: u32,
+    <span class="kw">pub </span>jnl_blocks: [u32; <span class="number">17usize</span>],
+}
+
+<span class="kw">pub struct </span>Ext2 {}
+
+<span class="kw">impl </span>Ext2 {
+    <span class="kw">pub fn </span>new(device: Arc&lt;BlockDevice&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="self">Self</span>&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>superblock = Box::&lt;SuperBlock&gt;::new_uninit();
+        device.device().read(<span class="number">2</span>, superblock.as_bytes_mut())<span class="question-mark">?</span>;
+
+        <span class="comment">// SAFETY: We have initialized the superblock above.
+        </span><span class="kw">let </span>superblock = <span class="kw">unsafe </span>{ superblock.assume_init() };
+
+        <span class="kw">if </span>superblock.magic != <span class="number">0xef53 </span>{
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
+
+        <span class="prelude-val">Some</span>(Arc::new(<span class="self">Self </span>{}))
+    }
+}
+
+<span class="kw">impl </span>FileSystem <span class="kw">for </span>Ext2 {
+    <span class="kw">fn </span>root_dir(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">super</span>::cache::DirCacheItem {
+        <span class="macro">todo!</span>()
+    }
+}
+</code></pre></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>

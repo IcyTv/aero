@@ -134,7 +134,17 @@
 <span id="134">134</span>
 <span id="135">135</span>
 <span id="136">136</span>
-</pre><pre class="rust"><code><span class="kw">use </span>core::mem::MaybeUninit;
+<span id="137">137</span>
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+</pre><pre class="rust"><code><span class="kw">use </span>core::cell::UnsafeCell;
 <span class="kw">use </span>core::sync::atomic::{AtomicU16, Ordering};
 
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::PhysAddr;
@@ -174,7 +184,7 @@
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>Queue&lt;<span class="lifetime">&#39;bell</span>, T: QueueType&gt; {
     doorbell: <span class="kw-2">&amp;</span><span class="lifetime">&#39;bell </span>DoorBell,
     index: usize,
-    queue: Dma&lt;[MaybeUninit&lt;T::Type&gt;]&gt;,
+    queue: Dma&lt;[UnsafeCell&lt;T::Type&gt;]&gt;,
     phase: bool,
 }
 
@@ -189,7 +199,7 @@
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             doorbell,
-            queue: Dma::new_uninit_slice(size),
+            queue: <span class="kw">unsafe </span>{ Dma::new_uninit_slice(size).assume_init() },
             index: <span class="number">0</span>,
             phase: <span class="bool-val">true</span>,
         })
@@ -202,20 +212,30 @@
 
 <span class="kw">impl </span>Queue&lt;<span class="lifetime">&#39;_</span>, Completion&gt; {
     <span class="kw">pub fn </span>next_cmd_result(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;CompletionEntry&gt; {
-        <span class="kw">let </span>cur_completion = <span class="kw">unsafe </span>{ <span class="self">self</span>.queue[<span class="self">self</span>.index].assume_init() };
-        <span class="kw">if </span>cur_completion.get_phase_tag() != <span class="self">self</span>.phase {
-            <span class="self">self</span>.index += <span class="number">1</span>;
-            <span class="self">self</span>.doorbell.<span class="number">0</span>.set(<span class="self">self</span>.index <span class="kw">as </span>u32);
-            <span class="prelude-val">Some</span>(cur_completion.clone())
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>}
+        <span class="kw">let </span>cmd = <span class="kw-2">&amp;mut </span><span class="self">self</span>.queue[<span class="self">self</span>.index];
+
+        <span class="kw">while </span>(cmd.get_mut().status &amp; <span class="number">0x1</span>) != <span class="self">self</span>.phase <span class="kw">as </span>u16 {
+            core::hint::spin_loop();
+        }
+
+        <span class="kw">let </span>cmd = cmd.get_mut();
+        <span class="kw">let </span>status = cmd.status &gt;&gt; <span class="number">1</span>;
+
+        <span class="kw">if </span>status != <span class="number">0 </span>{
+            <span class="macro">log::error!</span>(<span class="string">&quot;nvme: command error {status:#x}&quot;</span>);
+            <span class="kw">return </span><span class="prelude-val">None</span>;
+        }
+
+        <span class="self">self</span>.index += <span class="number">1</span>;
+        <span class="self">self</span>.doorbell.<span class="number">0</span>.set(<span class="self">self</span>.index <span class="kw">as </span>u32);
+
+        <span class="prelude-val">Some</span>(cmd.clone())
     }
 }
 
 <span class="kw">impl </span>Queue&lt;<span class="lifetime">&#39;_</span>, Submisson&gt; {
     <span class="kw">pub fn </span>submit_command(<span class="kw-2">&amp;mut </span><span class="self">self</span>, command: Command) {
-        <span class="self">self</span>.queue[<span class="self">self</span>.index] = MaybeUninit::new(command);
+        <span class="self">self</span>.queue[<span class="self">self</span>.index] = UnsafeCell::new(command);
 
         <span class="self">self</span>.index += <span class="number">1</span>;
         <span class="self">self</span>.doorbell.<span class="number">0</span>.set(<span class="self">self</span>.index <span class="kw">as </span>u32); <span class="comment">// ring ring!
@@ -271,4 +291,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>

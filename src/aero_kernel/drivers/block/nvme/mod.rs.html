@@ -482,6 +482,51 @@
 <span id="482">482</span>
 <span id="483">483</span>
 <span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -505,6 +550,8 @@
 <span class="kw">mod </span>dma;
 <span class="kw">mod </span>queue;
 
+<span class="kw">use </span>core::mem::MaybeUninit;
+
 <span class="kw">use </span>command::<span class="kw-2">*</span>;
 <span class="kw">use </span>dma::<span class="kw-2">*</span>;
 <span class="kw">use </span>queue::<span class="kw-2">*</span>;
@@ -520,7 +567,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
-<span class="kw">use </span><span class="kw">crate</span>::utils::VolatileCell;
+<span class="kw">use </span><span class="kw">crate</span>::utils::{CeilDiv, VolatileCell};
 
 <span class="attribute">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">enum </span>Error {
@@ -562,7 +609,8 @@
 </span><span class="kw">struct </span>Capability(VolatileCell&lt;u64&gt;);
 
 <span class="kw">impl </span>Capability {
-    <span class="doccomment">/// Returns maximum individual queue size that the controller supports.
+    <span class="doccomment">/// Returns maximum individual queue size that the controller
+    /// supports.
     </span><span class="kw">fn </span>max_queue_entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u16 {
         <span class="self">self</span>.<span class="number">0</span>.get().get_bits(<span class="number">0</span>..<span class="number">16</span>) <span class="kw">as </span>u16
     }
@@ -572,9 +620,16 @@
         <span class="self">self</span>.<span class="number">0</span>.get().get_bits(<span class="number">32</span>..<span class="number">36</span>)
     }
 
-    <span class="doccomment">/// Returns the command sets that are supported by the controller.
+    <span class="doccomment">/// Returns the command sets that are supported by the
+    /// controller.
     </span><span class="kw">fn </span>get_css(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; CommandSetsSupported {
         CommandSetsSupported::from_bits_truncate(<span class="self">self</span>.<span class="number">0</span>.get().get_bits(<span class="number">37</span>..<span class="number">45</span>) <span class="kw">as </span>u8)
+    }
+
+    <span class="doccomment">/// Returns the the minimum host memory page size that the
+    /// controller supports.
+    </span><span class="kw">fn </span>mpsmin(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
+        <span class="self">self</span>.<span class="number">0</span>.get().get_bits(<span class="number">48</span>..<span class="number">52</span>)
     }
 }
 
@@ -699,12 +754,15 @@
     blocks: usize,
     block_size: usize,
     size: usize,
+    max_prps: usize,
+    prps: Mutex&lt;Dma&lt;[MaybeUninit&lt;u64&gt;]&gt;&gt;,
     controller: Arc&lt;Controller&lt;<span class="lifetime">&#39;a</span>&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Namespace&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[u8]) {
-        <span class="kw">let </span>length = ((dest.len() / <span class="self">self</span>.block_size) - <span class="number">1</span>) <span class="kw">as </span>u16;
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) {
+        <span class="kw">let </span>size_bytes = dest.len();
+        <span class="kw">let </span>blocks = size_bytes.ceil_div(<span class="self">self</span>.block_size);
 
         <span class="kw">let </span>buffer = Dma::&lt;u8&gt;::new_uninit_slice(dest.len());
         <span class="kw">let </span><span class="kw-2">mut </span>read_cmd = ReadWriteCommand::default();
@@ -712,14 +770,32 @@
         read_cmd.opcode = CommandOpcode::Read <span class="kw">as </span>u8;
         read_cmd.nsid = <span class="self">self</span>.nsid;
         read_cmd.start_lba = sector <span class="kw">as </span>u64;
-        read_cmd.length = length;
-        read_cmd.data_ptr.prp1 = buffer.addr().as_u64();
+        read_cmd.length = (blocks - <span class="number">1</span>) <span class="kw">as </span>u16;
+
+        <span class="kw">if </span>size_bytes &gt; Size4KiB::SIZE <span class="kw">as </span>usize {
+            <span class="comment">// The data cannot fit in 8KiB frames, so we need to use
+            // a PRP list.
+            </span><span class="kw">let </span>prp_num = ((blocks - <span class="number">1</span>) * <span class="self">self</span>.block_size) / Size4KiB::SIZE <span class="kw">as </span>usize;
+            <span class="macro">assert!</span>(prp_num &lt; <span class="self">self</span>.max_prps);
+
+            <span class="kw">let </span><span class="kw-2">mut </span>prps = <span class="self">self</span>.prps.lock();
+
+            <span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..prp_num {
+                prps[i]
+                    .write((buffer.addr().as_u64() + Size4KiB::SIZE) + (Size4KiB::SIZE * i <span class="kw">as </span>u64));
+            }
+
+            read_cmd.data_ptr.prp1 = buffer.addr().as_u64();
+            read_cmd.data_ptr.prp2 = prps.addr().as_u64();
+        } <span class="kw">else </span>{
+            read_cmd.data_ptr.prp1 = buffer.addr().as_u64();
+        }
 
         <span class="self">self</span>.controller.io_queue.lock().submit_command(read_cmd);
 
         <span class="comment">// SAFETY: The buffer is initialized above.
         </span><span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ buffer.assume_init() };
-        dest.copy_from_slice(<span class="kw-2">&amp;*</span>buffer);
+        MaybeUninit::write_slice(dest, <span class="kw-2">&amp;*</span>buffer);
     }
 }
 
@@ -840,6 +916,13 @@
 
         admin.submit_command(io_sq_cmd);
 
+        <span class="kw">let </span>shift = <span class="number">12 </span>+ registers.capability.mpsmin() <span class="kw">as </span>usize;
+        <span class="kw">let </span>max_transfer_shift = <span class="kw">if </span>identity.mdts != <span class="number">0 </span>{
+            shift + identity.mdts <span class="kw">as </span>usize
+        } <span class="kw">else </span>{
+            <span class="number">20
+        </span>};
+
         <span class="kw">let </span>this = Arc::new(<span class="self">Self </span>{
             identity,
             namespaces: Mutex::new(<span class="macro">alloc::vec!</span>[]),
@@ -880,12 +963,19 @@
                 <span class="kw">let </span>blocks = identity.nsze <span class="kw">as </span>usize;
                 <span class="kw">let </span>block_size = <span class="number">1 </span>&lt;&lt; identity.lbaf[(identity.flbas &amp; <span class="number">0b11111</span>) <span class="kw">as </span>usize].ds;
 
+                <span class="comment">// The maximum transfer size is in units of 2^(min page size)
+                </span><span class="kw">let </span>lba_shift = identity.lbaf[(identity.flbas &amp; <span class="number">0xf</span>) <span class="kw">as </span>usize].ds;
+                <span class="kw">let </span>max_lbas = <span class="number">1 </span>&lt;&lt; (max_transfer_shift - lba_shift <span class="kw">as </span>usize);
+                <span class="kw">let </span>max_prps = (max_lbas * (<span class="number">1 </span>&lt;&lt; lba_shift)) / Size4KiB::SIZE <span class="kw">as </span>usize;
+
                 Namespace {
                     controller: this.clone(),
                     nsid: <span class="kw-2">*</span>nsid,
                     blocks,
                     block_size,
                     size: blocks * block_size,
+                    max_prps,
+                    prps: Mutex::new(Dma::new_uninit_slice(max_prps)),
                 }
             })
             .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -907,7 +997,7 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BlockDeviceInterface <span class="kw">for </span>Controller&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="self">self</span>.namespaces.lock()[<span class="number">0</span>].read(sector, dest);
         <span class="prelude-val">Some</span>(dest.len())
     }
@@ -967,4 +1057,4 @@
 
 <span class="macro">crate::module_init!</span>(nvme_init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>

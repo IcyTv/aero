@@ -330,6 +330,8 @@
 <span id="330">330</span>
 <span id="331">331</span>
 <span id="332">332</span>
+<span id="333">333</span>
+<span id="334">334</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -369,6 +371,7 @@
 <span class="kw">pub mod </span>devfs;
 <span class="kw">pub mod </span>epoll;
 <span class="kw">pub mod </span>eventfd;
+<span class="kw">pub mod </span>ext2;
 <span class="kw">pub mod </span>file_table;
 <span class="kw">pub mod </span>initramfs;
 <span class="kw">pub mod </span>inode;
@@ -650,6 +653,7 @@
     root_dir().inode().mkdir(<span class="string">&quot;tmp&quot;</span>)<span class="question-mark">?</span>;
     root_dir().inode().mkdir(<span class="string">&quot;proc&quot;</span>)<span class="question-mark">?</span>;
     root_dir().inode().mkdir(<span class="string">&quot;var&quot;</span>)<span class="question-mark">?</span>;
+    root_dir().inode().mkdir(<span class="string">&quot;mnt&quot;</span>)<span class="question-mark">?</span>;
 
     initramfs::init()<span class="question-mark">?</span>;
     <span class="macro">log::info!</span>(<span class="string">&quot;installed initramfs&quot;</span>);
@@ -663,4 +667,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>

@@ -116,6 +116,10 @@
 <span id="116">116</span>
 <span id="117">117</span>
 <span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
+<span id="122">122</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -153,22 +157,26 @@
 </span><span class="kw">unsafe impl </span>Allocator <span class="kw">for </span>DmaAllocator {
     <span class="kw">fn </span>allocate(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: Layout) -&gt; <span class="prelude-ty">Result</span>&lt;NonNull&lt;[u8]&gt;, AllocError&gt; {
         <span class="comment">// XXX: The DMA buffer must be aligned to a page boundary.
-        </span><span class="kw">let </span>size = align_up(layout.size() <span class="kw">as </span>u64, Size2MiB::SIZE);
+        </span><span class="kw">let </span>size_bytes = layout.size() <span class="kw">as </span>u64;
 
-        <span class="kw">let </span>pages = size / Size2MiB::SIZE;
-        <span class="macro">assert!</span>(pages == <span class="number">1</span>);
+        <span class="kw">let </span>phys = <span class="kw">if </span>size_bytes &lt;= Size4KiB::SIZE {
+            <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR.allocate_frame().ok_or(AllocError)<span class="question-mark">?</span>;
+            frame.start_address()
+        } <span class="kw">else </span>{
+            <span class="macro">assert!</span>(size_bytes &lt;= Size2MiB::SIZE);
 
-        <span class="kw">let </span>frame: PhysFrame&lt;Size2MiB&gt; = FRAME_ALLOCATOR.allocate_frame().ok_or(AllocError)<span class="question-mark">?</span>;
-        <span class="kw">let </span>virt = frame.start_address().as_hhdm_virt();
+            <span class="kw">let </span>frame: PhysFrame&lt;Size2MiB&gt; = FRAME_ALLOCATOR.allocate_frame().ok_or(AllocError)<span class="question-mark">?</span>;
+            frame.start_address()
+        };
+
+        <span class="kw">let </span>virt = phys.as_hhdm_virt();
 
         <span class="comment">// SAFETY: The frame is aligned and non-null.
         </span><span class="kw">let </span>ptr = <span class="kw">unsafe </span>{ NonNull::new_unchecked(virt.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>u8) };
-        <span class="prelude-val">Ok</span>(NonNull::slice_from_raw_parts(ptr, size <span class="kw">as _</span>))
+        <span class="prelude-val">Ok</span>(NonNull::slice_from_raw_parts(ptr, size_bytes <span class="kw">as _</span>))
     }
 
-    <span class="kw">unsafe fn </span>deallocate(<span class="kw-2">&amp;</span><span class="self">self</span>, _ptr: NonNull&lt;u8&gt;, _layout: Layout) {
-        <span class="macro">log::warn!</span>(<span class="string">&quot;DMA memory deallocation is not *yet* implemented :) Enjoy the leaks :)&quot;</span>)
-    }
+    <span class="kw">unsafe fn </span>deallocate(<span class="kw-2">&amp;</span><span class="self">self</span>, _ptr: NonNull&lt;u8&gt;, _layout: Layout) {}
 }
 
 <span class="kw">pub type </span>DmaBuffer&lt;T&gt; = Box&lt;T, DmaAllocator&gt;;
@@ -235,4 +243,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>

@@ -214,6 +214,9 @@
 <span id="214">214</span>
 <span id="215">215</span>
 <span id="216">216</span>
+<span id="217">217</span>
+<span id="218">218</span>
+<span id="219">219</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -235,6 +238,8 @@
 
 </span><span class="kw">mod </span>channel;
 <span class="kw">mod </span>registers;
+
+<span class="kw">use </span>core::mem::MaybeUninit;
 
 <span class="kw">use </span>channel::<span class="kw-2">*</span>;
 
@@ -266,15 +271,16 @@
 }
 
 <span class="kw">impl </span>BlockDeviceInterface <span class="kw">for </span>IdeDrive {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="kw">let </span>count = dest.len().ceil_div(<span class="number">512</span>);
         <span class="kw">let </span>request = Arc::new(DmaRequest::new(sector, count));
 
         <span class="kw">let </span>res = <span class="self">self</span>.channel.run_request(request.clone(), <span class="self">self</span>.slave);
 
         <span class="kw">if </span>res.is_some() {
-            request.copy_into(dest);
-        }
+            <span class="macro">todo!</span>()
+            <span class="comment">// request.copy_into(dest);
+        </span>}
 
         res
     }
@@ -431,4 +437,4 @@
 
 <span class="macro">crate::module_init!</span>(init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (fa6ee9375 2022-09-12)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>
