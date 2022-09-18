@@ -2195,12 +2195,12 @@
 
     <span class="comment">// Sort the modes by display size:
     </span>result.sort_by(|e, f| {
-        (e.hdisplay * e.vdisplay)
-            .partial_cmp(<span class="kw-2">&amp;</span>(f.hdisplay * f.vdisplay))
+        ((e.hdisplay <span class="kw">as </span>usize) * (e.vdisplay <span class="kw">as </span>usize))
+            .partial_cmp(<span class="kw-2">&amp;</span>((f.hdisplay <span class="kw">as </span>usize) * (f.vdisplay <span class="kw">as </span>usize)))
             .unwrap() <span class="comment">// unreachable
     </span>});
 
     result
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (98ad6a551 2022-09-17)" ></div></body></html>

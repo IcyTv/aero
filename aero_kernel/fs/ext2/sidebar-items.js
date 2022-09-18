@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":[["Ext2",""],["SuperBlock",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["FileType",""]],"struct":[["DiskINode",""],["Ext2",""],["GroupDescriptor",""],["INode",""],["SuperBlock",""]]};

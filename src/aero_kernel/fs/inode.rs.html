@@ -493,10 +493,6 @@
 <span id="493">493</span>
 <span id="494">494</span>
 <span id="495">495</span>
-<span id="496">496</span>
-<span id="497">497</span>
-<span id="498">498</span>
-<span id="499">499</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -755,14 +751,8 @@
 </span><span class="kw">pub struct </span>Metadata {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>file_type: FileType,
-
-    <span class="doccomment">/// The total size of the content that the inode holds. Set to `0x00` if
-    /// the inode file type is *not* a file.
-    </span><span class="kw">pub </span>size: usize,
-
-    <span class="doccomment">/// The length of the children&#39;s map of the inode. Set to `0x00` if the inode
-    /// has no children and if the file type of the inode is *not* a directory.
-    </span><span class="kw">pub </span>children_len: usize,
+    <span class="kw">pub </span>size: usize,
+    <span class="kw">pub </span>children_len: usize,
 }
 
 <span class="kw">impl </span>Metadata {
@@ -829,6 +819,7 @@
     Directory,
     Device,
     Socket,
+    Symlink,
 }
 
 <span class="kw">impl </span>From&lt;FileType&gt; <span class="kw">for </span>aero_syscall::SysFileType {
@@ -836,8 +827,9 @@
         <span class="kw">match </span>file {
             FileType::File =&gt; aero_syscall::SysFileType::File,
             FileType::Directory =&gt; aero_syscall::SysFileType::Directory,
-            FileType::Device =&gt; aero_syscall::SysFileType::Device,
-            FileType::Socket =&gt; aero_syscall::SysFileType::Socket,
+            FileType::Device =&gt; aero_syscall::SysFileType::CharDevice, <span class="comment">// FIXME: determine if it is a character or block device.
+            </span>FileType::Socket =&gt; aero_syscall::SysFileType::Socket,
+            FileType::Symlink =&gt; aero_syscall::SysFileType::Symlink,
         }
     }
 }
@@ -997,4 +989,4 @@
     dcache.get(cache_key)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (98ad6a551 2022-09-17)" ></div></body></html>

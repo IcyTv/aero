@@ -367,6 +367,11 @@
 <span id="367">367</span>
 <span id="368">368</span>
 <span id="369">369</span>
+<span id="370">370</span>
+<span id="371">371</span>
+<span id="372">372</span>
+<span id="373">373</span>
+<span id="374">374</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -407,6 +412,8 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::inode::{DirEntry, INodeInterface};
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
+
+<span class="kw">use </span><span class="kw">super</span>::FileSystem;
 
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static </span>INODE_CACHE: Once&lt;Arc&lt;INodeCache&gt;&gt; = Once::new();
 <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static </span>DIR_CACHE: Once&lt;Arc&lt;DirCache&gt;&gt; = Once::new();
@@ -660,10 +667,13 @@
 
 <span class="kw">impl </span>Cacheable&lt;INodeCacheKey&gt; <span class="kw">for </span>CachedINode {
     <span class="kw">fn </span>cache_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; INodeCacheKey {
-        (
-            Weak::as_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>.weak_filesystem().unwrap()) <span class="kw">as </span><span class="kw-2">*const </span>() <span class="kw">as </span>usize,
-            <span class="self">self</span>.metadata().unwrap().id,
-        )
+        INodeCacheItem::make_key(<span class="self">self</span>.weak_filesystem().unwrap(), <span class="self">self</span>.metadata().unwrap().id)
+    }
+}
+
+<span class="kw">impl </span>INodeCacheItem {
+    <span class="kw">pub fn </span>make_key(fs: Weak&lt;<span class="kw">dyn </span>FileSystem&gt;, id: usize) -&gt; INodeCacheKey {
+        (Weak::as_ptr(<span class="kw-2">&amp;</span>fs) <span class="kw">as </span><span class="kw-2">*const </span>() <span class="kw">as </span>usize, id)
     }
 }
 
@@ -737,4 +747,4 @@
     DIR_CACHE.call_once(|| DirCache::new());
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (98ad6a551 2022-09-17)" ></div></body></html>

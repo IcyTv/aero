@@ -966,6 +966,10 @@
 <span id="966">966</span>
 <span id="967">967</span>
 <span id="968">968</span>
+<span id="969">969</span>
+<span id="970">970</span>
+<span id="971">971</span>
+<span id="972">972</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -1209,10 +1213,14 @@
 <span class="attribute">#[derive(Debug)]
 #[repr(usize)]
 </span><span class="kw">pub enum </span>SysFileType {
-    File,
-    Directory,
-    Device,
-    Socket,
+    Unknown = <span class="number">0</span>,
+    Fifo = <span class="number">1</span>,
+    CharDevice = <span class="number">2</span>,
+    Directory = <span class="number">4</span>,
+    BlockDevice = <span class="number">6</span>,
+    File = <span class="number">8</span>,
+    Symlink = <span class="number">10</span>,
+    Socket = <span class="number">12</span>,
 }
 
 <span class="attribute">#[repr(C, packed)]
@@ -1935,4 +1943,4 @@
     isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (95a992a68 2022-09-16)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (98ad6a551 2022-09-17)" ></div></body></html>
