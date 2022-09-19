@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":[["FileType",""]],"struct":[["DiskINode",""],["Ext2",""],["GroupDescriptor",""],["INode",""],["SuperBlock",""]]};
+window.SIDEBAR_ITEMS = {"enum":[["FileType",""]],"struct":[["DirEntryIter",""],["DiskDirEntry",""],["DiskINode",""],["Ext2",""],["GroupDescriptor",""],["INode",""],["SuperBlock",""]]};
