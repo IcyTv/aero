@@ -289,7 +289,7 @@
 
         controller
             .device()
-            .read(<span class="number">1</span>, header.as_bytes_mut())
+            .read_block(<span class="number">1</span>, header.as_bytes_mut())
             .expect(<span class="string">&quot;gpt: failed to read first sector&quot;</span>);
 
         <span class="comment">// SAFETY: The buffer is initialized above.
@@ -306,7 +306,7 @@
 
         controller
             .device()
-            .read(
+            .read_block(
                 header.starting_lba <span class="kw">as _</span>,
                 MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>entry_list),
             )
@@ -323,4 +323,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (98ad6a551 2022-09-17)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (a37499ae6 2022-09-18)" ></div></body></html>
