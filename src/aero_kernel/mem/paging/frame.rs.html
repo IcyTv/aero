@@ -648,6 +648,9 @@
 <span id="648">648</span>
 <span id="649">649</span>
 <span id="650">650</span>
+<span id="651">651</span>
+<span id="652">652</span>
+<span id="653">653</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -711,7 +714,7 @@
         </span><span class="self">self</span>.<span class="number">0
             </span>.get()
             .map(|m| {
-                m.lock()
+                m.lock_irq()
                     .allocate_frame_inner(<span class="number">0</span>)
                     .map(|f| PhysFrame::containing_address(f))
             })
@@ -743,7 +746,7 @@
         </span><span class="self">self</span>.<span class="number">0
             </span>.get()
             .map(|m| {
-                m.lock()
+                m.lock_irq()
                     .allocate_frame_inner(<span class="number">2</span>)
                     .map(|f| PhysFrame::containing_address(f))
             })
@@ -761,7 +764,10 @@
 
         </span><span class="self">self</span>.<span class="number">0
             </span>.get()
-            .map(|m| m.lock().deallocate_frame_inner(frame.start_address(), <span class="number">2</span>))
+            .map(|m| {
+                m.lock_irq()
+                    .deallocate_frame_inner(frame.start_address(), <span class="number">2</span>)
+            })
             .unwrap_or(());
     }
 }
@@ -1299,4 +1305,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (a37499ae6 2022-09-18)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (2019147c5 2022-09-19)" ></div></body></html>

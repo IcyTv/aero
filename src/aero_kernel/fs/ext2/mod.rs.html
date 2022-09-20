@@ -410,6 +410,80 @@
 <span id="410">410</span>
 <span id="411">411</span>
 <span id="412">412</span>
+<span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
+<span id="421">421</span>
+<span id="422">422</span>
+<span id="423">423</span>
+<span id="424">424</span>
+<span id="425">425</span>
+<span id="426">426</span>
+<span id="427">427</span>
+<span id="428">428</span>
+<span id="429">429</span>
+<span id="430">430</span>
+<span id="431">431</span>
+<span id="432">432</span>
+<span id="433">433</span>
+<span id="434">434</span>
+<span id="435">435</span>
+<span id="436">436</span>
+<span id="437">437</span>
+<span id="438">438</span>
+<span id="439">439</span>
+<span id="440">440</span>
+<span id="441">441</span>
+<span id="442">442</span>
+<span id="443">443</span>
+<span id="444">444</span>
+<span id="445">445</span>
+<span id="446">446</span>
+<span id="447">447</span>
+<span id="448">448</span>
+<span id="449">449</span>
+<span id="450">450</span>
+<span id="451">451</span>
+<span id="452">452</span>
+<span id="453">453</span>
+<span id="454">454</span>
+<span id="455">455</span>
+<span id="456">456</span>
+<span id="457">457</span>
+<span id="458">458</span>
+<span id="459">459</span>
+<span id="460">460</span>
+<span id="461">461</span>
+<span id="462">462</span>
+<span id="463">463</span>
+<span id="464">464</span>
+<span id="465">465</span>
+<span id="466">466</span>
+<span id="467">467</span>
+<span id="468">468</span>
+<span id="469">469</span>
+<span id="470">470</span>
+<span id="471">471</span>
+<span id="472">472</span>
+<span id="473">473</span>
+<span id="474">474</span>
+<span id="475">475</span>
+<span id="476">476</span>
+<span id="477">477</span>
+<span id="478">478</span>
+<span id="479">479</span>
+<span id="480">480</span>
+<span id="481">481</span>
+<span id="482">482</span>
+<span id="483">483</span>
+<span id="484">484</span>
+<span id="485">485</span>
+<span id="486">486</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -440,8 +514,8 @@
 
 <span class="kw">use </span><span class="kw">super</span>::block::BlockDevice;
 
-<span class="kw">use </span><span class="kw">super</span>::cache;
 <span class="kw">use </span><span class="kw">super</span>::cache::{DirCacheItem, INodeCacheItem};
+<span class="kw">use super</span>::{cache, FileSystemError};
 
 <span class="kw">use </span><span class="kw">super</span>::inode::{DirEntry, INodeInterface, Metadata};
 <span class="kw">use </span><span class="kw">super</span>::FileSystem;
@@ -694,8 +768,82 @@
         })
     }
 
+    <span class="kw">fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">super</span>::Result&lt;aero_syscall::Stat&gt; {
+        <span class="kw">use </span><span class="kw">super</span>::inode::FileType;
+        <span class="kw">use </span>aero_syscall::{Mode, Stat};
+
+        <span class="kw">let </span>filesystem = <span class="self">self</span>.fs.upgrade().unwrap();
+        <span class="kw">let </span>filetype = <span class="self">self</span>.metadata()<span class="question-mark">?</span>.file_type();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>mode = Mode::empty();
+
+        <span class="kw">match </span>filetype {
+            FileType::File =&gt; mode.insert(Mode::S_IFREG),
+            FileType::Directory =&gt; mode.insert(Mode::S_IFDIR),
+            FileType::Device =&gt; mode.insert(Mode::S_IFCHR),
+            FileType::Socket =&gt; mode.insert(Mode::S_IFSOCK),
+            FileType::Symlink =&gt; mode.insert(Mode::S_IFLNK),
+        }
+
+        <span class="comment">// FIXME: read permission bits from the inode.
+        </span>mode.insert(Mode::S_IRWXU | Mode::S_IRWXG | Mode::S_IRWXO);
+
+        <span class="prelude-val">Ok</span>(Stat {
+            st_ino: <span class="self">self</span>.id <span class="kw">as _</span>,
+            st_blksize: filesystem.superblock.block_size() <span class="kw">as _</span>,
+            st_size: <span class="self">self</span>.inode.size_lower <span class="kw">as _</span>,
+            st_mode: mode,
+
+            ..Default::default()
+        })
+    }
+
     <span class="kw">fn </span>dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, index: usize) -&gt; <span class="kw">super</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt; {
         <span class="prelude-val">Ok</span>(DirEntryIter::new(parent, <span class="self">self</span>.sref()).nth(index))
+    }
+
+    <span class="kw">fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, dir: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">super</span>::Result&lt;DirCacheItem&gt; {
+        DirEntryIter::new(dir, <span class="self">self</span>.sref())
+            .find(|e| <span class="kw-2">&amp;</span>e.name() == name)
+            .ok_or(FileSystemError::EntryNotFound)
+    }
+
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span>filesystem = <span class="self">self</span>.fs.upgrade().unwrap();
+        <span class="kw">let </span>block_size = filesystem.superblock.block_size();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>progress = <span class="number">0</span>;
+
+        <span class="kw">let </span>count = core::cmp::min(<span class="self">self</span>.inode.size_lower <span class="kw">as </span>usize - offset, buffer.len());
+
+        <span class="kw">while </span>progress &lt; count {
+            <span class="kw">let </span>block = (offset + progress) / block_size;
+            <span class="kw">let </span>loc = (offset + progress) % block_size;
+
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = count - progress;
+
+            <span class="kw">if </span>chunk &gt; block_size - loc {
+                chunk = block_size - loc;
+            }
+
+            <span class="kw">let </span>block_index = <span class="self">self</span>.inode.data_ptr[block];
+
+            <span class="comment">// TODO: We really should not allocate another buffer here.
+            </span><span class="kw">let </span><span class="kw-2">mut </span>data = Box::&lt;[u8]&gt;::new_uninit_slice(chunk);
+
+            filesystem.block.device().read(
+                (block_index <span class="kw">as </span>usize * block_size) + loc,
+                MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>data),
+            );
+
+            <span class="comment">// SAFETY: We have initialized the data buffer above.
+            </span><span class="kw">let </span>data = <span class="kw">unsafe </span>{ data.assume_init() };
+
+            buffer[progress..progress + data.len()].copy_from_slice(<span class="kw-2">&amp;*</span>data);
+            progress += chunk;
+        }
+
+        <span class="prelude-val">Ok</span>(count)
     }
 }
 
@@ -823,4 +971,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (a37499ae6 2022-09-18)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (2019147c5 2022-09-19)" ></div></body></html>
