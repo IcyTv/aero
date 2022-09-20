@@ -484,6 +484,124 @@
 <span id="484">484</span>
 <span id="485">485</span>
 <span id="486">486</span>
+<span id="487">487</span>
+<span id="488">488</span>
+<span id="489">489</span>
+<span id="490">490</span>
+<span id="491">491</span>
+<span id="492">492</span>
+<span id="493">493</span>
+<span id="494">494</span>
+<span id="495">495</span>
+<span id="496">496</span>
+<span id="497">497</span>
+<span id="498">498</span>
+<span id="499">499</span>
+<span id="500">500</span>
+<span id="501">501</span>
+<span id="502">502</span>
+<span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
+<span id="506">506</span>
+<span id="507">507</span>
+<span id="508">508</span>
+<span id="509">509</span>
+<span id="510">510</span>
+<span id="511">511</span>
+<span id="512">512</span>
+<span id="513">513</span>
+<span id="514">514</span>
+<span id="515">515</span>
+<span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -505,11 +623,15 @@
 
 </span><span class="kw">use </span>core::mem::MaybeUninit;
 
+<span class="kw">use </span>aero_syscall::MMapFlags;
 <span class="kw">use </span>alloc::boxed::Box;
 <span class="kw">use </span>alloc::string::ToString;
 <span class="kw">use </span>alloc::sync::{Arc, Weak};
+<span class="kw">use </span>alloc::vec::Vec;
+<span class="kw">use </span>spin::Once;
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::cache::CachedINode;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::{FrameAllocator, PhysFrame, FRAME_ALLOCATOR};
 <span class="kw">use </span><span class="kw">crate</span>::utils::CeilDiv;
 
 <span class="kw">use </span><span class="kw">super</span>::block::BlockDevice;
@@ -654,7 +776,7 @@
     <span class="kw">pub </span>deletion_time: u32,
     <span class="kw">pub </span>group_id: u16,
     <span class="kw">pub </span>hl_count: u16,
-    <span class="kw">pub </span>sector_count: u32,
+    <span class="kw">pub </span>block_count: u32,
     <span class="kw">pub </span>flags: u32,
     <span class="kw">pub </span>os_specific: u32,
     <span class="kw">pub </span>data_ptr: [u32; <span class="number">15</span>],
@@ -688,6 +810,11 @@
     id: usize,
     fs: Weak&lt;Ext2&gt;,
     inode: Box&lt;DiskINode&gt;,
+
+    <span class="comment">// TODO: Do not store this in the inode, but rather in a different
+    // cache using the API provided by fs::cache (consider LRU only?).
+    </span>block_map: Once&lt;Box&lt;[u32]&gt;&gt;,
+    entries: Once&lt;Vec&lt;(String, Box&lt;DiskDirEntry&gt;)&gt;&gt;,
 
     sref: Weak&lt;INode&gt;,
 }
@@ -733,14 +860,122 @@
                     id,
                     fs: ext2,
 
+                    block_map: Once::new(),
+                    entries: Once::new(),
+
                     sref: sref.clone(),
                 }))),
             )
         }
     }
 
-    <span class="kw">pub fn </span>sref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;INode&gt; {
-        <span class="self">self</span>.sref.upgrade().unwrap()
+    <span class="kw">pub fn </span>init_block_map(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>filesystem = <span class="self">self</span>.fs.upgrade().unwrap();
+        <span class="kw">let </span>block_size = filesystem.superblock.block_size();
+
+        <span class="kw">let </span>entries_per_block = block_size / core::mem::size_of::&lt;u32&gt;();
+        <span class="kw">let </span><span class="kw-2">mut </span>block_map = Box::&lt;[u32]&gt;::new_uninit_slice(<span class="self">self</span>.inode.block_count <span class="kw">as </span>usize);
+
+        <span class="comment">// There are pointers to the first 12 blocks which contain the file&#39;s
+        // data in the inode. There is a pointer to an indirect block (which
+        // contains pointers to the next set of blocks), a pointer to a doubly
+        // indirect block and a pointer to a treply indirect block.
+        </span><span class="kw">for </span>i <span class="kw">in </span><span class="number">0</span>..block_map.len() {
+            <span class="kw">let </span><span class="kw-2">mut </span>block = i;
+            <span class="kw">if </span>block &lt; <span class="number">12 </span>{
+                <span class="comment">// direct block
+                </span>block_map[i].write(<span class="self">self</span>.inode.data_ptr[block]);
+            } <span class="kw">else </span>{
+                <span class="comment">// indirect block
+                </span>block -= <span class="number">12</span>;
+
+                <span class="kw">if </span>block &gt;= entries_per_block {
+                    <span class="comment">// doubly indirect block
+                    </span>block -= entries_per_block;
+
+                    <span class="kw">let </span>index = block / entries_per_block;
+                    <span class="kw">let </span><span class="kw-2">mut </span>indirect_block = MaybeUninit::&lt;u32&gt;::uninit();
+
+                    <span class="kw">if </span>index &gt;= entries_per_block {
+                        <span class="comment">// treply indirect block
+                        </span><span class="macro">todo!</span>()
+                    } <span class="kw">else </span>{
+                        <span class="kw">let </span>block_ptrs = <span class="self">self</span>.inode.data_ptr[<span class="number">13</span>] <span class="kw">as </span>usize * block_size;
+                        <span class="kw">let </span>offset = block_ptrs + (index * core::mem::size_of::&lt;u32&gt;());
+
+                        filesystem
+                            .block
+                            .device()
+                            .read(offset, indirect_block.as_bytes_mut())
+                            .unwrap();
+                    }
+
+                    <span class="comment">// SAFETY: We have initialized the indirect block variable above.
+                    </span><span class="kw">let </span>indirect_block = <span class="kw">unsafe </span>{ indirect_block.assume_init() } <span class="kw">as </span>usize;
+
+                    <span class="kw">for </span>j <span class="kw">in </span><span class="number">0</span>..entries_per_block {
+                        <span class="kw">if </span>(i + j) &gt;= block_map.len() {
+                            <span class="comment">// SAFETY: We have fully initialized the block map.
+                            </span><span class="kw">let </span>block_map = <span class="kw">unsafe </span>{ block_map.assume_init() };
+                            <span class="self">self</span>.block_map.call_once(|| block_map);
+                            <span class="kw">return</span>;
+                        }
+
+                        <span class="kw">let </span>offset = indirect_block * block_size + j * core::mem::size_of::&lt;u32&gt;();
+                        filesystem
+                            .block
+                            .device()
+                            .read(offset, block_map[i + j].as_bytes_mut())
+                            .unwrap();
+                    }
+                } <span class="kw">else </span>{
+                    <span class="comment">// singly indirect block
+                    </span><span class="kw">let </span>block_ptrs = <span class="self">self</span>.inode.data_ptr[<span class="number">12</span>] <span class="kw">as </span>usize * block_size;
+                    <span class="kw">let </span>offset = block_ptrs + (block * core::mem::size_of::&lt;u32&gt;());
+
+                    filesystem
+                        .block
+                        .device()
+                        .read(offset, block_map[i].as_bytes_mut())
+                        .expect(<span class="string">&quot;init_block_map: failed to read singly indirect block&quot;</span>);
+                }
+            }
+        }
+
+        <span class="comment">// SAFETY: We have fully initialized the block map.
+        </span><span class="kw">let </span>block_map = <span class="kw">unsafe </span>{ block_map.assume_init() };
+        <span class="self">self</span>.block_map.call_once(|| block_map);
+    }
+
+    <span class="kw">pub fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span>filesystem = <span class="self">self</span>.fs.upgrade().unwrap();
+        <span class="kw">let </span>block_size = filesystem.superblock.block_size();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>progress = <span class="number">0</span>;
+
+        <span class="kw">let </span>count = core::cmp::min(<span class="self">self</span>.inode.size_lower <span class="kw">as </span>usize - offset, buffer.len());
+
+        <span class="kw">while </span>progress &lt; count {
+            <span class="kw">let </span>block = (offset + progress) / block_size;
+            <span class="kw">let </span>loc = (offset + progress) % block_size;
+
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = count - progress;
+
+            <span class="kw">if </span>chunk &gt; block_size - loc {
+                chunk = block_size - loc;
+            }
+
+            <span class="kw">let </span>block_index = <span class="self">self</span>.block_map()[block] <span class="kw">as </span>usize;
+
+            filesystem.block.device().read(
+                (block_index * block_size) + loc,
+                <span class="kw-2">&amp;mut </span>buffer[progress..progress + chunk],
+            );
+
+            progress += chunk;
+        }
+
+        <span class="prelude-val">Ok</span>(count)
     }
 
     <span class="kw">pub fn </span>make_dir_entry(
@@ -751,6 +986,20 @@
     ) -&gt; <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt; {
         <span class="kw">let </span>inode = <span class="self">self</span>.fs.upgrade()<span class="question-mark">?</span>.find_inode(entry.inode <span class="kw">as </span>usize)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(DirEntry::new(parent, inode, name.to_string()))
+    }
+
+    <span class="kw">pub fn </span>entries(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[(String, Box&lt;DiskDirEntry&gt;)] {
+        <span class="self">self</span>.entries
+            .call_once(|| DirEntryIter::new(<span class="self">self</span>.sref()).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;())
+    }
+
+    <span class="kw">pub fn </span>block_map(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>[u32] {
+        <span class="self">self</span>.init_block_map();
+        <span class="self">self</span>.block_map.get().unwrap()
+    }
+
+    <span class="kw">pub fn </span>sref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;INode&gt; {
+        <span class="self">self</span>.sref.upgrade().unwrap()
     }
 }
 
@@ -799,51 +1048,46 @@
     }
 
     <span class="kw">fn </span>dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, index: usize) -&gt; <span class="kw">super</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt; {
-        <span class="prelude-val">Ok</span>(DirEntryIter::new(parent, <span class="self">self</span>.sref()).nth(index))
-    }
-
-    <span class="kw">fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, dir: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">super</span>::Result&lt;DirCacheItem&gt; {
-        DirEntryIter::new(dir, <span class="self">self</span>.sref())
-            .find(|e| <span class="kw-2">&amp;</span>e.name() == name)
-            .ok_or(FileSystemError::EntryNotFound)
-    }
-
-    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
-        <span class="kw">let </span>filesystem = <span class="self">self</span>.fs.upgrade().unwrap();
-        <span class="kw">let </span>block_size = filesystem.superblock.block_size();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>progress = <span class="number">0</span>;
-
-        <span class="kw">let </span>count = core::cmp::min(<span class="self">self</span>.inode.size_lower <span class="kw">as </span>usize - offset, buffer.len());
-
-        <span class="kw">while </span>progress &lt; count {
-            <span class="kw">let </span>block = (offset + progress) / block_size;
-            <span class="kw">let </span>loc = (offset + progress) % block_size;
-
-            <span class="kw">let </span><span class="kw-2">mut </span>chunk = count - progress;
-
-            <span class="kw">if </span>chunk &gt; block_size - loc {
-                chunk = block_size - loc;
-            }
-
-            <span class="kw">let </span>block_index = <span class="self">self</span>.inode.data_ptr[block];
-
-            <span class="comment">// TODO: We really should not allocate another buffer here.
-            </span><span class="kw">let </span><span class="kw-2">mut </span>data = Box::&lt;[u8]&gt;::new_uninit_slice(chunk);
-
-            filesystem.block.device().read(
-                (block_index <span class="kw">as </span>usize * block_size) + loc,
-                MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>data),
-            );
-
-            <span class="comment">// SAFETY: We have initialized the data buffer above.
-            </span><span class="kw">let </span>data = <span class="kw">unsafe </span>{ data.assume_init() };
-
-            buffer[progress..progress + data.len()].copy_from_slice(<span class="kw-2">&amp;*</span>data);
-            progress += chunk;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((name, entry)) = <span class="self">self</span>.entries().get(index) {
+            <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_dir_entry(parent, name, entry))
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
         }
+    }
+
+    <span class="kw">fn </span>lookup(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">super</span>::Result&lt;DirCacheItem&gt; {
+        <span class="kw">let </span>(name, entry) = <span class="self">self
+            </span>.entries()
+            .iter()
+            .find(|(ename, <span class="kw">_</span>)| ename == name)
+            .ok_or(FileSystemError::EntryNotFound)
+            .cloned()<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_dir_entry(parent, <span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>entry).unwrap())
+    }
+
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, usr_buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="comment">// TODO: We really should not allocate another buffer here.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>buffer = Box::&lt;[u8]&gt;::new_uninit_slice(usr_buffer.len());
+        <span class="kw">let </span>count = <span class="self">self</span>.read(offset, MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>buffer))<span class="question-mark">?</span>;
+
+        <span class="comment">// SAFETY: We have initialized the data buffer above.
+        </span><span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ buffer.assume_init() };
+        usr_buffer.copy_from_slice(<span class="kw-2">&amp;*</span>buffer);
 
         <span class="prelude-val">Ok</span>(count)
+    }
+
+    <span class="kw">fn </span>mmap(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, size: usize, flags: MMapFlags) -&gt; <span class="kw">super</span>::Result&lt;PhysFrame&gt; {
+        <span class="comment">// TODO: support shared file mappings.
+        </span><span class="macro">assert!</span>(!flags.contains(MMapFlags::MAP_SHARED));
+
+        <span class="kw">let </span>private_cp: PhysFrame = FRAME_ALLOCATOR.allocate_frame().unwrap();
+
+        <span class="kw">let </span>buffer = <span class="kw-2">&amp;mut </span>private_cp.as_slice_mut()[..size];
+        <span class="self">self</span>.read_at(offset, buffer)<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(private_cp)
     }
 }
 
@@ -857,27 +1101,20 @@
 }
 
 <span class="kw">pub struct </span>DirEntryIter {
-    parent: DirCacheItem,
     inode: Arc&lt;INode&gt;,
     offset: usize,
 }
 
 <span class="kw">impl </span>DirEntryIter {
-    <span class="kw">pub fn </span>new(parent: DirCacheItem, inode: Arc&lt;INode&gt;) -&gt; <span class="self">Self </span>{
-        <span class="self">Self </span>{
-            parent,
-            inode,
-
-            offset: <span class="number">0</span>,
-        }
+    <span class="kw">pub fn </span>new(inode: Arc&lt;INode&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{ inode, offset: <span class="number">0 </span>}
     }
 }
 
 <span class="kw">impl </span>Iterator <span class="kw">for </span>DirEntryIter {
-    <span class="kw">type </span>Item = DirCacheItem;
+    <span class="kw">type </span>Item = (String, Box&lt;DiskDirEntry&gt;);
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
-        <span class="kw">let </span>filesystem = <span class="self">self</span>.inode.fs.upgrade()<span class="question-mark">?</span>;
         <span class="kw">let </span>file_size = <span class="self">self</span>.inode.inode.size_lower <span class="kw">as </span>usize;
 
         <span class="kw">if </span><span class="self">self</span>.offset + core::mem::size_of::&lt;DiskDirEntry&gt;() &gt; file_size {
@@ -886,26 +1123,25 @@
 
         <span class="kw">let </span><span class="kw-2">mut </span>entry = Box::&lt;DiskDirEntry&gt;::new_uninit();
 
-        <span class="kw">let </span>offset = (<span class="self">self</span>.inode.inode.data_ptr[<span class="number">0</span>] <span class="kw">as </span>usize * filesystem.superblock.block_size())
-            + <span class="self">self</span>.offset;
-
-        filesystem.block.device().read(offset, entry.as_bytes_mut());
+        <span class="self">self</span>.inode.read(<span class="self">self</span>.offset, entry.as_bytes_mut()).ok()<span class="question-mark">?</span>;
 
         <span class="comment">// SAFETY: We have initialized the entry above.
         </span><span class="kw">let </span>entry = <span class="kw">unsafe </span>{ entry.assume_init() };
 
         <span class="kw">let </span><span class="kw-2">mut </span>name = Box::&lt;[u8]&gt;::new_uninit_slice(entry.name_size <span class="kw">as </span>usize);
-        filesystem.block.device().read(
-            offset + core::mem::size_of::&lt;DiskDirEntry&gt;(),
-            MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>name),
-        );
+        <span class="self">self</span>.inode
+            .read(
+                <span class="self">self</span>.offset + core::mem::size_of::&lt;DiskDirEntry&gt;(),
+                MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>name),
+            )
+            .ok()<span class="question-mark">?</span>;
 
         <span class="comment">// SAFETY: We have initialized the name above.
         </span><span class="kw">let </span>name = <span class="kw">unsafe </span>{ name.assume_init() };
         <span class="kw">let </span>name = <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;*</span>name) };
 
         <span class="self">self</span>.offset += entry.entry_size <span class="kw">as </span>usize;
-        <span class="self">self</span>.inode.make_dir_entry(<span class="self">self</span>.parent.clone(), name, <span class="kw-2">&amp;</span>entry)
+        <span class="prelude-val">Some</span>((name.to_string(), entry))
     }
 }
 

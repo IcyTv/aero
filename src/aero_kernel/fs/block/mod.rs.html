@@ -199,6 +199,12 @@
 <span id="199">199</span>
 <span id="200">200</span>
 <span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
+<span id="206">206</span>
+<span id="207">207</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -233,7 +239,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::fs::{Path, <span class="prelude-ty">Result</span>, MOUNT_MANAGER};
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::ext2::Ext2;
-<span class="kw">use </span><span class="kw">crate</span>::mem::paging::{align_down, align_up};
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
 <span class="kw">use </span><span class="kw">super</span>::devfs::{alloc_device_marker, Device};
@@ -246,20 +251,27 @@
     <span class="kw">fn </span>write_block(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, buf: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt;;
 
     <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, dest: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="kw">let </span>aligned_offset = align_down(offset <span class="kw">as </span>u64, <span class="self">self</span>.block_size() <span class="kw">as </span>u64) <span class="kw">as </span>usize;
-        <span class="kw">let </span>sector = aligned_offset / <span class="self">self</span>.block_size();
+        <span class="kw">let </span><span class="kw-2">mut </span>progress = <span class="number">0</span>;
+        <span class="kw">let </span>block_size = <span class="self">self</span>.block_size();
 
-        <span class="kw">let </span>aligned_size = align_up(dest.len() <span class="kw">as </span>u64, <span class="self">self</span>.block_size() <span class="kw">as </span>u64) <span class="kw">as </span>usize;
-        <span class="kw">let </span><span class="kw-2">mut </span>buffer = Box::&lt;[u8]&gt;::new_uninit_slice(aligned_size);
+        <span class="kw">while </span>progress &lt; dest.len() {
+            <span class="kw">let </span>block = (offset + progress) / block_size;
+            <span class="kw">let </span>loc = (offset + progress) % block_size;
 
-        <span class="self">self</span>.read_block(sector, MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>buffer))<span class="question-mark">?</span>;
-        <span class="comment">// SAFETY: We have initialized the buffer above.
-        </span><span class="kw">let </span>buffer = <span class="kw">unsafe </span>{ buffer.assume_init() };
+            <span class="kw">let </span><span class="kw-2">mut </span>chunk = dest.len() - progress;
 
-        <span class="kw">let </span>offset = offset - aligned_offset;
-        MaybeUninit::write_slice(dest, <span class="kw-2">&amp;</span>buffer[offset..(offset + dest.len())]);
+            <span class="kw">if </span>chunk &gt; (block_size - loc) {
+                chunk = block_size - loc;
+            }
 
-        <span class="prelude-val">Some</span>(dest.len())
+            <span class="kw">let </span><span class="kw-2">mut </span>buffer = Box::&lt;[u8]&gt;::new_uninit_slice(block_size);
+            <span class="self">self</span>.read_block(block, MaybeUninit::slice_as_bytes_mut(<span class="kw-2">&amp;mut </span>buffer))<span class="question-mark">?</span>;
+
+            dest[progress..(progress + chunk)].copy_from_slice(<span class="kw-2">&amp;</span>buffer[loc..loc + chunk]);
+            progress += chunk;
+        }
+
+        <span class="prelude-val">Some</span>(progress)
     }
 }
 
