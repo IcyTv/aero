@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/cache.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cache.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/cache.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>cache.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../../normalize.css"><link rel="stylesheet" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../../ayu.css" disabled><link rel="stylesheet" href="../../../dark.css" disabled><link rel="stylesheet" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a><h2 class="location"></h2></nav><nav class="sidebar"><a class="sidebar-logo" href="../../../aero_kernel/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -372,6 +372,39 @@
 <span id="372">372</span>
 <span id="373">373</span>
 <span id="374">374</span>
+<span id="375">375</span>
+<span id="376">376</span>
+<span id="377">377</span>
+<span id="378">378</span>
+<span id="379">379</span>
+<span id="380">380</span>
+<span id="381">381</span>
+<span id="382">382</span>
+<span id="383">383</span>
+<span id="384">384</span>
+<span id="385">385</span>
+<span id="386">386</span>
+<span id="387">387</span>
+<span id="388">388</span>
+<span id="389">389</span>
+<span id="390">390</span>
+<span id="391">391</span>
+<span id="392">392</span>
+<span id="393">393</span>
+<span id="394">394</span>
+<span id="395">395</span>
+<span id="396">396</span>
+<span id="397">397</span>
+<span id="398">398</span>
+<span id="399">399</span>
+<span id="400">400</span>
+<span id="401">401</span>
+<span id="402">402</span>
+<span id="403">403</span>
+<span id="404">404</span>
+<span id="405">405</span>
+<span id="406">406</span>
+<span id="407">407</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -402,7 +435,10 @@
 </span><span class="kw">use </span>core::borrow::Borrow;
 <span class="kw">use </span>core::fmt::Debug;
 <span class="kw">use </span>core::hash::Hash;
+<span class="kw">use </span>core::num::NonZeroUsize;
 <span class="kw">use </span>core::ops;
+<span class="kw">use </span>core::sync::atomic::AtomicBool;
+<span class="kw">use </span>core::sync::atomic::Ordering;
 
 <span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>alloc::sync::Weak;
@@ -415,8 +451,8 @@
 
 <span class="kw">use </span><span class="kw">super</span>::FileSystem;
 
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static </span>INODE_CACHE: Once&lt;Arc&lt;INodeCache&gt;&gt; = Once::new();
-<span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">static </span>DIR_CACHE: Once&lt;Arc&lt;DirCache&gt;&gt; = Once::new();
+<span class="kw">pub static </span>INODE_CACHE: Once&lt;Arc&lt;INodeCache&gt;&gt; = Once::new();
+<span class="kw">pub static </span>DIR_CACHE: Once&lt;Arc&lt;DirCache&gt;&gt; = Once::new();
 
 <span class="comment">// NOTE: We require a custom wrapper around [`Arc`] and [`Weak`] since we need to be able
 // to move the cache item from the used list to the unused list when the cache item is dropped.
@@ -520,21 +556,29 @@
     <span class="kw">fn </span>cache_key(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; K;
 }
 
-<span class="doccomment">/// Structure representing a cache item in the cache index. See the documentation of [CacheIndex]
-/// and the fields of this struct for more information.
-</span><span class="kw">pub struct </span>CacheItem&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; {
+<span class="kw">pub struct </span>CacheItem&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; {
     cache: Weak&lt;Cache&lt;K, V&gt;&gt;,
     value: V,
+    <span class="doccomment">/// Whether the cache item has active strong references associated
+    /// with it.
+    </span>used: AtomicBool,
 }
 
 <span class="kw">impl</span>&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; CacheItem&lt;K, V&gt; {
-    <span class="doccomment">/// Constructs a new `CacheItem&lt;K, V&gt;`.
-    </span><span class="attribute">#[inline]
-    </span><span class="kw">pub fn </span>new(cache: <span class="kw-2">&amp;</span>Weak&lt;Cache&lt;K, V&gt;&gt;, value: V) -&gt; CacheArc&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">pub fn </span>new(cache: <span class="kw-2">&amp;</span>Weak&lt;Cache&lt;K, V&gt;&gt;, value: V) -&gt; CacheArc&lt;<span class="self">Self</span>&gt; {
         CacheArc::new(<span class="self">Self </span>{
             cache: cache.clone(),
             value,
+            used: AtomicBool::new(<span class="bool-val">false</span>),
         })
+    }
+
+    <span class="kw">pub fn </span>is_used(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.used.load(Ordering::SeqCst)
+    }
+
+    <span class="kw">pub fn </span>set_used(<span class="kw-2">&amp;</span><span class="self">self</span>, yes: bool) {
+        <span class="self">self</span>.used.store(yes, Ordering::SeqCst);
     }
 }
 
@@ -550,33 +594,37 @@
 
 <span class="kw">struct </span>CacheIndex&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; {
     used: hashbrown::HashMap&lt;K, Weak&lt;CacheItem&lt;K, V&gt;&gt;&gt;,
+    <span class="doccomment">/// Cache items that are longer have any active strong references associated
+    /// with them. These are stored in the cache index so, if the item is
+    /// accessed again, we can re-use it; reducing required memory allocation
+    /// and I/O (if applicable).
+    </span>unused: lru::LruCache&lt;K, Arc&lt;CacheItem&lt;K, V&gt;&gt;&gt;,
 }
 
-<span class="doccomment">/// Structure representing a cache with a key of `K` and value of `V`. The cache
-/// key is used to get the cache from the cache index. This structure basically contains
-/// the cache index (protected by a mutex) and a weak self reference to itself.
-</span><span class="kw">pub struct </span>Cache&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; {
+<span class="kw">pub struct </span>Cache&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; {
     index: Mutex&lt;CacheIndex&lt;K, V&gt;&gt;,
     self_ref: Weak&lt;Cache&lt;K, V&gt;&gt;,
 }
 
 <span class="kw">impl</span>&lt;K: CacheKey, V: Cacheable&lt;K&gt;&gt; Cache&lt;K, V&gt; {
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
+    <span class="kw">pub fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
         Arc::new_cyclic(|this| Cache::&lt;K, V&gt; {
             index: Mutex::new(CacheIndex {
                 used: hashbrown::HashMap::new(),
+                unused: lru::LruCache::new(NonZeroUsize::new(<span class="number">512</span>).unwrap()),
             }),
             self_ref: this.clone(),
         })
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+    <span class="kw">pub fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span><span class="kw-2">mut </span>index_mut = <span class="self">self</span>.index.lock();
 
+        index_mut.unused.clear();
         index_mut.used.clear();
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>make_item_cached(<span class="kw-2">&amp;</span><span class="self">self</span>, value: V) -&gt; CacheArc&lt;CacheItem&lt;K, V&gt;&gt; {
+    <span class="kw">pub fn </span>make_item_cached(<span class="kw-2">&amp;</span><span class="self">self</span>, value: V) -&gt; CacheArc&lt;CacheItem&lt;K, V&gt;&gt; {
         <span class="kw">let </span>item = CacheItem::&lt;K, V&gt;::new(<span class="kw-2">&amp;</span><span class="self">self</span>.self_ref, value);
 
         <span class="self">self</span>.index
@@ -584,51 +632,72 @@
             .used
             .insert(item.cache_key(), Arc::downgrade(<span class="kw-2">&amp;</span>item));
 
+        item.set_used(<span class="bool-val">true</span>);
         item
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>make_item_no_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, value: V) -&gt; CacheArc&lt;CacheItem&lt;K, V&gt;&gt; {
+    <span class="kw">pub fn </span>make_item_no_cache(<span class="kw-2">&amp;</span><span class="self">self</span>, value: V) -&gt; CacheArc&lt;CacheItem&lt;K, V&gt;&gt; {
         CacheItem::&lt;K, V&gt;::new(<span class="kw-2">&amp;</span>Weak::default(), value)
     }
 
-    <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: K) -&gt; <span class="prelude-ty">Option</span>&lt;CacheArc&lt;CacheItem&lt;K, V&gt;&gt;&gt; {
-        <span class="kw">let </span>index = <span class="self">self</span>.index.lock();
+    <span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>, key: K) -&gt; <span class="prelude-ty">Option</span>&lt;CacheArc&lt;CacheItem&lt;K, V&gt;&gt;&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="self">self</span>.index.lock();
 
         <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = index.used.get(<span class="kw-2">&amp;</span>key) {
-            <span class="prelude-val">Some</span>(CacheArc::from(entry.upgrade()<span class="question-mark">?</span>))
+            <span class="kw">let </span>entry = entry.upgrade()<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>(CacheArc::from(entry))
+        } <span class="kw">else if let </span><span class="prelude-val">Some</span>(entry) = index.unused.pop(<span class="kw-2">&amp;</span>key) {
+            entry.set_used(<span class="bool-val">true</span>);
+            index.used.insert(key, Arc::downgrade(<span class="kw-2">&amp;</span>entry));
+
+            <span class="prelude-val">Some</span>(entry.into())
         } <span class="kw">else </span>{
             <span class="prelude-val">None
         </span>}
     }
 
     <span class="kw">pub fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="kw">let </span>index = <span class="self">self</span>.index.lock();
+
         <span class="macro">log::debug!</span>(<span class="string">&quot;Cache:&quot;</span>);
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;\t Used entries:    {}&quot;</span>, <span class="self">self</span>.index.lock().used.len());
-        <span class="kw">for </span>item <span class="kw">in </span><span class="self">self</span>.index.lock().used.iter() {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;\t\t {:?} -&gt; {:?}&quot;</span>, item.<span class="number">0</span>, item.<span class="number">1</span>.strong_count());
+        <span class="macro">log::debug!</span>(<span class="string">&quot;\t Used entries:    {}&quot;</span>, index.used.len());
+        <span class="kw">for </span>(key, item) <span class="kw">in </span>index.used.iter() {
+            <span class="macro">log::debug!</span>(<span class="string">&quot;\t\t {:?} -&gt; {:?}&quot;</span>, key, item.strong_count());
+        }
+
+        <span class="macro">log::debug!</span>(<span class="string">&quot;\t Unused entries:  {}&quot;</span>, index.unused.len());
+        <span class="kw">for </span>(key, item) <span class="kw">in </span>index.unused.iter() {
+            <span class="macro">log::debug!</span>(<span class="string">&quot;\t\t {:?} -&gt; {:?}&quot;</span>, key, Arc::strong_count(item))
         }
     }
 
     <span class="doccomment">/// Removes the item with the provided `key` from the cache.
-    </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>remove(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) {
+    </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;</span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>K) {
         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="self">self</span>.index.lock();
 
-        index.used.remove(key);
+        <span class="kw">if </span>index.used.remove(key).is_none() {
+            <span class="kw">let _ </span>= index.unused.pop(key);
+        }
     }
 
     <span class="kw">fn </span>mark_item_unused(<span class="kw-2">&amp;</span><span class="self">self</span>, item: CacheArc&lt;CacheItem&lt;K, V&gt;&gt;) {
-        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.index.lock();
+        item.set_used(<span class="bool-val">false</span>);
+
+        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="self">self</span>.index.lock_irq();
         <span class="kw">let </span>key = item.cache_key();
 
-        this.used.remove(<span class="kw-2">&amp;</span>key);
+        <span class="macro">assert!</span>(index.used.remove(<span class="kw-2">&amp;</span>key).is_some());
+        index.unused.put(key, item.<span class="number">0</span>.clone());
     }
 }
 
 <span class="kw">impl</span>&lt;K: CacheKey, T: Cacheable&lt;K&gt;&gt; CacheDropper <span class="kw">for </span>CacheItem&lt;K, T&gt; {
     <span class="kw">fn </span>drop_this(<span class="kw-2">&amp;</span><span class="self">self</span>, this: Arc&lt;<span class="self">Self</span>&gt;) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(cache) = <span class="self">self</span>.cache.upgrade() {
-            cache.mark_item_unused(this.into());
+            <span class="kw">if </span><span class="self">self</span>.is_used() {
+                cache.mark_item_unused(this.into());
+            }
         }
     }
 }
@@ -638,10 +707,7 @@
 <span class="kw">pub type </span>INodeCacheItem = CacheArc&lt;CacheItem&lt;INodeCacheKey, CachedINode&gt;&gt;;
 <span class="kw">pub type </span>INodeCacheWeakItem = CacheWeak&lt;CacheItem&lt;INodeCacheKey, CachedINode&gt;&gt;;
 
-<span class="doccomment">/// The cache key for the directory entry cache used to get the cache item. The cache key
-/// is the tuple of the parent&#39;s cache marker (akin [usize]) and the name of the directory entry
-/// (akin [String]).
-</span><span class="kw">pub type </span>DirCacheKey = (usize, String);
+<span class="kw">pub type </span>DirCacheKey = (usize, String);
 <span class="kw">pub type </span>DirCache = Cache&lt;DirCacheKey, DirEntry&gt;;
 <span class="kw">pub type </span>DirCacheItem = CacheArc&lt;CacheItem&lt;DirCacheKey, DirEntry&gt;&gt;;
 
@@ -747,4 +813,4 @@
     DIR_CACHE.call_once(|| DirCache::new());
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (2019147c5 2022-09-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (f83e0266c 2022-10-03)" ></div></body></html>

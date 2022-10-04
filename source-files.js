@@ -1,10 +1,11 @@
 var sourcesIndex = JSON.parse('{\
-"aero_kernel":["",[["acpi",[],["aml.rs","fadt.rs","hpet.rs","madt.rs","mcfg.rs","mod.rs","rsdp.rs","sdt.rs"]],["arch",[["x86_64",[["interrupts",[],["exceptions.rs","idt.rs","mod.rs"]]],["apic.rs","controlregs.rs","gdt.rs","io.rs","mod.rs","signals.rs","syscall.rs","task.rs","time.rs","tls.rs"]]],["mod.rs"]],["drivers",[["block",[["ide",[],["channel.rs","mod.rs","registers.rs"]],["nvme",[],["command.rs","dma.rs","mod.rs","queue.rs"]]],["ahci.rs","mod.rs"]],["drm",[],["mod.rs","rawfb.rs"]]],["keyboard.rs","lai.rs","mod.rs","pci.rs","tty.rs","uart_16550.rs"]],["fs",[["block",[],["gpt.rs","mod.rs"]],["ext2",[],["mod.rs"]]],["cache.rs","devfs.rs","epoll.rs","eventfd.rs","file_table.rs","initramfs.rs","inode.rs","mod.rs","pipe.rs","procfs.rs","ramfs.rs"]],["mem",[["paging",[],["addr.rs","frame.rs","mapper.rs","mod.rs","page.rs","page_table.rs"]]],["alloc.rs","mod.rs","pti.rs","vmalloc.rs"]],["socket",[],["mod.rs","unix.rs"]],["syscall",[],["fs.rs","futex.rs","ipc.rs","mod.rs","net.rs","process.rs","time.rs"]],["userland",[["scheduler",[],["mod.rs","round_robin.rs"]]],["mod.rs","signals.rs","task.rs","vm.rs"]],["utils",[],["bitmap.rs","buffer.rs","linker.rs","mod.rs","sync.rs"]]],["cmdline.rs","logger.rs","main.rs","modules.rs","rendy.rs","unwind.rs"]],\
+"aero_kernel":["",[["acpi",[],["aml.rs","fadt.rs","hpet.rs","madt.rs","mcfg.rs","mod.rs","rsdp.rs","sdt.rs"]],["arch",[["x86_64",[["interrupts",[],["exceptions.rs","idt.rs","mod.rs"]]],["apic.rs","controlregs.rs","gdt.rs","io.rs","mod.rs","signals.rs","syscall.rs","task.rs","time.rs","tls.rs"]]],["mod.rs"]],["drivers",[["block",[["ide",[],["channel.rs","mod.rs","registers.rs"]],["nvme",[],["command.rs","dma.rs","mod.rs","queue.rs"]]],["ahci.rs","mod.rs"]],["drm",[],["mod.rs","rawfb.rs"]]],["keyboard.rs","lai.rs","mod.rs","pci.rs","tty.rs","uart_16550.rs"]],["fs",[["block",[],["gpt.rs","mod.rs"]],["ext2",[],["disk.rs","group_desc.rs","mod.rs"]]],["cache.rs","devfs.rs","epoll.rs","eventfd.rs","file_table.rs","inode.rs","mod.rs","pipe.rs","procfs.rs","ramfs.rs"]],["mem",[["paging",[],["addr.rs","frame.rs","mapper.rs","mod.rs","page.rs","page_table.rs"]]],["alloc.rs","mod.rs","pti.rs","vmalloc.rs"]],["socket",[],["mod.rs","unix.rs"]],["syscall",[],["fs.rs","futex.rs","ipc.rs","mod.rs","net.rs","process.rs","time.rs"]],["userland",[["scheduler",[],["mod.rs","round_robin.rs"]]],["mod.rs","signals.rs","task.rs","vm.rs"]],["utils",[],["bitmap.rs","buffer.rs","linker.rs","mod.rs","sync.rs"]]],["cmdline.rs","logger.rs","main.rs","modules.rs","rendy.rs","unwind.rs"]],\
 "aero_syscall":["",[],["consts.rs","lib.rs","signal.rs","socket.rs","syscall.rs","time.rs"]],\
 "ahash":["",[],["convert.rs","fallback_hash.rs","lib.rs","operations.rs","random_state.rs","specialize.rs"]],\
 "arrayvec":["",[],["array_string.rs","arrayvec.rs","arrayvec_impl.rs","char.rs","errors.rs","lib.rs","utils.rs"]],\
 "bit_field":["",[],["lib.rs"]],\
 "bitflags":["",[],["lib.rs"]],\
+"bytemuck":["",[],["anybitpattern.rs","checked.rs","contiguous.rs","internal.rs","lib.rs","no_uninit.rs","offset_of.rs","pod.rs","pod_in_option.rs","transparent.rs","zeroable.rs","zeroable_in_option.rs"]],\
 "cfg_if":["",[],["lib.rs"]],\
 "cpio_reader":["",[],["lib.rs"]],\
 "hashbrown":["",[["external_trait_impls",[],["mod.rs"]],["raw",[],["alloc.rs","bitmask.rs","generic.rs","mod.rs"]]],["lib.rs","macros.rs","map.rs","scopeguard.rs","set.rs"]],\
@@ -14,6 +15,7 @@ var sourcesIndex = JSON.parse('{\
 "lazy_static":["",[],["core_lazy.rs","lib.rs"]],\
 "limine":["",[],["lib.rs"]],\
 "log":["",[],["lib.rs","macros.rs"]],\
+"lru":["",[],["lib.rs"]],\
 "memoffset":["",[],["lib.rs","offset_of.rs","raw_field.rs","span_of.rs"]],\
 "once_cell":["",[],["lib.rs","race.rs"]],\
 "raw_cpuid":["",[],["extended.rs","lib.rs"]],\
