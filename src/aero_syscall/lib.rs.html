@@ -970,6 +970,9 @@
 <span id="970">970</span>
 <span id="971">971</span>
 <span id="972">972</span>
+<span id="973">973</span>
+<span id="974">974</span>
+<span id="975">975</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -1232,19 +1235,20 @@
     <span class="kw">pub </span>name: [u8; <span class="number">0</span>],
 }
 
-<span class="attribute">#[derive(Debug)]
-#[repr(C)]
+<span class="attribute">#[repr(C)]
+#[derive(Debug)]
 </span><span class="kw">pub struct </span>Utsname {
-    <span class="kw">pub </span>name: [u8; <span class="number">65</span>],
+    <span class="kw">pub </span>sysname: [u8; <span class="number">65</span>],
     <span class="kw">pub </span>nodename: [u8; <span class="number">65</span>],
     <span class="kw">pub </span>release: [u8; <span class="number">65</span>],
     <span class="kw">pub </span>version: [u8; <span class="number">65</span>],
     <span class="kw">pub </span>machine: [u8; <span class="number">65</span>],
+    <span class="kw">pub </span>domainname: [u8; <span class="number">65</span>],
 }
 
 <span class="kw">impl </span>Utsname {
     <span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
-        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.name) }
+        <span class="kw">unsafe </span>{ core::str::from_utf8_unchecked(<span class="kw-2">&amp;</span><span class="self">self</span>.sysname) }
     }
 
     <span class="kw">pub fn </span>nodename(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
@@ -1267,11 +1271,12 @@
 <span class="kw">impl </span>Default <span class="kw">for </span>Utsname {
     <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            name: [<span class="number">0</span>; <span class="number">65</span>],
+            sysname: [<span class="number">0</span>; <span class="number">65</span>],
             nodename: [<span class="number">0</span>; <span class="number">65</span>],
             release: [<span class="number">0</span>; <span class="number">65</span>],
             version: [<span class="number">0</span>; <span class="number">65</span>],
             machine: [<span class="number">0</span>; <span class="number">65</span>],
+            domainname: [<span class="number">0</span>; <span class="number">65</span>],
         }
     }
 }
@@ -1318,68 +1323,69 @@
 <span class="macro">bitflags::bitflags! </span>{
     <span class="attribute">#[derive(Default)]
     </span><span class="kw">pub struct </span>TermiosLFlag: u32 {
-        <span class="kw">const </span>ECHO   =  <span class="number">0x0001</span>;
-        <span class="kw">const </span>ECHOE  =  <span class="number">0x0002</span>;
-        <span class="kw">const </span>ECHOK  =  <span class="number">0x0004</span>;
-        <span class="kw">const </span>ECHONL =  <span class="number">0x0008</span>;
-        <span class="kw">const </span>ICANON =  <span class="number">0x0010</span>;
-        <span class="kw">const </span>IEXTEN =  <span class="number">0x0020</span>;
-        <span class="kw">const </span>ISIG   =  <span class="number">0x0040</span>;
-        <span class="kw">const </span>NOFLSH =  <span class="number">0x0080</span>;
-        <span class="kw">const </span>TOSTOP =  <span class="number">0x0100</span>;
-        <span class="kw">const </span>ECHOPRT=  <span class="number">0x0200</span>;
+        <span class="kw">const </span>ECHO    = <span class="number">0x8</span>;
+        <span class="kw">const </span>ECHOE   = <span class="number">0x10</span>;
+        <span class="kw">const </span>ECHOK   = <span class="number">0x20</span>;
+        <span class="kw">const </span>ECHONL  = <span class="number">0x40</span>;
+        <span class="kw">const </span>ICANON  = <span class="number">0x2</span>;
+        <span class="kw">const </span>IEXTEN  = <span class="number">0x8000</span>;
+        <span class="kw">const </span>ISIG    = <span class="number">0x1</span>;
+        <span class="kw">const </span>NOFLSH  = <span class="number">0x80</span>;
+        <span class="kw">const </span>TOSTOP  = <span class="number">0x100</span>;
+        <span class="kw">const </span>ECHOPRT = <span class="number">0x400</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags! </span>{
     <span class="attribute">#[derive(Default)]
     </span><span class="kw">pub struct </span>TermiosCFlag: u32 {
-        <span class="kw">const </span>CSIZE  =  <span class="number">0x0003</span>;
-        <span class="kw">const </span>CS5    =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>CS6    =  <span class="number">0x0001</span>;
-        <span class="kw">const </span>CS7    =  <span class="number">0x0002</span>;
-        <span class="kw">const </span>CS8    =  <span class="number">0x0003</span>;
-        <span class="kw">const </span>CSTOPB =  <span class="number">0x0004</span>;
-        <span class="kw">const </span>CREAD  =  <span class="number">0x0008</span>;
-        <span class="kw">const </span>PARENB =  <span class="number">0x0010</span>;
-        <span class="kw">const </span>PARODD =  <span class="number">0x0020</span>;
-        <span class="kw">const </span>HUPCL  =  <span class="number">0x0040</span>;
-        <span class="kw">const </span>CLOCAL =  <span class="number">0x0080</span>;
+        <span class="kw">const </span>CSIZE  = <span class="number">0x30</span>;
+        <span class="kw">const </span>CS5    = <span class="number">0x0</span>;
+        <span class="kw">const </span>CS6    = <span class="number">0x10</span>;
+        <span class="kw">const </span>CS7    = <span class="number">0x20</span>;
+        <span class="kw">const </span>CS8    = <span class="number">0x30</span>;
+        <span class="kw">const </span>CSTOPB = <span class="number">0x40</span>;
+        <span class="kw">const </span>CREAD  = <span class="number">0x80</span>;
+        <span class="kw">const </span>PARENB = <span class="number">0x100</span>;
+        <span class="kw">const </span>PARODD = <span class="number">0x200</span>;
+        <span class="kw">const </span>HUPCL  = <span class="number">0x400</span>;
+        <span class="kw">const </span>CLOCAL = <span class="number">0x800</span>;
     }
 }
 
 <span class="macro">bitflags::bitflags! </span>{
     <span class="attribute">#[derive(Default)]
     </span><span class="kw">pub struct </span>TermiosOFlag: u32 {
-        <span class="kw">const </span>OPOST  =  <span class="number">0x0001</span>;
-        <span class="kw">const </span>ONLCR  =  <span class="number">0x0002</span>;
-        <span class="kw">const </span>OCRNL  =  <span class="number">0x0004</span>;
-        <span class="kw">const </span>ONOCR  =  <span class="number">0x0008</span>;
-        <span class="kw">const </span>ONLRET =  <span class="number">0x0010</span>;
-        <span class="kw">const </span>OFDEL  =  <span class="number">0x0020</span>;
-        <span class="kw">const </span>OFILL  =  <span class="number">0x0040</span>;
-        <span class="kw">const </span>NLDLY  =  <span class="number">0x0080</span>;
-        <span class="kw">const </span>NL0    =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>NL1    =  <span class="number">0x0080</span>;
-        <span class="kw">const </span>CRDLY  =  <span class="number">0x0300</span>;
-        <span class="kw">const </span>CR0    =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>CR1    =  <span class="number">0x0100</span>;
-        <span class="kw">const </span>CR2    =  <span class="number">0x0200</span>;
-        <span class="kw">const </span>CR3    =  <span class="number">0x0300</span>;
-        <span class="kw">const </span>TABDLY =  <span class="number">0x0C00</span>;
-        <span class="kw">const </span>TAB0   =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>TAB1   =  <span class="number">0x0400</span>;
-        <span class="kw">const </span>TAB2   =  <span class="number">0x0800</span>;
-        <span class="kw">const </span>TAB3   =  <span class="number">0x0C00</span>;
-        <span class="kw">const </span>BSDLY  =  <span class="number">0x1000</span>;
-        <span class="kw">const </span>BS0    =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>BS1    =  <span class="number">0x1000</span>;
-        <span class="kw">const </span>VTDLY  =  <span class="number">0x2000</span>;
-        <span class="kw">const </span>VT0    =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>VT1    =  <span class="number">0x2000</span>;
-        <span class="kw">const </span>FFDLY  =  <span class="number">0x4000</span>;
-        <span class="kw">const </span>FF0    =  <span class="number">0x0000</span>;
-        <span class="kw">const </span>FF1    =  <span class="number">0x4000</span>;
+        <span class="kw">const </span>OPOST  = <span class="number">0x1</span>;
+        <span class="kw">const </span>ONLCR  = <span class="number">0x4</span>;
+        <span class="kw">const </span>OCRNL  = <span class="number">0x8</span>;
+        <span class="kw">const </span>ONOCR  = <span class="number">0x10</span>;
+        <span class="kw">const </span>ONLRET = <span class="number">0x20</span>;
+        <span class="kw">const </span>OFDEL  = <span class="number">0x80</span>;
+        <span class="kw">const </span>OFILL  = <span class="number">0x40</span>;
+        <span class="kw">const </span>NLDLY  = <span class="number">0x100</span>;
+        <span class="kw">const </span>NL0    = <span class="number">0x0</span>;
+        <span class="kw">const </span>NL1    = <span class="number">0x100</span>;
+        <span class="kw">const </span>CRDLY  = <span class="number">0x600</span>;
+        <span class="kw">const </span>CR0    = <span class="number">0x0</span>;
+        <span class="kw">const </span>CR1    = <span class="number">0x200</span>;
+        <span class="kw">const </span>CR2    = <span class="number">0x400</span>;
+        <span class="kw">const </span>CR3    = <span class="number">0x600</span>;
+        <span class="kw">const </span>TABDLY = <span class="number">0x1800</span>;
+        <span class="kw">const </span>TAB0   = <span class="number">0x0</span>;
+        <span class="kw">const </span>TAB1   = <span class="number">0x800</span>;
+        <span class="kw">const </span>TAB2   = <span class="number">0x1000</span>;
+        <span class="kw">const </span>TAB3   = <span class="number">0x1800</span>;
+        <span class="kw">const </span>XTABS  = <span class="number">0x1800</span>;
+        <span class="kw">const </span>BSDLY  = <span class="number">0x2000</span>;
+        <span class="kw">const </span>BS0    = <span class="number">0x0</span>;
+        <span class="kw">const </span>BS1    = <span class="number">0x2000</span>;
+        <span class="kw">const </span>VTDLY  = <span class="number">0x4000</span>;
+        <span class="kw">const </span>VT0    = <span class="number">0x0</span>;
+        <span class="kw">const </span>VT1    = <span class="number">0x4000</span>;
+        <span class="kw">const </span>FFDLY  = <span class="number">0x8000</span>;
+        <span class="kw">const </span>FF0    = <span class="number">0x0</span>;
+        <span class="kw">const </span>FF1    = <span class="number">0x8000</span>;
     }
 }
 
@@ -1391,7 +1397,7 @@
     <span class="kw">pub </span>c_cflag: TermiosCFlag,
     <span class="kw">pub </span>c_lflag: TermiosLFlag,
     <span class="kw">pub </span>c_line: u8,
-    <span class="kw">pub </span>c_cc: [u8; <span class="number">11</span>],
+    <span class="kw">pub </span>c_cc: [u8; <span class="number">32</span>],
     <span class="kw">pub </span>c_ispeed: u32,
     <span class="kw">pub </span>c_ospeed: u32,
 }
@@ -1943,4 +1949,4 @@
     isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (c97d02cdb 2022-10-05)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (0ca356586 2022-10-06)" ></div></body></html>

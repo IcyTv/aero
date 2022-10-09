@@ -135,21 +135,87 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
-</pre><pre class="rust"><code><span class="kw">pub const </span>SIGHUP: usize = <span class="number">1</span>;
-<span class="kw">pub const </span>SIGINT: usize = <span class="number">2</span>;
-<span class="kw">pub const </span>SIGQUIT: usize = <span class="number">3</span>;
-<span class="kw">pub const </span>SIGILL: usize = <span class="number">4</span>;
-<span class="kw">pub const </span>SIGTRAP: usize = <span class="number">5</span>;
-<span class="kw">pub const </span>SIGABRT: usize = <span class="number">6</span>;
-<span class="kw">pub const </span>SIGBUS: usize = <span class="number">7</span>;
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+</pre><pre class="rust"><code><span class="comment">/*
+ * Copyright (C) 2021-2022 The Aero Project Developers.
+ *
+ * This file is part of The Aero Project.
+ *
+ * Aero is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Aero is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
+ */
+
+// mlibc/abis/linux/signal.h
+</span><span class="kw">pub const </span>SIGABRT: usize = <span class="number">6</span>;
 <span class="kw">pub const </span>SIGFPE: usize = <span class="number">8</span>;
+<span class="kw">pub const </span>SIGILL: usize = <span class="number">4</span>;
+<span class="kw">pub const </span>SIGINT: usize = <span class="number">2</span>;
+<span class="kw">pub const </span>SIGSEGV: usize = <span class="number">11</span>;
+<span class="kw">pub const </span>SIGTERM: usize = <span class="number">15</span>;
+<span class="kw">pub const </span>SIGPROF: usize = <span class="number">27</span>;
+<span class="kw">pub const </span>SIGIO: usize = <span class="number">29</span>;
+<span class="kw">pub const </span>SIGPWR: usize = <span class="number">30</span>;
+<span class="kw">pub const </span>SIGRTMIN: usize = <span class="number">35</span>;
+<span class="kw">pub const </span>SIGRTMAX: usize = <span class="number">64</span>;
+
+<span class="comment">// constants for sigprocmask()
+</span><span class="kw">pub const </span>SIG_BLOCK: u64 = <span class="number">0</span>;
+<span class="kw">pub const </span>SIG_UNBLOCK: u64 = <span class="number">1</span>;
+<span class="kw">pub const </span>SIG_SETMASK: u64 = <span class="number">2</span>;
+
+<span class="kw">pub const </span>SIGHUP: usize = <span class="number">1</span>;
+<span class="kw">pub const </span>SIGQUIT: usize = <span class="number">3</span>;
+<span class="kw">pub const </span>SIGTRAP: usize = <span class="number">5</span>;
+<span class="kw">pub const </span>SIGIOT: usize = SIGABRT;
+<span class="kw">pub const </span>SIGBUS: usize = <span class="number">7</span>;
 <span class="kw">pub const </span>SIGKILL: usize = <span class="number">9</span>;
 <span class="kw">pub const </span>SIGUSR1: usize = <span class="number">10</span>;
-<span class="kw">pub const </span>SIGSEGV: usize = <span class="number">11</span>;
 <span class="kw">pub const </span>SIGUSR2: usize = <span class="number">12</span>;
 <span class="kw">pub const </span>SIGPIPE: usize = <span class="number">13</span>;
 <span class="kw">pub const </span>SIGALRM: usize = <span class="number">14</span>;
-<span class="kw">pub const </span>SIGTERM: usize = <span class="number">15</span>;
 <span class="kw">pub const </span>SIGSTKFLT: usize = <span class="number">16</span>;
 <span class="kw">pub const </span>SIGCHLD: usize = <span class="number">17</span>;
 <span class="kw">pub const </span>SIGCONT: usize = <span class="number">18</span>;
@@ -161,21 +227,58 @@
 <span class="kw">pub const </span>SIGXCPU: usize = <span class="number">24</span>;
 <span class="kw">pub const </span>SIGXFSZ: usize = <span class="number">25</span>;
 <span class="kw">pub const </span>SIGVTALRM: usize = <span class="number">26</span>;
-<span class="kw">pub const </span>SIGPROF: usize = <span class="number">27</span>;
 <span class="kw">pub const </span>SIGWINCH: usize = <span class="number">28</span>;
-<span class="kw">pub const </span>SIGIO: usize = <span class="number">29</span>;
-<span class="kw">pub const </span>SIGPOLL: usize = SIGIO;
-<span class="kw">pub const </span>SIGPWR: usize = <span class="number">30</span>;
+<span class="kw">pub const </span>SIGPOLL: usize = <span class="number">29</span>;
 <span class="kw">pub const </span>SIGSYS: usize = <span class="number">31</span>;
-<span class="kw">pub const </span>SIGRTMIN: usize = <span class="number">32</span>;
-<span class="kw">pub const </span>SIGRTMAX: usize = <span class="number">33</span>;
-<span class="kw">pub const </span>SIGCANCEL: usize = <span class="number">34</span>;
+<span class="kw">pub const </span>SIGUNUSED: usize = SIGSYS;
+<span class="kw">pub const </span>SIGCANCEL: usize = <span class="number">32</span>;
 
-<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
+<span class="kw">pub const </span>SIG_ERR: i64 = -<span class="number">1</span>; <span class="comment">// error
+</span><span class="kw">pub const </span>SIG_DFL: i64 = <span class="number">0</span>; <span class="comment">// default
+</span><span class="kw">pub const </span>SIG_IGN: i64 = <span class="number">1</span>; <span class="comment">// ignore
+
+</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
 </span><span class="kw">pub enum </span>SignalHandler {
     Ignore,
     Default,
     Handle(<span class="kw">fn</span>(usize)),
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>SignalHandler {
+    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
+        SignalHandler::Default
+    }
+}
+
+<span class="kw">impl </span>From&lt;u64&gt; <span class="kw">for </span>SignalHandler {
+    <span class="kw">fn </span>from(v: u64) -&gt; <span class="self">Self </span>{
+        <span class="kw">let </span>v = v <span class="kw">as </span>i64;
+        <span class="kw">match </span>v {
+            SIG_IGN =&gt; SignalHandler::Ignore,
+            SIG_DFL =&gt; SignalHandler::Default,
+            v =&gt; SignalHandler::Handle(<span class="kw">unsafe </span>{ core::mem::transmute::&lt;u64, <span class="kw">fn</span>(usize)&gt;(v <span class="kw">as </span>u64) }),
+        }
+    }
+}
+
+<span class="kw">impl </span>From&lt;SignalHandler&gt; <span class="kw">for </span>usize {
+    <span class="kw">fn </span>from(h: SignalHandler) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>h {
+            SignalHandler::Ignore =&gt; SIG_IGN <span class="kw">as </span>usize,
+            SignalHandler::Default =&gt; SIG_DFL <span class="kw">as </span>usize,
+            SignalHandler::Handle(f) =&gt; f <span class="kw">as </span>usize,
+        }
+    }
+}
+
+<span class="kw">impl </span>From&lt;SignalHandler&gt; <span class="kw">for </span>u64 {
+    <span class="kw">fn </span>from(h: SignalHandler) -&gt; <span class="self">Self </span>{
+        <span class="kw">match </span>h {
+            SignalHandler::Ignore =&gt; SIG_IGN <span class="kw">as </span>u64,
+            SignalHandler::Default =&gt; SIG_DFL <span class="kw">as </span>u64,
+            SignalHandler::Handle(f) =&gt; f <span class="kw">as </span>u64,
+        }
+    }
 }
 
 <span class="attribute">#[repr(C)]
@@ -199,69 +302,34 @@
 }
 
 <span class="macro">bitflags::bitflags! </span>{
-    <span class="attribute">#[derive(Default)]
+    <span class="comment">// mlibc/abis/linux/signal.h
+    </span><span class="attribute">#[derive(Default)]
     </span><span class="kw">pub struct </span>SignalFlags: u32 {
-        <span class="kw">const </span>SA_NOCLDSTOP = (<span class="number">1 </span>&lt;&lt; <span class="number">0</span>);
-        <span class="kw">const </span>SA_ONSTACK   = (<span class="number">1 </span>&lt;&lt; <span class="number">1</span>);
-        <span class="kw">const </span>SA_RESETHAND = (<span class="number">1 </span>&lt;&lt; <span class="number">2</span>);
-        <span class="kw">const </span>SA_RESTART   = (<span class="number">1 </span>&lt;&lt; <span class="number">3</span>);
-        <span class="kw">const </span>SA_SIGINFO   = (<span class="number">1 </span>&lt;&lt; <span class="number">4</span>);
-        <span class="kw">const </span>SA_NOCLDWAIT = (<span class="number">1 </span>&lt;&lt; <span class="number">5</span>);
-        <span class="kw">const </span>SA_NODEFER   = (<span class="number">1 </span>&lt;&lt; <span class="number">6</span>);
+        <span class="kw">const </span>SA_NOCLDSTOP = <span class="number">1</span>;
+        <span class="kw">const </span>SA_NOCLDWAIT = <span class="number">2</span>;
+        <span class="kw">const </span>SA_SIGINFO = <span class="number">4</span>;
+        <span class="kw">const </span>SA_ONSTACK = <span class="number">0x08000000</span>;
+        <span class="kw">const </span>SA_RESTART = <span class="number">0x10000000</span>;
+        <span class="kw">const </span>SA_NODEFER = <span class="number">0x40000000</span>;
+        <span class="kw">const </span>SA_RESETHAND = <span class="number">0x80000000</span>;
+        <span class="kw">const </span>SA_RESTORER = <span class="number">0x04000000</span>;
     }
 }
 
 <span class="attribute">#[repr(u64)]
 #[derive(Debug)]
 </span><span class="kw">pub enum </span>SigProcMask {
-    Block = <span class="number">1</span>,
-    Unblock = <span class="number">2</span>,
-    Set = <span class="number">3</span>,
-}
-
-<span class="kw">impl </span>Default <span class="kw">for </span>SignalHandler {
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        SignalHandler::Default
-    }
-}
-
-<span class="kw">impl </span>From&lt;u64&gt; <span class="kw">for </span>SignalHandler {
-    <span class="kw">fn </span>from(v: u64) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>v = v <span class="kw">as </span>i64;
-        <span class="kw">match </span>v {
-            -<span class="number">3 </span>=&gt; SignalHandler::Ignore,
-            -<span class="number">2 </span>=&gt; SignalHandler::Default,
-            v =&gt; SignalHandler::Handle(<span class="kw">unsafe </span>{ core::mem::transmute::&lt;u64, <span class="kw">fn</span>(usize)&gt;(v <span class="kw">as </span>u64) }),
-        }
-    }
-}
-
-<span class="kw">impl </span>From&lt;SignalHandler&gt; <span class="kw">for </span>usize {
-    <span class="kw">fn </span>from(h: SignalHandler) -&gt; <span class="self">Self </span>{
-        <span class="kw">match </span>h {
-            SignalHandler::Ignore =&gt; -<span class="number">3isize </span><span class="kw">as </span>usize,
-            SignalHandler::Default =&gt; -<span class="number">2isize </span><span class="kw">as </span>usize,
-            SignalHandler::Handle(f) =&gt; f <span class="kw">as </span>usize,
-        }
-    }
-}
-
-<span class="kw">impl </span>From&lt;SignalHandler&gt; <span class="kw">for </span>u64 {
-    <span class="kw">fn </span>from(h: SignalHandler) -&gt; <span class="self">Self </span>{
-        <span class="kw">match </span>h {
-            SignalHandler::Ignore =&gt; -<span class="number">3isize </span><span class="kw">as </span>u64,
-            SignalHandler::Default =&gt; -<span class="number">2isize </span><span class="kw">as </span>u64,
-            SignalHandler::Handle(f) =&gt; f <span class="kw">as </span>u64,
-        }
-    }
+    Block = SIG_BLOCK,
+    Unblock = SIG_UNBLOCK,
+    Set = SIG_SETMASK,
 }
 
 <span class="kw">impl </span>From&lt;u64&gt; <span class="kw">for </span>SigProcMask {
     <span class="kw">fn </span>from(v: u64) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>v {
-            <span class="number">1 </span>=&gt; SigProcMask::Block,
-            <span class="number">2 </span>=&gt; SigProcMask::Unblock,
-            <span class="number">3 </span>=&gt; SigProcMask::Set,
+            SIG_BLOCK =&gt; SigProcMask::Block,
+            SIG_UNBLOCK =&gt; SigProcMask::Unblock,
+            SIG_SETMASK =&gt; SigProcMask::Set,
             <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(<span class="string">&quot;invalid signal procmask {}&quot;</span>, v),
         }
     }
@@ -273,4 +341,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (c97d02cdb 2022-10-05)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (0ca356586 2022-10-06)" ></div></body></html>
