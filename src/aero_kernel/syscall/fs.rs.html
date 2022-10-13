@@ -637,6 +637,8 @@
 <span id="637">637</span>
 <span id="638">638</span>
 <span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -1159,7 +1161,7 @@
 /// file.
 </span><span class="attribute">#[syscall]
 </span><span class="kw">pub fn </span>link(src_path: <span class="kw-2">&amp;</span>Path, dest_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
-    <span class="kw">let </span>src = fs::lookup_path(src_path)<span class="question-mark">?</span>.inode();
+    <span class="kw">let </span>src = fs::lookup_path(src_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>(dest_dir, dest_name) = dest_path.parent_and_basename();
 
     <span class="kw">let </span>dest_dir = fs::lookup_path(dest_dir)<span class="question-mark">?</span>.inode();
@@ -1170,7 +1172,9 @@
     // strong references to it.
     //
     // TODO: Should this be moved to the inode impl?
-    </span><span class="kw">if </span>dest_dir.weak_filesystem().unwrap().as_ptr() != src.weak_filesystem().unwrap().as_ptr() {
+    </span><span class="kw">if </span>dest_dir.weak_filesystem().unwrap().as_ptr()
+        != src.inode().weak_filesystem().unwrap().as_ptr()
+    {
         <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EINVAL);
     }
 

@@ -501,6 +501,8 @@
 <span id="501">501</span>
 <span id="502">502</span>
 <span id="503">503</span>
+<span id="504">504</span>
+<span id="505">505</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -915,7 +917,9 @@
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.read().filesystem.clone())
     }
 
-    <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, src: INodeCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, src: DirCacheItem) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+        <span class="kw">let </span>src = src.inode();
+
         <span class="comment">// ensure: The dest inode (self) is a directory.
         </span><span class="kw">if </span><span class="self">self</span>.metadata()<span class="question-mark">?</span>.file_type() != FileType::Directory {
             <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotDirectory);

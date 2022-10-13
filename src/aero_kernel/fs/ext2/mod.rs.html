@@ -525,6 +525,21 @@
 <span id="525">525</span>
 <span id="526">526</span>
 <span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -798,8 +813,8 @@
 
         entry.entry_size = block_size <span class="kw">as _</span>;
         entry.inode = ext2_inode.id <span class="kw">as _</span>;
-        entry.file_type = <span class="number">2</span>;
-        entry.set_name(name);
+        entry.file_type = <span class="number">2</span>; <span class="comment">// FIXME: This is fucked.
+        </span>entry.set_name(name);
 
         fs.block.write(block * block_size, entry.as_bytes());
         <span class="prelude-val">Ok</span>(inode)
@@ -901,11 +916,26 @@
     }
 
     <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, usr_buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
-        <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_file() {
+        <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_file() &amp;&amp; !<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_symlink() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
         }
 
         <span class="self">self</span>.write(offset, usr_buffer)
+    }
+
+    <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, src: DirCacheItem) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+        <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_directory() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+        }
+
+        <span class="kw">if </span>src.inode().metadata()<span class="question-mark">?</span>.is_directory() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+        }
+
+        <span class="kw">let </span>inode = <span class="self">self</span>.make_inode(name, FileType::Symlink)<span class="question-mark">?</span>;
+        inode.write_at(<span class="number">0</span>, src.name().as_bytes())<span class="question-mark">?</span>;
+
+        <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>truncate(<span class="kw-2">&amp;</span><span class="self">self</span>, _size: usize) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
