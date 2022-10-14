@@ -232,7 +232,6 @@
 <span id="232">232</span>
 <span id="233">233</span>
 <span id="234">234</span>
-<span id="235">235</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -261,7 +260,6 @@
 <span class="kw">use </span>spin::RwLock;
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::block::{BlockDevice, CachedAccess};
-<span class="kw">use </span><span class="kw">crate</span>::fs::cache::INodeCacheItem;
 
 <span class="kw">use super</span>::{disk, Ext2};
 
@@ -386,7 +384,7 @@
     </span>}
 
     <span class="doccomment">/// Allocates a new inode using the first fit allocation strategy.
-    </span><span class="kw">pub fn </span>alloc_inode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;INodeCacheItem&gt; {
+    </span><span class="kw">pub fn </span>alloc_inode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="kw">let </span>fs = <span class="self">self</span>.ext2.upgrade()<span class="question-mark">?</span>;
         <span class="kw">let </span>ino_per_group = fs.superblock.inodes_per_group <span class="kw">as </span>usize;
 
@@ -403,7 +401,7 @@
             block_group.free_inodes_count -= <span class="number">1</span>;
             drop(descriptors); <span class="comment">// release the lock
 
-            </span><span class="kw">return </span>fs.find_inode(inode_id);
+            </span><span class="kw">return </span><span class="prelude-val">Some</span>(inode_id);
         }
 
         <span class="prelude-val">None

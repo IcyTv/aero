@@ -540,6 +540,100 @@
 <span id="540">540</span>
 <span id="541">541</span>
 <span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
+<span id="548">548</span>
+<span id="549">549</span>
+<span id="550">550</span>
+<span id="551">551</span>
+<span id="552">552</span>
+<span id="553">553</span>
+<span id="554">554</span>
+<span id="555">555</span>
+<span id="556">556</span>
+<span id="557">557</span>
+<span id="558">558</span>
+<span id="559">559</span>
+<span id="560">560</span>
+<span id="561">561</span>
+<span id="562">562</span>
+<span id="563">563</span>
+<span id="564">564</span>
+<span id="565">565</span>
+<span id="566">566</span>
+<span id="567">567</span>
+<span id="568">568</span>
+<span id="569">569</span>
+<span id="570">570</span>
+<span id="571">571</span>
+<span id="572">572</span>
+<span id="573">573</span>
+<span id="574">574</span>
+<span id="575">575</span>
+<span id="576">576</span>
+<span id="577">577</span>
+<span id="578">578</span>
+<span id="579">579</span>
+<span id="580">580</span>
+<span id="581">581</span>
+<span id="582">582</span>
+<span id="583">583</span>
+<span id="584">584</span>
+<span id="585">585</span>
+<span id="586">586</span>
+<span id="587">587</span>
+<span id="588">588</span>
+<span id="589">589</span>
+<span id="590">590</span>
+<span id="591">591</span>
+<span id="592">592</span>
+<span id="593">593</span>
+<span id="594">594</span>
+<span id="595">595</span>
+<span id="596">596</span>
+<span id="597">597</span>
+<span id="598">598</span>
+<span id="599">599</span>
+<span id="600">600</span>
+<span id="601">601</span>
+<span id="602">602</span>
+<span id="603">603</span>
+<span id="604">604</span>
+<span id="605">605</span>
+<span id="606">606</span>
+<span id="607">607</span>
+<span id="608">608</span>
+<span id="609">609</span>
+<span id="610">610</span>
+<span id="611">611</span>
+<span id="612">612</span>
+<span id="613">613</span>
+<span id="614">614</span>
+<span id="615">615</span>
+<span id="616">616</span>
+<span id="617">617</span>
+<span id="618">618</span>
+<span id="619">619</span>
+<span id="620">620</span>
+<span id="621">621</span>
+<span id="622">622</span>
+<span id="623">623</span>
+<span id="624">624</span>
+<span id="625">625</span>
+<span id="626">626</span>
+<span id="627">627</span>
+<span id="628">628</span>
+<span id="629">629</span>
+<span id="630">630</span>
+<span id="631">631</span>
+<span id="632">632</span>
+<span id="633">633</span>
+<span id="634">634</span>
+<span id="635">635</span>
+<span id="636">636</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -564,7 +658,8 @@
 
 <span class="kw">use </span>core::mem::MaybeUninit;
 
-<span class="kw">use </span>aero_syscall::MMapFlags;
+<span class="kw">use </span>aero_syscall::socket::MessageHeader;
+<span class="kw">use </span>aero_syscall::{MMapFlags, SyscallError};
 <span class="kw">use </span>alloc::boxed::Box;
 <span class="kw">use </span>alloc::string::ToString;
 <span class="kw">use </span>alloc::sync::{Arc, Weak};
@@ -575,6 +670,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::fs::ext2::disk::{FileType, SuperBlock};
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::{FrameAllocator, PhysFrame, FRAME_ALLOCATOR};
 
+<span class="kw">use </span><span class="kw">crate</span>::socket::unix::UnixSocket;
+<span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
+
 <span class="kw">use </span><span class="self">self</span>::group_desc::GroupDescriptors;
 
 <span class="kw">use </span><span class="kw">super</span>::block::{BlockDevice, CachedAccess};
@@ -582,13 +680,17 @@
 <span class="kw">use </span><span class="kw">super</span>::cache::{DirCacheItem, INodeCacheItem};
 <span class="kw">use super</span>::{cache, FileSystemError};
 
-<span class="kw">use </span><span class="kw">super</span>::inode::{DirEntry, INodeInterface, Metadata};
+<span class="kw">use </span><span class="kw">super</span>::inode::{DirEntry, INodeInterface, Metadata, PollFlags, PollTable};
 <span class="kw">use </span><span class="kw">super</span>::FileSystem;
 
 <span class="kw">pub struct </span>INode {
     id: usize,
     fs: Weak&lt;Ext2&gt;,
     inode: RwLock&lt;Box&lt;disk::INode&gt;&gt;,
+    <span class="comment">// Forwards all of the inode operations to the proxy inode. Note that the
+    // proxy inode is not saved on the disk. (e.g. This is useful for binding
+    // a socket inode to a file).
+    </span>proxy: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt;,
 
     <span class="comment">// TODO: Do not store this in the inode, but rather in a different
     // cache using the API provided by fs::cache (consider LRU only?).
@@ -596,7 +698,11 @@
 }
 
 <span class="kw">impl </span>INode {
-    <span class="kw">pub fn </span>new(ext2: Weak&lt;Ext2&gt;, id: usize) -&gt; <span class="prelude-ty">Option</span>&lt;INodeCacheItem&gt; {
+    <span class="kw">pub fn </span>new(
+        ext2: Weak&lt;Ext2&gt;,
+        id: usize,
+        proxy: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;INodeCacheItem&gt; {
         <span class="macro">debug_assert!</span>(id != <span class="number">0</span>);
 
         <span class="kw">let </span>icache = cache::icache();
@@ -613,6 +719,7 @@
                     inode: RwLock::new(inode),
                     id,
                     fs: ext2,
+                    proxy,
 
                     sref: sref.clone(),
                 }))),
@@ -771,7 +878,12 @@
         <span class="macro">todo!</span>(<span class="string">&quot;triply indirect block&quot;</span>)
     }
 
-    <span class="kw">pub fn </span>make_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, typ: FileType) -&gt; <span class="kw">super</span>::Result&lt;INodeCacheItem&gt; {
+    <span class="kw">pub fn </span>make_inode(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        name: <span class="kw-2">&amp;</span>str,
+        typ: FileType,
+        proxy: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt;,
+    ) -&gt; <span class="kw">super</span>::Result&lt;INodeCacheItem&gt; {
         <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_directory() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
         }
@@ -788,6 +900,8 @@
         <span class="kw">let </span>fs = <span class="self">self</span>.fs.upgrade().expect(<span class="string">&quot;ext2: filesystem was dropped&quot;</span>);
 
         <span class="kw">let </span>inode = fs.bgdt.alloc_inode().expect(<span class="string">&quot;ext2: out of inodes&quot;</span>);
+        <span class="kw">let </span>inode = fs.find_inode(inode, proxy).expect(<span class="string">&quot;ext2: inode not found&quot;</span>);
+
         <span class="kw">let </span>ext2_inode = inode.downcast_arc::&lt;INode&gt;().expect(<span class="string">&quot;ext2: invalid inode&quot;</span>);
 
         {
@@ -826,7 +940,7 @@
         name: <span class="kw-2">&amp;</span>str,
         entry: <span class="kw-2">&amp;</span>disk::DirEntry,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt; {
-        <span class="kw">let </span>inode = <span class="self">self</span>.fs.upgrade()<span class="question-mark">?</span>.find_inode(entry.inode <span class="kw">as </span>usize)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inode = <span class="self">self</span>.fs.upgrade()<span class="question-mark">?</span>.find_inode(entry.inode <span class="kw">as </span>usize, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Some</span>(DirEntry::new(parent, inode, name.to_string()))
     }
 
@@ -900,6 +1014,10 @@
     }
 
     <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, usr_buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.read_at(offset, usr_buffer);
+        }
+
         <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_file() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
         }
@@ -916,6 +1034,10 @@
     }
 
     <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, usr_buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.write_at(offset, usr_buffer);
+        }
+
         <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_file() &amp;&amp; !<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_symlink() {
             <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
         }
@@ -932,23 +1054,40 @@
             <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
         }
 
-        <span class="kw">let </span>inode = <span class="self">self</span>.make_inode(name, FileType::Symlink)<span class="question-mark">?</span>;
+        <span class="kw">let </span>inode = <span class="self">self</span>.make_inode(name, FileType::Symlink, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         inode.write_at(<span class="number">0</span>, src.name().as_bytes())<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>truncate(<span class="kw-2">&amp;</span><span class="self">self</span>, _size: usize) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+        <span class="macro">log::warn!</span>(<span class="string">&quot;ext2::truncate is a stub!&quot;</span>);
         <span class="prelude-val">Ok</span>(())
     }
 
     <span class="kw">fn </span>touch(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">super</span>::Result&lt;DirCacheItem&gt; {
-        <span class="kw">let </span>inode = <span class="self">self</span>.make_inode(name, FileType::File)<span class="question-mark">?</span>;
+        <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_directory() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+        }
+
+        <span class="kw">let </span>inode = <span class="self">self</span>.make_inode(name, FileType::File, <span class="prelude-val">None</span>)<span class="question-mark">?</span>;
         <span class="prelude-val">Ok</span>(DirEntry::new(parent, inode, name.to_string()))
     }
 
     <span class="kw">fn </span>mkdir(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">super</span>::Result&lt;INodeCacheItem&gt; {
-        <span class="self">self</span>.make_inode(name, FileType::Directory)
+        <span class="kw">if </span>!<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_directory() {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+        }
+
+        <span class="self">self</span>.make_inode(name, FileType::Directory, <span class="prelude-val">None</span>)
+    }
+
+    <span class="kw">fn </span>make_local_socket_inode(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        name: <span class="kw-2">&amp;</span>str,
+        inode: Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;,
+    ) -&gt; <span class="kw">super</span>::Result&lt;INodeCacheItem&gt; {
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_inode(name, FileType::Socket, <span class="prelude-val">Some</span>(inode))<span class="question-mark">?</span>)
     }
 
     <span class="kw">fn </span>resolve_link(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">super</span>::Result&lt;String&gt; {
@@ -970,6 +1109,8 @@
     }
 
     <span class="kw">fn </span>mmap(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, size: usize, flags: MMapFlags) -&gt; <span class="kw">super</span>::Result&lt;PhysFrame&gt; {
+        <span class="macro">assert!</span>(<span class="self">self</span>.proxy.is_none());
+
         <span class="comment">// TODO: support shared file mappings.
         </span><span class="macro">assert!</span>(!flags.contains(MMapFlags::MAP_SHARED));
 
@@ -979,6 +1120,49 @@
         <span class="self">self</span>.read_at(offset, buffer)<span class="question-mark">?</span>;
 
         <span class="prelude-val">Ok</span>(private_cp)
+    }
+
+    <span class="kw">fn </span>listen(<span class="kw-2">&amp;</span><span class="self">self</span>, backlog: usize) -&gt; <span class="prelude-ty">Result</span>&lt;(), SyscallError&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.listen(backlog);
+        }
+
+        <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EACCES);
+    }
+
+    <span class="comment">// XXX: We do not require to handle `bind` here since if this function
+    // is being is called on an EXT2 inode then, it has already been bound.
+
+    </span><span class="kw">fn </span>connect(<span class="kw-2">&amp;</span><span class="self">self</span>, address: SocketAddr, length: usize) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.connect(address, length);
+        }
+
+        <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+    }
+
+    <span class="kw">fn </span>accept(<span class="kw-2">&amp;</span><span class="self">self</span>, address: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>SocketAddr&gt;) -&gt; <span class="kw">super</span>::Result&lt;Arc&lt;UnixSocket&gt;&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.accept(address);
+        }
+
+        <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+    }
+
+    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>, message_header: <span class="kw-2">&amp;mut </span>MessageHeader) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.recv(message_header);
+        }
+
+        <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
+    }
+
+    <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; <span class="kw">super</span>::Result&lt;PollFlags&gt; {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(proxy) = <span class="self">self</span>.proxy.as_ref() {
+            <span class="kw">return </span>proxy.poll(table);
+        }
+
+        <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
     }
 }
 
@@ -1068,15 +1252,19 @@
         }))
     }
 
-    <span class="kw">pub fn </span>find_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, id: usize) -&gt; <span class="prelude-ty">Option</span>&lt;INodeCacheItem&gt; {
-        INode::new(<span class="self">self</span>.sref.clone(), id)
+    <span class="kw">pub fn </span>find_inode(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        id: usize,
+        proxy: <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;INodeCacheItem&gt; {
+        INode::new(<span class="self">self</span>.sref.clone(), id, proxy)
     }
 }
 
 <span class="kw">impl </span>FileSystem <span class="kw">for </span>Ext2 {
     <span class="kw">fn </span>root_dir(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; DirCacheItem {
         <span class="kw">let </span>inode = <span class="self">self
-            </span>.find_inode(Ext2::ROOT_INODE_ID)
+            </span>.find_inode(Ext2::ROOT_INODE_ID, <span class="prelude-val">None</span>)
             .expect(<span class="string">&quot;ext2: invalid filesystem (root inode not found)&quot;</span>);
 
         DirEntry::new_root(inode, String::from(<span class="string">&quot;/&quot;</span>))
