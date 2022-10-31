@@ -400,7 +400,7 @@
 }
 
 <span class="attribute">#[repr(u8)]
-#[derive(PartialEq)]
+#[derive(PartialEq, Copy, Clone)]
 </span><span class="kw">pub enum </span>FileType {
     Unknown = <span class="number">0</span>,
     Fifo = <span class="number">1</span>,
