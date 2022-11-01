@@ -359,6 +359,7 @@
 <span id="359">359</span>
 <span id="360">360</span>
 <span id="361">361</span>
+<span id="362">362</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -548,7 +549,8 @@
     <span class="kw">pub </span>sqes: u8,
     <span class="kw">pub </span>cqes: u8,
     <span class="kw">pub </span>maxcmd: u16,
-    <span class="kw">pub </span>nn: u32,
+    <span class="doccomment">/// This field indicates the maximum value of a valid NSID for the NVM subsystem.
+    </span><span class="kw">pub </span>nn: u32,
     <span class="kw">pub </span>oncs: u16,
     <span class="kw">pub </span>fuses: u16,
     <span class="kw">pub </span>fna: u8,
@@ -721,4 +723,4 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;Command&gt;(), <span class="number">64</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (77e57db38 2022-10-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>

@@ -151,6 +151,22 @@
 <span id="151">151</span>
 <span id="152">152</span>
 <span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
 </pre><pre class="rust"><code><span class="kw">use </span>core::cell::UnsafeCell;
 <span class="kw">use </span>core::sync::atomic::{AtomicU16, Ordering};
 
@@ -262,17 +278,21 @@
     id: u16,
     size: usize,
 
+    cid: u16,
+
     submission: Queue&lt;<span class="lifetime">&#39;a</span>, Submisson&gt;,
     completion: Queue&lt;<span class="lifetime">&#39;a</span>, Completion&gt;,
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; QueuePair&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">pub fn </span>new(registers: <span class="kw-2">&amp;</span>Registers, size: usize) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, Error&gt; {
-        <span class="kw">let </span>queue_id = QUEUE_PAIR_ID.fetch_add(<span class="number">2</span>, Ordering::SeqCst);
+        <span class="kw">let </span>queue_id = QUEUE_PAIR_ID.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
 
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
             size,
             id: queue_id,
+
+            cid: <span class="number">0</span>,
 
             submission: Queue::new(registers, size, queue_id)<span class="question-mark">?</span>,
             completion: Queue::new(registers, size, queue_id)<span class="question-mark">?</span>,
@@ -280,7 +300,19 @@
     }
 
     <span class="kw">pub fn </span>submit_command&lt;T: Into&lt;Command&gt;&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, command: T) {
-        <span class="self">self</span>.submission.submit_command(command.into());
+        <span class="kw">let </span><span class="kw-2">mut </span>command = command.into();
+
+        <span class="kw">unsafe </span>{
+            <span class="comment">// SAFETY: Command Layout:
+            //              - opcode: u8
+            //              - flags: u8
+            //              - command_id: u16 (offset=2 bytes))
+            </span><span class="kw-2">*</span>(<span class="kw-2">&amp;mut </span>command <span class="kw">as </span><span class="kw-2">*mut </span>Command <span class="kw">as </span><span class="kw-2">*mut </span>u16).offset(<span class="number">1</span>) = <span class="self">self</span>.cid;
+        }
+
+        <span class="self">self</span>.cid += <span class="number">1</span>;
+
+        <span class="self">self</span>.submission.submit_command(command);
         <span class="self">self</span>.completion.next_cmd_result().unwrap();
     }
 
@@ -305,4 +337,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (77e57db38 2022-10-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>

@@ -534,6 +534,7 @@
 <span id="534">534</span>
 <span id="535">535</span>
 <span id="536">536</span>
+<span id="537">537</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -899,9 +900,8 @@
         io_cq_cmd.prp1 = io_queue.completion_addr().as_u64();
         io_cq_cmd.cqid = io_queue.id();
         io_cq_cmd.q_size = (io_queue.len() - <span class="number">1</span>) <span class="kw">as </span>u16;
-        io_cq_cmd.irq_vector = vector <span class="kw">as </span>u16;
-        io_cq_cmd.cq_flags =
-            (CommandFlags::CQ_IRQ_ENABLED | CommandFlags::QUEUE_PHYS_CONTIG).bits();
+        io_cq_cmd.irq_vector = <span class="number">0</span>;
+        io_cq_cmd.cq_flags = CommandFlags::QUEUE_PHYS_CONTIG.bits();
 
         admin.submit_command(io_cq_cmd);
 
@@ -912,8 +912,7 @@
         io_sq_cmd.cqid = io_queue.id();
         io_sq_cmd.sqid = io_queue.id();
         io_sq_cmd.q_size = (io_queue.len() - <span class="number">1</span>) <span class="kw">as </span>u16;
-        io_sq_cmd.sq_flags =
-            (CommandFlags::CQ_IRQ_ENABLED | CommandFlags::QUEUE_PHYS_CONTIG).bits();
+        io_sq_cmd.sq_flags = CommandFlags::QUEUE_PHYS_CONTIG.bits();
 
         admin.submit_command(io_sq_cmd);
 
@@ -932,7 +931,8 @@
             io_queue: Mutex::new(io_queue),
         });
 
-        <span class="kw">let </span>namespace_ids = || {
+        <span class="comment">// Discover and initialize the namespaces.
+        </span><span class="kw">let </span>nsids = {
             <span class="kw">let </span>nsid_list = Dma::&lt;u32&gt;::new_uninit_slice(this.identity.nn <span class="kw">as </span>usize);
             <span class="kw">let </span><span class="kw-2">mut </span>nsid_command = IdentifyCommand::default();
 
@@ -946,48 +946,50 @@
             </span><span class="kw">unsafe </span>{ nsid_list.assume_init() }
         };
 
-        <span class="comment">// Discover and initialize the namespaces.
-        </span><span class="kw">let </span>nsids = namespace_ids();
-        <span class="kw">let </span>namespaces = nsids
-            .iter()
-            .map(|nsid| {
-                <span class="kw">let </span>identity = Dma::&lt;IdentifyNamespace&gt;::new();
-                <span class="kw">let </span><span class="kw-2">mut </span>identify_command = IdentifyCommand::default();
+        <span class="kw">let </span><span class="kw-2">mut </span>namespaces = <span class="macro">alloc::vec!</span>[];
 
-                identify_command.opcode = AdminOpcode::Identify <span class="kw">as </span>u8;
-                identify_command.cns = IdentifyCns::Namespace <span class="kw">as </span>u8;
-                identify_command.nsid = <span class="kw-2">*</span>nsid;
-                identify_command.data_ptr.prp1 = identity.addr().as_u64();
+        <span class="kw">for </span><span class="kw-2">&amp;</span>nsid <span class="kw">in </span>nsids.iter() {
+            <span class="comment">// Unused entries are zero-filled.
+            </span><span class="kw">if </span>nsid == <span class="number">0 </span>{
+                <span class="kw">continue</span>;
+            }
 
-                this.admin.lock().submit_command(identify_command);
+            <span class="kw">let </span>identity = Dma::&lt;IdentifyNamespace&gt;::new();
+            <span class="kw">let </span><span class="kw-2">mut </span>identify_command = IdentifyCommand::default();
 
-                <span class="kw">let </span>blocks = identity.nsze <span class="kw">as </span>usize;
-                <span class="kw">let </span>block_size = <span class="number">1 </span>&lt;&lt; identity.lbaf[(identity.flbas &amp; <span class="number">0b11111</span>) <span class="kw">as </span>usize].ds;
+            identify_command.opcode = AdminOpcode::Identify <span class="kw">as </span>u8;
+            identify_command.cns = IdentifyCns::Namespace <span class="kw">as </span>u8;
+            identify_command.nsid = nsid;
+            identify_command.data_ptr.prp1 = identity.addr().as_u64();
 
-                <span class="comment">// The maximum transfer size is in units of 2^(min page size)
-                </span><span class="kw">let </span>lba_shift = identity.lbaf[(identity.flbas &amp; <span class="number">0xf</span>) <span class="kw">as </span>usize].ds;
-                <span class="kw">let </span>max_lbas = <span class="number">1 </span>&lt;&lt; (max_transfer_shift - lba_shift <span class="kw">as </span>usize);
-                <span class="kw">let </span>max_prps = (max_lbas * (<span class="number">1 </span>&lt;&lt; lba_shift)) / Size4KiB::SIZE <span class="kw">as </span>usize;
+            this.admin.lock().submit_command(identify_command);
 
-                Namespace {
-                    controller: this.clone(),
-                    nsid: <span class="kw-2">*</span>nsid,
-                    blocks,
-                    block_size,
-                    size: blocks * block_size,
-                    max_prps,
-                    prps: Mutex::new(Dma::new_uninit_slice(max_prps)),
-                }
-            })
-            .collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
+            <span class="kw">let </span>blocks = identity.nsze <span class="kw">as </span>usize;
+            <span class="kw">let </span>block_size = <span class="number">1 </span>&lt;&lt; identity.lbaf[(identity.flbas &amp; <span class="number">0b11111</span>) <span class="kw">as </span>usize].ds;
 
-        <span class="kw">for </span>namespace <span class="kw">in </span>namespaces.iter() {
+            <span class="comment">// The maximum transfer size is in units of 2^(min page size)
+            </span><span class="kw">let </span>lba_shift = identity.lbaf[(identity.flbas &amp; <span class="number">0xf</span>) <span class="kw">as </span>usize].ds;
+            <span class="kw">let </span>max_lbas = <span class="number">1 </span>&lt;&lt; (max_transfer_shift - lba_shift <span class="kw">as </span>usize);
+            <span class="kw">let </span>max_prps = (max_lbas * (<span class="number">1 </span>&lt;&lt; lba_shift)) / Size4KiB::SIZE <span class="kw">as </span>usize;
+
+            <span class="kw">let </span>namespace = Namespace {
+                controller: this.clone(),
+                nsid,
+                blocks,
+                block_size,
+                size: blocks * block_size,
+                max_prps,
+                prps: Mutex::new(Dma::new_uninit_slice(max_prps)),
+            };
+
             <span class="macro">log::trace!</span>(
                 <span class="string">&quot;nvme: identified namespace (blocks={}, block_size={}, size={})&quot;</span>,
                 namespace.blocks,
                 namespace.block_size,
                 namespace.size
             );
+
+            namespaces.push(namespace);
         }
 
         <span class="kw-2">*</span>this.namespaces.lock() = namespaces;
@@ -1071,4 +1073,4 @@
 
 <span class="macro">crate::module_init!</span>(nvme_init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (77e57db38 2022-10-30)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
