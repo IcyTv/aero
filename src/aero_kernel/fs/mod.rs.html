@@ -327,6 +327,10 @@
 <span id="327">327</span>
 <span id="328">328</span>
 <span id="329">329</span>
+<span id="330">330</span>
+<span id="331">331</span>
+<span id="332">332</span>
+<span id="333">333</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -601,10 +605,14 @@
                 <span class="kw">let </span>metadata = inode.metadata()<span class="question-mark">?</span>;
 
                 <span class="kw">if </span>metadata.is_symlink() {
-                    <span class="kw">let </span>relative_path_str = inode.resolve_link()<span class="question-mark">?</span>;
-                    <span class="kw">let </span>relative_path = Path::new(<span class="kw-2">&amp;</span>relative_path_str);
+                    <span class="kw">let </span>resolved_path_str = inode.resolve_link()<span class="question-mark">?</span>;
+                    <span class="kw">let </span>resolved_path = Path::new(<span class="kw-2">&amp;</span>resolved_path_str);
 
-                    <span class="kw">return </span>lookup_path_with(parent, relative_path, LookupMode::None);
+                    <span class="kw">if </span>resolved_path.is_absolute() {
+                        <span class="kw">return </span>lookup_path(resolved_path);
+                    }
+
+                    <span class="kw">return </span>lookup_path_with(parent, resolved_path, LookupMode::None);
                 } <span class="kw">else if </span>metadata.is_directory() {
                     <span class="kw">if let </span><span class="prelude-val">Ok</span>(mount_point) = MOUNT_MANAGER.find_mount(cwd.clone()) {
                         cwd = mount_point.root_entry;
