@@ -114,7 +114,7 @@
 // http://opensource.org/licenses/MIT&gt;, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::alloc::boxed::Box;
 <span class="kw">use </span>core::borrow::Borrow;
 <span class="kw">use </span>core::fmt;
@@ -140,7 +140,7 @@
     /// # Safety
     ///
     /// You must ensure that the `UnsafeRef` guarantees are upheld.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>from_raw(val: <span class="kw-2">*const </span>T) -&gt; UnsafeRef&lt;T&gt; {
         UnsafeRef {
             ptr: NonNull::new_unchecked(val <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>),
@@ -148,16 +148,16 @@
     }
 
     <span class="doccomment">/// Converts an `UnsafeRef` into a raw pointer
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>into_raw(ptr: <span class="self">Self</span>) -&gt; <span class="kw-2">*mut </span>T {
         ptr.ptr.as_ptr()
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
 </span><span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; UnsafeRef&lt;T&gt; {
     <span class="doccomment">/// Creates an `UnsafeRef` from a `Box`
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>from_box(val: Box&lt;T&gt;) -&gt; UnsafeRef&lt;T&gt; {
         <span class="kw">unsafe </span>{ UnsafeRef::from_raw(Box::into_raw(val)) }
     }
@@ -170,14 +170,14 @@
     /// object and that it is not currently a member of any intrusive
     /// collections. This operation is only valid if the `UnsafeRef` was
     /// created using `UnsafeRef::from_box`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>into_box(ptr: <span class="self">Self</span>) -&gt; Box&lt;T&gt; {
         Box::from_raw(UnsafeRef::into_raw(ptr))
     }
 }
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; Clone <span class="kw">for </span>UnsafeRef&lt;T&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; UnsafeRef&lt;T&gt; {
         UnsafeRef { ptr: <span class="self">self</span>.ptr }
     }
@@ -186,28 +186,28 @@
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; Deref <span class="kw">for </span>UnsafeRef&lt;T&gt; {
     <span class="kw">type </span>Target = T;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
         <span class="self">self</span>.as_ref()
     }
 }
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; AsRef&lt;T&gt; <span class="kw">for </span>UnsafeRef&lt;T&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>as_ref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
         <span class="kw">unsafe </span>{ <span class="self">self</span>.ptr.as_ref() }
     }
 }
 
 <span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; Borrow&lt;T&gt; <span class="kw">for </span>UnsafeRef&lt;T&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>borrow(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>T {
         <span class="self">self</span>.as_ref()
     }
 }
 
 <span class="kw">impl</span>&lt;T: fmt::Debug + <span class="question-mark">?</span>Sized&gt; fmt::Debug <span class="kw">for </span>UnsafeRef&lt;T&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         fmt::Debug::fmt(<span class="self">self</span>.as_ref(), f)
     }
@@ -217,4 +217,4 @@
 
 <span class="kw">unsafe impl</span>&lt;T: <span class="question-mark">?</span>Sized + Sync&gt; Sync <span class="kw">for </span>UnsafeRef&lt;T&gt; {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

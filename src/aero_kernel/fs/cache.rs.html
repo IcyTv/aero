@@ -461,7 +461,7 @@
 
 <span class="kw">impl</span>&lt;T: CacheDropper&gt; CacheArc&lt;T&gt; {
     <span class="doccomment">/// Constructs a new `CacheArc&lt;T&gt;`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>new(data: T) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(Arc::new(data))
     }
@@ -484,7 +484,7 @@
     ///
     /// This creates another pointer to the same allocation, increasing the
     /// strong reference count.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.clone())
     }
@@ -532,7 +532,7 @@
 
 <span class="kw">impl</span>&lt;T: CacheDropper&gt; Clone <span class="kw">for </span>CacheWeak&lt;T&gt; {
     <span class="doccomment">/// Makes a clone of the `CacheWeak&lt;T&gt;` pointer.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(<span class="self">self</span>.<span class="number">0</span>.clone())
     }
@@ -785,12 +785,12 @@
     }
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>clear_inode_cache() {
     INODE_CACHE.get().map(|cache| cache.clear());
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>clear_dir_cache() {
     DIR_CACHE.get().map(|cache| cache.clear());
 }
@@ -813,4 +813,4 @@
     DIR_CACHE.call_once(|| DirCache::new());
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

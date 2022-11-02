@@ -106,7 +106,7 @@
 </pre><pre class="rust"><code><span class="doccomment">//! Types supporting the UTF-8 parser
 
 /// Action to take when receiving a byte
-</span><span class="attribute">#[derive(Debug, Copy, Clone)]
+</span><span class="attr">#[derive(Debug, Copy, Clone)]
 </span><span class="kw">pub enum </span>Action {
     <span class="doccomment">/// Unexpected byte; sequence is invalid
     </span>InvalidSequence = <span class="number">0</span>,
@@ -130,7 +130,7 @@
 ///
 /// There is a state for each initial input of the 3 and 4 byte sequences since
 /// the following bytes are subject to different conditions than a tail byte.
-</span><span class="attribute">#[allow(non_camel_case_types)]
+</span><span class="attr">#[allow(non_camel_case_types)]
 #[derive(Debug, Copy, Clone)]
 </span><span class="kw">pub enum </span>State {
     <span class="doccomment">/// Ground state; expect anything
@@ -162,7 +162,7 @@
     ///
     /// This takes the current state and input byte into consideration, to determine the next state
     /// and any action that should be taken.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>advance(<span class="self">self</span>, byte: u8) -&gt; (State, Action) {
         <span class="kw">match </span><span class="self">self </span>{
             State::Ground =&gt; <span class="kw">match </span>byte {
@@ -209,4 +209,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="utf8parse" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="utf8parse" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

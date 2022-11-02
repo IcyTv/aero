@@ -13,16 +13,16 @@
 <span id="13">13</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Shows a user-friendly compiler error on incompatible selected features.
 
-</span><span class="attribute">#[allow(unused_macros)]
+</span><span class="attr">#[allow(unused_macros)]
 </span><span class="macro">macro_rules! </span>hide_from_rustfmt {
     (<span class="macro-nonterminal">$</span><span class="kw">mod</span>:<span class="macro-nonterminal">item</span>) =&gt; {
         <span class="macro-nonterminal">$</span><span class="kw">mod
     </span>};
 }
 
-<span class="attribute">#[<span class="macro-nonterminal">cfg</span>(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+<span class="attr">#[<span class="macro-nonterminal">cfg</span>(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="macro">hide_from_rustfmt! </span>{
     <span class="kw">mod </span>error;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

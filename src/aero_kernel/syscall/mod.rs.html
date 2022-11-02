@@ -407,7 +407,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::utils::StackHelper;
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>ExecArgs {
     <span class="kw">pub </span>inner: Vec&lt;Box&lt;[u8]&gt;&gt;,
 }
@@ -467,7 +467,7 @@
     ExecArgs { inner: result }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>SysLog {
     name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     <span class="doccomment">/// The result of the syscall.
@@ -476,7 +476,7 @@
     </span>args: Vec&lt;String&gt;,
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
 </span><span class="kw">impl </span>SysLog {
     <span class="kw">pub fn </span>new(name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
@@ -623,4 +623,4 @@
     aero_syscall::syscall_result_as_usize(result)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

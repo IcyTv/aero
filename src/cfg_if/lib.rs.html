@@ -199,18 +199,18 @@
 //! # fn main() {}
 //! ```
 
-</span><span class="attribute">#![no_std]
+</span><span class="attr">#![no_std]
 #![doc(html_root_url = <span class="string">&quot;https://docs.rs/cfg-if&quot;</span>)]
 #![deny(missing_docs)]
 #![cfg_attr(test, deny(warnings))]
 
 </span><span class="doccomment">/// The main macro provided by this crate. See crate documentation for more
 /// information.
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>cfg_if {
     <span class="comment">// match if/else chains with a final `else`
     </span>($(
-        <span class="kw">if </span><span class="attribute">#[cfg(<span class="macro-nonterminal">$meta</span>:meta)] </span>{ $(<span class="macro-nonterminal">$tokens</span>:tt)* }
+        <span class="kw">if </span><span class="attr">#[cfg(<span class="macro-nonterminal">$meta</span>:meta)] </span>{ $(<span class="macro-nonterminal">$tokens</span>:tt)* }
     ) <span class="kw">else </span>* <span class="kw">else </span>{
         $(<span class="macro-nonterminal">$tokens2</span>:tt)*
     }) =&gt; {
@@ -224,9 +224,9 @@
 
     <span class="comment">// match if/else chains lacking a final `else`
     </span>(
-        <span class="kw">if </span><span class="attribute">#[cfg(<span class="macro-nonterminal">$i_met</span>:meta)] </span>{ $(<span class="macro-nonterminal">$i_tokens</span>:tt)* }
+        <span class="kw">if </span><span class="attr">#[cfg(<span class="macro-nonterminal">$i_met</span>:meta)] </span>{ $(<span class="macro-nonterminal">$i_tokens</span>:tt)* }
         $(
-            <span class="kw">else if </span><span class="attribute">#[cfg(<span class="macro-nonterminal">$e_met</span>:meta)] </span>{ $(<span class="macro-nonterminal">$e_tokens</span>:tt)* }
+            <span class="kw">else if </span><span class="attr">#[cfg(<span class="macro-nonterminal">$e_met</span>:meta)] </span>{ $(<span class="macro-nonterminal">$e_tokens</span>:tt)* }
         )*
     ) =&gt; {
         <span class="macro-nonterminal">$</span><span class="macro">crate::cfg_if! </span>{
@@ -247,7 +247,7 @@
         <span class="comment">// Emit all items within one block, applying an appropriate #[cfg]. The
         // #[cfg] will require all `$m` matchers specified and must also negate
         // all previous matchers.
-        </span><span class="attribute">#[cfg(all($(<span class="macro-nonterminal">$m</span>,)* not(any($(<span class="macro-nonterminal">$not</span>),<span class="kw-2">*</span>))))] </span><span class="macro-nonterminal">$</span><span class="macro">crate::cfg_if! </span>{ @<span class="macro-nonterminal">__identity </span>$(<span class="macro-nonterminal">$tokens</span>)* }
+        </span><span class="attr">#[cfg(all($(<span class="macro-nonterminal">$m</span>,)* not(any($(<span class="macro-nonterminal">$not</span>),<span class="kw-2">*</span>))))] </span><span class="macro-nonterminal">$</span><span class="macro">crate::cfg_if! </span>{ @<span class="macro-nonterminal">__identity </span>$(<span class="macro-nonterminal">$tokens</span>)* }
 
         <span class="comment">// Recurse to emit all other items in `$rest`, and when we do so add all
         // our `$m` matchers to the list of `$not` matchers as future emissions
@@ -262,10 +262,10 @@
     };
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="macro">cfg_if! </span>{
-        <span class="kw">if </span><span class="attribute">#[cfg(test)] </span>{
+        <span class="kw">if </span><span class="attr">#[cfg(test)] </span>{
             <span class="kw">use </span>core::option::Option <span class="kw">as </span>Option2;
             <span class="kw">fn </span>works1() -&gt; Option2&lt;u32&gt; { <span class="prelude-val">Some</span>(<span class="number">1</span>) }
         } <span class="kw">else </span>{
@@ -274,9 +274,9 @@
     }
 
     <span class="macro">cfg_if! </span>{
-        <span class="kw">if </span><span class="attribute">#[cfg(foo)] </span>{
+        <span class="kw">if </span><span class="attr">#[cfg(foo)] </span>{
             <span class="kw">fn </span>works2() -&gt; bool { <span class="bool-val">false </span>}
-        } <span class="kw">else if </span><span class="attribute">#[cfg(test)] </span>{
+        } <span class="kw">else if </span><span class="attr">#[cfg(test)] </span>{
             <span class="kw">fn </span>works2() -&gt; bool { <span class="bool-val">true </span>}
         } <span class="kw">else </span>{
             <span class="kw">fn </span>works2() -&gt; bool { <span class="bool-val">false </span>}
@@ -284,7 +284,7 @@
     }
 
     <span class="macro">cfg_if! </span>{
-        <span class="kw">if </span><span class="attribute">#[cfg(foo)] </span>{
+        <span class="kw">if </span><span class="attr">#[cfg(foo)] </span>{
             <span class="kw">fn </span>works3() -&gt; bool { <span class="bool-val">false </span>}
         } <span class="kw">else </span>{
             <span class="kw">fn </span>works3() -&gt; bool { <span class="bool-val">true </span>}
@@ -292,21 +292,21 @@
     }
 
     <span class="macro">cfg_if! </span>{
-        <span class="kw">if </span><span class="attribute">#[cfg(test)] </span>{
+        <span class="kw">if </span><span class="attr">#[cfg(test)] </span>{
             <span class="kw">use </span>core::option::Option <span class="kw">as </span>Option3;
             <span class="kw">fn </span>works4() -&gt; Option3&lt;u32&gt; { <span class="prelude-val">Some</span>(<span class="number">1</span>) }
         }
     }
 
     <span class="macro">cfg_if! </span>{
-        <span class="kw">if </span><span class="attribute">#[cfg(foo)] </span>{
+        <span class="kw">if </span><span class="attr">#[cfg(foo)] </span>{
             <span class="kw">fn </span>works5() -&gt; bool { <span class="bool-val">false </span>}
-        } <span class="kw">else if </span><span class="attribute">#[cfg(test)] </span>{
+        } <span class="kw">else if </span><span class="attr">#[cfg(test)] </span>{
             <span class="kw">fn </span>works5() -&gt; bool { <span class="bool-val">true </span>}
         }
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>it_works() {
         <span class="macro">assert!</span>(works1().is_some());
         <span class="macro">assert!</span>(works2());
@@ -315,10 +315,10 @@
         <span class="macro">assert!</span>(works5());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[allow(clippy::assertions_on_constants)]
     </span><span class="kw">fn </span>test_usage_within_a_function() {
-        <span class="macro">cfg_if! </span>{<span class="kw">if </span><span class="attribute">#[cfg(debug_assertions)] </span>{
+        <span class="macro">cfg_if! </span>{<span class="kw">if </span><span class="attr">#[cfg(debug_assertions)] </span>{
             <span class="comment">// we want to put more than one thing here to make sure that they
             // all get configured properly.
             </span><span class="macro">assert!</span>(<span class="macro">cfg!</span>(debug_assertions));
@@ -333,12 +333,12 @@
         <span class="kw">fn </span>blah(<span class="kw-2">&amp;</span><span class="self">self</span>);
     }
 
-    <span class="attribute">#[allow(dead_code)]
+    <span class="attr">#[allow(dead_code)]
     </span><span class="kw">struct </span>Struct;
 
     <span class="kw">impl </span>Trait <span class="kw">for </span>Struct {
         <span class="macro">cfg_if! </span>{
-            <span class="kw">if </span><span class="attribute">#[cfg(feature = <span class="string">&quot;blah&quot;</span>)] </span>{
+            <span class="kw">if </span><span class="attr">#[cfg(feature = <span class="string">&quot;blah&quot;</span>)] </span>{
                 <span class="kw">fn </span>blah(<span class="kw-2">&amp;</span><span class="self">self</span>) {
                     <span class="macro">unimplemented!</span>();
                 }
@@ -351,4 +351,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cfg_if" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cfg_if" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

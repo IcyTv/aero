@@ -120,7 +120,7 @@
 /// On error, return `EncodeUtf8Error` if the buffer was too short for the char.
 ///
 /// Safety: `ptr` must be writable for `len` bytes.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>encode_utf8(ch: char, ptr: <span class="kw-2">*mut </span>u8, len: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, EncodeUtf8Error&gt;
 {
     <span class="kw">let </span>code = ch <span class="kw">as </span>u32;
@@ -147,7 +147,7 @@
 }
 
 
-<span class="attribute">#[test]
+<span class="attr">#[test]
 #[cfg_attr(miri, ignore)] </span><span class="comment">// Miri is too slow
 </span><span class="kw">fn </span>test_encode_utf8() {
     <span class="comment">// Test that all codepoints are encoded correctly
@@ -167,7 +167,7 @@
     }
 }
 
-<span class="attribute">#[test]
+<span class="attr">#[test]
 </span><span class="kw">fn </span>test_encode_utf8_oob() {
     <span class="comment">// test that we report oob if the buffer is too short
     </span><span class="kw">let </span><span class="kw-2">mut </span>data = [<span class="number">0u8</span>; <span class="number">16</span>];
@@ -183,4 +183,4 @@
 }
 
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="arrayvec" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="arrayvec" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

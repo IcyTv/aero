@@ -351,14 +351,14 @@
 
 <span class="doccomment">/// The interrupt controller interface. The task of an interrupt controller is to
 /// end the interrupt, mask the interrupt, send ipi, etc...
-</span><span class="attribute">#[repr(transparent)]
+</span><span class="attr">#[repr(transparent)]
 </span><span class="kw">pub struct </span>InterruptController {
     method: AtomicUsize,
 }
 
 <span class="kw">impl </span>InterruptController {
     <span class="doccomment">/// Creates a new interrupt controller using the PIC chip by default.
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             method: AtomicUsize::new(<span class="number">0</span>),
@@ -380,7 +380,7 @@
     }
 
     <span class="doccomment">/// Sets the interrupt controller to APIC.
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>switch_to_apic(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.method.store(<span class="number">1</span>, Ordering::Release);
 
@@ -401,7 +401,7 @@
 
 <span class="kw">impl </span>ApicController {
     <span class="doccomment">/// Send EOI to the local APIC, indicating the completion of an interrupt.
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">fn </span>eoi(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         apic::get_local_apic().eoi();
     }
@@ -516,7 +516,7 @@
     }
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>generic_interrupt_handler(isr: usize, stack_frame: <span class="kw-2">*mut </span>InterruptErrorStack) {
     <span class="kw">let </span>stack_frame = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>stack_frame };
     <span class="kw">let </span>handlers = idt::INTERRUPT_HANDLERS.lock();
@@ -572,29 +572,29 @@
 
 <span class="doccomment">/// Wrapper function to the `hlt` assembly instruction used to halt
 /// the CPU.
-</span><span class="attribute">#[inline(always)]
+</span><span class="attr">#[inline(always)]
 </span><span class="kw">pub unsafe fn </span>halt() {
     <span class="macro">asm!</span>(<span class="string">&quot;hlt&quot;</span>, options(nomem, nostack));
 }
 
 <span class="doccomment">/// Wrapper function to the `cli` assembly instruction used to disable
 /// interrupts.
-</span><span class="attribute">#[inline(always)]
+</span><span class="attr">#[inline(always)]
 </span><span class="kw">pub unsafe fn </span>disable_interrupts() {
     <span class="macro">asm!</span>(<span class="string">&quot;cli&quot;</span>, options(nomem, nostack));
 }
 
 <span class="doccomment">/// Wrapper function to the `sti` assembly instruction used to enable
 /// interrupts.
-</span><span class="attribute">#[inline(always)]
+</span><span class="attr">#[inline(always)]
 </span><span class="kw">pub unsafe fn </span>enable_interrupts() {
     <span class="macro">asm!</span>(<span class="string">&quot;sti&quot;</span>, options(nomem, nostack));
 }
 
 <span class="doccomment">/// Returns true if interrupts are enabled.
-</span><span class="attribute">#[inline(always)]
+</span><span class="attr">#[inline(always)]
 </span><span class="kw">pub fn </span>is_enabled() -&gt; bool {
     controlregs::read_rflags().contains(controlregs::RFlags::INTERRUPT_FLAG)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

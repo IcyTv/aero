@@ -159,14 +159,14 @@
 <span class="comment">// Use the native word size as the group size. Using a 64-bit group size on
 // a 32-bit architecture will just end up being more expensive because
 // shifts and multiplies will need to be emulated.
-</span><span class="attribute">#[cfg(any(
+</span><span class="attr">#[cfg(any(
     target_pointer_width = <span class="string">&quot;64&quot;</span>,
     target_arch = <span class="string">&quot;aarch64&quot;</span>,
     target_arch = <span class="string">&quot;x86_64&quot;</span>,
     target_arch = <span class="string">&quot;wasm32&quot;</span>,
 ))]
 </span><span class="kw">type </span>GroupWord = u64;
-<span class="attribute">#[cfg(all(
+<span class="attr">#[cfg(all(
     target_pointer_width = <span class="string">&quot;32&quot;</span>,
     not(target_arch = <span class="string">&quot;aarch64&quot;</span>),
     not(target_arch = <span class="string">&quot;x86_64&quot;</span>),
@@ -177,11 +177,11 @@
 <span class="kw">pub type </span>BitMaskWord = GroupWord;
 <span class="kw">pub const </span>BITMASK_STRIDE: usize = <span class="number">8</span>;
 <span class="comment">// We only care about the highest bit of each byte for the mask.
-</span><span class="attribute">#[allow(clippy::cast_possible_truncation, clippy::unnecessary_cast)]
+</span><span class="attr">#[allow(clippy::cast_possible_truncation, clippy::unnecessary_cast)]
 </span><span class="kw">pub const </span>BITMASK_MASK: BitMaskWord = <span class="number">0x8080_8080_8080_8080_u64 </span><span class="kw">as </span>GroupWord;
 
 <span class="doccomment">/// Helper function to replicate a byte across a `GroupWord`.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">fn </span>repeat(byte: u8) -&gt; GroupWord {
     GroupWord::from_ne_bytes([byte; Group::WIDTH])
 }
@@ -190,14 +190,14 @@
 /// parallel.
 ///
 /// This implementation uses a word-sized integer.
-</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="attr">#[derive(Copy, Clone)]
 </span><span class="kw">pub struct </span>Group(GroupWord);
 
 <span class="comment">// We perform all operations in the native endianness, and convert to
 // little-endian just before creating a BitMask. The can potentially
 // enable the compiler to eliminate unnecessary byte swaps if we are
 // only checking whether a BitMask is empty.
-</span><span class="attribute">#[allow(clippy::use_self)]
+</span><span class="attr">#[allow(clippy::use_self)]
 </span><span class="kw">impl </span>Group {
     <span class="doccomment">/// Number of bytes in the group.
     </span><span class="kw">pub const </span>WIDTH: usize = mem::size_of::&lt;<span class="self">Self</span>&gt;();
@@ -206,9 +206,9 @@
     /// value for an empty hash table.
     ///
     /// This is guaranteed to be aligned to the group size.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>static_empty() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8; Group::WIDTH] {
-        <span class="attribute">#[repr(C)]
+        <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>AlignedBytes {
             _align: [Group; <span class="number">0</span>],
             bytes: [u8; Group::WIDTH],
@@ -221,7 +221,7 @@
     }
 
     <span class="doccomment">/// Loads a group of bytes starting at the given address.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     #[allow(clippy::cast_ptr_alignment)] </span><span class="comment">// unaligned load
     </span><span class="kw">pub unsafe fn </span>load(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
         Group(ptr::read_unaligned(ptr.cast()))
@@ -229,7 +229,7 @@
 
     <span class="doccomment">/// Loads a group of bytes starting at the given address, which must be
     /// aligned to `mem::align_of::&lt;Group&gt;()`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     #[allow(clippy::cast_ptr_alignment)]
     </span><span class="kw">pub unsafe fn </span>load_aligned(ptr: <span class="kw-2">*const </span>u8) -&gt; <span class="self">Self </span>{
         <span class="comment">// FIXME: use align_offset once it stabilizes
@@ -239,7 +239,7 @@
 
     <span class="doccomment">/// Stores the group of bytes to the given address, which must be
     /// aligned to `mem::align_of::&lt;Group&gt;()`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     #[allow(clippy::cast_ptr_alignment)]
     </span><span class="kw">pub unsafe fn </span>store_aligned(<span class="self">self</span>, ptr: <span class="kw-2">*mut </span>u8) {
         <span class="comment">// FIXME: use align_offset once it stabilizes
@@ -257,7 +257,7 @@
     /// - The check for key equality will catch these.
     /// - This only happens if there is at least 1 true match.
     /// - The chance of this happening is very low (&lt; 1% chance per byte).
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>match_byte(<span class="self">self</span>, byte: u8) -&gt; BitMask {
         <span class="comment">// This algorithm is derived from
         // https://graphics.stanford.edu/~seander/bithacks.html##ValueInWord
@@ -267,7 +267,7 @@
 
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are
     /// `EMPTY`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>match_empty(<span class="self">self</span>) -&gt; BitMask {
         <span class="comment">// If the high bit is set, then the byte must be either:
         // 1111_1111 (EMPTY) or 1000_0000 (DELETED).
@@ -277,14 +277,14 @@
 
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are
     /// `EMPTY` or `DELETED`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>match_empty_or_deleted(<span class="self">self</span>) -&gt; BitMask {
         <span class="comment">// A byte is EMPTY or DELETED iff the high bit is set
         </span>BitMask((<span class="self">self</span>.<span class="number">0 </span>&amp; repeat(<span class="number">0x80</span>)).to_le())
     }
 
     <span class="doccomment">/// Returns a `BitMask` indicating all bytes in the group which are full.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>match_full(<span class="self">self</span>) -&gt; BitMask {
         <span class="self">self</span>.match_empty_or_deleted().invert()
     }
@@ -293,7 +293,7 @@
     /// - `EMPTY =&gt; EMPTY`
     /// - `DELETED =&gt; EMPTY`
     /// - `FULL =&gt; DELETED`
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>convert_special_to_empty_and_full_to_deleted(<span class="self">self</span>) -&gt; <span class="self">Self </span>{
         <span class="comment">// Map high_bit = 1 (EMPTY or DELETED) to 1111_1111
         // and high_bit = 0 (FULL) to 1000_0000
@@ -307,4 +307,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hashbrown" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hashbrown" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

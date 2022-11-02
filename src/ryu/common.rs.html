@@ -115,7 +115,7 @@
 
 // Returns the number of decimal digits in v, which must not contain more than 9
 // digits.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>decimal_length9(v: u32) -&gt; u32 {
     <span class="comment">// Function precondition: v is not a 10-digit number.
     // (f2s: 9 digits are sufficient for round-tripping.)
@@ -143,7 +143,7 @@
 }
 
 <span class="comment">// Returns e == 0 ? 1 : [log_2(5^e)]; requires 0 &lt;= e &lt;= 3528.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 #[allow(dead_code)]
 </span><span class="kw">pub fn </span>log2_pow5(e: i32) -&gt; i32 <span class="comment">/* or u32 -&gt; u32 */ </span>{
     <span class="comment">// This approximation works up to the point that the multiplication
@@ -155,7 +155,7 @@
 }
 
 <span class="comment">// Returns e == 0 ? 1 : ceil(log_2(5^e)); requires 0 &lt;= e &lt;= 3528.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>pow5bits(e: i32) -&gt; i32 <span class="comment">/* or u32 -&gt; u32 */ </span>{
     <span class="comment">// This approximation works up to the point that the multiplication
     // overflows at e = 3529. If the multiplication were done in 64 bits, it
@@ -165,14 +165,14 @@
     (((e <span class="kw">as </span>u32 * <span class="number">1217359</span>) &gt;&gt; <span class="number">19</span>) + <span class="number">1</span>) <span class="kw">as </span>i32
 }
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 #[allow(dead_code)]
 </span><span class="kw">pub fn </span>ceil_log2_pow5(e: i32) -&gt; i32 <span class="comment">/* or u32 -&gt; u32 */ </span>{
     log2_pow5(e) + <span class="number">1
 </span>}
 
 <span class="comment">// Returns floor(log_10(2^e)); requires 0 &lt;= e &lt;= 1650.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>log10_pow2(e: i32) -&gt; u32 <span class="comment">/* or u32 -&gt; u32 */ </span>{
     <span class="comment">// The first value this approximation fails for is 2^1651 which is just greater than 10^297.
     </span><span class="macro">debug_assert!</span>(e &gt;= <span class="number">0</span>);
@@ -181,7 +181,7 @@
 </span>}
 
 <span class="comment">// Returns floor(log_10(5^e)); requires 0 &lt;= e &lt;= 2620.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>log10_pow5(e: i32) -&gt; u32 <span class="comment">/* or u32 -&gt; u32 */ </span>{
     <span class="comment">// The first value this approximation fails for is 5^2621 which is just greater than 10^1832.
     </span><span class="macro">debug_assert!</span>(e &gt;= <span class="number">0</span>);
@@ -189,4 +189,4 @@
     (e <span class="kw">as </span>u32 * <span class="number">732923</span>) &gt;&gt; <span class="number">20
 </span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -243,7 +243,7 @@
 </span><span class="kw">const </span>LAI_DEBUG_LOG: i32 = <span class="number">1</span>;
 <span class="kw">const </span>LAI_WARN_LOG: i32 = <span class="number">2</span>;
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_log(level: i32, message: <span class="kw-2">*const </span>u8) {
     <span class="kw">let </span>message = <span class="kw">unsafe </span>{ c_str_as_str(message) };
 
@@ -255,90 +255,90 @@
     };
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_panic(message: <span class="kw-2">*const </span>u8) -&gt; ! {
     <span class="kw">let </span>message = <span class="kw">unsafe </span>{ c_str_as_str(message) };
     <span class="macro">panic!</span>(<span class="string">&quot;{message}&quot;</span>);
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_malloc(size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
     get_laihost().alloc(size)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_free(ptr: <span class="kw-2">*mut </span>u8, size: usize) {
     get_laihost().dealloc(ptr, size)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_realloc(ptr: <span class="kw-2">*mut </span>u8, old_size: usize, new_size: usize) -&gt; <span class="kw-2">*mut </span>u8 {
     get_laihost().realloc(ptr, old_size, new_size)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_scan(signature: <span class="kw-2">*const </span>u8, index: usize) -&gt; <span class="kw-2">*const </span>u8 {
     <span class="kw">let </span>signature = c_str_as_str(signature);
     get_laihost().scan(signature, index)
 }
 
 <span class="comment">// Port I/O functions:
-</span><span class="attribute">#[no_mangle]
+</span><span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outb(port: u16, value: u8) {
     get_laihost().outb(port, value)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outw(port: u16, value: u16) {
     get_laihost().outw(port, value)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_outd(port: u16, value: u32) {
     get_laihost().outd(port, value)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inb(port: u16) -&gt; u8 {
     get_laihost().inb(port)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_inw(port: u16) -&gt; u16 {
     get_laihost().inw(port)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_ind(port: u16) -&gt; u32 {
     get_laihost().ind(port)
 }
 
 <span class="comment">// Thread functions:
-</span><span class="attribute">#[no_mangle]
+</span><span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_sleep(ms: u64) {
     get_laihost().sleep(ms)
 }
 
 <span class="comment">// PCI read functions:
-</span><span class="attribute">#[no_mangle]
+</span><span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readb(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u8 {
     get_laihost().pci_readb(seg, bus, slot, fun, offset)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readw(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u16 {
     get_laihost().pci_readw(seg, bus, slot, fun, offset)
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_pci_readd(seg: u16, bus: u8, slot: u8, fun: u8, offset: u16) -&gt; u32 {
     get_laihost().pci_readd(seg, bus, slot, fun, offset)
 }
 
 <span class="comment">// Memory functions:
-</span><span class="attribute">#[no_mangle]
+</span><span class="attr">#[no_mangle]
 </span><span class="kw">unsafe extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>laihost_map(address: usize, count: usize) -&gt; <span class="kw-2">*mut </span>u8 {
     get_laihost().map(address, count)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

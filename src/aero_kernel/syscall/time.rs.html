@@ -106,7 +106,7 @@
 <span class="kw">const </span>CLOCK_TYPE_REALTIME: usize = <span class="number">0</span>;
 <span class="kw">const </span>CLOCK_TYPE_MONOTONIC: usize = <span class="number">1</span>;
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>sleep(timespec: <span class="kw-2">&amp;</span>TimeSpec) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>duration = (timespec.tv_nsec <span class="kw">as </span>usize).ceil_div(<span class="number">1000000000</span>) + timespec.tv_sec <span class="kw">as </span>usize;
 
@@ -115,7 +115,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>gettime(clock: usize, timespec: <span class="kw-2">&amp;mut </span>TimeSpec) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">match </span>clock {
         CLOCK_TYPE_REALTIME =&gt; {
@@ -141,7 +141,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>setitimer(
     _which: usize,
     _new_value: <span class="kw-2">&amp;</span>ITimerVal,
@@ -154,9 +154,9 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>getitimer(_which: usize, _curr_value: <span class="kw-2">&amp;mut </span>ITimerVal) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

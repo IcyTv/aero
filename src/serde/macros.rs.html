@@ -344,7 +344,7 @@
 /// [`Deserializer`]: trait.Deserializer.html
 /// [`Visitor`]: de/trait.Visitor.html
 /// [`Deserializer::deserialize_any`]: trait.Deserializer.html#tymethod.deserialize_any
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>forward_to_deserialize_any {
     (&lt;<span class="macro-nonterminal">$visitor</span>:ident: Visitor&lt;<span class="macro-nonterminal">$lifetime</span>:tt&gt;&gt; $(<span class="macro-nonterminal">$func</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(<span class="macro">forward_to_deserialize_any_helper!</span>{<span class="macro-nonterminal">$func</span>&lt;<span class="macro-nonterminal">$lifetime</span>, <span class="macro-nonterminal">$visitor</span>&gt;})*
@@ -355,11 +355,11 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>forward_to_deserialize_any_method {
     (<span class="macro-nonterminal">$func</span>:ident&lt;<span class="macro-nonterminal">$l</span>:tt, <span class="macro-nonterminal">$v</span>:ident&gt;($(<span class="macro-nonterminal">$arg</span>:ident : <span class="macro-nonterminal">$ty</span>:ty),<span class="kw-2">*</span>)) =&gt; {
-        <span class="attribute">#[inline]
+        <span class="attr">#[inline]
         </span><span class="kw">fn </span><span class="macro-nonterminal">$func</span>&lt;<span class="macro-nonterminal">$v</span>&gt;(<span class="self">self</span>, $(<span class="macro-nonterminal">$arg</span>: <span class="macro-nonterminal">$ty</span>,)* visitor: <span class="macro-nonterminal">$v</span>) -&gt; <span class="macro-nonterminal">$crate::__private::Result</span>&lt;<span class="macro-nonterminal">$v::Value</span>, <span class="self">Self</span>::Error&gt;
         <span class="kw">where
             </span><span class="macro-nonterminal">$v</span>: <span class="macro-nonterminal">$crate::de::Visitor</span>&lt;<span class="macro-nonterminal">$l</span>&gt;,
@@ -372,7 +372,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>forward_to_deserialize_any_helper {
     (bool&lt;<span class="macro-nonterminal">$l</span>:tt, <span class="macro-nonterminal">$v</span>:ident&gt;) =&gt; {
@@ -471,4 +471,4 @@
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

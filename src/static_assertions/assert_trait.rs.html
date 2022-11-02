@@ -142,13 +142,13 @@
 /// [`PartialOrd`]: https://doc.rust-lang.org/std/cmp/trait.PartialOrd.html
 /// [`Eq`]:         https://doc.rust-lang.org/std/cmp/trait.Eq.html
 /// [`PartialEq`]:  https://doc.rust-lang.org/std/cmp/trait.PartialEq.html
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>assert_trait_sub_all {
     (<span class="macro-nonterminal">$sub</span>:path: $(<span class="macro-nonterminal">$</span><span class="kw">super</span>:<span class="macro-nonterminal">path</span>),+ $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="kw">const _</span>: () = {
             <span class="comment">// One scope per super-trait.
             </span>$({
-                <span class="attribute">#[allow(non_camel_case_types)]
+                <span class="attr">#[allow(non_camel_case_types)]
                 </span><span class="kw">trait </span>__Impl_Implication: <span class="macro-nonterminal">$</span><span class="kw">super </span>{}
 
                 <span class="comment">// Can only be implemented for `$sub` types if `$super` is
@@ -203,11 +203,11 @@
 /// [`assert_trait_sub_all!`]: macro.assert_trait_sub_all.html
 ///
 /// [`Copy`]: https://doc.rust-lang.org/std/marker/trait.Copy.html
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>assert_trait_super_all {
     (<span class="macro-nonterminal">$</span><span class="kw">super</span>:<span class="macro-nonterminal">path</span>: $(<span class="macro-nonterminal">$sub</span>:path),+ $(,)<span class="question-mark">?</span>) =&gt; {
         $(<span class="macro">assert_trait_sub_all!</span>(<span class="macro-nonterminal">$sub</span>: <span class="macro-nonterminal">$</span><span class="kw">super</span>);)+
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

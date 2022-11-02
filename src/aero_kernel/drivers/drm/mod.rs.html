@@ -1140,7 +1140,7 @@
 
 <span class="doccomment">/// Represents modset objects visible to userspace; this includes connectors,
 /// CRTCs, encoders, frambuffers and planes.
-</span><span class="attribute">#[downcastable]
+</span><span class="attr">#[downcastable]
 </span><span class="kw">trait </span>ModeObject: Send + Sync {
     <span class="doccomment">/// Returns the mode object&#39;s ID.
     </span><span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32;
@@ -1188,7 +1188,7 @@
     </span><span class="kw">fn </span>driver_info(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; (<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str);
 }
 
-<span class="attribute">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">struct </span>BufferObject {
     size: usize,
     mapping: usize,
@@ -1830,7 +1830,7 @@
 }
 
 <span class="kw">fn </span>make_dmt_modes(max_width: u16, max_height: u16) -&gt; Vec&lt;DrmModeInfo&gt; {
-    <span class="attribute">#[rustfmt::skip] </span><span class="comment">// with formatting this gets way too long.
+    <span class="attr">#[rustfmt::skip] </span><span class="comment">// with formatting this gets way too long.
     </span><span class="kw">let </span>modes = <span class="kw-2">&amp;</span>[
         <span class="comment">/* 0x01 - 640x350@85Hz */
         </span>make_mode_info(<span class="string">&quot;640x350&quot;</span>, DRM_MODE_TYPE_DRIVER, <span class="number">31500</span>, <span class="number">640</span>, <span class="number">672</span>,
@@ -2203,4 +2203,4 @@
     result
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

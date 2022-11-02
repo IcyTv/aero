@@ -150,7 +150,7 @@
 
 <span class="macro">bitflags::bitflags! </span>{
     <span class="doccomment">/// Describes an page fault error code.
-    </span><span class="attribute">#[repr(transparent)]
+    </span><span class="attr">#[repr(transparent)]
     </span><span class="kw">pub struct </span>PageFaultErrorCode: u64 {
         <span class="doccomment">/// If this flag is set, the page fault was caused by a page-protection violation,
         /// else the page fault was caused by a not-present page.
@@ -177,13 +177,13 @@
 }
 
 <span class="doccomment">/// Returns true if level 5 paging is supported by the CPU and is enabled in Cr4.
-</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub fn </span>level_5_paging_enabled() -&gt; bool {
     <span class="kw">use </span><span class="kw">crate</span>::arch::controlregs;
     controlregs::read_cr4().contains(controlregs::Cr4Flags::L5_PAGING)
 }
 
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
 </span><span class="kw">pub const fn </span>level_5_paging_enabled() -&gt; bool {
     <span class="bool-val">false
 </span>}
@@ -200,7 +200,7 @@
 }
 
 <span class="doccomment">/// Get a mutable reference to the active level 4 page table.
-</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub unsafe fn </span>active_level_4_table() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PageTable {
     <span class="kw">use </span><span class="kw">crate</span>::arch::controlregs;
 
@@ -212,9 +212,9 @@
     <span class="kw-2">&amp;mut *</span>page_table_ptr
 }
 
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)]
 </span><span class="kw">pub unsafe fn </span>active_level_4_table() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw-2">mut </span>PageTable {
     <span class="macro">unimplemented!</span>()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

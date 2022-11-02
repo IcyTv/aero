@@ -779,12 +779,12 @@
     <span class="comment">// SAFETY: This structure has an invariant, namely that the inner atomic u8 must *always* have
     // a value for which there exists a valid Status. This means that users of this API must only
     // be allowed to load and store `Status`es.
-    </span><span class="attribute">#[repr(transparent)]
+    </span><span class="attr">#[repr(transparent)]
     </span><span class="kw">pub struct </span>AtomicStatus(AtomicU8);
 
     <span class="comment">// Four states that a Once can be in, encoded into the lower bits of `status` in
     // the Once structure.
-    </span><span class="attribute">#[repr(u8)]
+    </span><span class="attr">#[repr(u8)]
     #[derive(Clone, Copy, Debug, PartialEq)]
     </span><span class="kw">pub enum </span>Status {
         Incomplete = <span class="number">0x00</span>,
@@ -804,24 +804,24 @@
     }
 
     <span class="kw">impl </span>AtomicStatus {
-        <span class="attribute">#[inline(always)]
+        <span class="attr">#[inline(always)]
         </span><span class="kw">pub const fn </span>new(status: Status) -&gt; <span class="self">Self </span>{
             <span class="comment">// SAFETY: We got the value directly from status, so transmuting back is fine.
             </span><span class="self">Self</span>(AtomicU8::new(status <span class="kw">as </span>u8))
         }
-        <span class="attribute">#[inline(always)]
+        <span class="attr">#[inline(always)]
         </span><span class="kw">pub fn </span>load(<span class="kw-2">&amp;</span><span class="self">self</span>, ordering: Ordering) -&gt; Status {
             <span class="comment">// SAFETY: We know that the inner integer must have been constructed from a Status in
             // the first place.
             </span><span class="kw">unsafe </span>{ Status::new_unchecked(<span class="self">self</span>.<span class="number">0</span>.load(ordering)) }
         }
-        <span class="attribute">#[inline(always)]
+        <span class="attr">#[inline(always)]
         </span><span class="kw">pub fn </span>store(<span class="kw-2">&amp;</span><span class="self">self</span>, status: Status, ordering: Ordering) {
             <span class="comment">// SAFETY: While not directly unsafe, this is safe because the value was retrieved from
             // a status, thus making transmutation safe.
             </span><span class="self">self</span>.<span class="number">0</span>.store(status <span class="kw">as </span>u8, ordering);
         }
-        <span class="attribute">#[inline(always)]
+        <span class="attr">#[inline(always)]
         </span><span class="kw">pub fn </span>compare_exchange(<span class="kw-2">&amp;</span><span class="self">self</span>, old: Status, new: Status, success: Ordering, failure: Ordering) -&gt; <span class="prelude-ty">Result</span>&lt;Status, Status&gt; {
             <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.compare_exchange(old <span class="kw">as </span>u8, new <span class="kw">as </span>u8, success, failure) {
                 <span class="comment">// SAFETY: A compare exchange will always return a value that was later stored into
@@ -832,7 +832,7 @@
                 <span class="prelude-val">Err</span>(err) =&gt; <span class="prelude-val">Err</span>(<span class="kw">unsafe </span>{ Status::new_unchecked(err) }),
             }
         }
-        <span class="attribute">#[inline(always)]
+        <span class="attr">#[inline(always)]
         </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>Status {
             <span class="comment">// SAFETY: Since we know that the u8 inside must be a valid Status, we can safely cast
             // it to a &amp;mut Status.
@@ -1072,7 +1072,7 @@
 
 <span class="kw">impl</span>&lt;T, R&gt; Once&lt;T, R&gt; {
     <span class="doccomment">/// Initialization constant of [`Once`].
-    </span><span class="attribute">#[allow(clippy::declare_interior_mutable_const)]
+    </span><span class="attr">#[allow(clippy::declare_interior_mutable_const)]
     </span><span class="kw">pub const </span>INIT: <span class="self">Self </span>= <span class="self">Self </span>{
         phantom: PhantomData,
         status: AtomicStatus::new(Status::Incomplete),
@@ -1222,7 +1222,7 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>std::prelude::v1::<span class="kw-2">*</span>;
 
@@ -1231,7 +1231,7 @@
 
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>smoke_once() {
         <span class="kw">static </span>O: Once = Once::new();
         <span class="kw">let </span><span class="kw-2">mut </span>a = <span class="number">0</span>;
@@ -1241,7 +1241,7 @@
         <span class="macro">assert_eq!</span>(a, <span class="number">1</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>smoke_once_value() {
         <span class="kw">static </span>O: Once&lt;usize&gt; = Once::new();
         <span class="kw">let </span>a = O.call_once(|| <span class="number">1</span>);
@@ -1250,7 +1250,7 @@
         <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>b, <span class="number">1</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>stampede_once() {
         <span class="kw">static </span>O: Once = Once::new();
         <span class="kw">static </span><span class="kw-2">mut </span>RUN: bool = <span class="bool-val">false</span>;
@@ -1284,7 +1284,7 @@
         }
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>get() {
         <span class="kw">static </span>INIT: Once&lt;usize&gt; = Once::new();
 
@@ -1293,7 +1293,7 @@
         <span class="macro">assert_eq!</span>(INIT.get().map(|r| <span class="kw-2">*</span>r), <span class="prelude-val">Some</span>(<span class="number">2</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>get_no_wait() {
         <span class="kw">static </span>INIT: Once&lt;usize&gt; = Once::new();
 
@@ -1305,7 +1305,7 @@
     }
 
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>poll() {
         <span class="kw">static </span>INIT: Once&lt;usize&gt; = Once::new();
 
@@ -1315,7 +1315,7 @@
     }
 
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>wait() {
         <span class="kw">static </span>INIT: Once&lt;usize&gt; = Once::new();
 
@@ -1330,7 +1330,7 @@
         INIT.call_once(|| <span class="number">3</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>panic() {
         <span class="kw">use </span>::std::panic;
 
@@ -1349,7 +1349,7 @@
         <span class="macro">assert!</span>(t.is_err());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>init_constant() {
         <span class="kw">static </span>O: Once = Once::INIT;
         <span class="kw">let </span><span class="kw-2">mut </span>a = <span class="number">0</span>;
@@ -1374,7 +1374,7 @@
     <span class="comment">// This is sort of two test cases, but if we write them as separate test methods
     // they can be executed concurrently and then fail some small fraction of the
     // time.
-    </span><span class="attribute">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>drop_occurs_and_skip_uninit_drop() {
         <span class="kw">unsafe </span>{
             CALLED = <span class="bool-val">false</span>;
@@ -1401,7 +1401,7 @@
         });
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>call_once_test() {
         <span class="kw">for _ in </span><span class="number">0</span>..<span class="number">20 </span>{
             <span class="kw">use </span>std::sync::Arc;
@@ -1431,4 +1431,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

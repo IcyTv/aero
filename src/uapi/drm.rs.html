@@ -294,28 +294,28 @@
 <span class="kw">pub const </span>DRM_IOCTL_BASE: usize = <span class="string">&#39;d&#39; </span><span class="kw">as </span>usize;
 
 <span class="comment">// Functions to generate the IOCTl numbers:
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>drm_io(nr: usize) -&gt; usize {
     ioctl::io(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>drm_ior&lt;T&gt;(nr: usize) -&gt; usize {
     ioctl::ior::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>drm_iow&lt;T&gt;(nr: usize) -&gt; usize {
     ioctl::iow::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>drm_iowr&lt;T&gt;(nr: usize) -&gt; usize {
     ioctl::iowr::&lt;T&gt;(DRM_IOCTL_BASE, nr)
 }
 
 <span class="comment">// DRM structures:
-</span><span class="attribute">#[repr(C)]
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmVersion {
     <span class="kw">pub </span>version_major: ffi::c_int,
     <span class="kw">pub </span>version_minor: ffi::c_int,
@@ -350,13 +350,13 @@
 <span class="kw">pub const </span>DRM_CAP_SYNCOBJ: u64 = <span class="number">0x13</span>;
 <span class="kw">pub const </span>DRM_CAP_SYNCOBJ_TIMELINE: u64 = <span class="number">0x14</span>;
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmGetCap {
     <span class="kw">pub </span>capability: u64,
     <span class="kw">pub </span>value: u64,
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeCardRes {
     <span class="kw">pub </span>fb_id_ptr: u64,
     <span class="kw">pub </span>crtc_id_ptr: u64,
@@ -372,7 +372,7 @@
     <span class="kw">pub </span>max_height: u32,
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeCrtc {
     <span class="kw">pub </span>set_connectors_ptr: u64,
     <span class="kw">pub </span>count_connectors: u32,
@@ -389,7 +389,7 @@
     <span class="kw">pub </span>mode: DrmModeInfo,
 }
 
-<span class="attribute">#[repr(u32)]
+<span class="attr">#[repr(u32)]
 #[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub enum </span>DrmModeConStatus {
     Connected = <span class="number">1</span>, <span class="comment">// connector has the sink plugged in
@@ -397,7 +397,7 @@
     Unknown = <span class="number">3</span>,
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeGetEncoder {
     <span class="kw">pub </span>encoder_id: u32,
     <span class="kw">pub </span>encoder_typ: u32,
@@ -427,7 +427,7 @@
 
 <span class="kw">pub const </span>DRM_DISPLAY_MODE_LEN: usize = <span class="number">32</span>;
 
-<span class="attribute">#[derive(Clone)]
+<span class="attr">#[derive(Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeInfo {
     <span class="kw">pub </span>clock: u32,                                <span class="comment">// pixel clock in kHz
@@ -447,7 +447,7 @@
     </span><span class="kw">pub </span>name: [ffi::c_char; DRM_DISPLAY_MODE_LEN], <span class="comment">// string describing the mode resolution
 </span>}
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeGetConnector {
     <span class="kw">pub </span>encoders_ptr: u64,    <span class="comment">// pointer to `u32` array of object IDs
     </span><span class="kw">pub </span>modes_ptr: u64,       <span class="comment">// pointer to `DrmModeInfo` array
@@ -478,7 +478,7 @@
     </span><span class="kw">pub </span>pad: u32, <span class="comment">// padding; must be zero
 </span>}
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeFbCmd {
     <span class="kw">pub </span>fb_id: u32,
     <span class="kw">pub </span>width: u32,
@@ -489,7 +489,7 @@
     <span class="kw">pub </span>handle: u32, <span class="comment">// driver specific handle
 </span>}
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeCreateDumb {
     <span class="kw">pub </span>height: u32,
     <span class="kw">pub </span>width: u32,
@@ -502,7 +502,7 @@
     <span class="kw">pub </span>size: u64,
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>DrmModeMapDumb {
     <span class="kw">pub </span>handle: u32, <span class="comment">// handle for the object being mapped
     </span><span class="kw">pub </span>pad: u32,
@@ -525,4 +525,4 @@
 <span class="kw">pub const </span>DRM_IOCTL_MODE_CREATE_DUMB: usize = drm_iowr::&lt;DrmModeCreateDumb&gt;(<span class="number">0xb2</span>);
 <span class="kw">pub const </span>DRM_IOCTL_MODE_MAP_DUMB: usize = drm_iowr::&lt;DrmModeMapDumb&gt;(<span class="number">0xb3</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

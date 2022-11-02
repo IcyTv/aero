@@ -435,7 +435,7 @@
 <span class="kw">pub const </span>EPOLL_CTL_MOD: usize = <span class="number">3</span>;
 
 <span class="comment">// structures for the epoll API:
-</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="attr">#[derive(Copy, Clone)]
 #[repr(C)]
 </span><span class="kw">pub union </span>EPollData {
     <span class="kw">pub </span>ptr: <span class="kw-2">*mut </span>u8,
@@ -466,7 +466,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone)]
+<span class="attr">#[derive(Copy, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>EPollEvent {
     <span class="kw">pub </span>events: EPollEventFlags,
@@ -482,7 +482,7 @@
 }
 
 <span class="comment">// structures for the poll API:
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PollFd {
     <span class="kw">pub </span>fd: i32,
     <span class="kw">pub </span>events: PollEventFlags,
@@ -557,7 +557,7 @@
 <span class="kw">pub const </span>FB_VMODE_ODD_FLD_FIRST: u32 = <span class="number">4</span>;
 <span class="kw">pub const </span>FB_VMODE_MASK: u32 = <span class="number">255</span>;
 
-<span class="attribute">#[derive(Default, Debug, Clone)]
+<span class="attr">#[derive(Default, Debug, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>FramebufferBitField {
     <span class="kw">pub </span>offset: u32,
@@ -576,7 +576,7 @@
 }
 
 <span class="comment">// framebuffer variable screen info:
-</span><span class="attribute">#[derive(Default, Debug, Clone)]
+</span><span class="attr">#[derive(Default, Debug, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>FramebufferVScreenInfo {
     <span class="kw">pub </span>xres: u32,
@@ -611,7 +611,7 @@
 }
 
 <span class="comment">// framebuffer fixed screen info:
-</span><span class="attribute">#[derive(Default, Debug, Clone)]
+</span><span class="attr">#[derive(Default, Debug, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>FramebufferFScreenInfo {
     <span class="kw">pub </span>id: [u8; <span class="number">16</span>],
@@ -631,4 +631,4 @@
     <span class="kw">pub </span>reserved: [u16; <span class="number">2</span>],
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

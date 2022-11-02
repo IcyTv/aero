@@ -352,7 +352,7 @@
 ///     &quot;comma --&gt;&quot;,
 /// ]);
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>json {
     <span class="comment">// Hide distracting implementation details from the generated rustdoc.
     </span>($(<span class="macro-nonterminal">$json</span>:tt)+) =&gt; {
@@ -367,7 +367,7 @@
 //
 // Changes are fine as long as `json_internal!` does not call any new helper
 // macros and can still be invoked as `json_internal!($($json)+)`.
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>json_internal {
     <span class="comment">//////////////////////////////////////////////////////////////////////////
@@ -585,7 +585,7 @@
 <span class="comment">// The json_internal macro above cannot invoke vec directly because it uses
 // local_inner_macros. A vec invocation there would resolve to $crate::vec.
 // Instead invoke vec here outside of local_inner_macros.
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>json_internal_vec {
     ($(<span class="macro-nonterminal">$content</span>:tt)<span class="kw-2">*</span>) =&gt; {
@@ -593,16 +593,16 @@
     };
 }
 
-<span class="attribute">#[macro_export]
+<span class="attr">#[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>json_unexpected {
     () =&gt; {};
 }
 
-<span class="attribute">#[macro_export]
+<span class="attr">#[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>json_expect_expr_comma {
     (<span class="macro-nonterminal">$e</span>:expr , $(<span class="macro-nonterminal">$tt</span>:tt)<span class="kw-2">*</span>) =&gt; {};
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

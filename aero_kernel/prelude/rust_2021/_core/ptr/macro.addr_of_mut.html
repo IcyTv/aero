@@ -16,7 +16,7 @@ Behavior because it dereferences a null pointer.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::ptr;
 
-<span class="attribute">#[repr(packed)]
+<span class="attr">#[repr(packed)]
 </span><span class="kw">struct </span>Packed {
     f1: u8,
     f2: u16,
@@ -41,4 +41,4 @@ Behavior because it dereferences a null pointer.</p>
 </span><span class="kw">let </span>f1_ptr = <span class="kw">unsafe </span>{ <span class="macro">ptr::addr_of_mut!</span>((<span class="kw-2">*</span>uninit.as_mut_ptr()).field) };
 <span class="kw">unsafe </span>{ f1_ptr.write(<span class="bool-val">true</span>); }
 <span class="kw">let </span>init = <span class="kw">unsafe </span>{ uninit.assume_init() };</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

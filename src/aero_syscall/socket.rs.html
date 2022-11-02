@@ -67,7 +67,7 @@
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::SocketAddr;
 
 <span class="comment">// sysdeps/aero/include/abi-bits/socket.h
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>MessageHeader {
     <span class="doccomment">/// Pointer to the socket address structure.
@@ -111,7 +111,7 @@
 }
 
 <span class="comment">// options/posix/include/bits/posix/iovec.h
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>IoVec {
     base: <span class="kw-2">*mut </span>u8, <span class="comment">// todo: use Option&lt;NonNull&lt;u8&gt;&gt;
@@ -131,4 +131,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

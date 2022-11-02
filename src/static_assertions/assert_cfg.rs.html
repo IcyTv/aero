@@ -85,17 +85,17 @@
 ///                 target_os = &quot;windows&quot;),
 ///             &quot;No, that&#39;s not how it works! ಠ_ಠ&quot;);
 /// ```
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>assert_cfg {
     () =&gt; {};
     ($(<span class="macro-nonterminal">$cfg</span>:meta)+, <span class="macro-nonterminal">$msg</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
-        <span class="attribute">#[cfg(not($(<span class="macro-nonterminal">$cfg</span>)+))]
+        <span class="attr">#[cfg(not($(<span class="macro-nonterminal">$cfg</span>)+))]
         </span><span class="macro">compile_error!</span>(<span class="macro-nonterminal">$msg</span>);
     };
     ($(<span class="macro-nonterminal">$cfg</span>:tt)<span class="kw-2">*</span>) =&gt; {
-        <span class="attribute">#[cfg(not($(<span class="macro-nonterminal">$cfg</span>)<span class="kw-2">*</span>))]
+        <span class="attr">#[cfg(not($(<span class="macro-nonterminal">$cfg</span>)<span class="kw-2">*</span>))]
         </span><span class="macro">compile_error!</span>(<span class="macro">concat!</span>(<span class="string">&quot;Cfg does not pass: &quot;</span>, <span class="macro">stringify!</span>($(<span class="macro-nonterminal">$cfg</span>)<span class="kw-2">*</span>)));
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

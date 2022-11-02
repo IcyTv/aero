@@ -610,7 +610,7 @@
     ///     drop(lock);
     /// }
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub const fn </span>new(data: T) -&gt; <span class="self">Self </span>{
         SpinMutex {
             lock: AtomicBool::new(<span class="bool-val">false</span>),
@@ -627,7 +627,7 @@
     /// let lock = spin::mutex::SpinMutex::&lt;_&gt;::new(42);
     /// assert_eq!(42, lock.into_inner());
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>into_inner(<span class="self">self</span>) -&gt; T {
         <span class="comment">// We know statically that there are no outstanding references to
         // `self` so there&#39;s no need to lock.
@@ -656,7 +656,7 @@
     /// assert_eq!(*lock.lock(), 58);
     ///
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>as_mut_ptr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>T {
         <span class="self">self</span>.data.get()
     }
@@ -677,7 +677,7 @@
     ///     // The lock is implicitly dropped at the end of the scope
     /// }
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; SpinMutexGuard&lt;T&gt; {
         <span class="comment">// Can fail to lock even if the spinlock is not locked. May be more efficient than `try_lock`
         // when called in a loop.
@@ -702,7 +702,7 @@
     ///
     /// This function provides no synchronization guarantees and so its result should be considered &#39;out of date&#39;
     /// the instant it is called. Do not use it for synchronization purposes. However, it may be useful as a heuristic.
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>is_locked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.lock.load(Ordering::Relaxed)
     }
@@ -714,7 +714,7 @@
     /// This is *extremely* unsafe if the lock is not held by the current
     /// thread. However, this can be useful in some instances for exposing the
     /// lock to FFI that doesn&#39;t know how to deal with RAII.
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub unsafe fn </span>force_unlock(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.lock.store(<span class="bool-val">false</span>, Ordering::Release);
     }
@@ -733,7 +733,7 @@
     /// let maybe_guard2 = lock.try_lock();
     /// assert!(maybe_guard2.is_none());
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>try_lock(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;SpinMutexGuard&lt;T&gt;&gt; {
         <span class="comment">// The reason for using a strong compare_exchange is explained here:
         // https://github.com/Amanieu/parking_lot/pull/207#issuecomment-575869107
@@ -760,7 +760,7 @@
     /// *lock.get_mut() = 10;
     /// assert_eq!(*lock.lock(), 10);
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>get_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span>T {
         <span class="comment">// We know statically that there are no other references to `self`, so
         // there&#39;s no need to lock the inner mutex.
@@ -804,7 +804,7 @@
     /// *data = 1;
     /// assert_eq!(*data, 1);
     /// ```
-    </span><span class="attribute">#[inline(always)]
+    </span><span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>leak(this: <span class="self">Self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T {
         <span class="kw">let </span>data = this.data <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>; <span class="comment">// Keep it in pointer form temporarily to avoid double-aliasing
         </span>core::mem::forget(this);
@@ -844,7 +844,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;lock_api&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;lock_api&quot;</span>)]
 </span><span class="kw">unsafe impl</span>&lt;R: RelaxStrategy&gt; lock_api_crate::RawMutex <span class="kw">for </span>SpinMutex&lt;(), R&gt; {
     <span class="kw">type </span>GuardMarker = lock_api_crate::GuardSend;
 
@@ -869,7 +869,7 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>std::prelude::v1::<span class="kw-2">*</span>;
 
@@ -880,17 +880,17 @@
 
     <span class="kw">type </span>SpinMutex&lt;T&gt; = <span class="kw">super</span>::SpinMutex&lt;T&gt;;
 
-    <span class="attribute">#[derive(Eq, PartialEq, Debug)]
+    <span class="attr">#[derive(Eq, PartialEq, Debug)]
     </span><span class="kw">struct </span>NonCopy(i32);
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>smoke() {
         <span class="kw">let </span>m = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(());
         drop(m.lock());
         drop(m.lock());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>lots_and_lots() {
         <span class="kw">static </span>M: SpinMutex&lt;()&gt; = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(());
         <span class="kw">static </span><span class="kw-2">mut </span>CNT: u32 = <span class="number">0</span>;
@@ -927,7 +927,7 @@
         <span class="macro">assert_eq!</span>(<span class="kw">unsafe </span>{ CNT }, J * K * <span class="number">2</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>try_lock() {
         <span class="kw">let </span>mutex = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(<span class="number">42</span>);
 
@@ -945,13 +945,13 @@
         <span class="macro">assert_eq!</span>(c.as_ref().map(|r| <span class="kw-2">**</span>r), <span class="prelude-val">Some</span>(<span class="number">42</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_into_inner() {
         <span class="kw">let </span>m = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(NonCopy(<span class="number">10</span>));
         <span class="macro">assert_eq!</span>(m.into_inner(), NonCopy(<span class="number">10</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_into_inner_drop() {
         <span class="kw">struct </span>Foo(Arc&lt;AtomicUsize&gt;);
         <span class="kw">impl </span>Drop <span class="kw">for </span>Foo {
@@ -969,7 +969,7 @@
         <span class="macro">assert_eq!</span>(num_drops.load(Ordering::SeqCst), <span class="number">1</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_mutex_arc_nested() {
         <span class="comment">// Tests nested mutexes and access
         // to underlying data.
@@ -985,7 +985,7 @@
         rx.recv().unwrap();
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_mutex_arc_access_in_unwind() {
         <span class="kw">let </span>arc = Arc::new(SpinMutex::&lt;<span class="kw">_</span>&gt;::new(<span class="number">1</span>));
         <span class="kw">let </span>arc2 = arc.clone();
@@ -1006,7 +1006,7 @@
         <span class="macro">assert_eq!</span>(<span class="kw-2">*</span>lock, <span class="number">2</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_mutex_unsized() {
         <span class="kw">let </span>mutex: <span class="kw-2">&amp;</span>SpinMutex&lt;[i32]&gt; = <span class="kw-2">&amp;</span>SpinMutex::&lt;<span class="kw">_</span>&gt;::new([<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>]);
         {
@@ -1018,7 +1018,7 @@
         <span class="macro">assert_eq!</span>(<span class="kw-2">&amp;*</span>mutex.lock(), comp);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_mutex_force_lock() {
         <span class="kw">let </span>lock = SpinMutex::&lt;<span class="kw">_</span>&gt;::new(());
         ::std::mem::forget(lock.lock());
@@ -1029,4 +1029,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spin" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

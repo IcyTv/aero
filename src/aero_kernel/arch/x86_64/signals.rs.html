@@ -212,7 +212,7 @@
 <span class="kw">const </span>REDZONE_SIZE: u64 = <span class="number">128</span>;
 <span class="kw">const </span>SYSCALL_INSTRUCTION_SIZE: u64 = <span class="number">2</span>;
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>SignalFrame {
     restart_syscall: u64,
@@ -302,7 +302,7 @@
             <span class="kw">let </span>restart_syscall = syscall_rresult == <span class="prelude-val">Err</span>(SyscallError::EINTR)
                 &amp;&amp; entry.flags().contains(SignalFlags::SA_RESTART);
 
-            <span class="attribute">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
             </span><span class="macro">log::warn!</span>(<span class="string">&quot;syscall routine signaled: (restart={restart_syscall})&quot;</span>);
 
             <span class="kw">let </span>signal_frame =
@@ -353,7 +353,7 @@
     <span class="kw-2">*</span>stack = signal_frame.frame;
 
     <span class="kw">if </span>signal_frame.restart_syscall != u64::MAX {
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;syslog&quot;</span>)]
         </span><span class="macro">log::debug!</span>(
             <span class="string">&quot;sigreturn: restarting {} syscall&quot;</span>,
             aero_syscall::syscall_as_str(signal_frame.restart_syscall <span class="kw">as _</span>)
@@ -365,4 +365,4 @@
     result <span class="kw">as </span>usize
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

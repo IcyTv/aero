@@ -1531,7 +1531,7 @@
 </pre><pre class="rust"><code><span class="kw">use </span>core::convert::TryFrom;
 <span class="kw">use </span>core::{char, fmt, iter, mem, str};
 
-<span class="attribute">#[allow(unused_macros)]
+<span class="attr">#[allow(unused_macros)]
 </span><span class="macro">macro_rules! </span>write {
     ($(<span class="macro-nonterminal">$ignored</span>:tt)<span class="kw-2">*</span>) =&gt; {
         <span class="macro">compile_error!</span>(
@@ -1550,7 +1550,7 @@
     inner: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str,
 }
 
-<span class="attribute">#[derive(PartialEq, Eq, Debug)]
+<span class="attr">#[derive(PartialEq, Eq, Debug)]
 </span><span class="kw">pub enum </span>ParseError {
     <span class="doccomment">/// Symbol doesn&#39;t match the expected `v0` grammar.
     </span>Invalid,
@@ -2769,7 +2769,7 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>std::prelude::v1::<span class="kw-2">*</span>;
 
@@ -2806,12 +2806,12 @@
         }};
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_crate_with_leading_digit() {
         <span class="macro">t_nohash!</span>(<span class="string">&quot;_RNvC6_123foo3bar&quot;</span>, <span class="string">&quot;123foo::bar&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_utf8_idents() {
         <span class="macro">t_nohash!</span>(
             <span class="string">&quot;_RNqCs4fqI2P2rA04_11utf8_identsu30____7hkackfecea1cbdathfdh9hlq6y&quot;</span>,
@@ -2819,7 +2819,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_closure() {
         <span class="macro">t_nohash!</span>(
             <span class="string">&quot;_RNCNCNgCs6DXkGYLi8lr_2cc5spawn00B5_&quot;</span>,
@@ -2831,7 +2831,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_dyn_trait() {
         <span class="macro">t_nohash!</span>(
             <span class="string">&quot;_RINbNbCskIICzLVDPPb_5alloc5alloc8box_freeDINbNiB4_5boxed5FnBoxuEp6OutputuEL_ECs1iopQbuBiw2_3std&quot;</span>,
@@ -2839,7 +2839,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_generics_preview() {
         <span class="comment">// NOTE(eddyb) this was hand-written, before rustc had working
         // const generics support (but the mangling format did include them).
@@ -2850,7 +2850,7 @@
         <span class="macro">t_const_suffixed!</span>(<span class="string">&quot;j7b_&quot;</span>, <span class="string">&quot;123&quot;</span>, <span class="string">&quot;usize&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_min_const_generics() {
         <span class="macro">t_const!</span>(<span class="string">&quot;p&quot;</span>, <span class="string">&quot;_&quot;</span>);
         <span class="macro">t_const_suffixed!</span>(<span class="string">&quot;hb_&quot;</span>, <span class="string">&quot;11&quot;</span>, <span class="string">&quot;u8&quot;</span>);
@@ -2865,7 +2865,7 @@
         <span class="macro">t_const!</span>(<span class="string">&quot;c2202_&quot;</span>, <span class="string">&quot;&#39;∂&#39;&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_str() {
         <span class="macro">t_const!</span>(<span class="string">&quot;e616263_&quot;</span>, <span class="string">&quot;{*\&quot;abc\&quot;}&quot;</span>);
         <span class="macro">t_const!</span>(<span class="string">&quot;e27_&quot;</span>, <span class="string">r#&quot;{*&quot;&#39;&quot;}&quot;#</span>);
@@ -2886,7 +2886,7 @@
     <span class="comment">// NOTE(eddyb) this uses the same strings as `demangle_const_str` and should
     // be kept in sync with it - while a macro could be used to generate both
     // `str` and `&amp;str` tests, from a single list of strings, this seems clearer.
-    </span><span class="attribute">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_ref_str() {
         <span class="macro">t_const!</span>(<span class="string">&quot;Re616263_&quot;</span>, <span class="string">&quot;\&quot;abc\&quot;&quot;</span>);
         <span class="macro">t_const!</span>(<span class="string">&quot;Re27_&quot;</span>, <span class="string">r#&quot;&quot;&#39;&quot;&quot;#</span>);
@@ -2904,7 +2904,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_ref() {
         <span class="macro">t_const!</span>(<span class="string">&quot;Rp&quot;</span>, <span class="string">&quot;{&amp;_}&quot;</span>);
         <span class="macro">t_const!</span>(<span class="string">&quot;Rh7b_&quot;</span>, <span class="string">&quot;{&amp;123}&quot;</span>);
@@ -2915,7 +2915,7 @@
         <span class="macro">t_const!</span>(<span class="string">&quot;QAE&quot;</span>, <span class="string">&quot;{&amp;mut []}&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_array() {
         <span class="macro">t_const!</span>(<span class="string">&quot;AE&quot;</span>, <span class="string">&quot;{[]}&quot;</span>);
         <span class="macro">t_const!</span>(<span class="string">&quot;Aj0_E&quot;</span>, <span class="string">&quot;{[0]}&quot;</span>);
@@ -2924,7 +2924,7 @@
         <span class="macro">t_const!</span>(<span class="string">&quot;AAh1_h2_EAh3_h4_EE&quot;</span>, <span class="string">&quot;{[[1, 2], [3, 4]]}&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_tuple() {
         <span class="macro">t_const!</span>(<span class="string">&quot;TE&quot;</span>, <span class="string">&quot;{()}&quot;</span>);
         <span class="macro">t_const!</span>(<span class="string">&quot;Tj0_E&quot;</span>, <span class="string">&quot;{(0,)}&quot;</span>);
@@ -2935,7 +2935,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_const_adt() {
         <span class="macro">t_const!</span>(
             <span class="string">&quot;VNvINtNtC4core6option6OptionjE4NoneU&quot;</span>,
@@ -2951,7 +2951,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_exponential_explosion() {
         <span class="comment">// NOTE(eddyb) because of the prefix added by `t_nohash_type!` is
         // 3 bytes long, `B2_` refers to the start of the type, not `B_`.
@@ -2967,14 +2967,14 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_thinlto() {
         <span class="macro">t_nohash!</span>(<span class="string">&quot;_RC3foo.llvm.9D1C9369&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="macro">t_nohash!</span>(<span class="string">&quot;_RC3foo.llvm.9D1C9369@@16&quot;</span>, <span class="string">&quot;foo&quot;</span>);
         <span class="macro">t_nohash!</span>(<span class="string">&quot;_RNvC9backtrace3foo.llvm.A5310EB9&quot;</span>, <span class="string">&quot;backtrace::foo&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangle_extra_suffix() {
         <span class="comment">// From alexcrichton/rustc-demangle#27:
         </span><span class="macro">t_nohash!</span>(
@@ -2983,7 +2983,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>demangling_limits() {
         <span class="comment">// Stress tests found via fuzzing.
 
@@ -3007,7 +3007,7 @@
         </span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>recursion_limit_leaks() {
         <span class="comment">// NOTE(eddyb) this test checks that both paths and types support the
         // recursion limit correctly, i.e. matching `push_depth` and `pop_depth`,
@@ -3030,7 +3030,7 @@
         }
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>recursion_limit_backref_free_bypass() {
         <span class="comment">// NOTE(eddyb) this test checks that long symbols cannot bypass the
         // recursion limit by not using backrefs, and cause a stack overflow.
@@ -3059,4 +3059,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_demangle" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="rustc_demangle" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

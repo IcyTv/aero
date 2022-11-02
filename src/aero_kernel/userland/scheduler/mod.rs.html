@@ -196,7 +196,7 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;round-robin&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;round-robin&quot;</span>)]
 </span><span class="kw">pub mod </span>round_robin;
 
 <span class="kw">use </span>alloc::sync::Arc;
@@ -213,7 +213,7 @@
 
 <span class="kw">static </span>SCHEDULER: Once&lt;Scheduler&gt; = Once::new();
 
-<span class="attribute">#[downcastable]
+<span class="attr">#[downcastable]
 </span><span class="kw">pub trait </span>SchedulerInterface: Send + Sync {
     <span class="doccomment">/// Register the provided task into the task scheduler queue.
     </span><span class="kw">fn </span>register_task(<span class="kw-2">&amp;</span><span class="self">self</span>, task: Arc&lt;Task&gt;);
@@ -264,12 +264,12 @@
 
 <span class="kw">impl </span>Scheduler {
     <span class="doccomment">/// Create a new scheduler with no active tasks by default.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             tasks: TaskContainer::new(),
 
-            <span class="attribute">#[cfg(feature = <span class="string">&quot;round-robin&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">&quot;round-robin&quot;</span>)]
             </span>inner: RoundRobin::new(),
         }
     }
@@ -280,7 +280,7 @@
         <span class="self">self</span>.inner.register_task(task.clone());
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>exec(<span class="kw-2">&amp;</span><span class="self">self</span>, executable: DirCacheItem, argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;, envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;) {
         <span class="self">self</span>.inner
             .current_task()
@@ -289,7 +289,7 @@
     }
 
     <span class="doccomment">/// Get the current task
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>current_task(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Arc&lt;Task&gt; {
         <span class="self">self</span>.inner.current_task()
     }
@@ -312,7 +312,7 @@
     }
 
     <span class="doccomment">/// Lookup a task by ID
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>find_task(<span class="kw-2">&amp;</span><span class="self">self</span>, task_id: TaskId) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;Task&gt;&gt; {
         <span class="self">self</span>.tasks.<span class="number">0</span>.lock().get(<span class="kw-2">&amp;</span>task_id).map(|task| task.clone())
     }
@@ -334,7 +334,7 @@
 <span class="kw">const </span>SCHEDULER_TIMER_US: usize = <span class="number">20000</span>;
 
 <span class="kw">fn </span>scheduler_irq_handler(_stack: <span class="kw-2">&amp;mut </span>InterruptStack) {
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span>{
         <span class="kw">crate</span>::arch::apic::get_local_apic()
             .timer_oneshot(<span class="kw-2">*</span>SCHEDULER_VECTOR.get().unwrap(), SCHEDULER_TIMER_US);
@@ -352,9 +352,9 @@
     <span class="kw">let </span>scheduler_vector = interrupts::allocate_vector();
     interrupts::register_handler(scheduler_vector, scheduler_irq_handler);
 
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span><span class="kw">crate</span>::arch::apic::get_local_apic().timer_oneshot(scheduler_vector, SCHEDULER_TIMER_US);
     SCHEDULER_VECTOR.call_once(|| scheduler_vector);
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

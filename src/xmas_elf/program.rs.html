@@ -365,7 +365,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">pub struct </span>ProgramIter&lt;<span class="lifetime">&#39;b</span>, <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>&gt; {
     <span class="kw">pub </span>file: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>ElfFile&lt;<span class="lifetime">&#39;a</span>&gt;,
     <span class="kw">pub </span>next_index: u16,
@@ -386,13 +386,13 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]
+<span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub enum </span>ProgramHeader&lt;<span class="lifetime">&#39;a</span>&gt; {
     Ph32(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ProgramHeader32),
     Ph64(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>ProgramHeader64),
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Default)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>ProgramHeader32 {
     <span class="kw">pub </span>type_: Type_,
@@ -407,7 +407,7 @@
 
 <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>ProgramHeader32 {}
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Default)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>ProgramHeader64 {
     <span class="kw">pub </span>type_: Type_,
@@ -528,7 +528,7 @@
 <span class="macro">ph_impl!</span>(ProgramHeader32);
 <span class="macro">ph_impl!</span>(ProgramHeader64);
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Default, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>Flags(<span class="kw">pub </span>u32);
 
 <span class="kw">impl </span>Flags {
@@ -570,10 +570,10 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Default)]
+<span class="attr">#[derive(Copy, Clone, Default)]
 </span><span class="kw">pub struct </span>Type_(u32);
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Type {
     Null,
     Load,
@@ -613,7 +613,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>SegmentData&lt;<span class="lifetime">&#39;a</span>&gt; {
     Empty,
     Undefined(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]),
@@ -667,4 +667,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

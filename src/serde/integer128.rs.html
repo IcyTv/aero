@@ -148,7 +148,7 @@
 ///     ($($tt:tt)*) =&gt; {};
 /// }
 /// ```
-</span><span class="attribute">#[cfg(integer128)]
+</span><span class="attr">#[cfg(integer128)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>serde_if_integer128 {
     ($(<span class="macro-nonterminal">$tt</span>:tt)<span class="kw-2">*</span>) =&gt; {
@@ -156,11 +156,11 @@
     };
 }
 
-<span class="attribute">#[cfg(not(integer128))]
+<span class="attr">#[cfg(not(integer128))]
 #[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>serde_if_integer128 {
     ($(<span class="macro-nonterminal">$tt</span>:tt)<span class="kw-2">*</span>) =&gt; {};
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -5,13 +5,13 @@ etc) by the caller.</p>
 <a href="https://doc.rust-lang.org/reference/attributes/diagnostics.html#the-must_use-attribute"><code>#[must_use]</code> attribute</a> either on a type or a function would not
 be convenient.</p>
 <h2 id="example"><a href="#example">Example</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(hint_must_use)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#![feature(hint_must_use)]
 
 </span><span class="kw">use </span>core::fmt;
 
 <span class="kw">pub struct </span>Error(<span class="comment">/* ... */</span>);
 
-<span class="attribute">#[macro_export]
+<span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>make_error {
     ($(<span class="macro-nonterminal">$args</span>:expr),<span class="kw-2">*</span>) =&gt; {
         core::hint::must_use({
@@ -22,7 +22,7 @@ be convenient.</p>
 }
 
 <span class="comment">// Implementation detail of make_error! macro.
-</span><span class="attribute">#[doc(hidden)]
+</span><span class="attr">#[doc(hidden)]
 </span><span class="kw">pub fn </span>make_error(args: fmt::Arguments&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Error {
     Error(<span class="comment">/* ... */</span>)
 }
@@ -45,7 +45,7 @@ make the following unproblematic code trigger a warning:</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn </span>f(arg: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), Error&gt;
 
-<span class="attribute">#[test]
+<span class="attr">#[test]
 </span><span class="kw">fn </span>t() {
     <span class="comment">// Assert that `f` returns error if passed an empty string.
     // A value of type `Error` is unused here but that&#39;s not a problem.
@@ -77,4 +77,4 @@ autotrait issues in async code:</p>
 }</code></pre></div>
 </li>
 </ul>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

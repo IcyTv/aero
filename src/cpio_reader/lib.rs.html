@@ -492,7 +492,7 @@
 <span id="492">492</span>
 <span id="493">493</span>
 <span id="494">494</span>
-</pre><pre class="rust"><code><span class="attribute">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
+</pre><pre class="rust"><code><span class="attr">#![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 #![no_std]
 #![deny(unsafe_code)]
 
@@ -510,7 +510,7 @@
 }
 
 <span class="doccomment">/// An entry of a cpio file.
-</span><span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 </span><span class="kw">pub struct </span>Entry&lt;<span class="lifetime">&#39;a</span>&gt; {
     dev: <span class="prelude-ty">Option</span>&lt;u32&gt;,
     devmajor: <span class="prelude-ty">Option</span>&lt;u32&gt;,
@@ -532,7 +532,7 @@
     ///
     /// This method returns [`None`] if the cpio file format is either New ASCII Format or New CRC
     /// Format. For these formats, use [`Entry::devmajor`] and [`Entry::devminor`].
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>dev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.dev
     }
@@ -541,7 +541,7 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::dev`].
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>devmajor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.devmajor
     }
@@ -550,38 +550,38 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::dev`].
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>devminor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.devminor
     }
 
     <span class="doccomment">/// Returns the inode number of the file.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>ino(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.ino
     }
 
     <span class="doccomment">/// Returns the [`Mode`] value of the file, which contains the file&#39;s permission information
     /// and file type.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>mode(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Mode {
         <span class="self">self</span>.mode
     }
 
     <span class="doccomment">/// Returns the user id of the owner of the file.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>uid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.uid
     }
 
     <span class="doccomment">/// Returns the group id of the owner of the file.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>gid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.gid
     }
 
     <span class="doccomment">/// Returns the number of links to this file.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>nlink(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u32 {
         <span class="self">self</span>.nlink
     }
@@ -591,7 +591,7 @@
     ///
     /// This method returns [`None`] if the entry format is either New ASCII Format or New CRC
     /// Format. For these formats, use [`Entry::rdevmajor`] and [`Entry::rdevminor`].
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>rdev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.rdev
     }
@@ -602,7 +602,7 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::rdev`].
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>rdevmajor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.rdevmajor
     }
@@ -613,19 +613,19 @@
     ///
     /// This method returns [`None`] if the entry format is either Old Binary Format or Portable
     /// ASCII Format. For these formats, use [`Entry::rdev`].
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>rdevminor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u32&gt; {
         <span class="self">self</span>.rdevminor
     }
 
     <span class="doccomment">/// Returns the modification time of this file.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>mtime(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.mtime
     }
 
     <span class="doccomment">/// Returns the filename.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>str {
         <span class="self">self</span>.name
     }
@@ -635,7 +635,7 @@
     /// This method returns the path to the original file if the file is a symbolic link. For the
     /// New ASCII Format and New CRC Format, this method returns an empty slice if the file is a
     /// hard link and is not the last entry of the multiple duplicate files.
-    </span><span class="attribute">#[must_use]
+    </span><span class="attr">#[must_use]
     </span><span class="kw">pub fn </span>file(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8] {
         <span class="self">self</span>.file
     }
@@ -973,7 +973,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+<span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 </span><span class="kw">enum </span>Endianness {
     Big,
     Little,
@@ -987,4 +987,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cpio_reader" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="cpio_reader" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

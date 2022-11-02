@@ -501,7 +501,7 @@
 <span class="kw">use </span>bitflags::bitflags;
 
 <span class="doccomment">/// The error returned by the `PageTableEntry::frame` method.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
 </span><span class="kw">pub enum </span>FrameError {
     <span class="doccomment">/// The entry does not have the `PRESENT` flag set, so it isn&#39;t currently mapped to a frame.
     </span>FrameNotPresent,
@@ -511,7 +511,7 @@
 }
 
 <span class="doccomment">/// A 64-bit page table entry.
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone)]
 #[repr(transparent)]
 </span><span class="kw">pub struct </span>PageTableEntry {
     entry: u64,
@@ -730,7 +730,7 @@
 ///
 /// Note that while this type implements [`Clone`], the users must be careful not to introduce
 /// mutable aliasing by using the cloned page tables.
-</span><span class="attribute">#[repr(align(<span class="number">4096</span>))]
+</span><span class="attr">#[repr(align(<span class="number">4096</span>))]
 #[repr(C)]
 #[derive(Clone)]
 </span><span class="kw">pub struct </span>PageTable {
@@ -739,7 +739,7 @@
 
 <span class="kw">impl </span>PageTable {
     <span class="doccomment">/// Creates an empty page table.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="kw">const </span>EMPTY: PageTableEntry = PageTableEntry::new();
         PageTable {
@@ -748,7 +748,7 @@
     }
 
     <span class="doccomment">/// Clears all entries.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>zero(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">for </span>entry <span class="kw">in </span><span class="self">self</span>.entries.iter_mut() {
             entry.set_unused();
@@ -799,14 +799,14 @@
 <span class="kw">impl </span>Index&lt;usize&gt; <span class="kw">for </span>PageTable {
     <span class="kw">type </span>Output = PageTableEntry;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;</span><span class="self">self</span>.entries[index]
     }
 }
 
 <span class="kw">impl </span>IndexMut&lt;usize&gt; <span class="kw">for </span>PageTable {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: usize) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[index]
     }
@@ -815,14 +815,14 @@
 <span class="kw">impl </span>Index&lt;PageTableIndex&gt; <span class="kw">for </span>PageTable {
     <span class="kw">type </span>Output = PageTableEntry;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>index(<span class="kw-2">&amp;</span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;</span><span class="self">self</span>.entries[usize::from(index)]
     }
 }
 
 <span class="kw">impl </span>IndexMut&lt;PageTableIndex&gt; <span class="kw">for </span>PageTable {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>index_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>, index: PageTableIndex) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::Output {
         <span class="kw-2">&amp;mut </span><span class="self">self</span>.entries[usize::from(index)]
     }
@@ -835,7 +835,7 @@
 }
 
 <span class="kw">impl </span>fmt::Debug <span class="kw">for </span>PageTable {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="self">self</span>.entries[..].fmt(f)
     }
@@ -846,47 +846,47 @@
 /// Can be used to select one of the 512 entries of a page table.
 ///
 /// Guaranteed to only ever contain 0..512.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 </span><span class="kw">pub struct </span>PageTableIndex(u16);
 
 <span class="kw">impl </span>PageTableIndex {
     <span class="doccomment">/// Creates a new index from the given `u16`. Panics if the given value is &gt;=512.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>new(index: u16) -&gt; <span class="self">Self </span>{
         <span class="macro">assert!</span>(usize::from(index) &lt; ENTRY_COUNT);
         <span class="self">Self</span>(index)
     }
 
     <span class="doccomment">/// Creates a new index from the given `u16`. Throws away bits if the value is &gt;=512.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new_truncate(index: u16) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(index % ENTRY_COUNT <span class="kw">as </span>u16)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u16 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         index.<span class="number">0
     </span>}
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u32 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         u32::from(index.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>u64 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         u64::from(index.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageTableIndex&gt; <span class="kw">for </span>usize {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(index: PageTableIndex) -&gt; <span class="self">Self </span>{
         usize::from(index.<span class="number">0</span>)
     }
@@ -897,50 +897,50 @@
 /// This type is returned by the `VirtAddr::page_offset` method.
 ///
 /// Guaranteed to only ever contain 0..4096.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 </span><span class="kw">pub struct </span>PageOffset(u16);
 
 <span class="kw">impl </span>PageOffset {
     <span class="doccomment">/// Creates a new offset from the given `u16`. Panics if the passed value is &gt;=4096.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>new(offset: u16) -&gt; <span class="self">Self </span>{
         <span class="macro">assert!</span>(offset &lt; (<span class="number">1 </span>&lt;&lt; <span class="number">12</span>));
         <span class="self">Self</span>(offset)
     }
 
     <span class="doccomment">/// Creates a new offset from the given `u16`. Throws away bits if the value is &gt;=4096.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new_truncate(offset: u16) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(offset % (<span class="number">1 </span>&lt;&lt; <span class="number">12</span>))
     }
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u16 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         offset.<span class="number">0
     </span>}
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u32 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         u32::from(offset.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>u64 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         u64::from(offset.<span class="number">0</span>)
     }
 }
 
 <span class="kw">impl </span>From&lt;PageOffset&gt; <span class="kw">for </span>usize {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(offset: PageOffset) -&gt; <span class="self">Self </span>{
         usize::from(offset.<span class="number">0</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

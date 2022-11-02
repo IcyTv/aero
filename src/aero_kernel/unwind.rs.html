@@ -387,10 +387,10 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;ci&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;ci&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::emu;
 
-<span class="attribute">#[panic_handler]
+<span class="attr">#[panic_handler]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>rust_begin_unwind(info: <span class="kw-2">&amp;</span>PanicInfo) -&gt; ! {
     prepare_panic();
 
@@ -417,10 +417,10 @@
 
     unwind_stack_trace();
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;ci&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;ci&quot;</span>)]
     </span>emu::exit_qemu(emu::ExitStatus::Success);
 
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;ci&quot;</span>))]
+    <span class="attr">#[cfg(not(feature = <span class="string">&quot;ci&quot;</span>))]
     </span><span class="kw">unsafe </span>{
         <span class="comment">// Go into a halt loop to to save power.
         </span><span class="kw">loop </span>{
@@ -432,7 +432,7 @@
 <span class="doccomment">/// This function is automatically called after each unwinding cleanup routine finishes
 /// executing. Our task here is to *resume* the unwinding procedure by figuring out where
 /// we just came from and picking up where we left off.
-</span><span class="attribute">#[allow(non_snake_case)]
+</span><span class="attr">#[allow(non_snake_case)]
 #[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>_Unwind_Resume(unwind_context_ptr: usize) -&gt; ! {
     <span class="macro">log::debug!</span>(<span class="string">&quot;{}&quot;</span>, unwind_context_ptr);
@@ -447,7 +447,7 @@
 }
 
 <span class="doccomment">/// This function is the entry point for the unwinding process.
-</span><span class="attribute">#[lang = <span class="string">&quot;eh_personality&quot;</span>]
+</span><span class="attr">#[lang = <span class="string">&quot;eh_personality&quot;</span>]
 #[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>rust_eh_personality() -&gt; ! {
     <span class="macro">log::error!</span>(<span class="string">&quot;Poisoned function `rust_eh_personaity` was invoked.&quot;</span>);
@@ -461,4 +461,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

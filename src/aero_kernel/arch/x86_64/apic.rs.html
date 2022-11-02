@@ -550,7 +550,7 @@
 
 <span class="kw">static </span>BSP_READY: AtomicBool = AtomicBool::new(<span class="bool-val">false</span>);
 
-<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
 </span><span class="kw">pub enum </span>ApicType {
     Xapic,
     X2apic,
@@ -558,7 +558,7 @@
 }
 
 <span class="kw">impl </span>ApicType {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_none(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="macro">matches!</span>(<span class="self">self</span>, <span class="self">Self</span>::None)
     }
@@ -793,23 +793,23 @@
 }
 
 <span class="doccomment">/// Get the local BSP&#39;s id.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>get_bsp_id() -&gt; u64 {
     BSP_APIC_ID.load(Ordering::SeqCst)
 }
 
 <span class="doccomment">/// Return the number of active CPUs.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>get_cpu_count() -&gt; usize {
     CPU_COUNT.load(Ordering::Relaxed)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>is_bsp_ready() -&gt; bool {
     BSP_READY.load(Ordering::SeqCst)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>mark_bsp_ready(value: bool) {
     BSP_READY.store(value, Ordering::SeqCst);
 }
@@ -933,7 +933,7 @@
     BSP_APIC_ID.store(bsp_id <span class="kw">as </span>u64, Ordering::SeqCst);
     LOCAL_APIC.call_once(<span class="kw">move </span>|| Mutex::new(local_apic));
 
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span>{
         <span class="kw">use </span><span class="kw">crate</span>::arch::interrupts::INTERRUPT_CONTROLLER;
 
@@ -947,4 +947,4 @@
     <span class="kw">return </span>apic_type;
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

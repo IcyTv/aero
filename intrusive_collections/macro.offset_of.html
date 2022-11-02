@@ -3,10 +3,10 @@
 }</code></pre></div>
 </div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Calculates the offset of the specified field from the start of the struct.</p>
 <h3 id="examples"><a href="#examples">Examples</a></h3>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[macro_use]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[macro_use]
 </span><span class="kw">extern crate </span>memoffset;
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">struct </span>Foo {
     a: u32,
     b: u64,
@@ -17,4 +17,4 @@
     <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(Foo, a), <span class="number">0</span>);
     <span class="macro">assert_eq!</span>(<span class="macro">offset_of!</span>(Foo, b), <span class="number">4</span>);
 }</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

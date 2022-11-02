@@ -83,24 +83,24 @@
  * NOTE: `iow` means userland is writing and kernel is reading. `ior`
  * means userland is reading and kernel is writing.
  */
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>io(typ: usize, nr: usize) -&gt; usize {
     ioc(IOC_NONE, typ, nr, <span class="number">0</span>)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>ior&lt;T&gt;(typ: usize, nr: usize) -&gt; usize {
     ioc(IOC_READ, typ, nr, core::mem::size_of::&lt;T&gt;())
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>iow&lt;T&gt;(typ: usize, nr: usize) -&gt; usize {
     ioc(IOC_WRITE, typ, nr, core::mem::size_of::&lt;T&gt;())
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>iowr&lt;T&gt;(typ: usize, nr: usize) -&gt; usize {
     ioc(IOC_READ | IOC_WRITE, typ, nr, core::mem::size_of::&lt;T&gt;())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="uapi" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

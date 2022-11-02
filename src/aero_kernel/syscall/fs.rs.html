@@ -672,7 +672,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::Path;
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>write(fd: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
@@ -692,7 +692,7 @@
     // }
 </span>}
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>read(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
@@ -710,7 +710,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>open(_fd: usize, path: <span class="kw-2">&amp;</span>Path, mode: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span><span class="kw-2">mut </span>flags = OpenFlags::from_bits(mode).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
@@ -740,7 +740,7 @@
         .open_file(inode, flags)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>dup(fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
     <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">? </span>&amp; OpenFlags::O_CLOEXEC;
@@ -748,7 +748,7 @@
     task.file_table.duplicate(fd, DuplicateHint::Any, flags)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>dup2(fd: usize, new_fd: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
     <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">? </span>&amp; OpenFlags::O_CLOEXEC;
@@ -757,7 +757,7 @@
         .duplicate(fd, DuplicateHint::Exact(new_fd), flags)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>getdents(fd: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
@@ -768,7 +768,7 @@
     <span class="prelude-val">Ok</span>(handle.get_dents(buffer)<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>close(fd: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>res = scheduler::get_scheduler()
         .current_task()
@@ -783,7 +783,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>chdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>inode = fs::lookup_path(Path::new(path))<span class="question-mark">?</span>;
 
@@ -796,7 +796,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>mkdirat(dfd: usize, path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// NOTE: If the pathname given in pathname is relative, then it is interpreted
     // relative to the directory referred to by the file descriptor (rather than relative
@@ -837,7 +837,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>rmdir(path: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>path = Path::new(path);
 
@@ -855,7 +855,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>getcwd(buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>cwd = scheduler::get_scheduler().current_task().get_cwd();
 
@@ -863,7 +863,7 @@
     <span class="prelude-val">Ok</span>(cwd.len())
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>ioctl(fd: usize, command: usize, argument: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
@@ -884,7 +884,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>seek(fd: usize, offset: usize, whence: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
@@ -895,7 +895,7 @@
     <span class="prelude-val">Ok</span>(handle.seek(offset <span class="kw">as </span>isize, aero_syscall::SeekWhence::from(whence))<span class="question-mark">?</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>pipe(fds: <span class="kw-2">&amp;mut </span>[i32; <span class="number">2</span>], flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
     <span class="kw">let </span>pipe = Pipe::new();
@@ -927,7 +927,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>unlink(fd: usize, path: <span class="kw-2">&amp;</span>Path, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// TODO: Make use of the open flags.
     </span><span class="kw">let </span>_flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
@@ -951,7 +951,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>access(fd: usize, path: <span class="kw-2">&amp;</span>Path, _mode: usize, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">if </span>fd <span class="kw">as </span>isize == aero_syscall::AT_FDCWD {
         lookup_path(path)<span class="question-mark">?</span>;
@@ -962,7 +962,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>fcntl(fd: usize, command: usize, arg: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>handle = scheduler::get_scheduler()
         .current_task()
@@ -1024,7 +1024,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>fstat(fd: usize, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>file = scheduler::get_scheduler()
         .current_task()
@@ -1037,7 +1037,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>stat(path: <span class="kw-2">&amp;</span>Path, stat: <span class="kw-2">&amp;mut </span>Stat) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>file = fs::lookup_path(path)<span class="question-mark">?</span>;
 
@@ -1046,7 +1046,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>read_link(path: <span class="kw-2">&amp;</span>Path, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="macro">log::warn!</span>(<span class="string">&quot;read_link: is a stub! (path={path:?})&quot;</span>);
 
@@ -1054,7 +1054,7 @@
 }
 
 <span class="doccomment">/// Returns a file descriptor referring to the new epoll instance.
-</span><span class="attribute">#[syscall]
+</span><span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>epoll_create(flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>_flags = EPollFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
@@ -1070,7 +1070,7 @@
 <span class="doccomment">/// Used to add, modify, or remove entries in the interest list of the
 /// epoll instance referred to by the file descriptor. It requests that
 /// the operation be performed for the target file descriptor.
-</span><span class="attribute">#[syscall]
+</span><span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>epoll_ctl(
     epfd: usize,
     mode: usize,
@@ -1108,7 +1108,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>epoll_pwait(
     epfd: usize,
     event: <span class="kw-2">&amp;mut </span>[<span class="kw-2">&amp;mut </span>EPollEvent],
@@ -1142,7 +1142,7 @@
     <span class="prelude-val">Ok</span>(result)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>event_fd(_initval: usize, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>flags = EventFdFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
     <span class="macro">assert!</span>(!flags.contains(EventFdFlags::SEMAPHORE)); <span class="comment">// todo: implement event fd semaphore support.
@@ -1159,7 +1159,7 @@
 
 <span class="doccomment">/// Creates a new link (also known as a hard link) to an existing
 /// file.
-</span><span class="attribute">#[syscall]
+</span><span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>link(src_path: <span class="kw-2">&amp;</span>Path, dest_path: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>src = fs::lookup_path(src_path)<span class="question-mark">?</span>;
     <span class="kw">let </span>(dest_dir, dest_name) = dest_path.parent_and_basename();
@@ -1252,7 +1252,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>poll(fds: <span class="kw-2">&amp;mut </span>[PollFd], timeout: usize, sigmask: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="comment">// Nothing to poll on.
     </span><span class="kw">if </span>fds.len() == <span class="number">0 </span>{
@@ -1281,4 +1281,4 @@
     <span class="prelude-val">Ok</span>(n)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

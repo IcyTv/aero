@@ -71,7 +71,7 @@ on the platform they are compiled for.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::mem;
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">struct </span>FieldStruct {
     first: u8,
     second: u16,
@@ -87,7 +87,7 @@ on the platform they are compiled for.</p>
 // fields is 2), so add 1 to the size for padding. Size is 6.
 </span><span class="macro">assert_eq!</span>(<span class="number">6</span>, mem::size_of::&lt;FieldStruct&gt;());
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">struct </span>TupleStruct(u8, u16, u8);
 
 <span class="comment">// Tuple structs follow the same rules.
@@ -95,7 +95,7 @@ on the platform they are compiled for.</p>
 
 <span class="comment">// Note that reordering the fields can lower the size. We can remove both padding bytes
 // by putting `third` before `second`.
-</span><span class="attribute">#[repr(C)]
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">struct </span>FieldStructOptimized {
     first: u8,
     third: u8,
@@ -105,11 +105,11 @@ on the platform they are compiled for.</p>
 <span class="macro">assert_eq!</span>(<span class="number">4</span>, mem::size_of::&lt;FieldStructOptimized&gt;());
 
 <span class="comment">// Union size is the size of the largest field.
-</span><span class="attribute">#[repr(C)]
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">union </span>ExampleUnion {
     smaller: u8,
     larger: u16
 }
 
 <span class="macro">assert_eq!</span>(<span class="number">2</span>, mem::size_of::&lt;ExampleUnion&gt;());</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

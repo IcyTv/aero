@@ -31,9 +31,9 @@ lengths of <code>a</code> and <code>b</code> to be explicitly specified.</p>
 <h2 id="examples"><a href="#examples">Examples</a></h2>
 <p>Finds a substring using <a href="constant._SIDD_CMP_EQUAL_ORDERED.html" title="_SIDD_CMP_EQUAL_ORDERED"><code>_SIDD_CMP_EQUAL_ORDERED</code></a></p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86::<span class="kw-2">*</span>;
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86_64::<span class="kw-2">*</span>;
 
 <span class="kw">let </span>haystack = <span class="string">b&quot;This is a long string of text data\r\n\tthat extends
@@ -57,9 +57,9 @@ multiple lines&quot;</span>;
 <p>The <code>_mm_cmpistri</code> intrinsic may also be used to find the existence of
 one or more of a given set of characters in the haystack.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86::<span class="kw-2">*</span>;
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86_64::<span class="kw-2">*</span>;
 
 <span class="comment">// Ensure your input is 16 byte aligned
@@ -81,9 +81,9 @@ one or more of a given set of characters in the haystack.</p>
 <p>Finds the index of the first character in the haystack that is within a
 range of characters.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86::<span class="kw-2">*</span>;
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86_64::<span class="kw-2">*</span>;
 
 
@@ -103,9 +103,9 @@ range of characters.</p>
 }</code></pre></div>
 <p>Working with 16-bit characters.</p>
 
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86::<span class="kw-2">*</span>;
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span>std::arch::x86_64::<span class="kw-2">*</span>;
 
 <span class="comment">// Load the input
@@ -122,4 +122,4 @@ range of characters.</p>
     <span class="macro">println!</span>(<span class="string">&quot;16-bit unicode strings were not equal!&quot;</span>);
 }</code></pre></div>
 <p><a href="https://software.intel.com/sites/landingpage/IntrinsicsGuide/#text=_mm_cmpistri">Intel’s documentation</a></p>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

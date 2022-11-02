@@ -992,7 +992,7 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="attribute">#![no_std]
+</span><span class="attr">#![no_std]
 #![feature(decl_macro)]
 
 </span><span class="kw">pub mod </span>consts;
@@ -1052,7 +1052,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, PartialEq, Debug)]
+<span class="attr">#[derive(Copy, Clone, PartialEq, Debug)]
 #[repr(isize)]
 </span><span class="kw">pub enum </span>SyscallError {
     EDOM = <span class="number">1</span>,
@@ -1213,7 +1213,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(usize)]
 </span><span class="kw">pub enum </span>SysFileType {
     Unknown = <span class="number">0</span>,
@@ -1226,7 +1226,7 @@
     Socket = <span class="number">12</span>,
 }
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">pub struct </span>SysDirEntry {
     <span class="kw">pub </span>inode: usize,
     <span class="kw">pub </span>offset: usize,
@@ -1235,7 +1235,7 @@
     <span class="kw">pub </span>name: [u8; <span class="number">0</span>],
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>Utsname {
     <span class="kw">pub </span>sysname: [u8; <span class="number">65</span>],
@@ -1281,14 +1281,14 @@
     }
 }
 
-<span class="attribute">#[derive(Default, Clone, Debug)]
+<span class="attr">#[derive(Default, Clone, Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>TimeSpec {
     <span class="kw">pub </span>tv_sec: isize,
     <span class="kw">pub </span>tv_nsec: isize,
 }
 
-<span class="attribute">#[repr(usize)]
+<span class="attr">#[repr(usize)]
 #[derive(Debug)]
 </span><span class="kw">pub enum </span>SeekWhence {
     SeekCur = <span class="number">1</span>,
@@ -1311,7 +1311,7 @@
 <span class="kw">pub const </span>TCGETS: usize = <span class="number">0x5401</span>;
 <span class="kw">pub const </span>TCSETSF: usize = <span class="number">0x5404</span>;
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>WinSize {
     <span class="kw">pub </span>ws_row: u16,
@@ -1321,7 +1321,7 @@
 }
 
 <span class="macro">bitflags::bitflags! </span>{
-    <span class="attribute">#[derive(Default)]
+    <span class="attr">#[derive(Default)]
     </span><span class="kw">pub struct </span>TermiosLFlag: u32 {
         <span class="kw">const </span>ECHO    = <span class="number">0x8</span>;
         <span class="kw">const </span>ECHOE   = <span class="number">0x10</span>;
@@ -1337,7 +1337,7 @@
 }
 
 <span class="macro">bitflags::bitflags! </span>{
-    <span class="attribute">#[derive(Default)]
+    <span class="attr">#[derive(Default)]
     </span><span class="kw">pub struct </span>TermiosCFlag: u32 {
         <span class="kw">const </span>CSIZE  = <span class="number">0x30</span>;
         <span class="kw">const </span>CS5    = <span class="number">0x0</span>;
@@ -1354,7 +1354,7 @@
 }
 
 <span class="macro">bitflags::bitflags! </span>{
-    <span class="attribute">#[derive(Default)]
+    <span class="attr">#[derive(Default)]
     </span><span class="kw">pub struct </span>TermiosOFlag: u32 {
         <span class="kw">const </span>OPOST  = <span class="number">0x1</span>;
         <span class="kw">const </span>ONLCR  = <span class="number">0x4</span>;
@@ -1389,7 +1389,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Default, Clone)]
+<span class="attr">#[derive(Debug, Default, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>Termios {
     <span class="kw">pub </span>c_iflag: u32,
@@ -1404,7 +1404,7 @@
 
 <span class="kw">pub const </span>AT_FDCWD: isize = -<span class="number">100</span>;
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>SysInfo {
     <span class="doccomment">/// Seconds since boot
@@ -1651,7 +1651,7 @@
 <span class="comment">// Sockets
 </span><span class="kw">pub trait </span>SocketAddr: Send + Sync {}
 
-<span class="attribute">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>SocketAddrUnix {
     <span class="kw">pub </span>family: u32,
@@ -1667,7 +1667,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>SocketAddrInet {
     <span class="kw">pub </span>family: u32,
@@ -1881,7 +1881,7 @@
 
 <span class="comment">// sysdeps/aero/include/abi-bits/stat.h
 </span><span class="macro">bitflags::bitflags! </span>{
-    <span class="attribute">#[derive(Default)]
+    <span class="attr">#[derive(Default)]
     </span><span class="kw">pub struct </span>Mode: u32 {
         <span class="kw">const </span>S_IFMT   = <span class="number">0x0F000</span>;
         <span class="kw">const </span>S_IFBLK  = <span class="number">0x06000</span>;
@@ -1915,7 +1915,7 @@
 }
 
 <span class="comment">// sysdeps/aero/include/abi-bits/stat.h
-</span><span class="attribute">#[repr(C)]
+</span><span class="attr">#[repr(C)]
 #[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>Stat {
     <span class="kw">pub </span>st_dev: u64,
@@ -1949,4 +1949,4 @@
     isize_as_syscall_result(value <span class="kw">as _</span>)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

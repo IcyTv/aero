@@ -265,7 +265,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::fs::inode;
 <span class="kw">use </span><span class="kw">crate</span>::utils::CeilDiv;
 
-<span class="attribute">#[derive(Debug, Copy, Clone)]
+<span class="attr">#[derive(Debug, Copy, Clone)]
 #[repr(C, packed)]
 </span><span class="kw">pub struct </span>SuperBlock {
     <span class="kw">pub </span>inodes_count: u32,
@@ -355,7 +355,7 @@
     }
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug, Copy, Clone)]
 </span><span class="kw">pub struct </span>GroupDescriptor {
     <span class="kw">pub </span>block_bitmap: u32,
@@ -370,7 +370,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;GroupDescriptor&gt;(), <span class="number">32</span>);
 
-<span class="attribute">#[derive(Debug, Copy, Clone)]
+<span class="attr">#[derive(Debug, Copy, Clone)]
 #[repr(C, packed)]
 </span><span class="kw">pub struct </span>DirEntry {
     <span class="kw">pub </span>inode: u32,
@@ -399,7 +399,7 @@
     }
 }
 
-<span class="attribute">#[repr(u8)]
+<span class="attr">#[repr(u8)]
 #[derive(PartialEq, Copy, Clone)]
 </span><span class="kw">pub enum </span>FileType {
     Unknown = <span class="number">0</span>,
@@ -431,7 +431,7 @@
     }
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 </span><span class="kw">pub struct </span>INode {
     type_and_perm: u16,
@@ -485,4 +485,4 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;INode&gt;(), <span class="number">128</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

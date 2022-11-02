@@ -115,7 +115,7 @@
 <span class="doccomment">/// Inner helper function to make sure the function provided to the [module_init] macro
 /// has a valid function signature. This function returns the passed module init function as
 /// a const void pointer.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub const fn </span>make_module_init(init_function: <span class="kw">fn</span>() -&gt; ()) -&gt; ModuleInit {
     ModuleInit(init_function <span class="kw">as </span><span class="kw-2">*const </span>())
 }
@@ -127,10 +127,10 @@
 
 <span class="kw">unsafe impl </span>Sync <span class="kw">for </span>ModuleInit {}
 
-<span class="attribute">#[macro_export]
+<span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>module_init {
     (<span class="macro-nonterminal">$init_function</span>:expr) =&gt; {
-        <span class="attribute">#[used]
+        <span class="attr">#[used]
         #[link_section = <span class="string">&quot;.kernel_modules.init&quot;</span>]
         </span><span class="kw">static </span>__MODULE_INIT: <span class="macro-nonterminal">$crate::modules::ModuleInit </span>=
             <span class="macro-nonterminal">$crate::modules::make_module_init</span>(<span class="macro-nonterminal">$init_function</span>);
@@ -157,4 +157,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

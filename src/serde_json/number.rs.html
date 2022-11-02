@@ -783,7 +783,7 @@
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::de::ParserNumber;
 <span class="kw">use </span><span class="kw">crate</span>::error::Error;
 <span class="kw">use </span>core::fmt::{<span class="self">self</span>, Debug, Display};
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
 </span><span class="kw">use </span>core::hash::{Hash, Hasher};
 <span class="kw">use </span>serde::de::{<span class="self">self</span>, Unexpected, Visitor};
 <span class="kw">use </span>serde::{
@@ -791,21 +791,21 @@
     Serializer,
 };
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">crate</span>::error::ErrorCode;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">use </span>serde::de::{IntoDeserializer, MapAccess};
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">const </span>TOKEN: <span class="kw-2">&amp;</span>str = <span class="string">&quot;$serde_json::private::Number&quot;</span>;
 
 <span class="doccomment">/// Represents a JSON number, whether integer or floating point.
-</span><span class="attribute">#[derive(Clone, PartialEq, Eq, Hash)]
+</span><span class="attr">#[derive(Clone, PartialEq, Eq, Hash)]
 </span><span class="kw">pub struct </span>Number {
     n: N,
 }
 
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
 #[derive(Copy, Clone)]
 </span><span class="kw">enum </span>N {
     PosInt(u64),
@@ -815,7 +815,7 @@
     </span>Float(f64),
 }
 
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
 </span><span class="kw">impl </span>PartialEq <span class="kw">for </span>N {
     <span class="kw">fn </span>eq(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; bool {
         <span class="kw">match </span>(<span class="self">self</span>, other) {
@@ -828,10 +828,10 @@
 }
 
 <span class="comment">// Implementing Eq is fine since any float values are always finite.
-</span><span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+</span><span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
 </span><span class="kw">impl </span>Eq <span class="kw">for </span>N {}
 
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
 </span><span class="kw">impl </span>Hash <span class="kw">for </span>N {
     <span class="kw">fn </span>hash&lt;H: Hasher&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, h: <span class="kw-2">&amp;mut </span>H) {
         <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
@@ -851,7 +851,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">type </span>N = String;
 
 <span class="kw">impl </span>Number {
@@ -875,15 +875,15 @@
     /// // Numbers with a decimal point are not considered integers.
     /// assert!(!v[&quot;c&quot;].is_i64());
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_i64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">match </span><span class="self">self</span>.n {
             N::PosInt(v) =&gt; v &lt;= i64::max_value() <span class="kw">as </span>u64,
             N::NegInt(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
             N::Float(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span><span class="self">self</span>.as_i64().is_some()
     }
 
@@ -905,14 +905,14 @@
     /// // Numbers with a decimal point are not considered integers.
     /// assert!(!v[&quot;c&quot;].is_u64());
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_u64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">match </span><span class="self">self</span>.n {
             N::PosInt(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
             N::NegInt(<span class="kw">_</span>) | N::Float(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span><span class="self">self</span>.as_u64().is_some()
     }
 
@@ -935,14 +935,14 @@
     /// assert!(!v[&quot;b&quot;].is_f64());
     /// assert!(!v[&quot;c&quot;].is_f64());
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_f64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">match </span><span class="self">self</span>.n {
             N::Float(<span class="kw">_</span>) =&gt; <span class="bool-val">true</span>,
             N::PosInt(<span class="kw">_</span>) | N::NegInt(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span>{
             <span class="kw">for </span>c <span class="kw">in </span><span class="self">self</span>.n.chars() {
                 <span class="kw">if </span>c == <span class="string">&#39;.&#39; </span>|| c == <span class="string">&#39;e&#39; </span>|| c == <span class="string">&#39;E&#39; </span>{
@@ -966,9 +966,9 @@
     /// assert_eq!(v[&quot;b&quot;].as_i64(), None);
     /// assert_eq!(v[&quot;c&quot;].as_i64(), None);
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_i64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i64&gt; {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">match </span><span class="self">self</span>.n {
             N::PosInt(n) =&gt; {
                 <span class="kw">if </span>n &lt;= i64::max_value() <span class="kw">as </span>u64 {
@@ -980,7 +980,7 @@
             N::NegInt(n) =&gt; <span class="prelude-val">Some</span>(n),
             N::Float(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         }
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span><span class="self">self</span>.n.parse().ok()
     }
 
@@ -996,14 +996,14 @@
     /// assert_eq!(v[&quot;b&quot;].as_u64(), None);
     /// assert_eq!(v[&quot;c&quot;].as_u64(), None);
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_u64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;u64&gt; {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">match </span><span class="self">self</span>.n {
             N::PosInt(n) =&gt; <span class="prelude-val">Some</span>(n),
             N::NegInt(<span class="kw">_</span>) | N::Float(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
         }
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span><span class="self">self</span>.n.parse().ok()
     }
 
@@ -1018,15 +1018,15 @@
     /// assert_eq!(v[&quot;b&quot;].as_f64(), Some(64.0));
     /// assert_eq!(v[&quot;c&quot;].as_f64(), Some(-64.0));
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_f64(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;f64&gt; {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">match </span><span class="self">self</span>.n {
             N::PosInt(n) =&gt; <span class="prelude-val">Some</span>(n <span class="kw">as </span>f64),
             N::NegInt(n) =&gt; <span class="prelude-val">Some</span>(n <span class="kw">as </span>f64),
             N::Float(n) =&gt; <span class="prelude-val">Some</span>(n),
         }
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span><span class="self">self</span>.n.parse::&lt;f64&gt;().ok().filter(|float| float.is_finite())
     }
 
@@ -1042,15 +1042,15 @@
     ///
     /// assert!(Number::from_f64(f64::NAN).is_none());
     /// ```
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>from_f64(f: f64) -&gt; <span class="prelude-ty">Option</span>&lt;Number&gt; {
         <span class="kw">if </span>f.is_finite() {
             <span class="kw">let </span>n = {
-                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+                <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
                 </span>{
                     N::Float(f)
                 }
-                <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
                 </span>{
                     ryu::Buffer::new().format_finite(f).to_owned()
                 }
@@ -1061,9 +1061,9 @@
         </span>}
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
     </span><span class="doccomment">/// Not public API. Only tests use this.
-    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="attr">#[doc(hidden)]
     #[inline]
     </span><span class="kw">pub fn </span>from_string_unchecked(n: String) -&gt; <span class="self">Self </span>{
         Number { n }
@@ -1071,7 +1071,7 @@
 }
 
 <span class="kw">impl </span>Display <span class="kw">for </span>Number {
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+    <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">match </span><span class="self">self</span>.n {
             N::PosInt(u) =&gt; Display::fmt(<span class="kw-2">&amp;</span>u, formatter),
@@ -1080,14 +1080,14 @@
         }
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         Display::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.n, formatter)
     }
 }
 
 <span class="kw">impl </span>Debug <span class="kw">for </span>Number {
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+    <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         <span class="kw">let </span><span class="kw-2">mut </span>debug = formatter.debug_tuple(<span class="string">&quot;Number&quot;</span>);
         <span class="kw">match </span><span class="self">self</span>.n {
@@ -1104,7 +1104,7 @@
         debug.finish()
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, formatter: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         formatter
             .debug_tuple(<span class="string">&quot;Number&quot;</span>)
@@ -1114,7 +1114,7 @@
 }
 
 <span class="kw">impl </span>Serialize <span class="kw">for </span>Number {
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+    <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
     #[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1127,7 +1127,7 @@
         }
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
     #[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1142,7 +1142,7 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>Number {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;Number, D::Error&gt;
     <span class="kw">where
         </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -1156,17 +1156,17 @@
                 formatter.write_str(<span class="string">&quot;a JSON number&quot;</span>)
             }
 
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>visit_i64&lt;E&gt;(<span class="self">self</span>, value: i64) -&gt; <span class="prelude-ty">Result</span>&lt;Number, E&gt; {
                 <span class="prelude-val">Ok</span>(value.into())
             }
 
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>visit_u64&lt;E&gt;(<span class="self">self</span>, value: u64) -&gt; <span class="prelude-ty">Result</span>&lt;Number, E&gt; {
                 <span class="prelude-val">Ok</span>(value.into())
             }
 
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>visit_f64&lt;E&gt;(<span class="self">self</span>, value: f64) -&gt; <span class="prelude-ty">Result</span>&lt;Number, E&gt;
             <span class="kw">where
                 </span>E: de::Error,
@@ -1174,7 +1174,7 @@
                 Number::from_f64(value).ok_or_else(|| de::Error::custom(<span class="string">&quot;not a JSON number&quot;</span>))
             }
 
-            <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             #[inline]
             </span><span class="kw">fn </span>visit_map&lt;V&gt;(<span class="self">self</span>, <span class="kw-2">mut </span>visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;Number, V::Error&gt;
             <span class="kw">where
@@ -1193,10 +1193,10 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">struct </span>NumberKey;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; de::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NumberKey {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;NumberKey, D::Error&gt;
     <span class="kw">where
@@ -1228,12 +1228,12 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">pub struct </span>NumberFromString {
     <span class="kw">pub </span>value: Number,
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; de::Deserialize&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NumberFromString {
     <span class="kw">fn </span>deserialize&lt;D&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;NumberFromString, D::Error&gt;
     <span class="kw">where
@@ -1261,14 +1261,14 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">fn </span>invalid_number() -&gt; Error {
     Error::syntax(ErrorCode::InvalidNumber, <span class="number">0</span>, <span class="number">0</span>)
 }
 
 <span class="macro">macro_rules! </span>deserialize_any {
     (@expand [$(<span class="macro-nonterminal">$num_string</span>:tt)<span class="kw-2">*</span>]) =&gt; {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         #[inline]
         </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, Error&gt;
         <span class="kw">where
@@ -1281,7 +1281,7 @@
             }
         }
 
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         #[inline]
         </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, Error&gt;
             <span class="kw">where </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>&gt;
@@ -1313,7 +1313,7 @@
 
 <span class="macro">macro_rules! </span>deserialize_number {
     (<span class="macro-nonterminal">$deserialize</span>:ident =&gt; <span class="macro-nonterminal">$visit</span>:ident) =&gt; {
-        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
         </span><span class="kw">fn </span><span class="macro-nonterminal">$deserialize</span>&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, Error&gt;
         <span class="kw">where
             </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -1321,7 +1321,7 @@
             <span class="self">self</span>.deserialize_any(visitor)
         }
 
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
         </span><span class="kw">fn </span><span class="macro-nonterminal">$deserialize</span>&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, Error&gt;
         <span class="kw">where
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -1387,12 +1387,12 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">struct </span>NumberDeserializer {
     <span class="kw">pub </span>number: <span class="prelude-ty">Option</span>&lt;String&gt;,
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; MapAccess&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NumberDeserializer {
     <span class="kw">type </span>Error = Error;
 
@@ -1414,10 +1414,10 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">struct </span>NumberFieldDeserializer;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;de</span>&gt; Deserializer&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>NumberFieldDeserializer {
     <span class="kw">type </span>Error = Error;
 
@@ -1439,36 +1439,36 @@
     <span class="kw">fn </span>from(value: ParserNumber) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>n = <span class="kw">match </span>value {
             ParserNumber::F64(f) =&gt; {
-                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+                <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
                 </span>{
                     N::Float(f)
                 }
-                <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
                 </span>{
                     f.to_string()
                 }
             }
             ParserNumber::U64(u) =&gt; {
-                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+                <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
                 </span>{
                     N::PosInt(u)
                 }
-                <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
                 </span>{
                     u.to_string()
                 }
             }
             ParserNumber::I64(i) =&gt; {
-                <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+                <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
                 </span>{
                     N::NegInt(i)
                 }
-                <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+                <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
                 </span>{
                     i.to_string()
                 }
             }
-            <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+            <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
             </span>ParserNumber::String(s) =&gt; s,
         };
         Number { n }
@@ -1481,12 +1481,12 @@
     ) =&gt; {
         $(
             <span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$ty</span>&gt; <span class="kw">for </span>Number {
-                <span class="attribute">#[inline]
+                <span class="attr">#[inline]
                 </span><span class="kw">fn </span>from(u: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="self">Self </span>{
                     <span class="kw">let </span>n = {
-                        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+                        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
                         </span>{ N::PosInt(u <span class="kw">as </span>u64) }
-                        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+                        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
                         </span>{
                             itoa::Buffer::new().format(u).to_owned()
                         }
@@ -1504,10 +1504,10 @@
     ) =&gt; {
         $(
             <span class="kw">impl </span>From&lt;<span class="macro-nonterminal">$ty</span>&gt; <span class="kw">for </span>Number {
-                <span class="attribute">#[inline]
+                <span class="attr">#[inline]
                 </span><span class="kw">fn </span>from(i: <span class="macro-nonterminal">$ty</span>) -&gt; <span class="self">Self </span>{
                     <span class="kw">let </span>n = {
-                        <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+                        <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
                         </span>{
                             <span class="kw">if </span>i &lt; <span class="number">0 </span>{
                                 N::NegInt(i <span class="kw">as </span>i64)
@@ -1515,7 +1515,7 @@
                                 N::PosInt(i <span class="kw">as </span>u64)
                             }
                         }
-                        <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+                        <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
                         </span>{
                             itoa::Buffer::new().format(i).to_owned()
                         }
@@ -1530,7 +1530,7 @@
 <span class="macro">impl_from_unsigned!</span>(u8, u16, u32, u64, usize);
 <span class="macro">impl_from_signed!</span>(i8, i16, i32, i64, isize);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
 </span><span class="macro">serde_if_integer128! </span>{
     <span class="kw">impl </span>From&lt;i128&gt; <span class="kw">for </span>Number {
         <span class="kw">fn </span>from(i: i128) -&gt; <span class="self">Self </span>{
@@ -1546,7 +1546,7 @@
 }
 
 <span class="kw">impl </span>Number {
-    <span class="attribute">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
+    <span class="attr">#[cfg(not(feature = <span class="string">&quot;arbitrary_precision&quot;</span>))]
     #[cold]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unexpected(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Unexpected {
         <span class="kw">match </span><span class="self">self</span>.n {
@@ -1556,11 +1556,11 @@
         }
     }
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;arbitrary_precision&quot;</span>)]
     #[cold]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>unexpected(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Unexpected {
         Unexpected::Other(<span class="string">&quot;number&quot;</span>)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

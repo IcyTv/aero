@@ -284,7 +284,7 @@
 
 <span class="doccomment">/// Wrapper function to the `outb` assembly instruction used to do the
 /// 8-bit low level port output.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>outb(port: u16, value: u8) {
     <span class="macro">asm!</span>(
        <span class="string">&quot;out dx, al&quot;</span>,
@@ -296,7 +296,7 @@
 
 <span class="doccomment">/// Wrapper function to the `inb` assembly instruction used to do the
 /// 8-bit low level port input.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>inb(port: u16) -&gt; u8 {
     <span class="kw">let </span>ret: u8;
 
@@ -312,7 +312,7 @@
 
 <span class="doccomment">/// Wrapper function to the `outw` assembly instruction used to do the
 /// 16-bit low level port output.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>outw(port: u16, value: u16) {
     <span class="macro">asm!</span>(
         <span class="string">&quot;out dx, ax&quot;</span>,
@@ -324,7 +324,7 @@
 
 <span class="doccomment">/// Wrapper function to the `outl` assembly instruction used to do the
 /// 32-bit low level port output.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>outl(port: u16, value: u32) {
     <span class="macro">asm!</span>(
         <span class="string">&quot;out dx, eax&quot;</span>,
@@ -336,7 +336,7 @@
 
 <span class="doccomment">/// Wrapper function to the `inl` assembly instruction used to do the
 /// 32-bit low level port input.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>inl(port: u16) -&gt; u32 {
     <span class="kw">let </span>ret: u32;
 
@@ -352,7 +352,7 @@
 
 <span class="doccomment">/// Wrapper function to the `inw` assembly instruction used to do the
 /// 16-bit low level port input.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>inw(port: u16) -&gt; u16 {
     <span class="kw">let </span>ret: u16;
 
@@ -369,7 +369,7 @@
 <span class="doccomment">/// This function is called after every `outb` and `outl` instruction as on older machines
 /// its necessary to give the PIC some time to react to commands as they might not
 /// be processed quickly.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>wait() {
     outb(<span class="number">0x80</span>, <span class="number">0</span>)
 }
@@ -385,7 +385,7 @@
 
 <span class="doccomment">/// Wrapper function to the `rdmsr` assembly instruction used
 </span><span class="comment">// to read 64 bits msr register.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>rdmsr(msr: u32) -&gt; u64 {
     <span class="kw">let </span>(high, low): (u32, u32);
 
@@ -394,7 +394,7 @@
     ((high <span class="kw">as </span>u64) &lt;&lt; <span class="number">32</span>) | (low <span class="kw">as </span>u64)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>delay(cycles: usize) {
     <span class="kw">unsafe </span>{
         <span class="kw">for _ in </span><span class="number">0</span>..cycles {
@@ -440,7 +440,7 @@
 
 <span class="comment">// based :^)
 
-</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="attr">#[derive(Copy, Clone)]
 </span><span class="kw">pub struct </span>BasedPort {
     base: u16,
 }
@@ -459,4 +459,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

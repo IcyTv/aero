@@ -1567,7 +1567,7 @@
 ///
 /// # Platforms
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedProcessorFeatureIdentifiers {
     vendor: Vendor,
     eax: u32,
@@ -1942,7 +1942,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ExtendedFunctionInfoEcx: u32 {
         <span class="kw">const </span>LAHF_SAHF = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>CMP_LEGACY =  <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -1973,7 +1973,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ExtendedFunctionInfoEdx: u32 {
         <span class="kw">const </span>SYSCALL_SYSRET = <span class="number">1 </span>&lt;&lt; <span class="number">11</span>;
         <span class="kw">const </span>EXECUTE_DISABLE = <span class="number">1 </span>&lt;&lt; <span class="number">20</span>;
@@ -1993,7 +1993,7 @@
 ///
 /// # Platforms
 /// ✅ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ProcessorBrandString {
     data: [CpuIdResult; <span class="number">3</span>],
 }
@@ -2037,7 +2037,7 @@
 ///
 /// # Availability
 /// ✅ AMD ❌ Intel (reserved=0)
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>L1CacheTlbInfo {
     eax: u32,
@@ -2155,7 +2155,7 @@
 ///
 /// # Availability
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>L2And3CacheTlbInfo {
     eax: u32,
@@ -2320,7 +2320,7 @@
 }
 
 <span class="doccomment">/// Info about cache Associativity.
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>Associativity {
     Disabled,
@@ -2387,7 +2387,7 @@
 ///
 /// # Platforms
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="attr">#[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ApmInfo {
     <span class="doccomment">/// Reserved on AMD and Intel.
@@ -2566,7 +2566,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ApmInfoEdx: u32 {
         <span class="kw">const </span>TS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>FID = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -2584,7 +2584,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>RasCapabilities: u32 {
         <span class="kw">const </span>MCAOVFLRECOV = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>SUCCOR = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -2601,7 +2601,7 @@
 ///
 /// # Platforms
 /// ✅ AMD 🟡 Intel
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="attr">#[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ProcessorCapacityAndFeatureInfo {
     eax: u32,
@@ -2812,7 +2812,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ProcessorCapacityAndFeatureEbx: u32 {
         <span class="kw">const </span>CLZERO = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>INST_RETCNT_MSR = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -2831,7 +2831,7 @@
 ///
 /// # Platforms
 /// ✅ AMD ❌ Intel
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="attr">#[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>MemoryEncryptionInfo {
     eax: MemoryEncryptionInfoEax,
@@ -2937,7 +2937,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>MemoryEncryptionInfoEax: u32 {
         <span class="kw">const </span>SME = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>SEV = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -2963,7 +2963,7 @@
 ///
 /// # Platforms
 /// ✅ AMD ❌ Intel
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>SvmFeatures {
     eax: u32,
@@ -3090,7 +3090,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>SvmFeaturesEdx: u32 {
         <span class="kw">const </span>NP = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>LBR_VIRT = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
@@ -3113,4 +3113,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="raw_cpuid" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="raw_cpuid" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -202,7 +202,7 @@
     </span>}
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Bitmap&lt;A: Allocator&gt; {
     bitmap: Vec&lt;usize, A&gt;,
 }
@@ -341,12 +341,12 @@
     </span>}
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span>alloc::alloc::Global;
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>bitmap_first_unset_idx() {
         <span class="kw">let </span><span class="kw-2">mut </span>bitmap = Bitmap::new_in(Global, <span class="number">4096</span>);
 
@@ -357,7 +357,7 @@
         <span class="macro">assert_eq!</span>(bitmap.find_first_unset(), <span class="prelude-val">Some</span>(<span class="number">1</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>bitmap_first_set_idx() {
         <span class="kw">let </span><span class="kw-2">mut </span>bitmap = Bitmap::new_in(Global, <span class="number">4096</span>);
 
@@ -365,7 +365,7 @@
         <span class="macro">assert_eq!</span>(bitmap.find_first_set(), <span class="prelude-val">Some</span>(<span class="number">69</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>bitmap_set_and_test() {
         <span class="kw">let </span><span class="kw-2">mut </span>bitmap = Bitmap::new_in(Global, <span class="number">4096</span>);
 
@@ -377,4 +377,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

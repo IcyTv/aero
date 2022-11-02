@@ -154,7 +154,7 @@
 /// [`usize`]: https://doc.rust-lang.org/std/primitive.usize.html
 /// [`u64`]: https://doc.rust-lang.org/std/primitive.u64.html
 /// [`u32`]: https://doc.rust-lang.org/std/primitive.u32.html
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>assert_eq_size {
     (<span class="macro-nonterminal">$x</span>:ty, $(<span class="macro-nonterminal">$xs</span>:ty),+ $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="kw">const _</span>: <span class="kw">fn</span>() = || {
@@ -196,10 +196,10 @@
 ///
 /// assert_eq_size_ptr!(BYTES, TABLE);
 /// ```
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>assert_eq_size_ptr {
     (<span class="macro-nonterminal">$x</span>:expr, $(<span class="macro-nonterminal">$xs</span>:expr),+ $(,)<span class="question-mark">?</span>) =&gt; {
-        <span class="attribute">#[allow(unknown_lints, unsafe_code, forget_copy, useless_transmute)]
+        <span class="attr">#[allow(unknown_lints, unsafe_code, forget_copy, useless_transmute)]
         </span><span class="kw">let _ </span>= || <span class="kw">unsafe </span>{
             <span class="kw">use </span><span class="macro-nonterminal">$crate::_core</span>::{mem, ptr};
             <span class="kw">let </span><span class="kw-2">mut </span>copy = ptr::read(<span class="macro-nonterminal">$x</span>);
@@ -239,11 +239,11 @@
 /// ```
 ///
 /// [`Clone`]: https://doc.rust-lang.org/std/clone/trait.Clone.html
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>assert_eq_size_val {
     (<span class="macro-nonterminal">$x</span>:expr, $(<span class="macro-nonterminal">$xs</span>:expr),+ $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="macro">assert_eq_size_ptr!</span>(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$x</span>, $(<span class="kw-2">&amp;</span><span class="macro-nonterminal">$xs</span>),+);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

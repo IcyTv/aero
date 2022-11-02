@@ -326,7 +326,7 @@
 <span class="kw">static </span>STACK: LimineStackSizeRequest = LimineStackSizeRequest::new(<span class="number">0</span>).stack_size(<span class="number">0x1000 </span>* <span class="number">32</span>); <span class="comment">// 16KiB of stack for both the BSP and the APs
 </span><span class="kw">static </span>HHDM: LimineHhdmRequest = LimineHhdmRequest::new(<span class="number">0</span>);
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>arch_aero_main() -&gt; ! {
     <span class="kw">unsafe </span>{
         core::ptr::read_volatile(STACK.get_response().as_ptr().unwrap());
@@ -470,7 +470,7 @@
     </span><span class="kw">crate</span>::aero_main();
 }
 
-<span class="attribute">#[no_mangle]
+<span class="attr">#[no_mangle]
 </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span><span class="kw">fn </span>x86_64_aero_ap_main(boot_info: <span class="kw-2">*const </span>LimineSmpInfo) -&gt; ! {
     <span class="kw">let </span>boot_info = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span>boot_info };
     <span class="kw">let </span>ap_id = boot_info.processor_id <span class="kw">as </span>usize;
@@ -535,4 +535,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

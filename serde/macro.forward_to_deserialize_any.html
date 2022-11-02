@@ -10,7 +10,7 @@ the <a href="de/trait.Visitor.html"><code>Visitor</code></a> method correspondin
 input. This requires repetitive implementations of all the <a href="trait.Deserializer.html"><code>Deserializer</code></a>
 trait methods.</p>
 
-<div class="example-wrap edition"><div class='tooltip' data-edition="2018">ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#[inline]
+<div class="example-wrap edition"><div class='tooltip' data-edition="2018">ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attr">#[inline]
 </span><span class="kw">fn </span>deserialize_bool&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
 <span class="kw">where
     </span>V: Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -46,4 +46,4 @@ specified explicitly if necessary.</p>
     bytes byte_buf option unit unit_struct newtype_struct seq tuple
     tuple_struct map <span class="kw">struct enum </span>identifier ignored_any
 }</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -5368,7 +5368,7 @@
 //! will exist for your CPU -- just that it is potentially supported by the
 //! vendor on some of its chips. You will still have to query it at runtime.
 
-</span><span class="attribute">#![no_std]
+</span><span class="attr">#![no_std]
 #![crate_name = <span class="string">&quot;raw_cpuid&quot;</span>]
 #![crate_type = <span class="string">&quot;lib&quot;</span>]
 
@@ -5377,25 +5377,25 @@
 </span><span class="kw">extern crate </span>std;
 
 <span class="kw">mod </span>extended;
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;serialize&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;serialize&quot;</span>)]
 #[macro_use]
 </span><span class="kw">extern crate </span>serde_derive;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;serialize&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;serialize&quot;</span>)]
 </span><span class="kw">extern crate </span>serde;
 
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">extern crate </span>bitflags;
 
 <span class="doccomment">/// Uses Rust&#39;s `cpuid` function from the `arch` module.
 </span><span class="kw">pub mod </span>native_cpuid {
     <span class="kw">use </span><span class="kw">crate</span>::CpuIdResult;
 
-    <span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;x86&quot;</span>, not(target_env = <span class="string">&quot;sgx&quot;</span>), target_feature = <span class="string">&quot;sse&quot;</span>))]
+    <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;x86&quot;</span>, not(target_env = <span class="string">&quot;sgx&quot;</span>), target_feature = <span class="string">&quot;sse&quot;</span>))]
     </span><span class="kw">use </span>core::arch::x86 <span class="kw">as </span>arch;
-    <span class="attribute">#[cfg(all(target_arch = <span class="string">&quot;x86_64&quot;</span>, not(target_env = <span class="string">&quot;sgx&quot;</span>)))]
+    <span class="attr">#[cfg(all(target_arch = <span class="string">&quot;x86_64&quot;</span>, not(target_env = <span class="string">&quot;sgx&quot;</span>)))]
     </span><span class="kw">use </span>core::arch::x86_64 <span class="kw">as </span>arch;
 
     <span class="kw">pub fn </span>cpuid_count(a: u32, c: u32) -&gt; CpuIdResult {
@@ -5419,7 +5419,7 @@
 
 <span class="kw">pub use </span>extended::<span class="kw-2">*</span>;
 
-<span class="attribute">#[cfg(not(test))]
+<span class="attr">#[cfg(not(test))]
 </span><span class="kw">mod </span>std {
     <span class="kw">pub use </span>core::ops;
     <span class="kw">pub use </span>core::option;
@@ -5429,7 +5429,7 @@
 ///
 /// First parameter is cpuid leaf (EAX register value),
 /// second optional parameter is the subleaf (ECX register value).
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>cpuid {
     (<span class="macro-nonterminal">$eax</span>:expr) =&gt; {
         <span class="macro-nonterminal">$crate::native_cpuid::cpuid_count</span>(<span class="macro-nonterminal">$eax </span><span class="kw">as </span>u32, <span class="number">0</span>)
@@ -5455,7 +5455,7 @@
 
 <span class="macro">macro_rules! </span>check_flag {
     (<span class="macro-nonterminal">$doc</span>:meta, <span class="macro-nonterminal">$fun</span>:ident, <span class="macro-nonterminal">$flags</span>:ident, <span class="macro-nonterminal">$flag</span>:expr) =&gt; {
-        <span class="attribute">#[<span class="macro-nonterminal">$doc</span>]
+        <span class="attr">#[<span class="macro-nonterminal">$doc</span>]
         </span><span class="kw">pub fn </span><span class="macro-nonterminal">$fun</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
             <span class="self">self</span>.<span class="macro-nonterminal">$flags</span>.contains(<span class="macro-nonterminal">$flag</span>)
         }
@@ -5470,7 +5470,7 @@
 
 <span class="macro">macro_rules! </span>check_bit_fn {
     (<span class="macro-nonterminal">$doc</span>:meta, <span class="macro-nonterminal">$fun</span>:ident, <span class="macro-nonterminal">$field</span>:ident, <span class="macro-nonterminal">$bit</span>:expr) =&gt; {
-        <span class="attribute">#[<span class="macro-nonterminal">$doc</span>]
+        <span class="attr">#[<span class="macro-nonterminal">$doc</span>]
         </span><span class="kw">pub fn </span><span class="macro-nonterminal">$fun</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
             <span class="macro">is_bit_set!</span>(<span class="self">self</span>.<span class="macro-nonterminal">$field</span>, <span class="macro-nonterminal">$bit</span>)
         }
@@ -5480,7 +5480,7 @@
 <span class="doccomment">/// Implements function to read/write cpuid.
 /// This allows to conveniently swap out the underlying cpuid implementation
 /// with one that returns data that is deterministic (for unit-testing).
-</span><span class="attribute">#[derive(Debug, Clone, Copy)]
+</span><span class="attr">#[derive(Debug, Clone, Copy)]
 </span><span class="kw">struct </span>CpuIdReader {
     cpuid_fn: <span class="kw">fn</span>(u32, u32) -&gt; CpuIdResult,
 }
@@ -5507,7 +5507,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Eq, PartialEq, Clone, Copy)]
+<span class="attr">#[derive(Debug, Eq, PartialEq, Clone, Copy)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">enum </span>Vendor {
     Intel,
@@ -5534,10 +5534,10 @@
 <span class="doccomment">/// The main type used to query information about the CPU we&#39;re running on.
 ///
 /// Other structs can be accessed by going through this type.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 #[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>CpuId {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     <span class="doccomment">/// CPU vendor to differntiate cases where logic needs to differ in code .
     </span>vendor: Vendor,
@@ -5554,7 +5554,7 @@
 }
 
 <span class="doccomment">/// Low-level data-structure to store result of cpuid instruction.
-</span><span class="attribute">#[derive(Copy, Clone, Eq, PartialEq)]
+</span><span class="attr">#[derive(Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 #[repr(C)]
 </span><span class="kw">pub struct </span>CpuIdResult {
@@ -6250,7 +6250,7 @@
 ///
 /// # Platforms
 /// ✅ AMD ✅ Intel
-</span><span class="attribute">#[derive(PartialEq, Eq)]
+</span><span class="attr">#[derive(PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 #[repr(C)]
 </span><span class="kw">pub struct </span>VendorInfo {
@@ -6272,7 +6272,7 @@
         str::from_utf8(slice).unwrap_or(<span class="string">&quot;InvalidVendorString&quot;</span>)
     }
 
-    <span class="attribute">#[deprecated(
+    <span class="attr">#[deprecated(
         since = <span class="string">&quot;10.0.0&quot;</span>,
         note = <span class="string">&quot;Use idiomatic function name `as_str` instead&quot;
     </span>)]
@@ -6302,7 +6302,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[derive(PartialEq, Eq, Clone)]
+</span><span class="attr">#[derive(PartialEq, Eq, Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>CacheInfoIter {
     current: u32,
@@ -6369,7 +6369,7 @@
 }
 
 <span class="doccomment">/// What type of cache are we dealing with?
-</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="attr">#[derive(Copy, Clone, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>CacheInfoType {
     General,
@@ -6381,7 +6381,7 @@
 }
 
 <span class="doccomment">/// Describes any kind of cache (TLB, Data and Instruction caches plus prefetchers).
-</span><span class="attribute">#[derive(Copy, Clone)]
+</span><span class="attr">#[derive(Copy, Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>CacheInfo {
     <span class="doccomment">/// Number as retrieved from cpuid
@@ -6982,7 +6982,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[derive(PartialEq, Eq)]
+</span><span class="attr">#[derive(PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ProcessorSerial {
     <span class="doccomment">/// Lower bits
@@ -7039,7 +7039,7 @@
 ///
 /// # Platforms
 /// ✅ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>FeatureInfo {
     vendor: Vendor,
     eax: u32,
@@ -7640,7 +7640,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>FeatureInfoFlags: u64 {
 
         <span class="comment">// ECX flags
@@ -7774,10 +7774,10 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>CacheParametersIter {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     current: u32,
 }
@@ -7824,7 +7824,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[derive(Copy, Clone, Eq, PartialEq)]
+</span><span class="attr">#[derive(Copy, Clone, Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>CacheParameter {
     eax: u32,
@@ -7834,7 +7834,7 @@
 }
 
 <span class="doccomment">/// Info about a what a given cache caches (instructions, data, etc.)
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>CacheType {
     <span class="doccomment">/// Null - No more caches
@@ -7967,7 +7967,7 @@
 ///
 /// # Platforms
 /// 🟡 AMD ✅ Intel
-</span><span class="attribute">#[derive(Eq, PartialEq)]
+</span><span class="attr">#[derive(Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>MonitorMwaitInfo {
     eax: u32,
@@ -8100,7 +8100,7 @@
 ///
 /// # Platforms
 /// 🟡 AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ThermalPowerInfo {
     eax: ThermalPowerFeaturesEax,
     ebx: u32,
@@ -8335,7 +8335,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ThermalPowerFeaturesEax: u32 {
         <span class="doccomment">/// Digital temperature sensor is supported if set. (Bit 00)
         </span><span class="kw">const </span>DTS = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
@@ -8384,7 +8384,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ThermalPowerFeaturesEcx: u32 {
         <span class="kw">const </span>HW_COORD_FEEDBACK = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
 
@@ -8397,7 +8397,7 @@
 ///
 /// # Platforms
 /// 🟡 AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedFeatures {
     _eax: u32,
     ebx: ExtendedFeaturesEbx,
@@ -8731,7 +8731,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ExtendedFeaturesEbx: u32 {
         <span class="doccomment">/// FSGSBASE. Supports RDFSBASE/RDGSBASE/WRFSBASE/WRGSBASE if 1. (Bit 00)
         </span><span class="kw">const </span>FSGSBASE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
@@ -8800,7 +8800,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ExtendedFeaturesEcx: u32 {
         <span class="doccomment">/// Bit 0: Prefetch WT1. (Intel® Xeon Phi™ only).
         </span><span class="kw">const </span>PREFETCHWT1 = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
@@ -8835,7 +8835,7 @@
 ///
 /// # Platforms
 /// ❌ AMD (reserved) ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>DirectCacheAccessInfo {
     eax: u32,
 }
@@ -8859,7 +8859,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>PerformanceMonitoringInfo {
     eax: u32,
     ebx: PerformanceMonitoringFeaturesEbx,
@@ -8972,7 +8972,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>PerformanceMonitoringFeaturesEbx: u32 {
         <span class="doccomment">/// Core cycle event not available if 1. (Bit 0)
         </span><span class="kw">const </span>CORE_CYC_EV_UNAVAILABLE = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
@@ -8999,10 +8999,10 @@
 ///
 /// # Platforms
 /// ✅ AMD ✅ Intel
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedTopologyIter {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     level: u32,
 }
@@ -9010,7 +9010,7 @@
 <span class="doccomment">/// Gives information about the current level in the topology.
 ///
 /// How many cores, what type etc.
-</span><span class="attribute">#[derive(PartialEq, Eq)]
+</span><span class="attr">#[derive(PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedTopologyLevel {
     eax: u32,
@@ -9066,7 +9066,7 @@
 }
 
 <span class="doccomment">/// What type of core we have at this level in the topology (real CPU or hyper-threaded).
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>TopologyType {
     Invalid = <span class="number">0</span>,
@@ -9119,7 +9119,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ExtendedStateInfoXCR0Flags: u32 {
         <span class="doccomment">/// legacy x87 (Bit 00).
         </span><span class="kw">const </span>LEGACY_X87 = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
@@ -9154,7 +9154,7 @@
 }
 
 <span class="macro">bitflags! </span>{
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
     </span><span class="kw">struct </span>ExtendedStateInfoXSSFlags: u32 {
         <span class="doccomment">/// IA32_XSS PT (Trace Packet) State (Bit 08).
         </span><span class="kw">const </span>PT = <span class="number">1 </span>&lt;&lt; <span class="number">8</span>;
@@ -9168,9 +9168,9 @@
 ///
 /// # Platforms
 /// ✅ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedStateInfo {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     eax: ExtendedStateInfoXCR0Flags,
     ebx: u32,
@@ -9334,10 +9334,10 @@
 }
 
 <span class="doccomment">/// Yields [ExtendedState] structs.
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedStateIter {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     level: u32,
     supported_xcr0: u32,
@@ -9385,7 +9385,7 @@
 }
 
 <span class="doccomment">/// What kidn of extended register state this is.
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 #[repr(u32)]
 </span><span class="kw">pub enum </span>ExtendedRegisterType {
@@ -9440,7 +9440,7 @@
 }
 
 <span class="doccomment">/// Where the extended register state is stored.
-</span><span class="attribute">#[derive(PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(PartialEq, Eq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>ExtendedRegisterStateLocation {
     Xcr0,
@@ -9459,7 +9459,7 @@
 }
 
 <span class="doccomment">/// ExtendedState subleaf structure for things that need to be restored.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ExtendedState {
     <span class="kw">pub </span>subleaf: u32,
     eax: u32,
@@ -9537,9 +9537,9 @@
 /// Monitoring Enumeration Sub-leaf (EAX = 0FH, ECX = 0 and ECX = 1)
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>RdtMonitoringInfo {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     ebx: u32,
     edx: u32,
@@ -9583,7 +9583,7 @@
 }
 
 <span class="doccomment">/// Information about L3 cache monitoring.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>L3MonitoringInfo {
     ebx: u32,
     ecx: u32,
@@ -9636,9 +9636,9 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>RdtAllocationInfo {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     ebx: u32,
 }
@@ -9713,7 +9713,7 @@
 }
 
 <span class="doccomment">/// L3 Cache Allocation Technology Enumeration Sub-leaf (LEAF=0x10, SUBLEAF=1).
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>L3CatInfo {
     eax: u32,
     ebx: u32,
@@ -9756,7 +9756,7 @@
 }
 
 <span class="doccomment">/// L2 Cache Allocation Technology Enumeration Sub-leaf (LEAF=0x10, SUBLEAF=2).
-</span><span class="attribute">#[derive(Eq, PartialEq)]
+</span><span class="attr">#[derive(Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>L2CatInfo {
     eax: u32,
@@ -9792,7 +9792,7 @@
 }
 
 <span class="doccomment">/// Memory Bandwidth Allocation Enumeration Sub-leaf (LEAF=0x10, SUBLEAF=3).
-</span><span class="attribute">#[derive(Eq, PartialEq)]
+</span><span class="attr">#[derive(Eq, PartialEq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>MemBwAllocationInfo {
     eax: u32,
@@ -9838,9 +9838,9 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>SgxInfo {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     eax: u32,
     ebx: u32,
@@ -9925,10 +9925,10 @@
 }
 
 <span class="doccomment">/// Iterator over the SGX sub-leafs (ECX &gt;= 2).
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>SgxSectionIter {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     current: u32,
 }
@@ -9964,7 +9964,7 @@
 <span class="doccomment">/// Intel SGX EPC Enumeration Leaf
 ///
 /// Sub-leaves 2 or higher.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>SgxSectionInfo {
     <span class="comment">// This would be nice: https://github.com/rust-lang/rfcs/pull/1450
@@ -9972,7 +9972,7 @@
 }
 
 <span class="doccomment">/// EBX:EAX and EDX:ECX provide information on the Enclave Page Cache (EPC) section
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>EpcSection {
     eax: u32,
@@ -10001,7 +10001,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ProcessorTraceInfo {
     _eax: u32,
     ebx: u32,
@@ -10141,7 +10141,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>TscInfo {
     eax: u32,
     ebx: u32,
@@ -10195,7 +10195,7 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>ProcessorFrequencyInfo {
     eax: u32,
     ebx: u32,
@@ -10233,10 +10233,10 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[derive(Clone)]
+</span><span class="attr">#[derive(Clone)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>DatIter {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     current: u32,
     count: u32,
@@ -10287,7 +10287,7 @@
 }
 
 <span class="doccomment">/// Deterministic Address Translation Structure
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>DatInfo {
     _eax: u32,
     ebx: u32,
@@ -10382,7 +10382,7 @@
 }
 
 <span class="doccomment">/// Deterministic Address Translation cache type (EDX bits 04 -- 00)
-</span><span class="attribute">#[derive(Eq, PartialEq, Debug)]
+</span><span class="attr">#[derive(Eq, PartialEq, Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub enum </span>DatType {
     <span class="doccomment">/// Null (indicates this sub-leaf is not valid).
@@ -10415,9 +10415,9 @@
 ///
 /// # Platforms
 /// ❌ AMD ✅ Intel
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>SoCVendorInfo {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     <span class="doccomment">/// MaxSOCID_Index
     </span>eax: u32,
@@ -10477,10 +10477,10 @@
 }
 
 <span class="doccomment">/// Iterator for SoC vendor attributes.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>SoCVendorAttributesIter {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     count: u32,
     current: u32,
@@ -10500,7 +10500,7 @@
 }
 
 <span class="doccomment">/// A vendor brand string as queried from the cpuid leaf.
-</span><span class="attribute">#[derive(Debug, PartialEq, Eq)]
+</span><span class="attr">#[derive(Debug, PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 #[repr(C)]
 </span><span class="kw">pub struct </span>SoCVendorBrand {
@@ -10518,7 +10518,7 @@
         str::from_utf8(slice).unwrap_or(<span class="string">&quot;InvalidSoCVendorString&quot;</span>)
     }
 
-    <span class="attribute">#[deprecated(
+    <span class="attr">#[deprecated(
         since = <span class="string">&quot;10.0.0&quot;</span>,
         note = <span class="string">&quot;Use idiomatic function name `as_str` instead&quot;
     </span>)]
@@ -10537,9 +10537,9 @@
 ///
 /// More information about this semi-official leaf can be found here
 /// &lt;https://lwn.net/Articles/301888/&gt;
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, derive(Serialize, Deserialize))]
 </span><span class="kw">pub struct </span>HypervisorInfo {
-    <span class="attribute">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
+    <span class="attr">#[cfg_attr(feature = <span class="string">&quot;serialize&quot;</span>, serde(skip))]
     </span>read: CpuIdReader,
     res: CpuIdResult,
 }
@@ -10555,7 +10555,7 @@
 }
 
 <span class="doccomment">/// Identifies the different Hypervisor products.
-</span><span class="attribute">#[derive(Debug, Eq, PartialEq)]
+</span><span class="attr">#[derive(Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Hypervisor {
     Xen,
     VMware,
@@ -10635,11 +10635,11 @@
     }
 }
 
-<span class="attribute">#[cfg(doctest)]
+<span class="attr">#[cfg(doctest)]
 </span><span class="kw">mod </span>test_readme {
     <span class="macro">macro_rules! </span>external_doc_test {
         (<span class="macro-nonterminal">$x</span>:expr) =&gt; {
-            <span class="attribute">#[doc = <span class="macro-nonterminal">$x</span>]
+            <span class="attr">#[doc = <span class="macro-nonterminal">$x</span>]
             </span><span class="kw">extern </span><span class="string">&quot;C&quot; </span>{}
         };
     }
@@ -10647,4 +10647,4 @@
     <span class="macro">external_doc_test!</span>(<span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="raw_cpuid" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="raw_cpuid" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

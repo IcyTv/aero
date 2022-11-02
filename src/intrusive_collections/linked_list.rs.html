@@ -1726,7 +1726,7 @@
 
 </span><span class="doccomment">/// Intrusive link that allows an object to be inserted into a
 /// `LinkedList`.
-</span><span class="attribute">#[repr(align(<span class="number">2</span>))]
+</span><span class="attr">#[repr(align(<span class="number">2</span>))]
 </span><span class="kw">pub struct </span>Link {
     next: Cell&lt;<span class="prelude-ty">Option</span>&lt;NonNull&lt;Link&gt;&gt;&gt;,
     prev: Cell&lt;<span class="prelude-ty">Option</span>&lt;NonNull&lt;Link&gt;&gt;&gt;,
@@ -1738,7 +1738,7 @@
 
 <span class="kw">impl </span>Link {
     <span class="doccomment">/// Creates a new `Link`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new() -&gt; Link {
         Link {
             next: Cell::new(UNLINKED_MARKER),
@@ -1747,7 +1747,7 @@
     }
 
     <span class="doccomment">/// Checks whether the `Link` is linked into a `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.next.get() != UNLINKED_MARKER
     }
@@ -1760,7 +1760,7 @@
     /// `LinkedList`. The only situation where this function is useful is
     /// after calling `fast_clear` on a `LinkedList`, since this clears
     /// the collection without marking the nodes as unlinked.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>force_unlink(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.next.set(UNLINKED_MARKER);
     }
@@ -1778,7 +1778,7 @@
 <span class="comment">// Provide an implementation of Clone which simply initializes the new link as
 // unlinked. This allows structs containing a link to derive Clone.
 </span><span class="kw">impl </span>Clone <span class="kw">for </span>Link {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Link {
         Link::new()
     }
@@ -1786,7 +1786,7 @@
 
 <span class="comment">// Same as above
 </span><span class="kw">impl </span>Default <span class="kw">for </span>Link {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>default() -&gt; Link {
         Link::new()
     }
@@ -1795,7 +1795,7 @@
 <span class="comment">// Provide an implementation of Debug so that structs containing a link can
 // still derive Debug.
 </span><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Link {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="comment">// There isn&#39;t anything sensible to print here except whether the link
         // is currently in a list.
@@ -1812,13 +1812,13 @@
 // =============================================================================
 
 </span><span class="doccomment">/// Default `LinkOps` implementation for `LinkedList`.
-</span><span class="attribute">#[derive(Clone, Copy, Default)]
+</span><span class="attr">#[derive(Clone, Copy, Default)]
 </span><span class="kw">pub struct </span>LinkOps;
 
 <span class="kw">unsafe impl </span>link_ops::LinkOps <span class="kw">for </span>LinkOps {
     <span class="kw">type </span>LinkPtr = NonNull&lt;Link&gt;;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>acquire_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; bool {
         <span class="kw">if </span>ptr.as_ref().is_linked() {
             <span class="bool-val">false
@@ -1828,48 +1828,48 @@
         </span>}
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>release_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) {
         ptr.as_ref().next.set(UNLINKED_MARKER);
     }
 }
 
 <span class="kw">unsafe impl </span>LinkedListOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         ptr.as_ref().next.get()
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>prev(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         ptr.as_ref().prev.get()
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         ptr.as_ref().next.set(next);
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, prev: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         ptr.as_ref().prev.set(prev);
     }
 }
 
 <span class="kw">unsafe impl </span>SinglyLinkedListOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         ptr.as_ref().next.get()
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         ptr.as_ref().next.set(next);
     }
 }
 
 <span class="kw">unsafe impl </span>XorLinkedListOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>next(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -1885,7 +1885,7 @@
         NonNull::new(raw <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>prev(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -1901,7 +1901,7 @@
         NonNull::new(raw <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -1915,7 +1915,7 @@
         ptr.as_ref().next.set(new_next);
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>replace_next_or_prev(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -1937,7 +1937,7 @@
     }
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>link_between&lt;T: LinkedListOps&gt;(
     link_ops: <span class="kw-2">&amp;mut </span>T,
     ptr: T::LinkPtr,
@@ -1954,17 +1954,17 @@
     link_ops.set_prev(ptr, prev);
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>link_after&lt;T: LinkedListOps&gt;(link_ops: <span class="kw-2">&amp;mut </span>T, ptr: T::LinkPtr, prev: T::LinkPtr) {
     link_between(link_ops, ptr, <span class="prelude-val">Some</span>(prev), link_ops.next(prev));
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>link_before&lt;T: LinkedListOps&gt;(link_ops: <span class="kw-2">&amp;mut </span>T, ptr: T::LinkPtr, next: T::LinkPtr) {
     link_between(link_ops, ptr, link_ops.prev(next), <span class="prelude-val">Some</span>(next));
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>replace_with&lt;T: LinkedListOps&gt;(link_ops: <span class="kw-2">&amp;mut </span>T, ptr: T::LinkPtr, new: T::LinkPtr) {
     <span class="kw">let </span>prev = link_ops.prev(ptr);
     <span class="kw">let </span>next = link_ops.next(ptr);
@@ -1980,7 +1980,7 @@
     link_ops.release_link(ptr);
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>remove&lt;T: LinkedListOps&gt;(link_ops: <span class="kw-2">&amp;mut </span>T, ptr: T::LinkPtr) {
     <span class="kw">let </span>prev = link_ops.prev(ptr);
     <span class="kw">let </span>next = link_ops.next(ptr);
@@ -1994,7 +1994,7 @@
     link_ops.release_link(ptr);
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>splice&lt;T: LinkedListOps&gt;(
     link_ops: <span class="kw-2">&amp;mut </span>T,
     start: T::LinkPtr,
@@ -2029,7 +2029,7 @@
 <span class="kw">where
     </span>A::LinkOps: LinkedListOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt; {
         Cursor {
             current: <span class="self">self</span>.current,
@@ -2043,7 +2043,7 @@
     </span>A::LinkOps: LinkedListOps,
 {
     <span class="doccomment">/// Checks if the cursor is currently pointing to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_null(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.current.is_none()
     }
@@ -2053,7 +2053,7 @@
     ///
     /// This returns `None` if the cursor is currently pointing to the null
     /// object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.list.adapter.get_value(<span class="self">self</span>.current<span class="question-mark">?</span>) })
     }
@@ -2063,7 +2063,7 @@
     ///
     /// This returns `None` if the cursor is currently pointing to the null
     /// object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>clone_pointer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt;
     <span class="kw">where
         </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer: Clone,
@@ -2080,7 +2080,7 @@
     /// the first element of the `LinkedList`. If it is pointing to the
     /// last element of the `LinkedList` then this will move it to the
     /// null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ <span class="self">self</span>.list.adapter.link_ops().next(current) };
@@ -2094,7 +2094,7 @@
     /// If the cursor is pointer to the null object then this will move it to
     /// the last element of the `LinkedList`. If it is pointing to the first
     /// element of the `LinkedList` then this will move it to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ <span class="self">self</span>.list.adapter.link_ops().prev(current) };
@@ -2108,7 +2108,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// first element of the `LinkedList`. If it is pointing to the last
     /// element of the `LinkedList` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>next = <span class="self">self</span>.clone();
         next.move_next();
@@ -2120,7 +2120,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// last element of the `LinkedList`. If it is pointing to the first
     /// element of the `LinkedList` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>prev = <span class="self">self</span>.clone();
         prev.move_prev();
@@ -2142,7 +2142,7 @@
     </span>A::LinkOps: LinkedListOps,
 {
     <span class="doccomment">/// Checks if the cursor is currently pointing to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_null(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.current.is_none()
     }
@@ -2152,7 +2152,7 @@
     ///
     /// This returns None if the cursor is currently pointing to the null
     /// object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.list.adapter.get_value(<span class="self">self</span>.current<span class="question-mark">?</span>) })
     }
@@ -2162,7 +2162,7 @@
     /// The lifetime of the returned `Cursor` is bound to that of the
     /// `CursorMut`, which means it cannot outlive the `CursorMut` and that the
     /// `CursorMut` is frozen for the lifetime of the `Cursor`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_cursor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         Cursor {
             current: <span class="self">self</span>.current,
@@ -2176,7 +2176,7 @@
     /// the first element of the `LinkedList`. If it is pointing to the
     /// last element of the `LinkedList` then this will move it to the
     /// null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ <span class="self">self</span>.list.adapter.link_ops().next(current) };
@@ -2190,7 +2190,7 @@
     /// If the cursor is pointer to the null object then this will move it to
     /// the last element of the `LinkedList`. If it is pointing to the first
     /// element of the `LinkedList` then this will move it to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ <span class="self">self</span>.list.adapter.link_ops().prev(current) };
@@ -2204,7 +2204,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// first element of the `LinkedList`. If it is pointing to the last
     /// element of the `LinkedList` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>next = <span class="self">self</span>.as_cursor();
         next.move_next();
@@ -2216,7 +2216,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// last element of the `LinkedList`. If it is pointing to the first
     /// element of the `LinkedList` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>prev = <span class="self">self</span>.as_cursor();
         prev.move_prev();
@@ -2230,7 +2230,7 @@
     ///
     /// If the cursor is currently pointing to the null object then no element
     /// is removed and `None` is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="kw">unsafe </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
@@ -2269,7 +2269,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>replace_with(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer,
@@ -2307,7 +2307,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert_after(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>new = <span class="self">self</span>.list.node_from_value(val);
@@ -2332,7 +2332,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert_before(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>new = <span class="self">self</span>.list.node_from_value(val);
@@ -2355,7 +2355,7 @@
     ///
     /// If the cursor is pointing at the null object then the new elements are
     /// inserted at the start of the `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>splice_after(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>list: LinkedList&lt;A&gt;) {
         <span class="kw">if </span>!list.is_empty() {
             <span class="kw">unsafe </span>{
@@ -2383,7 +2383,7 @@
     ///
     /// If the cursor is pointing at the null object then the new elements are
     /// inserted at the end of the `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>splice_before(<span class="kw-2">&amp;mut </span><span class="self">self</span>, <span class="kw-2">mut </span>list: LinkedList&lt;A&gt;) {
         <span class="kw">if </span>!list.is_empty() {
             <span class="kw">unsafe </span>{
@@ -2413,7 +2413,7 @@
     ///
     /// If the cursor is pointing at the null object then the entire contents
     /// of the `LinkedList` are moved.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>split_after(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; LinkedList&lt;A&gt;
     <span class="kw">where
         </span>A: Clone,
@@ -2452,7 +2452,7 @@
     ///
     /// If the cursor is pointing at the null object then the entire contents
     /// of the `LinkedList` are moved.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>split_before(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; LinkedList&lt;A&gt;
     <span class="kw">where
         </span>A: Clone,
@@ -2507,7 +2507,7 @@
 <span class="kw">where
     </span>A::LinkOps: LinkedListOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>node_from_value(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer,
@@ -2530,7 +2530,7 @@
     }
 
     <span class="doccomment">/// Creates an empty `LinkedList`.
-    </span><span class="attribute">#[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
+    </span><span class="attr">#[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
     #[inline]
     </span><span class="kw">pub fn </span>new(adapter: A) -&gt; LinkedList&lt;A&gt; {
         LinkedList {
@@ -2541,7 +2541,7 @@
     }
 
     <span class="doccomment">/// Creates an empty `LinkedList`.
-    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
     #[inline]
     </span><span class="kw">pub const fn </span>new(adapter: A) -&gt; LinkedList&lt;A&gt; {
         LinkedList {
@@ -2552,13 +2552,13 @@
     }
 
     <span class="doccomment">/// Returns `true` if the `LinkedList` is empty.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.head.is_none()
     }
 
     <span class="doccomment">/// Returns a null `Cursor` for this list.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>cursor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         Cursor {
             current: <span class="prelude-val">None</span>,
@@ -2567,7 +2567,7 @@
     }
 
     <span class="doccomment">/// Returns a null `CursorMut` for this list.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>cursor_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         CursorMut {
             current: <span class="prelude-val">None</span>,
@@ -2580,7 +2580,7 @@
     /// # Safety
     ///
     /// `ptr` must be a pointer to an object that is part of this list.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>cursor_from_ptr(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: <span class="kw-2">*const </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value,
@@ -2596,7 +2596,7 @@
     /// # Safety
     ///
     /// `ptr` must be a pointer to an object that is part of this list.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>cursor_mut_from_ptr(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ptr: <span class="kw-2">*const </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value,
@@ -2609,7 +2609,7 @@
 
     <span class="doccomment">/// Returns a `Cursor` pointing to the first element of the list. If the
     /// list is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor();
         cursor.move_next();
@@ -2618,7 +2618,7 @@
 
     <span class="doccomment">/// Returns a `CursorMut` pointing to the first element of the list. If the
     /// the list is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>front_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor_mut();
         cursor.move_next();
@@ -2627,7 +2627,7 @@
 
     <span class="doccomment">/// Returns a `Cursor` pointing to the last element of the list. If the list
     /// is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor();
         cursor.move_prev();
@@ -2636,7 +2636,7 @@
 
     <span class="doccomment">/// Returns a `CursorMut` pointing to the last element of the list. If the
     /// list is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>back_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor_mut();
         cursor.move_prev();
@@ -2644,7 +2644,7 @@
     }
 
     <span class="doccomment">/// Gets an iterator over the objects in the `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         Iter {
             head: <span class="self">self</span>.head,
@@ -2658,7 +2658,7 @@
     /// This will unlink all object currently in the list, which requires
     /// iterating through all elements in the `LinkedList`. Each element is
     /// converted back to an owned pointer and then dropped.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">use </span>link_ops::LinkOps;
 
@@ -2683,7 +2683,7 @@
     /// objects into another `LinkedList` will fail but will not cause any
     /// memory unsafety. To unlink those objects manually, you must call the
     /// `force_unlink` function on them.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>fast_clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.head = <span class="prelude-val">None</span>;
         <span class="self">self</span>.tail = <span class="prelude-val">None</span>;
@@ -2691,7 +2691,7 @@
 
     <span class="doccomment">/// Takes all the elements out of the `LinkedList`, leaving it empty.
     /// The taken elements are returned as a new `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; LinkedList&lt;A&gt;
     <span class="kw">where
         </span>A: Clone,
@@ -2707,13 +2707,13 @@
     }
 
     <span class="doccomment">/// Inserts a new element at the start of the `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>push_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) {
         <span class="self">self</span>.cursor_mut().insert_after(val);
     }
 
     <span class="doccomment">/// Inserts a new element at the end of the `LinkedList`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>push_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) {
         <span class="self">self</span>.cursor_mut().insert_before(val);
     }
@@ -2721,7 +2721,7 @@
     <span class="doccomment">/// Removes the first element of the `LinkedList`.
     ///
     /// This returns `None` if the `LinkedList` is empty.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>pop_front(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="self">self</span>.front_mut().remove()
     }
@@ -2729,7 +2729,7 @@
     <span class="doccomment">/// Removes the last element of the `LinkedList`.
     ///
     /// This returns `None` if the `LinkedList` is empty.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>pop_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="self">self</span>.back_mut().remove()
     }
@@ -2757,7 +2757,7 @@
 <span class="kw">where
     </span>A::LinkOps: LinkedListOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.clear();
     }
@@ -2770,7 +2770,7 @@
     <span class="kw">type </span>Item = &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer;
     <span class="kw">type </span>IntoIter = IntoIter&lt;A&gt;;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; IntoIter&lt;A&gt; {
         IntoIter { list: <span class="self">self </span>}
     }
@@ -2783,7 +2783,7 @@
     <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value;
     <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>, A&gt;;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, A&gt; {
         <span class="self">self</span>.iter()
     }
@@ -2827,7 +2827,7 @@
 {
     <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="kw">let </span>head = <span class="self">self</span>.head<span class="question-mark">?</span>;
 
@@ -2844,7 +2844,7 @@
 <span class="kw">where
     </span>A::LinkOps: LinkedListOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="kw">let </span>tail = <span class="self">self</span>.tail<span class="question-mark">?</span>;
 
@@ -2861,7 +2861,7 @@
 <span class="kw">where
     </span>A::LinkOps: LinkedListOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, A&gt; {
         Iter {
             head: <span class="self">self</span>.head,
@@ -2888,7 +2888,7 @@
 {
     <span class="kw">type </span>Item = &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="self">self</span>.list.pop_front()
     }
@@ -2897,7 +2897,7 @@
 <span class="kw">where
     </span>A::LinkOps: LinkedListOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="self">self</span>.list.pop_back()
     }
@@ -2907,7 +2907,7 @@
 // Tests
 // =============================================================================
 
-</span><span class="attribute">#[cfg(test)]
+</span><span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::{Link, LinkedList};
     <span class="kw">use </span>std::fmt;
@@ -2935,7 +2935,7 @@
         })
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_link() {
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
         <span class="macro">assert!</span>(!a.link1.is_linked());
@@ -2960,7 +2960,7 @@
         <span class="macro">assert!</span>(!a.link2.is_linked());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_cursor() {
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
         <span class="kw">let </span>b = make_obj(<span class="number">2</span>);
@@ -3043,7 +3043,7 @@
         <span class="macro">assert_eq!</span>(cur.get().unwrap() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>, c.as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_push_pop() {
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
         <span class="kw">let </span>b = make_obj(<span class="number">2</span>);
@@ -3068,7 +3068,7 @@
         <span class="macro">assert_eq!</span>(l.iter().map(|x| x.value).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), []);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_split_splice() {
         <span class="kw">let </span><span class="kw-2">mut </span>l1 = LinkedList::new(ObjAdapter1::new());
         <span class="kw">let </span><span class="kw-2">mut </span>l2 = LinkedList::new(ObjAdapter1::new());
@@ -3159,7 +3159,7 @@
         <span class="macro">assert_eq!</span>(l3.iter().map(|x| x.value).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), []);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_iter() {
         <span class="kw">let </span><span class="kw-2">mut </span>l = LinkedList::new(ObjAdapter1::new());
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
@@ -3232,7 +3232,7 @@
         <span class="macro">assert!</span>(!d.link1.is_linked());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_multi_list() {
         <span class="kw">let </span><span class="kw-2">mut </span>l1 = LinkedList::new(ObjAdapter1::new());
         <span class="kw">let </span><span class="kw-2">mut </span>l2 = LinkedList::new(ObjAdapter2::new());
@@ -3252,7 +3252,7 @@
         <span class="macro">assert_eq!</span>(l2.iter().map(|x| x.value).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), [<span class="number">4</span>, <span class="number">3</span>, <span class="number">2</span>, <span class="number">1</span>]);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_force_unlink() {
         <span class="kw">let </span><span class="kw-2">mut </span>l = LinkedList::new(ObjAdapter1::new());
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
@@ -3278,9 +3278,9 @@
         <span class="macro">assert!</span>(!c.link1.is_linked());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_non_static() {
-        <span class="attribute">#[derive(Clone)]
+        <span class="attr">#[derive(Clone)]
         </span><span class="kw">struct </span>Obj&lt;<span class="lifetime">&#39;a</span>, T&gt; {
             link: Link,
             value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T,
@@ -3304,7 +3304,7 @@
         (<span class="macro-nonterminal">$ptr</span>: ident, <span class="macro-nonterminal">$ptr_import</span>: path) =&gt; {
             <span class="kw">use </span><span class="macro-nonterminal">$ptr_import</span>;
 
-            <span class="attribute">#[derive(Clone)]
+            <span class="attr">#[derive(Clone)]
             </span><span class="kw">struct </span>Obj {
                 link: Link,
                 value: usize,
@@ -3328,15 +3328,15 @@
         };
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_clone_pointer_rc() {
         <span class="macro">test_clone_pointer!</span>(Rc, std::rc::Rc);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_clone_pointer_arc() {
         <span class="macro">test_clone_pointer!</span>(Arc, std::sync::Arc);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -242,7 +242,7 @@
 ///
 /// ## Saftey
 /// This method is not memory safe and should be only used when absolutely necessary.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub unsafe fn </span>force_unlock() {
     LOG_RING_BUFFER.get().map(|l| l.force_unlock());
 }
@@ -255,12 +255,12 @@
         .clone()
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>enabled_rendy_debug() -&gt; bool {
     RENDY_DEBUG.load(Ordering::SeqCst)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>set_rendy_debug(yes: bool) {
     RENDY_DEBUG.store(yes, Ordering::SeqCst);
 }
@@ -273,4 +273,4 @@
         .unwrap();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

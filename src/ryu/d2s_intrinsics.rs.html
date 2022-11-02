@@ -109,22 +109,22 @@
 
 </span><span class="kw">use </span>core::ptr;
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>div5(x: u64) -&gt; u64 {
     x / <span class="number">5
 </span>}
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>div10(x: u64) -&gt; u64 {
     x / <span class="number">10
 </span>}
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>div100(x: u64) -&gt; u64 {
     x / <span class="number">100
 </span>}
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">fn </span>pow5_factor(<span class="kw-2">mut </span>value: u64) -&gt; u32 {
     <span class="kw">let </span><span class="kw-2">mut </span>count = <span class="number">0u32</span>;
     <span class="kw">loop </span>{
@@ -141,14 +141,14 @@
 }
 
 <span class="comment">// Returns true if value is divisible by 5^p.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>multiple_of_power_of_5(value: u64, p: u32) -&gt; bool {
     <span class="comment">// I tried a case distinction on p, but there was no performance difference.
     </span>pow5_factor(value) &gt;= p
 }
 
 <span class="comment">// Returns true if value is divisible by 2^p.
-</span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+</span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>multiple_of_power_of_2(value: u64, p: u32) -&gt; bool {
     <span class="macro">debug_assert!</span>(value != <span class="number">0</span>);
     <span class="macro">debug_assert!</span>(p &lt; <span class="number">64</span>);
@@ -156,14 +156,14 @@
     </span>(value &amp; ((<span class="number">1u64 </span>&lt;&lt; p) - <span class="number">1</span>)) == <span class="number">0
 </span>}
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub fn </span>mul_shift_64(m: u64, mul: <span class="kw-2">&amp;</span>(u64, u64), j: u32) -&gt; u64 {
     <span class="kw">let </span>b0 = m <span class="kw">as </span>u128 * mul.<span class="number">0 </span><span class="kw">as </span>u128;
     <span class="kw">let </span>b2 = m <span class="kw">as </span>u128 * mul.<span class="number">1 </span><span class="kw">as </span>u128;
     (((b0 &gt;&gt; <span class="number">64</span>) + b2) &gt;&gt; (j - <span class="number">64</span>)) <span class="kw">as </span>u64
 }
 
-<span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+<span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
 </span><span class="kw">pub unsafe fn </span>mul_shift_all_64(
     m: u64,
     mul: <span class="kw-2">&amp;</span>(u64, u64),
@@ -177,4 +177,4 @@
     mul_shift_64(<span class="number">4 </span>* m, mul, j)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

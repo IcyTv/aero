@@ -614,7 +614,7 @@
 /// [`TryFrom`](https://doc.rust-lang.org/std/convert/trait.TryFrom.html) trait can be used for performing conversions
 /// between `u64` and `usize`.
 
-</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+</span><span class="attr">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(transparent)]
 </span><span class="kw">pub struct </span>VirtAddr(u64);
 
@@ -627,7 +627,7 @@
 ///
 /// On `x86_64`, only the 52 lower bits of a physical address can be used. The top 12 bits need
 /// to be zero. This type guarantees that it always represents a valid physical address.
-</span><span class="attribute">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="attr">#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(transparent)]
 </span><span class="kw">pub struct </span>PhysAddr(u64);
 
@@ -637,37 +637,37 @@
 /// a valid sign extension and are not null either. So automatic sign extension would have
 /// overwritten possibly meaningful bits. This likely indicates a bug, for example an invalid
 /// address calculation.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>VirtAddrNotValid(u64);
 
 <span class="kw">impl </span>VirtAddr {
     <span class="doccomment">/// Creates a new canonical virtual address.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new(addr: u64) -&gt; VirtAddr {
         VirtAddr(addr)
     }
 
     <span class="doccomment">/// Creates a virtual address that points to `0`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>zero() -&gt; VirtAddr {
         VirtAddr(<span class="number">0</span>)
     }
 
     <span class="doccomment">/// Converts the address to an `u64`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>as_u64(<span class="self">self</span>) -&gt; u64 {
         <span class="self">self</span>.<span class="number">0
     </span>}
 
     <span class="doccomment">/// Converts the address to a raw pointer.
-    </span><span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+    </span><span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
     #[inline]
     </span><span class="kw">pub fn </span>as_ptr&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="kw-2">*const </span>T {
         <span class="self">self</span>.as_u64() <span class="kw">as </span><span class="kw-2">*const </span>T
     }
 
     <span class="doccomment">/// Converts the address to a mutable raw pointer.
-    </span><span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+    </span><span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
     #[inline]
     </span><span class="kw">pub fn </span>as_mut_ptr&lt;T&gt;(<span class="self">self</span>) -&gt; <span class="kw-2">*mut </span>T {
         <span class="self">self</span>.as_ptr::&lt;T&gt;() <span class="kw">as </span><span class="kw-2">*mut </span>T
@@ -704,7 +704,7 @@
     <span class="doccomment">/// Aligns the virtual address downwards to the given alignment.
     ///
     /// See the `align_down` function for more information.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>align_down&lt;U&gt;(<span class="self">self</span>, align: U) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>U: Into&lt;u64&gt;,
@@ -722,7 +722,7 @@
     <span class="doccomment">/// Aligns the virtual address upwards to the given alignment.
     ///
     /// See the `align_up` function for more information.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>align_up&lt;U&gt;(<span class="self">self</span>, align: U) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>U: Into&lt;u64&gt;,
@@ -731,37 +731,37 @@
     }
 
     <span class="doccomment">/// Returns the 12-bit page offset of this virtual address.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>page_offset(<span class="self">self</span>) -&gt; PageOffset {
         PageOffset::new_truncate(<span class="self">self</span>.<span class="number">0 </span><span class="kw">as </span>u16)
     }
 
     <span class="doccomment">/// Returns the 9-bit level 1 page table index.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>p1_index(<span class="self">self</span>) -&gt; PageTableIndex {
         PageTableIndex::new_truncate((<span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">12</span>) <span class="kw">as </span>u16)
     }
 
     <span class="doccomment">/// Returns the 9-bit level 2 page table index.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>p2_index(<span class="self">self</span>) -&gt; PageTableIndex {
         PageTableIndex::new_truncate((<span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">12 </span>&gt;&gt; <span class="number">9</span>) <span class="kw">as </span>u16)
     }
 
     <span class="doccomment">/// Returns the 9-bit level 3 page table index.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>p3_index(<span class="self">self</span>) -&gt; PageTableIndex {
         PageTableIndex::new_truncate((<span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">12 </span>&gt;&gt; <span class="number">9 </span>&gt;&gt; <span class="number">9</span>) <span class="kw">as </span>u16)
     }
 
     <span class="doccomment">/// Returns the 9-bit level 4 page table index.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>p4_index(<span class="self">self</span>) -&gt; PageTableIndex {
         PageTableIndex::new_truncate((<span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">12 </span>&gt;&gt; <span class="number">9 </span>&gt;&gt; <span class="number">9 </span>&gt;&gt; <span class="number">9</span>) <span class="kw">as </span>u16)
     }
 
     <span class="doccomment">/// Returns the 9-bit level 5 page table index.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>p5_index(<span class="self">self</span>) -&gt; PageTableIndex {
         PageTableIndex::new_truncate((<span class="self">self</span>.<span class="number">0 </span>&gt;&gt; <span class="number">12 </span>&gt;&gt; <span class="number">9 </span>&gt;&gt; <span class="number">9 </span>&gt;&gt; <span class="number">9 </span>&gt;&gt; <span class="number">9</span>) <span class="kw">as </span>u16)
     }
@@ -780,35 +780,35 @@
 }
 
 <span class="kw">impl </span>fmt::Binary <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         fmt::Binary::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
 <span class="kw">impl </span>fmt::LowerHex <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         fmt::LowerHex::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
 <span class="kw">impl </span>fmt::Octal <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         fmt::Octal::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
 <span class="kw">impl </span>fmt::UpperHex <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         fmt::UpperHex::fmt(<span class="kw-2">&amp;</span><span class="self">self</span>.<span class="number">0</span>, f)
     }
 }
 
 <span class="kw">impl </span>fmt::Pointer <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter) -&gt; fmt::Result {
         fmt::Pointer::fmt(<span class="kw-2">&amp;</span>(<span class="self">self</span>.<span class="number">0 </span><span class="kw">as </span><span class="kw-2">*const </span>()), f)
     }
@@ -816,31 +816,31 @@
 
 <span class="kw">impl </span>Add&lt;u64&gt; <span class="kw">for </span>VirtAddr {
     <span class="kw">type </span>Output = <span class="self">Self</span>;
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>add(<span class="self">self</span>, rhs: u64) -&gt; <span class="self">Self</span>::Output {
         VirtAddr::new(<span class="self">self</span>.<span class="number">0 </span>+ rhs)
     }
 }
 
 <span class="kw">impl </span>AddAssign&lt;u64&gt; <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: u64) {
         <span class="kw-2">*</span><span class="self">self </span>= <span class="kw-2">*</span><span class="self">self </span>+ rhs;
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>Add&lt;usize&gt; <span class="kw">for </span>VirtAddr {
     <span class="kw">type </span>Output = <span class="self">Self</span>;
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>add(<span class="self">self</span>, rhs: usize) -&gt; <span class="self">Self</span>::Output {
         <span class="self">self </span>+ rhs <span class="kw">as </span>u64
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>AddAssign&lt;usize&gt; <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: usize) {
         <span class="self">self</span>.add_assign(rhs <span class="kw">as </span>u64)
     }
@@ -848,31 +848,31 @@
 
 <span class="kw">impl </span>Sub&lt;u64&gt; <span class="kw">for </span>VirtAddr {
     <span class="kw">type </span>Output = <span class="self">Self</span>;
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>sub(<span class="self">self</span>, rhs: u64) -&gt; <span class="self">Self</span>::Output {
         VirtAddr::new(<span class="self">self</span>.<span class="number">0</span>.checked_sub(rhs).unwrap())
     }
 }
 
 <span class="kw">impl </span>SubAssign&lt;u64&gt; <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>sub_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: u64) {
         <span class="kw-2">*</span><span class="self">self </span>= <span class="kw-2">*</span><span class="self">self </span>- rhs;
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>Sub&lt;usize&gt; <span class="kw">for </span>VirtAddr {
     <span class="kw">type </span>Output = <span class="self">Self</span>;
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>sub(<span class="self">self</span>, rhs: usize) -&gt; <span class="self">Self</span>::Output {
         <span class="self">self </span>- rhs <span class="kw">as </span>u64
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>SubAssign&lt;usize&gt; <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>sub_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: usize) {
         <span class="self">self</span>.sub_assign(rhs <span class="kw">as </span>u64)
     }
@@ -880,14 +880,14 @@
 
 <span class="kw">impl </span>Sub&lt;VirtAddr&gt; <span class="kw">for </span>VirtAddr {
     <span class="kw">type </span>Output = u64;
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>sub(<span class="self">self</span>, rhs: VirtAddr) -&gt; <span class="self">Self</span>::Output {
         <span class="self">self</span>.as_u64().checked_sub(rhs.as_u64()).unwrap()
     }
 }
 
 <span class="kw">impl </span>Step <span class="kw">for </span>VirtAddr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>steps_between(start: <span class="kw-2">&amp;</span><span class="self">Self</span>, end: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="kw">if </span>start &lt; end {
             <span class="prelude-val">Some</span>((end.as_u64() - start.as_u64()) <span class="kw">as _</span>)
@@ -896,12 +896,12 @@
         </span>}
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>forward_checked(start: <span class="self">Self</span>, count: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Some</span>(start + count)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>backward_checked(start: <span class="self">Self</span>, count: usize) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
         <span class="prelude-val">Some</span>(start - count)
     }
@@ -910,7 +910,7 @@
 <span class="doccomment">/// A passed `u64` was not a valid physical address.
 ///
 /// This means that bits 52 to 64 were not all null.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>PhysAddrNotValid(u64);
 
 <span class="kw">impl </span>PhysAddr {
@@ -1044,7 +1044,7 @@
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>Add&lt;usize&gt; <span class="kw">for </span>PhysAddr {
     <span class="kw">type </span>Output = <span class="self">Self</span>;
     <span class="kw">fn </span>add(<span class="self">self</span>, rhs: usize) -&gt; <span class="self">Self</span>::Output {
@@ -1052,7 +1052,7 @@
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>AddAssign&lt;usize&gt; <span class="kw">for </span>PhysAddr {
     <span class="kw">fn </span>add_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: usize) {
         <span class="self">self</span>.add_assign(rhs <span class="kw">as </span>u64)
@@ -1072,16 +1072,16 @@
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>Sub&lt;usize&gt; <span class="kw">for </span>PhysAddr {
     <span class="kw">type </span>Output = <span class="self">Self</span>;
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>sub(<span class="self">self</span>, rhs: usize) -&gt; <span class="self">Self</span>::Output {
         <span class="self">self </span>- rhs <span class="kw">as </span>u64
     }
 }
 
-<span class="attribute">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
+<span class="attr">#[cfg(target_pointer_width = <span class="string">&quot;64&quot;</span>)]
 </span><span class="kw">impl </span>SubAssign&lt;usize&gt; <span class="kw">for </span>PhysAddr {
     <span class="kw">fn </span>sub_assign(<span class="kw-2">&amp;mut </span><span class="self">self</span>, rhs: usize) {
         <span class="self">self</span>.sub_assign(rhs <span class="kw">as </span>u64)
@@ -1099,7 +1099,7 @@
 ///
 /// Returns the greatest x with alignment `align` so that x &lt;= addr. The alignment must be
 ///  a power of 2.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>align_down(addr: u64, align: u64) -&gt; u64 {
     <span class="macro">assert!</span>(align.is_power_of_two(), <span class="string">&quot;`align` must be a power of two&quot;</span>);
     addr &amp; !(align - <span class="number">1</span>)
@@ -1111,7 +1111,7 @@
 ///
 /// Panics if the alignment is not a power of two. Without the `const_fn`
 /// feature, the panic message will be &quot;index out of bounds&quot;.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>align_up(addr: u64, align: u64) -&gt; u64 {
     <span class="kw">let </span>align_mask = align - <span class="number">1</span>;
 
@@ -1122,22 +1122,22 @@
     </span>}
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">pub fn </span>is_aligned(addr: u64, align: u64) -&gt; bool {
     align_up(addr, align) == addr
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">pub fn </span>test_is_aligned() {
         <span class="macro">assert!</span>(is_aligned(<span class="number">0x1000</span>, <span class="number">0x1000</span>));
         <span class="macro">assert!</span>(!is_aligned(<span class="number">69</span>, <span class="number">0x1000</span>));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">pub fn </span>test_align_up() {
         <span class="comment">// align 1
         </span><span class="macro">assert_eq!</span>(align_up(<span class="number">0</span>, <span class="number">1</span>), <span class="number">0</span>);
@@ -1157,4 +1157,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -577,7 +577,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 <span class="kw">use </span><span class="kw">crate</span>::utils::{CeilDiv, VolatileCell};
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]
+<span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">enum </span>Error {
     UnknownBar,
     NotSupported,
@@ -585,7 +585,7 @@
     NotMsixCapable,
 }
 
-<span class="attribute">#[repr(transparent)]
+<span class="attr">#[repr(transparent)]
 </span><span class="kw">struct </span>Version(VolatileCell&lt;u32&gt;);
 
 <span class="kw">impl </span>Version {
@@ -613,7 +613,7 @@
     }
 }
 
-<span class="attribute">#[repr(transparent)]
+<span class="attr">#[repr(transparent)]
 </span><span class="kw">struct </span>Capability(VolatileCell&lt;u64&gt;);
 
 <span class="kw">impl </span>Capability {
@@ -641,21 +641,21 @@
     }
 }
 
-<span class="attribute">#[repr(u32)]
+<span class="attr">#[repr(u32)]
 </span><span class="kw">enum </span>CommandSet {
     NVM = <span class="number">0b000</span>,
 }
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;CommandSet&gt;(), <span class="number">4</span>);
 
-<span class="attribute">#[repr(u32)]
+<span class="attr">#[repr(u32)]
 </span><span class="kw">enum </span>ArbitrationMechanism {
     RoundRobin = <span class="number">0b000</span>,
 }
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;ArbitrationMechanism&gt;(), <span class="number">4</span>);
 
-<span class="attribute">#[repr(transparent)]
+<span class="attr">#[repr(transparent)]
 </span><span class="kw">struct </span>ControllerConfig(VolatileCell&lt;u32&gt;);
 
 <span class="kw">impl </span>ControllerConfig {
@@ -709,7 +709,7 @@
     }
 }
 
-<span class="attribute">#[repr(transparent)]
+<span class="attr">#[repr(transparent)]
 </span><span class="kw">struct </span>ControllerStatus(VolatileCell&lt;u32&gt;);
 
 <span class="kw">impl </span>ControllerStatus {
@@ -724,7 +724,7 @@
     }
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">struct </span>Registers {
     capability: Capability,
     version: Version,
@@ -1073,4 +1073,4 @@
 
 <span class="macro">crate::module_init!</span>(nvme_init);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

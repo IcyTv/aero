@@ -2878,7 +2878,7 @@
 // =============================================================================
 
 </span><span class="doccomment">/// The color of a red-black tree node.
-</span><span class="attribute">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 #[allow(missing_docs)]
 </span><span class="kw">pub enum </span>Color {
     Red,
@@ -2942,7 +2942,7 @@
 
 </span><span class="doccomment">/// Intrusive link that allows an object to be inserted into a
 /// `RBTree`.
-</span><span class="attribute">#[repr(align(<span class="number">2</span>))]
+</span><span class="attr">#[repr(align(<span class="number">2</span>))]
 </span><span class="kw">pub struct </span>Link {
     left: Cell&lt;<span class="prelude-ty">Option</span>&lt;NonNull&lt;Link&gt;&gt;&gt;,
     right: Cell&lt;<span class="prelude-ty">Option</span>&lt;NonNull&lt;Link&gt;&gt;&gt;,
@@ -2955,7 +2955,7 @@
 
 <span class="kw">impl </span>Link {
     <span class="doccomment">/// Creates a new `Link`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new() -&gt; Link {
         Link {
             left: Cell::new(<span class="prelude-val">None</span>),
@@ -2965,7 +2965,7 @@
     }
 
     <span class="doccomment">/// Checks whether the `Link` is linked into a `RBTree`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.parent_color.get() != UNLINKED_MARKER
     }
@@ -2978,7 +2978,7 @@
     /// `RBTree`. The only situation where this function is useful is
     /// after calling `fast_clear` on a `RBTree`, since this clears
     /// the collection without marking the nodes as unlinked.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>force_unlink(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="self">self</span>.parent_color.set(UNLINKED_MARKER);
     }
@@ -2996,7 +2996,7 @@
 <span class="comment">// Provide an implementation of Clone which simply initializes the new link as
 // unlinked. This allows structs containing a link to derive Clone.
 </span><span class="kw">impl </span>Clone <span class="kw">for </span>Link {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Link {
         Link::new()
     }
@@ -3004,7 +3004,7 @@
 
 <span class="comment">// Same as above
 </span><span class="kw">impl </span>Default <span class="kw">for </span>Link {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>default() -&gt; Link {
         Link::new()
     }
@@ -3013,7 +3013,7 @@
 <span class="comment">// Provide an implementation of Debug so that structs containing a link can
 // still derive Debug.
 </span><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>Link {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
         <span class="comment">// There isn&#39;t anything sensible to print here except whether the link
         // is currently in a tree.
@@ -3030,11 +3030,11 @@
 // =============================================================================
 
 </span><span class="doccomment">/// Default `LinkOps` implementation for `RBTree`.
-</span><span class="attribute">#[derive(Clone, Copy, Default)]
+</span><span class="attr">#[derive(Clone, Copy, Default)]
 </span><span class="kw">pub struct </span>LinkOps;
 
 <span class="kw">impl </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_parent_color(
         <span class="self">self</span>,
         ptr: &lt;<span class="self">Self </span><span class="kw">as </span>link_ops::LinkOps&gt;::LinkPtr,
@@ -3054,7 +3054,7 @@
 <span class="kw">unsafe impl </span>link_ops::LinkOps <span class="kw">for </span>LinkOps {
     <span class="kw">type </span>LinkPtr = NonNull&lt;Link&gt;;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>acquire_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; bool {
         <span class="kw">if </span>ptr.as_ref().is_linked() {
             <span class="bool-val">false
@@ -3064,30 +3064,30 @@
         </span>}
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>release_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) {
         ptr.as_ref().parent_color.set(UNLINKED_MARKER);
     }
 }
 
 <span class="kw">unsafe impl </span>RBTreeOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>left(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         ptr.as_ref().left.get()
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>right(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         ptr.as_ref().right.get()
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>parent(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         <span class="kw">let </span>parent_usize = ptr.as_ref().parent_color.get() &amp; !<span class="number">1</span>;
         NonNull::new(parent_usize <span class="kw">as </span><span class="kw-2">*mut </span>Link)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>color(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; Color {
         <span class="kw">if </span>ptr.as_ref().parent_color.get() &amp; <span class="number">1 </span>== <span class="number">1 </span>{
             Color::Black
@@ -3096,63 +3096,63 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_left(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, left: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         ptr.as_ref().left.set(left);
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_right(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, right: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         ptr.as_ref().right.set(right);
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_parent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, parent: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         <span class="self">self</span>.set_parent_color(ptr, parent, <span class="self">self</span>.color(ptr));
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, color: Color) {
         <span class="self">self</span>.set_parent_color(ptr, <span class="self">self</span>.parent(ptr), color);
     }
 }
 
 <span class="kw">unsafe impl </span>SinglyLinkedListOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         <span class="self">self</span>.right(ptr)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         <span class="self">self</span>.set_right(ptr, next);
     }
 }
 
 <span class="kw">unsafe impl </span>LinkedListOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         <span class="self">self</span>.right(ptr)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>prev(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
         <span class="self">self</span>.left(ptr)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         <span class="self">self</span>.set_right(ptr, next);
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, prev: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
         <span class="self">self</span>.set_left(ptr, prev);
     }
 }
 
 <span class="kw">unsafe impl </span>XorLinkedListOps <span class="kw">for </span>LinkOps {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>next(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -3163,7 +3163,7 @@
         NonNull::new(raw <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>prev(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -3174,7 +3174,7 @@
         NonNull::new(raw <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>set(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -3188,7 +3188,7 @@
         <span class="self">self</span>.set_right(ptr, new_next);
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>replace_next_or_prev(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ptr: <span class="self">Self</span>::LinkPtr,
@@ -3205,12 +3205,12 @@
     }
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>is_left_child&lt;T: RBTreeOps&gt;(link_ops: <span class="kw-2">&amp;</span>T, ptr: T::LinkPtr, parent: T::LinkPtr) -&gt; bool {
     link_ops.left(parent) == <span class="prelude-val">Some</span>(ptr)
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>first_child&lt;T: RBTreeOps&gt;(link_ops: <span class="kw-2">&amp;</span>T, ptr: T::LinkPtr) -&gt; T::LinkPtr {
     <span class="kw">let </span><span class="kw-2">mut </span>x = ptr;
     <span class="kw">while let </span><span class="prelude-val">Some</span>(y) = link_ops.left(x) {
@@ -3219,7 +3219,7 @@
     x
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>last_child&lt;T: RBTreeOps&gt;(link_ops: <span class="kw-2">&amp;</span>T, ptr: T::LinkPtr) -&gt; T::LinkPtr {
     <span class="kw">let </span><span class="kw-2">mut </span>x = ptr;
     <span class="kw">while let </span><span class="prelude-val">Some</span>(y) = link_ops.right(x) {
@@ -3228,7 +3228,7 @@
     x
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>next&lt;T: RBTreeOps&gt;(link_ops: <span class="kw-2">&amp;</span>T, ptr: T::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;T::LinkPtr&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(right) = link_ops.right(ptr) {
         <span class="prelude-val">Some</span>(first_child(link_ops, right))
@@ -3248,7 +3248,7 @@
     }
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>prev&lt;T: RBTreeOps&gt;(link_ops: <span class="kw-2">&amp;</span>T, ptr: T::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;T::LinkPtr&gt; {
     <span class="kw">if let </span><span class="prelude-val">Some</span>(left) = link_ops.left(ptr) {
         <span class="prelude-val">Some</span>(last_child(link_ops, left))
@@ -3268,7 +3268,7 @@
     }
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>replace_with&lt;T: RBTreeOps&gt;(
     link_ops: <span class="kw-2">&amp;mut </span>T,
     ptr: T::LinkPtr,
@@ -3297,7 +3297,7 @@
     link_ops.release_link(ptr);
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>insert_left&lt;T: RBTreeOps&gt;(
     link_ops: <span class="kw-2">&amp;mut </span>T,
     ptr: T::LinkPtr,
@@ -3312,7 +3312,7 @@
     post_insert(link_ops, new, root);
 }
 
-<span class="attribute">#[inline]
+<span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>insert_right&lt;T: RBTreeOps&gt;(
     link_ops: <span class="kw-2">&amp;mut </span>T,
     ptr: T::LinkPtr,
@@ -3613,7 +3613,7 @@
 <span class="kw">where
     </span>A::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt; {
         Cursor {
             current: <span class="self">self</span>.current,
@@ -3627,7 +3627,7 @@
     </span>A::LinkOps: RBTreeOps,
 {
     <span class="doccomment">/// Checks if the cursor is currently pointing to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_null(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.current.is_none()
     }
@@ -3637,7 +3637,7 @@
     ///
     /// This returns `None` if the cursor is currently pointing to the null
     /// object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.tree.adapter.get_value(<span class="self">self</span>.current<span class="question-mark">?</span>) })
     }
@@ -3647,7 +3647,7 @@
     ///
     /// This returns `None` if the cursor is currently pointing to the null
     /// object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>clone_pointer(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt;
     <span class="kw">where
         </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer: Clone,
@@ -3663,7 +3663,7 @@
     /// If the cursor is pointer to the null object then this will move it to
     /// the first element of the `RBTree`. If it is pointing to the last
     /// element of the `RBTree` then this will move it to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ next(<span class="self">self</span>.tree.adapter.link_ops(), current) };
@@ -3679,7 +3679,7 @@
     /// If the cursor is pointer to the null object then this will move it to
     /// the last element of the `RBTree`. If it is pointing to the first
     /// element of the `RBTree` then this will move it to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ prev(<span class="self">self</span>.tree.adapter.link_ops(), current) };
@@ -3695,7 +3695,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// first element of the `RBTree`. If it is pointing to the last
     /// element of the `RBTree` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>next = <span class="self">self</span>.clone();
         next.move_next();
@@ -3707,7 +3707,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// last element of the `RBTree`. If it is pointing to the first
     /// element of the `RBTree` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>prev = <span class="self">self</span>.clone();
         prev.move_prev();
@@ -3729,7 +3729,7 @@
     </span>A::LinkOps: RBTreeOps,
 {
     <span class="doccomment">/// Checks if the cursor is currently pointing to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_null(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.current.is_none()
     }
@@ -3739,7 +3739,7 @@
     ///
     /// This returns None if the cursor is currently pointing to the null
     /// object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>get(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.tree.adapter.get_value(<span class="self">self</span>.current<span class="question-mark">?</span>) })
     }
@@ -3749,7 +3749,7 @@
     /// The lifetime of the returned `Cursor` is bound to that of the
     /// `CursorMut`, which means it cannot outlive the `CursorMut` and that the
     /// `CursorMut` is frozen for the lifetime of the `Cursor`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>as_cursor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         Cursor {
             current: <span class="self">self</span>.current,
@@ -3762,7 +3762,7 @@
     /// If the cursor is pointer to the null object then this will move it to
     /// the first element of the `RBTree`. If it is pointing to the last
     /// element of the `RBTree` then this will move it to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ next(<span class="self">self</span>.tree.adapter.link_ops(), current) };
@@ -3778,7 +3778,7 @@
     /// If the cursor is pointer to the null object then this will move it to
     /// the last element of the `RBTree`. If it is pointing to the first
     /// element of the `RBTree` then this will move it to the null object.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>move_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
             <span class="self">self</span>.current = <span class="kw">unsafe </span>{ prev(<span class="self">self</span>.tree.adapter.link_ops(), current) };
@@ -3794,7 +3794,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// first element of the `RBTree`. If it is pointing to the last
     /// element of the `RBTree` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_next(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>next = <span class="self">self</span>.as_cursor();
         next.move_next();
@@ -3806,7 +3806,7 @@
     /// If the cursor is pointer to the null object then this will return the
     /// last element of the `RBTree`. If it is pointing to the first
     /// element of the `RBTree` then this will return a null cursor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>peek_prev(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>prev = <span class="self">self</span>.as_cursor();
         prev.move_prev();
@@ -3820,7 +3820,7 @@
     ///
     /// If the cursor is currently pointing to the null object then no element
     /// is removed and `None` is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>remove(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="kw">unsafe </span>{
             <span class="kw">if let </span><span class="prelude-val">Some</span>(current) = <span class="self">self</span>.current {
@@ -3862,7 +3862,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>replace_with(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer,
@@ -3904,7 +3904,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert_after(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>new = <span class="self">self</span>.tree.node_from_value(val);
@@ -3946,7 +3946,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert_before(<span class="kw-2">&amp;mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) {
         <span class="kw">unsafe </span>{
             <span class="kw">let </span>new = <span class="self">self</span>.tree.node_from_value(val);
@@ -3988,7 +3988,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert&lt;<span class="lifetime">&#39;c</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;c </span><span class="kw-2">mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer)
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;c</span>&gt;&gt;::Key: Ord,
@@ -4026,7 +4026,7 @@
 <span class="kw">where
     </span>A::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>node_from_value(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer,
@@ -4049,7 +4049,7 @@
     }
 
     <span class="doccomment">/// Creates an empty `RBTree`.
-    </span><span class="attribute">#[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
+    </span><span class="attr">#[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
     #[inline]
     </span><span class="kw">pub fn </span>new(adapter: A) -&gt; RBTree&lt;A&gt; {
         RBTree {
@@ -4059,7 +4059,7 @@
     }
 
     <span class="doccomment">/// Creates an empty `RBTree`.
-    </span><span class="attribute">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
+    </span><span class="attr">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
     #[inline]
     </span><span class="kw">pub const fn </span>new(adapter: A) -&gt; RBTree&lt;A&gt; {
         RBTree {
@@ -4069,13 +4069,13 @@
     }
 
     <span class="doccomment">/// Returns `true` if the `RBTree` is empty.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>is_empty(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="self">self</span>.root.is_none()
     }
 
     <span class="doccomment">/// Returns a null `Cursor` for this tree.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>cursor(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         Cursor {
             current: <span class="prelude-val">None</span>,
@@ -4084,7 +4084,7 @@
     }
 
     <span class="doccomment">/// Returns a null `CursorMut` for this tree.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>cursor_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         CursorMut {
             current: <span class="prelude-val">None</span>,
@@ -4097,7 +4097,7 @@
     /// # Safety
     ///
     /// `ptr` must be a pointer to an object that is part of this tree.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>cursor_from_ptr(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         ptr: <span class="kw-2">*const </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value,
@@ -4113,7 +4113,7 @@
     /// # Safety
     ///
     /// `ptr` must be a pointer to an object that is part of this tree.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>cursor_mut_from_ptr(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         ptr: <span class="kw-2">*const </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value,
@@ -4126,7 +4126,7 @@
 
     <span class="doccomment">/// Returns a `Cursor` pointing to the first element of the tree. If the
     /// tree is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>front(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor();
         cursor.move_next();
@@ -4135,7 +4135,7 @@
 
     <span class="doccomment">/// Returns a `CursorMut` pointing to the first element of the tree. If the
     /// the tree is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>front_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor_mut();
         cursor.move_next();
@@ -4144,7 +4144,7 @@
 
     <span class="doccomment">/// Returns a `Cursor` pointing to the last element of the tree. If the tree
     /// is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>back(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Cursor&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor();
         cursor.move_prev();
@@ -4153,14 +4153,14 @@
 
     <span class="doccomment">/// Returns a `CursorMut` pointing to the last element of the tree. If the
     /// tree is empty then a null cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>back_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.cursor_mut();
         cursor.move_prev();
         cursor
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>insert_root(<span class="kw-2">&amp;mut </span><span class="self">self</span>, node: &lt;A::LinkOps <span class="kw">as </span>link_ops::LinkOps&gt;::LinkPtr) {
         <span class="self">self</span>.adapter.link_ops_mut().set_parent(node, <span class="prelude-val">None</span>);
         <span class="self">self</span>.adapter.link_ops_mut().set_color(node, Color::Black);
@@ -4170,7 +4170,7 @@
     }
 
     <span class="doccomment">/// Gets an iterator over the objects in the `RBTree`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>iter(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;_</span>, A&gt; {
         <span class="kw">let </span>link_ops = <span class="self">self</span>.adapter.link_ops();
 
@@ -4189,7 +4189,7 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clear_recurse(<span class="kw-2">&amp;mut </span><span class="self">self</span>, current: <span class="prelude-ty">Option</span>&lt;&lt;A::LinkOps <span class="kw">as </span>link_ops::LinkOps&gt;::LinkPtr&gt;) {
         <span class="kw">use </span>link_ops::LinkOps;
         <span class="comment">// If adapter.get_value or Pointer::from_raw panic here, it will leak
@@ -4214,7 +4214,7 @@
     /// This will unlink all object currently in the tree, which requires
     /// iterating through all elements in the `RBTree`. Each element is
     /// converted back to an owned pointer and then dropped.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span>root = <span class="self">self</span>.root.take();
         <span class="self">self</span>.clear_recurse(root);
@@ -4226,14 +4226,14 @@
     /// objects into another `RBTree` will fail but will not cause any
     /// memory unsafety. To unlink those objects manually, you must call the
     /// `force_unlink` function on them.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>fast_clear(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.root = <span class="prelude-val">None</span>;
     }
 
     <span class="doccomment">/// Takes all the elements out of the `RBTree`, leaving it empty. The
     /// taken elements are returned as a new `RBTree`.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>take(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; RBTree&lt;A&gt;
     <span class="kw">where
         </span>A: Clone,
@@ -4251,7 +4251,7 @@
 <span class="kw">where
     </span>&lt;A <span class="kw">as </span>Adapter&gt;::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>find_internal&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         key: <span class="kw-2">&amp;</span>Q,
@@ -4279,7 +4279,7 @@
     ///
     /// If multiple elements with an identical key are found then an arbitrary
     /// one is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>find&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4295,7 +4295,7 @@
     ///
     /// If multiple elements with an identical key are found then an arbitrary
     /// one is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>find_mut&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4306,7 +4306,7 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>lower_bound_internal&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
@@ -4339,7 +4339,7 @@
     <span class="doccomment">/// Returns a `Cursor` pointing to the lowest element whose key is above
     /// the given bound. If no such element is found then a null cursor is
     /// returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>lower_bound&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4353,7 +4353,7 @@
     <span class="doccomment">/// Returns a `CursorMut` pointing to the first element whose key is
     /// above the given bound. If no such element is found then a null
     /// cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>lower_bound_mut&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4364,7 +4364,7 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>upper_bound_internal&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
@@ -4397,7 +4397,7 @@
     <span class="doccomment">/// Returns a `Cursor` pointing to the last element whose key is below
     /// the given bound. If no such element is found then a null cursor is
     /// returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>upper_bound&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4411,7 +4411,7 @@
     <span class="doccomment">/// Returns a `CursorMut` pointing to the last element whose key is
     /// below the given bound. If no such element is found then a null
     /// cursor is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>upper_bound_mut&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4433,7 +4433,7 @@
     ///
     /// Panics if the new element is already linked to a different intrusive
     /// collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>insert&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, val: &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer) -&gt; CursorMut&lt;<span class="lifetime">&#39;_</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Ord,
@@ -4482,7 +4482,7 @@
     ///
     /// If multiple elements with an identical key are found then an arbitrary
     /// one is returned.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>entry&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; Entry&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
         </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
@@ -4538,7 +4538,7 @@
     /// will be treated as &quot;negative infinity&quot;, and if max is `Unbounded`, then
     /// it will be treated as &quot;positive infinity&quot;. Thus
     /// `range(Unbounded, Unbounded)` will yield the whole collection.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>range&lt;<span class="lifetime">&#39;a</span>, Min: <span class="question-mark">?</span>Sized + Ord, Max: <span class="question-mark">?</span>Sized + Ord&gt;(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
         min: Bound&lt;<span class="kw-2">&amp;</span>Min&gt;,
@@ -4592,7 +4592,7 @@
 <span class="kw">where
     </span>A::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="self">self</span>.clear();
     }
@@ -4605,7 +4605,7 @@
     <span class="kw">type </span>Item = &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer;
     <span class="kw">type </span>IntoIter = IntoIter&lt;A&gt;;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; IntoIter&lt;A&gt; {
         <span class="kw">let </span>link_ops = <span class="self">self</span>.adapter.link_ops();
 
@@ -4632,7 +4632,7 @@
     <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value;
     <span class="kw">type </span>IntoIter = Iter&lt;<span class="lifetime">&#39;a</span>, A&gt;;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>into_iter(<span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, A&gt; {
         <span class="self">self</span>.iter()
     }
@@ -4776,7 +4776,7 @@
 {
     <span class="kw">type </span>Item = <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="kw">let </span>head = <span class="self">self</span>.head<span class="question-mark">?</span>;
 
@@ -4793,7 +4793,7 @@
 <span class="kw">where
     </span>A::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
         <span class="kw">let </span>tail = <span class="self">self</span>.tail<span class="question-mark">?</span>;
 
@@ -4810,7 +4810,7 @@
 <span class="kw">where
     </span>A::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Iter&lt;<span class="lifetime">&#39;a</span>, A&gt; {
         Iter {
             head: <span class="self">self</span>.head,
@@ -4839,7 +4839,7 @@
 {
     <span class="kw">type </span>Item = &lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer;
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="kw">use </span>link_ops::LinkOps;
 
@@ -4878,7 +4878,7 @@
 <span class="kw">where
     </span>A::LinkOps: RBTreeOps,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>next_back(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Pointer&gt; {
         <span class="kw">use </span>link_ops::LinkOps;
 
@@ -4918,7 +4918,7 @@
 // Tests
 // =============================================================================
 
-</span><span class="attribute">#[cfg(test)]
+</span><span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use super</span>::{Entry, KeyAdapter, Link, PointerOps, RBTree};
     <span class="kw">use </span><span class="kw">crate</span>::Bound::<span class="kw-2">*</span>;
@@ -4929,7 +4929,7 @@
     <span class="kw">use </span>std::vec::Vec;
     <span class="kw">use </span>std::{format, vec};
 
-    <span class="attribute">#[derive(Clone)]
+    <span class="attr">#[derive(Clone)]
     </span><span class="kw">struct </span>Obj {
         link: Link,
         value: i32,
@@ -4953,7 +4953,7 @@
         })
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_link() {
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
         <span class="macro">assert!</span>(!a.link.is_linked());
@@ -4983,7 +4983,7 @@
         <span class="macro">assert!</span>(!a.link.is_linked());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_cursor() {
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
         <span class="kw">let </span>b = make_obj(<span class="number">2</span>);
@@ -5053,7 +5053,7 @@
         </span>);
     }
 
-    <span class="attribute">#[cfg(not(miri))]
+    <span class="attr">#[cfg(not(miri))]
     #[test]
     </span><span class="kw">fn </span>test_insert_remove() {
         <span class="kw">let </span>v = (<span class="number">0</span>..<span class="number">100</span>).map(make_obj).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -5173,7 +5173,7 @@
         }
     }
 
-    <span class="attribute">#[cfg(not(miri))]
+    <span class="attr">#[cfg(not(miri))]
     #[test]
     </span><span class="kw">fn </span>test_iter() {
         <span class="kw">let </span>v = (<span class="number">0</span>..<span class="number">10</span>).map(|x| make_obj(x * <span class="number">10</span>)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
@@ -5420,7 +5420,7 @@
         <span class="macro">assert_eq!</span>(v2, <span class="macro">vec!</span>[<span class="number">90</span>, <span class="number">80</span>, <span class="number">70</span>, <span class="number">60</span>, <span class="number">50</span>, <span class="number">40</span>, <span class="number">30</span>, <span class="number">20</span>, <span class="number">10</span>, <span class="number">0</span>]);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_find() {
         <span class="kw">let </span>v = (<span class="number">0</span>..<span class="number">10</span>).map(|x| make_obj(x * <span class="number">10</span>)).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;();
         <span class="kw">let </span><span class="kw-2">mut </span>t = RBTree::new(ObjAdapter::new());
@@ -5549,7 +5549,7 @@
         }
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_fast_clear() {
         <span class="kw">let </span><span class="kw-2">mut </span>t = RBTree::new(ObjAdapter::new());
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
@@ -5575,7 +5575,7 @@
         <span class="macro">assert!</span>(!c.link.is_linked());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_entry() {
         <span class="kw">let </span><span class="kw-2">mut </span>t = RBTree::new(ObjAdapter::new());
         <span class="kw">let </span>a = make_obj(<span class="number">1</span>);
@@ -5620,9 +5620,9 @@
         <span class="macro">assert!</span>(f.link.is_linked());
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_non_static() {
-        <span class="attribute">#[derive(Clone)]
+        <span class="attr">#[derive(Clone)]
         </span><span class="kw">struct </span>Obj&lt;<span class="lifetime">&#39;a</span>, T&gt; {
             link: Link,
             value: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T,
@@ -5652,7 +5652,7 @@
         (<span class="macro-nonterminal">$ptr</span>: ident, <span class="macro-nonterminal">$ptr_import</span>: path) =&gt; {
             <span class="kw">use </span><span class="macro-nonterminal">$ptr_import</span>;
 
-            <span class="attribute">#[derive(Clone)]
+            <span class="attr">#[derive(Clone)]
             </span><span class="kw">struct </span>Obj {
                 link: Link,
                 value: usize,
@@ -5682,15 +5682,15 @@
         };
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_clone_pointer_rc() {
         <span class="macro">test_clone_pointer!</span>(Rc, std::rc::Rc);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>test_clone_pointer_arc() {
         <span class="macro">test_clone_pointer!</span>(Arc, std::sync::Arc);
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -171,7 +171,7 @@
 </pre><pre class="rust"><code><span class="kw">use </span><span class="kw">crate</span>::raw;
 <span class="kw">use </span>core::mem::MaybeUninit;
 <span class="kw">use </span>core::{slice, str};
-<span class="attribute">#[cfg(feature = <span class="string">&quot;no-panic&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;no-panic&quot;</span>)]
 </span><span class="kw">use </span>no_panic::no_panic;
 
 <span class="kw">const </span>NAN: <span class="kw-2">&amp;</span>str = <span class="string">&quot;NaN&quot;</span>;
@@ -194,7 +194,7 @@
 <span class="kw">impl </span>Buffer {
     <span class="doccomment">/// This is a cheap operation; you don&#39;t need to worry about reusing buffers
     /// for efficiency.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, no_panic)]
     </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>bytes = [MaybeUninit::&lt;u8&gt;::uninit(); <span class="number">24</span>];
@@ -212,7 +212,7 @@
     /// If your input is known to be finite, you may get better performance by
     /// calling the `format_finite` method instead of `format` to avoid the
     /// checks for special cases.
-    </span><span class="attribute">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
+    </span><span class="attr">#[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
     #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, no_panic)]
     </span><span class="kw">pub fn </span>format&lt;F: Float&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="kw">if </span>f.is_nonfinite() {
@@ -237,7 +237,7 @@
     /// [`is_finite`]: https://doc.rust-lang.org/std/primitive.f64.html#method.is_finite
     /// [`is_nan`]: https://doc.rust-lang.org/std/primitive.f64.html#method.is_nan
     /// [`is_infinite`]: https://doc.rust-lang.org/std/primitive.f64.html#method.is_infinite
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, no_panic)]
     </span><span class="kw">pub fn </span>format_finite&lt;F: Float&gt;(<span class="kw-2">&amp;mut </span><span class="self">self</span>, f: F) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="kw">unsafe </span>{
@@ -252,14 +252,14 @@
 <span class="kw">impl </span>Copy <span class="kw">for </span>Buffer {}
 
 <span class="kw">impl </span>Clone <span class="kw">for </span>Buffer {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
         Buffer::new()
     }
 }
 
 <span class="kw">impl </span>Default <span class="kw">for </span>Buffer {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, no_panic)]
     </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
         Buffer::new()
@@ -282,14 +282,14 @@
 }
 
 <span class="kw">impl </span>Sealed <span class="kw">for </span>f32 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>is_nonfinite(<span class="self">self</span>) -&gt; bool {
         <span class="kw">const </span>EXP_MASK: u32 = <span class="number">0x7f800000</span>;
         <span class="kw">let </span>bits = <span class="self">self</span>.to_bits();
         bits &amp; EXP_MASK == EXP_MASK
     }
 
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
     </span><span class="kw">fn </span>format_nonfinite(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
         <span class="kw">const </span>MANTISSA_MASK: u32 = <span class="number">0x007fffff</span>;
@@ -304,21 +304,21 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>write_to_ryu_buffer(<span class="self">self</span>, result: <span class="kw-2">*mut </span>u8) -&gt; usize {
         raw::format32(<span class="self">self</span>, result)
     }
 }
 
 <span class="kw">impl </span>Sealed <span class="kw">for </span>f64 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>is_nonfinite(<span class="self">self</span>) -&gt; bool {
         <span class="kw">const </span>EXP_MASK: u64 = <span class="number">0x7ff0000000000000</span>;
         <span class="kw">let </span>bits = <span class="self">self</span>.to_bits();
         bits &amp; EXP_MASK == EXP_MASK
     }
 
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, inline)]
     </span><span class="kw">fn </span>format_nonfinite(<span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str {
         <span class="kw">const </span>MANTISSA_MASK: u64 = <span class="number">0x000fffffffffffff</span>;
@@ -333,10 +333,10 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>write_to_ryu_buffer(<span class="self">self</span>, result: <span class="kw-2">*mut </span>u8) -&gt; usize {
         raw::format64(<span class="self">self</span>, result)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

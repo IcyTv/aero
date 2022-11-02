@@ -580,7 +580,7 @@
 //! of the allocation by two `usize` and avoids the overhead of maintaining
 //! reference counts.
 
-</span><span class="attribute">#![warn(missing_docs)]
+</span><span class="attr">#![warn(missing_docs)]
 #![warn(rust_2018_idioms)]
 #![no_std]
 #![cfg_attr(feature = <span class="string">&quot;nightly&quot;</span>, feature(const_fn_trait_bound))]
@@ -589,11 +589,11 @@
 #[cfg(feature = <span class="string">&quot;alloc&quot;</span>)]
 </span><span class="kw">extern crate </span>alloc;
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">extern crate </span>std;
 
 <span class="kw">mod </span>unsafe_ref;
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">mod </span>adapter;
 <span class="kw">mod </span>key_adapter;
 <span class="kw">mod </span>link_ops;
@@ -621,7 +621,7 @@
 <span class="kw">pub use </span>memoffset::offset_of;
 
 <span class="doccomment">/// An endpoint of a range of keys.
-</span><span class="attribute">#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+</span><span class="attr">#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>Bound&lt;T&gt; {
     <span class="doccomment">/// An inclusive bound.
     </span>Included(T),
@@ -631,4 +631,4 @@
     </span>Unbounded,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

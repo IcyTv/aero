@@ -337,7 +337,7 @@
 //! There are also unsafe versions of most functions which do not require the
 //! return type to implement `Pod` and which do no checking.
 
-</span><span class="attribute">#![no_std]
+</span><span class="attr">#![no_std]
 
 </span><span class="kw">use </span>core::mem;
 <span class="kw">use </span>core::slice::from_raw_parts;
@@ -431,7 +431,7 @@
 
 <span class="doccomment">/// Iterates over `self.data`, yielding strings (null-terminated in `self.data`).
 /// See `read_strs_to_null`.
-</span><span class="attribute">#[derive(Clone, Debug)]
+</span><span class="attr">#[derive(Clone, Debug)]
 </span><span class="kw">pub struct </span>StrReaderIterator&lt;<span class="lifetime">&#39;a</span>&gt; {
     data: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[u8]
 }
@@ -469,20 +469,20 @@
     <span class="macro">panic!</span>(<span class="string">&quot;No null byte in input&quot;</span>);
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]
+    <span class="attr">#[derive(Copy, Clone, PartialEq, Eq)]
     </span><span class="kw">struct </span>Zero;
 
-    <span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]
+    <span class="attr">#[derive(Copy, Clone, PartialEq, Eq)]
     #[repr(packed)]
     </span><span class="kw">struct </span>Foo {
         a: u8,
     }
 
-    <span class="attribute">#[derive(Copy, Clone, PartialEq, Eq)]
+    <span class="attr">#[derive(Copy, Clone, PartialEq, Eq)]
     #[repr(packed)]
     </span><span class="kw">struct </span>Bar {
         a: u32,
@@ -496,7 +496,7 @@
 
     <span class="comment">// read
 
-    </span><span class="attribute">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_read() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[];
         <span class="macro">assert!</span>(read::&lt;Zero&gt;(a) == <span class="kw-2">&amp;</span>Zero);
@@ -508,14 +508,14 @@
         <span class="macro">assert!</span>(read::&lt;Bar&gt;(a) == <span class="kw-2">&amp;</span>Bar { a: <span class="number">42</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>});
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_too_small() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[];
         read::&lt;Foo&gt;(a);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_too_small2() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0x03</span>, <span class="number">0xff</span>, <span class="number">0x62</span>, <span class="number">0xa2</span>, <span class="number">0x5b</span>, <span class="number">0x42</span>, <span class="number">0x00</span>, <span class="number">0xf0</span>];
@@ -524,7 +524,7 @@
 
     <span class="comment">// read_array
 
-    </span><span class="attribute">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_read_array() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">42</span>];
         <span class="macro">assert!</span>(read_array::&lt;Foo&gt;(a) == <span class="kw-2">&amp;</span>[Foo { a: <span class="number">42 </span>}]);
@@ -541,7 +541,7 @@
                                           Bar { a: <span class="number">44</span>, b: <span class="number">0xf000425b_a262ff03</span>, c: -<span class="number">2 </span>}]);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_array_zero_sized() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>];
@@ -550,7 +550,7 @@
 
     <span class="comment">// read_str
 
-    </span><span class="attribute">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_good_strs() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>];
         <span class="macro">assert_eq!</span>(read_str(a), <span class="string">&quot;&quot;</span>);
@@ -560,21 +560,21 @@
         <span class="macro">assert_eq!</span>(read_str(a), <span class="string">&quot;aAz&quot;</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_no_null() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[];
         read_str(a);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_no_null2() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>, <span class="number">0x41</span>, <span class="number">0x7a</span>];
         read_str(a);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_not_unicode() {
         <span class="comment">// TODO
@@ -583,7 +583,7 @@
 
     <span class="comment">// read_strs_to_null
 
-    </span><span class="attribute">#[test]
+    </span><span class="attr">#[test]
     </span><span class="kw">fn </span>test_good_strs_to_null() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0</span>];
         <span class="macro">assert_eq!</span>(read_strs_to_null(a).count(), <span class="number">0</span>);
@@ -612,7 +612,7 @@
         <span class="macro">assert_eq!</span>(iter.next(), <span class="prelude-val">None</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[should_panic]
     </span><span class="kw">fn </span>test_no_null_to_null() {
         <span class="kw">let </span>a = <span class="kw-2">&amp;</span>[<span class="number">0x61</span>];
@@ -621,4 +621,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="zero" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="zero" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

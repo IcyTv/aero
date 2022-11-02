@@ -226,7 +226,7 @@
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem;
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">struct </span>Entry32_ {
     name: u32,
@@ -237,7 +237,7 @@
     shndx: u16,
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">struct </span>Entry64_ {
     name: u32,
@@ -251,22 +251,22 @@
 <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Entry32_ {}
 <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Entry64_ {}
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>Entry32(Entry32_);
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>Entry64(Entry64_);
 
 <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Entry32 {}
 <span class="kw">unsafe impl </span>Pod <span class="kw">for </span>Entry64 {}
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>DynEntry32(Entry32_);
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>DynEntry64(Entry64_);
 
@@ -362,10 +362,10 @@
 <span class="macro">impl_entry!</span>(DynEntry32 with ElfFile::get_dyn_string);
 <span class="macro">impl_entry!</span>(DynEntry64 with ElfFile::get_dyn_string);
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]
+<span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>Visibility_(u8);
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]
+<span class="attr">#[derive(Copy, Clone, Debug)]
 #[repr(u8)]
 </span><span class="kw">pub enum </span>Visibility {
     Default = <span class="number">0</span>,
@@ -380,10 +380,10 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]
+<span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>Binding_(u8);
 
-<span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>Binding {
     Local,
     Global,
@@ -406,10 +406,10 @@
 }
 
 <span class="comment">// TODO should use a procedural macro for generating these things
-</span><span class="attribute">#[derive(Copy, Clone, Debug)]
+</span><span class="attr">#[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>Type_(u8);
 
-<span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>Type {
     NoType,
     Object,
@@ -439,4 +439,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

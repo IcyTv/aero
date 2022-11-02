@@ -1401,7 +1401,7 @@
     ///
     /// This is a convenience method. For more information about a mapping see the
     /// [`translate`](Translate::translate) method.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>translate_addr(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: VirtAddr) -&gt; <span class="prelude-ty">Option</span>&lt;PhysAddr&gt; {
         <span class="kw">match </span><span class="self">self</span>.translate(addr) {
             TranslateResult::NotMapped | TranslateResult::InvalidFrameAddress(<span class="kw">_</span>) =&gt; <span class="prelude-val">None</span>,
@@ -1414,7 +1414,7 @@
 ///
 /// If the given address has a valid mapping, a `Frame4KiB`, `Frame2MiB`, or `Frame1GiB` variant
 /// is returned, depending on the size of the mapped page. The remaining variants indicate errors.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>TranslateResult {
     <span class="doccomment">/// The virtual address is mapped to a physical frame.
     </span>Mapped {
@@ -1436,7 +1436,7 @@
 }
 
 <span class="doccomment">/// Represents a physical frame mapped in a page table.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>MappedFrame {
     <span class="doccomment">/// The virtual address is mapped to a 4KiB frame.
     </span>Size4KiB(PhysFrame&lt;Size4KiB&gt;),
@@ -1457,7 +1457,7 @@
     }
 
     <span class="doccomment">/// Returns the size the frame (4KB, 2MB or 1GB).
-    </span><span class="attribute">#[allow(unused)]
+    </span><span class="attr">#[allow(unused)]
     </span><span class="kw">pub const fn </span>size(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; u64 {
         <span class="kw">match </span><span class="self">self </span>{
             MappedFrame::Size4KiB(<span class="kw">_</span>) =&gt; Size4KiB::SIZE,
@@ -1509,7 +1509,7 @@
     /// the same in all address spaces, otherwise undefined behavior can occur
     /// because of TLB races. It&#39;s worth noting that all the above requirements
     /// also apply to shared mappings, including the aliasing requirements.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>map_to(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;S&gt;,
@@ -1605,7 +1605,7 @@
     ///
     /// This is a convencience function that invokes [`Mapper::map_to`] internally, so
     /// all safety requirements of it also apply for this function.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>identity_map(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         frame: PhysFrame&lt;S&gt;,
@@ -1626,13 +1626,13 @@
 /// The old mapping might be still cached in the translation lookaside buffer (TLB), so it needs
 /// to be flushed from the TLB before it&#39;s accessed. This type is returned from function that
 /// change the mapping of a page to ensure that the TLB flush is not forgotten.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 #[must_use = <span class="string">&quot;Page Table changes must be flushed or ignored.&quot;</span>]
 </span><span class="kw">pub struct </span>MapperFlush&lt;S: PageSize&gt;(Page&lt;S&gt;);
 
 <span class="kw">impl</span>&lt;S: PageSize&gt; MapperFlush&lt;S&gt; {
     <span class="doccomment">/// Create a new flush promise
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>new(page: Page&lt;S&gt;) -&gt; <span class="self">Self </span>{
         MapperFlush(page)
     }
@@ -1640,7 +1640,7 @@
     <span class="kw">pub fn </span>ignore(<span class="self">self</span>) {}
 
     <span class="doccomment">/// Flush the page from the TLB to ensure that the newest mapping is used.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>flush(<span class="self">self</span>) {
         <span class="kw">let </span>raw = <span class="self">self</span>.<span class="number">0</span>.start_address().as_u64();
 
@@ -1651,7 +1651,7 @@
 }
 
 <span class="doccomment">/// This error is returned from `map_to` and similar methods.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>MapToError&lt;S: PageSize&gt; {
     <span class="doccomment">/// An additional frame was needed for the mapping process, but the frame allocator
     /// returned `None`.
@@ -1664,7 +1664,7 @@
 }
 
 <span class="doccomment">/// An error indicating that an `unmap` call failed.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>UnmapError {
     <span class="doccomment">/// An upper level page table entry has the `HUGE_PAGE` flag set, which means that the
     /// given page is part of a huge page and can&#39;t be freed individually.
@@ -1676,7 +1676,7 @@
 }
 
 <span class="doccomment">/// An error indicating that an `update_flags` call failed.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>FlagUpdateError {
     <span class="doccomment">/// The given page is not mapped to a physical frame.
     </span>PageNotMapped,
@@ -1686,7 +1686,7 @@
 }
 
 <span class="doccomment">/// An error indicating that an `translate` call failed.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>TranslateError {
     <span class="doccomment">/// The given page is not mapped to a physical frame.
     </span>PageNotMapped,
@@ -1714,7 +1714,7 @@
 /// the virtual address space at some offset. Other mappings between physical and virtual
 /// memory are possible too, as long as they can be calculated as an `PhysAddr` to
 /// `VirtAddr` closure.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>MappedPageTable&lt;<span class="lifetime">&#39;a</span>, P: PageTableFrameMapping&gt; {
     page_table_walker: PageTableWalker&lt;P&gt;,
     level_5_paging_enabled: bool,
@@ -1731,7 +1731,7 @@
     /// closure is correct. Also, the passed `page_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>new(page_table: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>PageTable, page_table_frame_mapping: P) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             page_table,
@@ -1856,7 +1856,7 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, P: PageTableFrameMapping&gt; Mapper&lt;Size2MiB&gt; <span class="kw">for </span>MappedPageTable&lt;<span class="lifetime">&#39;a</span>, P&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>map_to_with_table_flags(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size2MiB&gt;,
@@ -1968,7 +1968,7 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, P: PageTableFrameMapping&gt; Mapper&lt;Size4KiB&gt; <span class="kw">for </span>MappedPageTable&lt;<span class="lifetime">&#39;a</span>, P&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>map_to_with_table_flags(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size4KiB&gt;,
@@ -2081,7 +2081,7 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, P: PageTableFrameMapping&gt; Translate <span class="kw">for </span>MappedPageTable&lt;<span class="lifetime">&#39;a</span>, P&gt; {
-    <span class="attribute">#[allow(clippy::inconsistent_digit_grouping)]
+    <span class="attr">#[allow(clippy::inconsistent_digit_grouping)]
     </span><span class="kw">fn </span>translate(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: VirtAddr) -&gt; TranslateResult {
         <span class="kw">let </span>p4;
 
@@ -2157,13 +2157,13 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>PageTableWalker&lt;P: PageTableFrameMapping&gt; {
     page_table_frame_mapping: P,
 }
 
 <span class="kw">impl</span>&lt;P: PageTableFrameMapping&gt; PageTableWalker&lt;P&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>new(page_table_frame_mapping: P) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             page_table_frame_mapping,
@@ -2175,7 +2175,7 @@
     /// Returns `PageTableWalkError::NotMapped` if the entry is unused. Returns
     /// `PageTableWalkError::MappedToHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>next_table&lt;<span class="lifetime">&#39;b</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         entry: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span>PageTableEntry,
@@ -2193,7 +2193,7 @@
     /// Returns `PageTableWalkError::NotMapped` if the entry is unused. Returns
     /// `PageTableWalkError::MappedToHugePage` if the `HUGE_PAGE` flag is set
     /// in the passed entry.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>next_table_mut&lt;<span class="lifetime">&#39;b</span>&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         entry: <span class="kw-2">&amp;</span><span class="lifetime">&#39;b </span><span class="kw-2">mut </span>PageTableEntry,
@@ -2254,20 +2254,20 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">enum </span>PageTableWalkError {
     NotMapped,
     MappedToHugePage,
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">enum </span>PageTableCreateError {
     MappedToHugePage,
     FrameAllocationFailed,
 }
 
 <span class="kw">impl </span>From&lt;PageTableCreateError&gt; <span class="kw">for </span>MapToError&lt;Size4KiB&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: PageTableCreateError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             PageTableCreateError::MappedToHugePage =&gt; MapToError::ParentEntryHugePage,
@@ -2277,7 +2277,7 @@
 }
 
 <span class="kw">impl </span>From&lt;PageTableCreateError&gt; <span class="kw">for </span>MapToError&lt;Size2MiB&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: PageTableCreateError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             PageTableCreateError::MappedToHugePage =&gt; MapToError::ParentEntryHugePage,
@@ -2287,7 +2287,7 @@
 }
 
 <span class="kw">impl </span>From&lt;PageTableCreateError&gt; <span class="kw">for </span>MapToError&lt;Size1GiB&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: PageTableCreateError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             PageTableCreateError::MappedToHugePage =&gt; MapToError::ParentEntryHugePage,
@@ -2297,7 +2297,7 @@
 }
 
 <span class="kw">impl </span>From&lt;FrameError&gt; <span class="kw">for </span>PageTableWalkError {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: FrameError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             FrameError::HugeFrame =&gt; PageTableWalkError::MappedToHugePage,
@@ -2307,7 +2307,7 @@
 }
 
 <span class="kw">impl </span>From&lt;PageTableWalkError&gt; <span class="kw">for </span>UnmapError {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: PageTableWalkError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             PageTableWalkError::MappedToHugePage =&gt; UnmapError::ParentEntryHugePage,
@@ -2317,7 +2317,7 @@
 }
 
 <span class="kw">impl </span>From&lt;PageTableWalkError&gt; <span class="kw">for </span>FlagUpdateError {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: PageTableWalkError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             PageTableWalkError::MappedToHugePage =&gt; FlagUpdateError::ParentEntryHugePage,
@@ -2327,7 +2327,7 @@
 }
 
 <span class="kw">impl </span>From&lt;PageTableWalkError&gt; <span class="kw">for </span>TranslateError {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>from(err: PageTableWalkError) -&gt; <span class="self">Self </span>{
         <span class="kw">match </span>err {
             PageTableWalkError::MappedToHugePage =&gt; TranslateError::ParentEntryHugePage,
@@ -2352,7 +2352,7 @@
 
 <span class="doccomment">/// A Mapper implementation that requires that the complete physically memory is mapped at some
 /// offset in the virtual address space.
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>OffsetPageTable&lt;<span class="lifetime">&#39;a</span>&gt; {
     inner: MappedPageTable&lt;<span class="lifetime">&#39;a</span>, PhysOffset&gt;,
 }
@@ -2373,7 +2373,7 @@
     /// is correct. Also, the passed `page_table` must point to the level 4 page table
     /// of a valid page table hierarchy. Otherwise this function might break memory safety, e.g.
     /// by writing to an illegal memory location.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>new(page_table: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>PageTable, phys_offset: VirtAddr) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>phys_offset = PhysOffset {
             offset: phys_offset,
@@ -2388,7 +2388,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>PhysOffset {
     offset: VirtAddr,
 }
@@ -2401,7 +2401,7 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Mapper&lt;Size2MiB&gt; <span class="kw">for </span>OffsetPageTable&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>map_to_with_table_flags(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size2MiB&gt;,
@@ -2413,7 +2413,7 @@
             .map_to_with_table_flags(page, frame, flags, parent_table_flags)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>unmap(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size2MiB&gt;,
@@ -2421,7 +2421,7 @@
         <span class="self">self</span>.inner.unmap(page)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>update_flags(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size2MiB&gt;,
@@ -2430,14 +2430,14 @@
         <span class="self">self</span>.inner.update_flags(page, flags)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>translate_page(<span class="kw-2">&amp;</span><span class="self">self</span>, page: Page&lt;Size2MiB&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PhysFrame&lt;Size2MiB&gt;, TranslateError&gt; {
         <span class="self">self</span>.inner.translate_page(page)
     }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Mapper&lt;Size4KiB&gt; <span class="kw">for </span>OffsetPageTable&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>map_to_with_table_flags(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size4KiB&gt;,
@@ -2449,7 +2449,7 @@
             .map_to_with_table_flags(page, frame, flags, parent_table_flags)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>unmap(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size4KiB&gt;,
@@ -2457,7 +2457,7 @@
         <span class="self">self</span>.inner.unmap(page)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">unsafe fn </span>update_flags(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         page: Page&lt;Size4KiB&gt;,
@@ -2466,14 +2466,14 @@
         <span class="self">self</span>.inner.update_flags(page, flags)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>translate_page(<span class="kw-2">&amp;</span><span class="self">self</span>, page: Page&lt;Size4KiB&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;PhysFrame&lt;Size4KiB&gt;, TranslateError&gt; {
         <span class="self">self</span>.inner.translate_page(page)
     }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Translate <span class="kw">for </span>OffsetPageTable&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>translate(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: VirtAddr) -&gt; TranslateResult {
         <span class="self">self</span>.inner.translate(addr)
     }
@@ -2673,4 +2673,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

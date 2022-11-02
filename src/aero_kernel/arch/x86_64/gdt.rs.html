@@ -493,7 +493,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
 </span><span class="kw">pub enum </span>Ring {
     Ring0 = <span class="number">0b00</span>,
 }
@@ -633,7 +633,7 @@
     }
 }
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">struct </span>GdtDescriptor {
     <span class="doccomment">/// The size of the table subtracted by 1.
     /// The size of the table is subtracted by 1 as the maximum value
@@ -645,13 +645,13 @@
 
 <span class="kw">impl </span>GdtDescriptor {
     <span class="doccomment">/// Create a new GDT descriptor.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new(size: u16, offset: u64) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ size, offset }
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy)]
+<span class="attr">#[derive(Debug, Clone, Copy)]
 #[repr(C)]
 </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">struct </span>GdtEntry {
     limit_low: u16,
@@ -701,7 +701,7 @@
 <span class="doccomment">/// Although hardware task-switching is not supported in 64-bit mode, a task
 /// state segment is required since the it holds information important to 64-bit
 /// mode and its not directly related to task switching mechanism.
-</span><span class="attribute">#[repr(C, packed)]
+</span><span class="attr">#[repr(C, packed)]
 </span><span class="kw">pub struct </span>Tss {
     reserved: u32, <span class="comment">// offset 0x00
 
@@ -722,7 +722,7 @@
 </span>}
 
 <span class="comment">// Processor Control Region
-</span><span class="attribute">#[repr(C)]
+</span><span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>Kpcr {
     <span class="kw">pub </span>tss: Tss,
     <span class="kw">pub </span>cpu_local: PerCpuData,
@@ -813,7 +813,7 @@
     </span>tls::get_percpu().gdt = gdt;
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_cs(selector: SegmentSelector) {
     <span class="comment">/*
      * NOTE: We cannot directly move into CS since x86 requires the IP
@@ -836,39 +836,39 @@
     );
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_ds(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov ds, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_es(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov es, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_fs(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov fs, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_gs(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov gs, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_ss(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;mov ss, {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nomem, nostack))
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_tss(selector: SegmentSelector) {
     <span class="macro">asm!</span>(<span class="string">&quot;ltr {0:x}&quot;</span>, <span class="kw">in</span>(reg) selector.bits(), options(nostack, nomem));
 }
 
-<span class="attribute">#[inline(always)]
+<span class="attr">#[inline(always)]
 </span><span class="kw">unsafe fn </span>load_gdt(gdt_descriptor: <span class="kw-2">&amp;</span>GdtDescriptor) {
     <span class="macro">asm!</span>(<span class="string">&quot;lgdt [{}]&quot;</span>, <span class="kw">in</span>(reg) gdt_descriptor, options(nostack));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

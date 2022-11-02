@@ -317,7 +317,7 @@
   ///
   /// This is undefined behavior regardless, so it could have been the nasal
   /// demons at that point anyway ;).
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>from_integer(value: <span class="self">Self</span>::Int) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>&gt; {
     <span class="comment">// Guard against an illegal implementation of Contiguous. Annoyingly we
     // can&#39;t rely on `transmute` to do this for us (see below), but
@@ -352,7 +352,7 @@
   ///
   /// This is undefined behavior regardless, so it could have been the nasal
   /// demons at that point anyway ;).
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>into_integer(<span class="self">self</span>) -&gt; <span class="self">Self</span>::Int {
     <span class="comment">// Guard against an illegal implementation of Contiguous. Annoyingly we
     // can&#39;t rely on `transmute` to do the size check for us (see
@@ -403,4 +403,4 @@
   NonZeroUsize <span class="kw">as </span>usize <span class="kw">in </span>[<span class="number">1</span>, usize::max_value()];
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bytemuck" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bytemuck" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

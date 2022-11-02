@@ -546,7 +546,7 @@
 <span class="kw">use </span><span class="kw">super</span>::inode::{FileContents, Metadata};
 <span class="kw">use super</span>::{FileSystem, FileSystemError, <span class="prelude-ty">Result</span>};
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>RamINode {
     id: usize,
     parent: INodeCacheWeakItem,
@@ -560,7 +560,7 @@
 <span class="kw">pub struct </span>LockedRamINode(RwLock&lt;RamINode&gt;);
 
 <span class="kw">impl </span>LockedRamINode {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>new(node: RamINode) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(RwLock::new(node))
     }
@@ -652,12 +652,12 @@
         ))
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>mkdir(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
         <span class="self">self</span>.make_inode(name, FileType::Directory, FileContents::None)
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>make_dev_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, marker: usize) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
         <span class="self">self</span>.make_inode(
             name,
@@ -666,12 +666,12 @@
         )
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>make_ramfs_inode(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, buffer: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;INodeCacheItem&gt; {
         <span class="self">self</span>.make_inode(name, FileType::File, FileContents::StaticContent(buffer))
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>make_local_socket_inode(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: <span class="kw-2">&amp;</span>str,
@@ -912,7 +912,7 @@
         }
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>weak_filesystem(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Weak&lt;<span class="kw">dyn </span>FileSystem&gt;&gt; {
         <span class="prelude-val">Some</span>(<span class="self">self</span>.<span class="number">0</span>.read().filesystem.clone())
     }
@@ -1003,10 +1003,10 @@
 }
 
 <span class="kw">impl </span>FileSystem <span class="kw">for </span>RamFs {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>root_dir(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; DirCacheItem {
         <span class="self">self</span>.root_dir.clone()
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

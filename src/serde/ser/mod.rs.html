@@ -2101,10 +2101,10 @@
 
 <span class="kw">pub use </span><span class="self">self</span>::impossible::Impossible;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[doc(no_inline)]
 </span><span class="kw">pub use </span>std::error::Error <span class="kw">as </span>StdError;
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
 #[doc(no_inline)]
 </span><span class="kw">pub use </span>std_error::Error <span class="kw">as </span>StdError;
 
@@ -2165,10 +2165,10 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">declare_error_trait!</span>(Error: Sized + StdError);
 
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
 </span><span class="macro">declare_error_trait!</span>(Error: Sized + Debug + Display);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
@@ -3266,13 +3266,13 @@
         <span class="kw">let </span>iter = iter.into_iter();
         <span class="kw">let </span><span class="kw-2">mut </span>serializer = <span class="macro">try!</span>(<span class="self">self</span>.serialize_seq(iterator_len_hint(<span class="kw-2">&amp;</span>iter)));
 
-        <span class="attribute">#[cfg(iterator_try_fold)]
+        <span class="attr">#[cfg(iterator_try_fold)]
         </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>iter = iter;
             <span class="macro">try!</span>(iter.try_for_each(|item| serializer.serialize_element(<span class="kw-2">&amp;</span>item)));
         }
 
-        <span class="attribute">#[cfg(not(iterator_try_fold))]
+        <span class="attr">#[cfg(not(iterator_try_fold))]
         </span>{
             <span class="kw">for </span>item <span class="kw">in </span>iter {
                 <span class="macro">try!</span>(serializer.serialize_element(<span class="kw-2">&amp;</span>item));
@@ -3317,13 +3317,13 @@
         <span class="kw">let </span>iter = iter.into_iter();
         <span class="kw">let </span><span class="kw-2">mut </span>serializer = <span class="macro">try!</span>(<span class="self">self</span>.serialize_map(iterator_len_hint(<span class="kw-2">&amp;</span>iter)));
 
-        <span class="attribute">#[cfg(iterator_try_fold)]
+        <span class="attr">#[cfg(iterator_try_fold)]
         </span>{
             <span class="kw">let </span><span class="kw-2">mut </span>iter = iter;
             <span class="macro">try!</span>(iter.try_for_each(|(key, value)| serializer.serialize_entry(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>value)));
         }
 
-        <span class="attribute">#[cfg(not(iterator_try_fold))]
+        <span class="attr">#[cfg(not(iterator_try_fold))]
         </span>{
             <span class="kw">for </span>(key, value) <span class="kw">in </span>iter {
                 <span class="macro">try!</span>(serializer.serialize_entry(<span class="kw-2">&amp;</span>key, <span class="kw-2">&amp;</span>value));
@@ -3363,7 +3363,7 @@
     ///
     /// [`String`]: https://doc.rust-lang.org/std/string/struct.String.html
     /// [`serialize_str`]: #tymethod.serialize_str
-    </span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    </span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
     </span><span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>T: Display,
@@ -3398,7 +3398,7 @@
     ///     }
     /// }
     /// ```
-    </span><span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    </span><span class="attr">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
     </span><span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, value: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>T: Display;
@@ -3451,7 +3451,7 @@
     /// human-readable to compact or vice versa should be regarded as a breaking
     /// change, as a value serialized in human-readable mode is not required to
     /// deserialize from the same data in compact mode.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>is_human_readable(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
         <span class="bool-val">true
     </span>}
@@ -3885,7 +3885,7 @@
         </span>T: Serialize;
 
     <span class="doccomment">/// Indicate that a struct field has been skipped.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>skip_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let _ </span>= key;
         <span class="prelude-val">Ok</span>(())
@@ -3951,7 +3951,7 @@
         </span>T: Serialize;
 
     <span class="doccomment">/// Indicate that a struct variant field has been skipped.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">fn </span>skip_field(<span class="kw-2">&amp;mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="self">Self</span>::Error&gt; {
         <span class="kw">let _ </span>= key;
         <span class="prelude-val">Ok</span>(())
@@ -3971,4 +3971,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

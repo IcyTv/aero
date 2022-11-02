@@ -4,7 +4,7 @@
 </div><span class="item-info"><div class="stab unstable"><span class="emoji">🔬</span><span>This is a nightly-only experimental API. (<code>pin_macro</code>)</span></div></span><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Constructs a <code><a href="struct.Pin.html" title="Pin">Pin</a>&lt;[&amp;mut] T&gt;</code>, by pinning<sup id="fnref1"><a href="#fn1">1</a></sup> a <code>value: T</code> <em>locally</em><sup id="fnref2"><a href="#fn2">2</a></sup>.</p>
 <p>Unlike <a href="../../std/boxed/struct.Box.html#method.pin"><code>Box::pin</code></a>, this does not involve a heap allocation.</p>
 <h3 id="examples"><a href="#examples">Examples</a></h3><h4 id="basic-usage"><a href="#basic-usage">Basic usage</a></h4>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(pin_macro)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#![feature(pin_macro)]
 </span><span class="kw">use </span>core::pin::{pin, Pin};
 
 <span class="kw">fn </span>stuff(foo: Pin&lt;<span class="kw-2">&amp;mut </span>Foo&gt;) {
@@ -16,7 +16,7 @@ stuff(pinned_foo);
 <span class="comment">// or, directly:
 </span>stuff(<span class="macro">pin!</span>(Foo { <span class="comment">/* … */ </span>}));</code></pre></div>
 <h4 id="manually-polling-a-future-without-unpin-bounds"><a href="#manually-polling-a-future-without-unpin-bounds">Manually polling a <code>Future</code> (without <code>Unpin</code> bounds)</a></h4>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(pin_macro)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#![feature(pin_macro)]
 </span><span class="kw">use </span>std::{
     future::Future,
     pin::pin,
@@ -38,7 +38,7 @@ stuff(pinned_foo);
     }
 }</code></pre></div>
 <h4 id="with-generators"><a href="#with-generators">With <code>Generator</code>s</a></h4>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(generators, generator_trait, pin_macro)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#![feature(generators, generator_trait, pin_macro)]
 </span><span class="kw">use </span>core::{
     ops::{Generator, GeneratorState},
     pin::pin,
@@ -76,7 +76,7 @@ stuff(pinned_foo);
 reference ends up borrowing a local tied to that block: it can’t escape it.</p>
 <p>The following, for instance, fails to compile:</p>
 
-<div class="example-wrap compile_fail"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(pin_macro)]
+<div class="example-wrap compile_fail"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="attr">#![feature(pin_macro)]
 </span><span class="kw">use </span>core::pin::{pin, Pin};
 
 <span class="kw">let </span>x: Pin&lt;<span class="kw-2">&amp;mut </span>Foo&gt; = {
@@ -114,4 +114,4 @@ See <a href="index.html#unpin" title="self">the <code>Unpin</code> section of th
 in the stack (<em>e.g.</em>, when within the body of a non-<code>async</code> function), the truth is that inside
 the body of an <code>async fn</code> or block —more generally, the body of a generator— any locals crossing
 an <code>.await</code> point —a <code>yield</code> point— end up being part of the state captured by the <code>Future</code> —by
-the <code>Generator</code>—, and thus will be stored wherever that one is.&nbsp;<a href="#fnref2">↩</a></p></li></ol></div></div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+the <code>Generator</code>—, and thus will be stored wherever that one is.&nbsp;<a href="#fnref2">↩</a></p></li></ol></div></div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

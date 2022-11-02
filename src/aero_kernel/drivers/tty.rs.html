@@ -904,9 +904,9 @@
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">super</span>::keyboard::KeyCode;
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">use </span><span class="kw">super</span>::keyboard::KeyboardListener;
 
 <span class="macro">lazy_static::lazy_static! </span>{
@@ -1214,7 +1214,7 @@
     }
 }
 
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">impl </span>KeyboardListener <span class="kw">for </span>Tty {
     <span class="kw">fn </span>on_key(<span class="kw-2">&amp;</span><span class="self">self</span>, key: KeyCode, released: bool) {
         <span class="kw">let </span><span class="kw-2">mut </span>state = <span class="self">self</span>.state.lock();
@@ -1741,7 +1741,7 @@
 
 <span class="kw">fn </span>init_tty() {
     <span class="comment">// TODO: aarch64 port
-    </span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span><span class="kw">super</span>::keyboard::register_keyboard_listener(TTY.as_ref().clone());
 
     devfs::install_device(TTY.clone()).expect(<span class="string">&quot;failed to register tty as a device&quot;</span>);
@@ -1749,4 +1749,4 @@
 
 <span class="macro">crate::module_init!</span>(init_tty);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

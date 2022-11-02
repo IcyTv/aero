@@ -715,9 +715,9 @@
 //! [macro]: https://docs.serde.rs/serde_json/macro.json.html
 //! [`serde-json-core`]: https://github.com/rust-embedded-community/serde-json-core
 
-</span><span class="attribute">#![doc(html_root_url = <span class="string">&quot;https://docs.rs/serde_json/1.0.74&quot;</span>)]
+</span><span class="attr">#![doc(html_root_url = <span class="string">&quot;https://docs.rs/serde_json/1.0.74&quot;</span>)]
 </span><span class="comment">// Ignored clippy lints
-</span><span class="attribute">#![allow(
+</span><span class="attr">#![allow(
     clippy::comparison_chain,
     clippy::deprecated_cfg_attr,
     clippy::doc_markdown,
@@ -735,7 +735,7 @@
     </span>clippy::unnested_or_patterns,
 )]
 </span><span class="comment">// Ignored clippy_pedantic lints
-</span><span class="attribute">#![allow(
+</span><span class="attr">#![allow(
     <span class="comment">// Deserializer::from_str, into_iter
     </span>clippy::should_implement_trait,
     <span class="comment">// integer and float ser/de requires these sorts of casts
@@ -777,19 +777,19 @@
 
 </span><span class="kw">extern crate </span>alloc;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::de::from_reader;
-<span class="attribute">#[doc(inline)]
+<span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::de::{from_slice, from_str, Deserializer, StreamDeserializer};
-<span class="attribute">#[doc(inline)]
+<span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::error::{Error, <span class="prelude-ty">Result</span>};
-<span class="attribute">#[doc(inline)]
+<span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::ser::{to_string, to_string_pretty, to_vec, to_vec_pretty};
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::ser::{to_writer, to_writer_pretty, Serializer};
-<span class="attribute">#[doc(inline)]
+<span class="attr">#[doc(inline)]
 </span><span class="kw">pub use </span><span class="kw">crate</span>::value::{from_value, to_value, Map, Number, Value};
 
 <span class="comment">// We only use our own error type; no need for From conversions provided by the
@@ -803,30 +803,30 @@
     };
 }
 
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">mod </span>macros;
 
 <span class="kw">pub mod </span>de;
 <span class="kw">pub mod </span>error;
 <span class="kw">pub mod </span>map;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[cfg_attr(docsrs, doc(cfg(feature = <span class="string">&quot;std&quot;</span>)))]
 </span><span class="kw">pub mod </span>ser;
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;std&quot;</span>))]
 </span><span class="kw">mod </span>ser;
 <span class="kw">pub mod </span>value;
 
 <span class="kw">mod </span>features_check;
 
 <span class="kw">mod </span>io;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">mod </span>iter;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;float_roundtrip&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;float_roundtrip&quot;</span>)]
 </span><span class="kw">mod </span>lexical;
 <span class="kw">mod </span>number;
 <span class="kw">mod </span>read;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;raw_value&quot;</span>)]
 </span><span class="kw">mod </span>raw;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

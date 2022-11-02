@@ -294,18 +294,18 @@
 /// ```
 </span><span class="kw">pub trait </span>Index: private::Sealed {
     <span class="doccomment">/// Return None if the key is not already in the array or object.
-    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">fn </span>index_into&lt;<span class="lifetime">&#39;v</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, v: <span class="kw-2">&amp;</span><span class="lifetime">&#39;v </span>Value) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;v </span>Value&gt;;
 
     <span class="doccomment">/// Return None if the key is not already in the array or object.
-    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">fn </span>index_into_mut&lt;<span class="lifetime">&#39;v</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, v: <span class="kw-2">&amp;</span><span class="lifetime">&#39;v </span><span class="kw-2">mut </span>Value) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;v </span><span class="kw-2">mut </span>Value&gt;;
 
     <span class="doccomment">/// Panic if array index out of bounds. If key is not already in the object,
     /// insert it with a value of null. Panic if Value is a type that cannot be
     /// indexed into, except if Value is null then it can be treated as an empty
     /// object.
-    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="attr">#[doc(hidden)]
     </span><span class="kw">fn </span>index_or_insert&lt;<span class="lifetime">&#39;v</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, v: <span class="kw-2">&amp;</span><span class="lifetime">&#39;v </span><span class="kw-2">mut </span>Value) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;v </span><span class="kw-2">mut </span>Value;
 }
 
@@ -515,4 +515,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

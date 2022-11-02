@@ -45,7 +45,7 @@
 <span class="kw">impl</span>&lt;T: Sync&gt; Lazy&lt;T&gt; {
     <span class="kw">pub const </span>INIT: <span class="self">Self </span>= Lazy(Once::INIT);
 
-    <span class="attribute">#[inline(always)]
+    <span class="attr">#[inline(always)]
     </span><span class="kw">pub fn </span>get&lt;F&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">self</span>, builder: F) -&gt; <span class="kw-2">&amp;</span>T
         <span class="kw">where </span>F: FnOnce() -&gt; T
     {
@@ -53,7 +53,7 @@
     }
 }
 
-<span class="attribute">#[macro_export]
+<span class="attr">#[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>__lazy_static_create {
     (<span class="macro-nonterminal">$NAME</span>:ident, <span class="macro-nonterminal">$T</span>:ty) =&gt; {
@@ -61,4 +61,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lazy_static" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lazy_static" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

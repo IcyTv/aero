@@ -367,7 +367,7 @@
             .map(|processors| {
                 <span class="kw">let </span><span class="kw-2">mut </span>cpu_info = <span class="macro">vec!</span>[];
 
-                <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+                <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
                 </span>tls::for_cpu_info_cached(|info| {
                     <span class="kw">let </span><span class="kw-2">mut </span>processor = <span class="macro">json!</span>({});
 
@@ -394,7 +394,7 @@
     })
 }
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">struct </span>ProcINode {
     id: usize,
     parent: INodeCacheWeakItem,
@@ -613,7 +613,7 @@
 }
 
 <span class="kw">impl </span>FileSystem <span class="kw">for </span>ProcFs {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>root_dir(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; DirCacheItem {
         <span class="self">self</span>.root_dir.clone()
     }
@@ -631,4 +631,4 @@
     <span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

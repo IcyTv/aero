@@ -158,7 +158,7 @@
 }
 
 <span class="doccomment">/// Connects the socket to the specified address.
-</span><span class="attribute">#[syscall]
+</span><span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>connect(fd: usize, address: usize, length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>address = socket_addr_from_addr(VirtAddr::new(address <span class="kw">as </span>u64))<span class="question-mark">?</span>;
     <span class="kw">let </span>file = scheduler::get_scheduler()
@@ -172,7 +172,7 @@
 }
 
 <span class="doccomment">/// Accept a connection on a socket.
-</span><span class="attribute">#[syscall]
+</span><span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>accept(
     fd: usize,
     address: usize,
@@ -197,7 +197,7 @@
     <span class="prelude-val">Ok</span>(handle)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>sock_recv(
     sockfd: usize,
     header: <span class="kw-2">&amp;mut </span>MessageHeader,
@@ -216,7 +216,7 @@
 
 <span class="doccomment">/// Marks the socket as a passive socket (i.e. as a socket that will be used to accept incoming
 /// connection requests).
-</span><span class="attribute">#[syscall]
+</span><span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>listen(fd: usize, backlog: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>file = scheduler::get_scheduler()
         .current_task()
@@ -228,7 +228,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>socket(domain: usize, socket_type: usize, protocol: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>socket = <span class="kw">match </span>domain <span class="kw">as </span>u32 {
         AF_UNIX =&gt; UnixSocket::new(),
@@ -250,7 +250,7 @@
     <span class="prelude-val">Ok</span>(fd)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>bind(fd: usize, address: usize, length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>address = socket_addr_from_addr(VirtAddr::new(address <span class="kw">as </span>u64))<span class="question-mark">?</span>;
 
@@ -271,4 +271,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

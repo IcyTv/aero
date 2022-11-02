@@ -200,7 +200,7 @@
     <span class="prelude-val">Ok</span>(msg.data.len())
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>send(pid: usize, payload: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>target = get_scheduler()
         .find_task(TaskId::new(pid))
@@ -221,7 +221,7 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>recv(pid_ptr: <span class="kw-2">&amp;mut </span>usize, output: <span class="kw-2">&amp;mut </span>[u8], block: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">let </span>current = get_scheduler().current_task();
 
@@ -258,7 +258,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>discover_root() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">match </span>IPC_ROOT_NODE.get() {
         <span class="prelude-val">Some</span>(pid) =&gt; <span class="prelude-val">Ok</span>(<span class="kw-2">*</span>pid),
@@ -266,7 +266,7 @@
     }
 }
 
-<span class="attribute">#[syscall]
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>become_root() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">if </span>IPC_ROOT_NODE.is_completed() {
         <span class="prelude-val">Err</span>(SyscallError::EINVAL)
@@ -277,4 +277,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -308,7 +308,7 @@
 ///     data.0, data.1, private_data);
 /// # }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>log {
     <span class="comment">// log!(target: &quot;my_target&quot;, Level::Info; key1 = 42, key2 = true; &quot;a {} event&quot;, &quot;log&quot;);
     </span>(target: <span class="macro-nonterminal">$target</span>:expr, <span class="macro-nonterminal">$lvl</span>:expr, $(<span class="macro-nonterminal">$key</span>:tt = <span class="macro-nonterminal">$value</span>:expr),+; $(<span class="macro-nonterminal">$arg</span>:tt)+) =&gt; ({
@@ -354,7 +354,7 @@
 /// error!(target: &quot;app_events&quot;, &quot;App Error: {}, Port: {}&quot;, err_info, 22);
 /// # }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>error {
     <span class="comment">// error!(target: &quot;my_target&quot;, key1 = 42, key2 = true; &quot;a {} event&quot;, &quot;log&quot;)
     // error!(target: &quot;my_target&quot;, &quot;a {} event&quot;, &quot;log&quot;)
@@ -378,7 +378,7 @@
 /// warn!(target: &quot;input_events&quot;, &quot;App received warning: {}&quot;, warn_description);
 /// # }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>warn {
     <span class="comment">// warn!(target: &quot;my_target&quot;, key1 = 42, key2 = true; &quot;a {} event&quot;, &quot;log&quot;)
     // warn!(target: &quot;my_target&quot;, &quot;a {} event&quot;, &quot;log&quot;)
@@ -404,7 +404,7 @@
 ///       conn_info.port, conn_info.speed);
 /// # }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>info {
     <span class="comment">// info!(target: &quot;my_target&quot;, key1 = 42, key2 = true; &quot;a {} event&quot;, &quot;log&quot;)
     // info!(target: &quot;my_target&quot;, &quot;a {} event&quot;, &quot;log&quot;)
@@ -429,7 +429,7 @@
 /// debug!(target: &quot;app_events&quot;, &quot;New position: x: {}, y: {}&quot;, pos.x, pos.y);
 /// # }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>debug {
     <span class="comment">// debug!(target: &quot;my_target&quot;, key1 = 42, key2 = true; &quot;a {} event&quot;, &quot;log&quot;)
     // debug!(target: &quot;my_target&quot;, &quot;a {} event&quot;, &quot;log&quot;)
@@ -456,7 +456,7 @@
 ///        if pos.y &gt;= 0.0 { &quot;positive&quot; } else { &quot;negative&quot; });
 /// # }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>trace {
     <span class="comment">// trace!(target: &quot;my_target&quot;, key1 = 42, key2 = true; &quot;a {} event&quot;, &quot;log&quot;)
     // trace!(target: &quot;my_target&quot;, &quot;a {} event&quot;, &quot;log&quot;)
@@ -492,7 +492,7 @@
 /// # fn expensive_call() -&gt; Data { Data { x: 0, y: 0 } }
 /// # fn main() {}
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>log_enabled {
     (target: <span class="macro-nonterminal">$target</span>:expr, <span class="macro-nonterminal">$lvl</span>:expr) =&gt; {{
         <span class="kw">let </span>lvl = <span class="macro-nonterminal">$lvl</span>;
@@ -515,7 +515,7 @@
 // This is a workaround until we drop support for pre-1.30 compilers. At that
 // point we can remove use of local_inner_macros, use $crate:: when invoking
 // local macros, and invoke format_args directly.
-</span><span class="attribute">#[doc(hidden)]
+</span><span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__log_format_args {
     ($(<span class="macro-nonterminal">$args</span>:tt)<span class="kw-2">*</span>) =&gt; {
@@ -523,7 +523,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__log_module_path {
     () =&gt; {
@@ -531,7 +531,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__log_file {
     () =&gt; {
@@ -539,7 +539,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__log_line {
     () =&gt; {
@@ -547,7 +547,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__log_key {
     <span class="comment">// key1 = 42
@@ -560,4 +560,4 @@
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="log" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="log" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

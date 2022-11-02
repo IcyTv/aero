@@ -42,7 +42,7 @@
 <span id="42">42</span>
 <span id="43">43</span>
 </pre><pre class="rust"><code><span class="doccomment">/// Multiply unsigned 128 bit integers, return upper 128 bits of the result
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">fn </span>u128_mulhi(x: u128, y: u128) -&gt; u128 {
     <span class="kw">let </span>x_lo = x <span class="kw">as </span>u64;
     <span class="kw">let </span>x_hi = (x &gt;&gt; <span class="number">64</span>) <span class="kw">as </span>u64;
@@ -68,7 +68,7 @@
 ///   in Proc. of the SIGPLAN94 Conference on Programming Language Design and
 ///   Implementation, 1994, pp. 61–72
 ///
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>udivmod_1e19(n: u128) -&gt; (u128, u64) {
     <span class="kw">let </span>d = <span class="number">10_000_000_000_000_000_000_u64</span>; <span class="comment">// 10^19
 
@@ -85,4 +85,4 @@
     (quot, rem)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="itoa" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="itoa" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

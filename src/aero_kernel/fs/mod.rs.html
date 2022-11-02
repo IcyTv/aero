@@ -385,7 +385,7 @@
 <span class="kw">pub type </span><span class="prelude-ty">Result</span>&lt;T&gt; = core::result::Result&lt;T, FileSystemError&gt;;
 <span class="kw">type </span>MountKey = (usize, String);
 
-<span class="attribute">#[derive(Clone)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">struct </span>MountPoint {
     filesystem: Arc&lt;<span class="kw">dyn </span>FileSystem&gt;,
 
@@ -393,11 +393,11 @@
     origin_entry: DirCacheItem,
 }
 
-<span class="attribute">#[repr(transparent)]
+<span class="attr">#[repr(transparent)]
 </span><span class="kw">pub struct </span>MountManager(Mutex&lt;BTreeMap&lt;MountKey, MountPoint&gt;&gt;);
 
 <span class="kw">impl </span>MountManager {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(Mutex::new(BTreeMap::new()))
     }
@@ -451,7 +451,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, PartialEq)]
+<span class="attr">#[derive(Debug, PartialEq)]
 </span><span class="kw">pub enum </span>FileSystemError {
     NotSupported,
     EntryExists,
@@ -491,7 +491,7 @@
 }
 
 <span class="doccomment">/// A slice of a path (akin to [str]).
-</span><span class="attribute">#[derive(Debug)]
+</span><span class="attr">#[derive(Debug)]
 </span><span class="kw">pub struct </span>Path(str);
 
 <span class="kw">impl </span>Path {
@@ -542,7 +542,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, PartialEq)]
+<span class="attr">#[derive(Debug, PartialEq)]
 </span><span class="kw">pub enum </span>LookupMode {
     <span class="prelude-val">None</span>,
     <span class="doccomment">/// Creates the file if it does not exist.
@@ -665,4 +665,4 @@
     </span><span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

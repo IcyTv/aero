@@ -1206,7 +1206,7 @@
 <span class="kw">const </span>ELF_PT1_SIZE: usize = core::mem::size_of::&lt;HeaderPt1&gt;();
 <span class="kw">const </span>ELF_PT2_64_SIZE: usize = core::mem::size_of::&lt;HeaderPt2_&lt;P64&gt;&gt;();
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">pub enum </span>ElfLoadError {
     <span class="doccomment">/// Unexpected file system error occured on an IO operation on the file.
     </span>IOError(FileSystemError),
@@ -1485,7 +1485,7 @@
     <span class="kw">pub </span>envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
 }
 
-<span class="attribute">#[derive(Clone)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">pub struct </span>MMapFile {
     offset: usize,
     file: DirCacheItem,
@@ -1493,13 +1493,13 @@
 }
 
 <span class="kw">impl </span>MMapFile {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>new(file: DirCacheItem, offset: usize, size: usize) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{ file, offset, size }
     }
 }
 
-<span class="attribute">#[derive(Clone)]
+<span class="attr">#[derive(Clone)]
 </span><span class="kw">struct </span>Mapping {
     protection: MMapProt,
     flags: MMapFlags,
@@ -2317,4 +2317,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

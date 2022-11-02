@@ -1312,7 +1312,7 @@
 
 <span class="kw">use </span>ser::{<span class="self">self</span>, Impossible, Serialize, SerializeMap, SerializeStruct, Serializer};
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">use </span><span class="self">self</span>::content::{
     Content, ContentSerializer, SerializeStructVariantAsMapValue, SerializeTupleVariantAsMapValue,
 };
@@ -1362,7 +1362,7 @@
     ByteArray,
     Optional,
     Unit,
-    <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
     </span>UnitStruct,
     Sequence,
     Tuple,
@@ -1381,7 +1381,7 @@
             Unsupported::ByteArray =&gt; formatter.write_str(<span class="string">&quot;a byte array&quot;</span>),
             Unsupported::Optional =&gt; formatter.write_str(<span class="string">&quot;an optional&quot;</span>),
             Unsupported::Unit =&gt; formatter.write_str(<span class="string">&quot;unit&quot;</span>),
-            <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+            <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
             </span>Unsupported::UnitStruct =&gt; formatter.write_str(<span class="string">&quot;unit struct&quot;</span>),
             Unsupported::Sequence =&gt; formatter.write_str(<span class="string">&quot;a sequence&quot;</span>),
             Unsupported::Tuple =&gt; formatter.write_str(<span class="string">&quot;a tuple&quot;</span>),
@@ -1416,14 +1416,14 @@
     <span class="kw">type </span>SerializeMap = S::SerializeMap;
     <span class="kw">type </span>SerializeStruct = S::SerializeStruct;
 
-    <span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    <span class="attr">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
     </span><span class="kw">type </span>SerializeTupleVariant = Impossible&lt;S::Ok, S::Error&gt;;
-    <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
     </span><span class="kw">type </span>SerializeTupleVariant = SerializeTupleVariantAsMapValue&lt;S::SerializeMap&gt;;
 
-    <span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    <span class="attr">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
     </span><span class="kw">type </span>SerializeStructVariant = Impossible&lt;S::Ok, S::Error&gt;;
-    <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
     </span><span class="kw">type </span>SerializeStructVariant = SerializeStructVariantAsMapValue&lt;S::SerializeMap&gt;;
 
     <span class="kw">fn </span>serialize_bool(<span class="self">self</span>, <span class="kw">_</span>: bool) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt; {
@@ -1558,7 +1558,7 @@
         <span class="prelude-val">Err</span>(<span class="self">self</span>.bad_type(Unsupported::TupleStruct))
     }
 
-    <span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    <span class="attr">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
     </span><span class="kw">fn </span>serialize_tuple_variant(
         <span class="self">self</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -1571,7 +1571,7 @@
         </span><span class="prelude-val">Err</span>(<span class="self">self</span>.bad_type(Unsupported::Enum))
     }
 
-    <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
     </span><span class="kw">fn </span>serialize_tuple_variant(
         <span class="self">self</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -1605,7 +1605,7 @@
         <span class="prelude-val">Ok</span>(state)
     }
 
-    <span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    <span class="attr">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
     </span><span class="kw">fn </span>serialize_struct_variant(
         <span class="self">self</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -1618,7 +1618,7 @@
         </span><span class="prelude-val">Err</span>(<span class="self">self</span>.bad_type(Unsupported::Enum))
     }
 
-    <span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+    <span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
     </span><span class="kw">fn </span>serialize_struct_variant(
         <span class="self">self</span>,
         <span class="kw">_</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -1636,7 +1636,7 @@
         ))
     }
 
-    <span class="attribute">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+    <span class="attr">#[cfg(not(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
     </span><span class="kw">fn </span>collect_str&lt;T: <span class="question-mark">?</span>Sized&gt;(<span class="self">self</span>, <span class="kw">_</span>: <span class="kw-2">&amp;</span>T) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>::Ok, <span class="self">Self</span>::Error&gt;
     <span class="kw">where
         </span>T: Display,
@@ -1645,7 +1645,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">mod </span>content {
     <span class="kw">use </span>lib::<span class="kw-2">*</span>;
 
@@ -2306,10 +2306,10 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapSerializer&lt;<span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>&gt;(<span class="kw">pub </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; FlatMapSerializer&lt;<span class="lifetime">&#39;a</span>, M&gt;
 <span class="kw">where
     </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
@@ -2322,7 +2322,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; Serializer <span class="kw">for </span>FlatMapSerializer&lt;<span class="lifetime">&#39;a</span>, M&gt;
 <span class="kw">where
     </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
@@ -2500,10 +2500,10 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapSerializeMap&lt;<span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; ser::SerializeMap <span class="kw">for </span>FlatMapSerializeMap&lt;<span class="lifetime">&#39;a</span>, M&gt;
 <span class="kw">where
     </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
@@ -2542,10 +2542,10 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapSerializeStruct&lt;<span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; ser::SerializeStruct <span class="kw">for </span>FlatMapSerializeStruct&lt;<span class="lifetime">&#39;a</span>, M&gt;
 <span class="kw">where
     </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
@@ -2569,14 +2569,14 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapSerializeStructVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M: <span class="lifetime">&#39;a</span>&gt; {
     map: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>M,
     name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
     fields: Vec&lt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, Content)&gt;,
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; FlatMapSerializeStructVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt;
 <span class="kw">where
     </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
@@ -2590,7 +2590,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, M&gt; ser::SerializeStructVariant <span class="kw">for </span>FlatMapSerializeStructVariantAsMapValue&lt;<span class="lifetime">&#39;a</span>, M&gt;
 <span class="kw">where
     </span>M: SerializeMap + <span class="lifetime">&#39;a</span>,
@@ -2619,4 +2619,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

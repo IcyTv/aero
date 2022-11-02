@@ -301,13 +301,13 @@
 <span class="kw">impl </span>LockedHeap {
     <span class="doccomment">/// Creates a new uninitialized instance of the kernel
     /// global allocator.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub const fn </span>new_uninit() -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(Allocator::new())
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
 </span><span class="kw">mod </span>kmemleak {
     <span class="kw">use </span>core::alloc::Layout;
     <span class="kw">use </span>core::sync::atomic::{AtomicBool, Ordering};
@@ -421,7 +421,7 @@
         // lock the interrupts during the allocation.
         </span><span class="kw">let </span>ptr = <span class="self">self</span>.<span class="number">0</span>.alloc(layout);
 
-        <span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
+        <span class="attr">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
         </span>kmemleak::MEM_LEAK_CATCHER.track_caller(ptr, layout);
 
         ptr
@@ -431,7 +431,7 @@
         <span class="comment">// SAFETY: We we need to be careful to not cause a deadlock as the interrupt
         // handlers utilize the heap and might interrupt an in-progress de-allocation. So, we
         // lock the interrupts during the de-allocation.
-        </span><span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
+        </span><span class="attr">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
         </span>kmemleak::MEM_LEAK_CATCHER.unref(ptr);
 
         <span class="self">self</span>.<span class="number">0</span>.dealloc(ptr, layout)
@@ -456,7 +456,7 @@
     }
 }
 
-<span class="attribute">#[alloc_error_handler]
+<span class="attr">#[alloc_error_handler]
 </span><span class="kw">fn </span>alloc_error_handler(layout: alloc::Layout) -&gt; ! {
     <span class="macro">panic!</span>(
         <span class="string">&quot;Allocation error with size {} and layout {}&quot;</span>,
@@ -469,8 +469,8 @@
 </span><span class="kw">pub fn </span>init_heap() {
     vmalloc::init();
 
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;kmemleak&quot;</span>)]
     </span>kmemleak::MEM_LEAK_CATCHER.init();
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

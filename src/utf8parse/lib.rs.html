@@ -135,7 +135,7 @@
 //! This module implements a table-driven UTF-8 parser which should
 //! theoretically contain the minimal number of branches (1). The only branch is
 //! on the `Action` returned from unpacking a transition.
-</span><span class="attribute">#![deny(clippy::all, clippy::if_not_else, clippy::enum_glob_use, clippy::wrong_pub_self_convention)]
+</span><span class="attr">#![deny(clippy::all, clippy::if_not_else, clippy::enum_glob_use, clippy::wrong_pub_self_convention)]
 #![cfg_attr(all(feature = <span class="string">&quot;nightly&quot;</span>, test), feature(test))]
 #![no_std]
 
@@ -157,7 +157,7 @@
 <span class="doccomment">/// A parser for Utf8 Characters
 ///
 /// Repeatedly call `advance` with bytes to emit Utf8 characters
-</span><span class="attribute">#[derive(Default)]
+</span><span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>Parser {
     point: u32,
     state: State,
@@ -223,7 +223,7 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;nightly&quot;</span>, test))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;nightly&quot;</span>, test))]
 </span><span class="kw">mod </span>benches {
     <span class="kw">extern crate </span>std;
     <span class="kw">extern crate </span>test;
@@ -242,7 +242,7 @@
         <span class="kw">fn </span>invalid_sequence(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {}
     }
 
-    <span class="attribute">#[bench]
+    <span class="attr">#[bench]
     </span><span class="kw">fn </span>parse_bench_utf8_demo(b: <span class="kw-2">&amp;mut </span>Bencher) {
         <span class="kw">let </span><span class="kw-2">mut </span>parser = Parser::new();
 
@@ -253,7 +253,7 @@
         })
     }
 
-    <span class="attribute">#[bench]
+    <span class="attr">#[bench]
     </span><span class="kw">fn </span>std_string_parse_utf8(b: <span class="kw-2">&amp;mut </span>Bencher) {
         b.iter(|| {
             <span class="kw">for </span>c <span class="kw">in </span>std::str::from_utf8(UTF8_DEMO).unwrap().chars() {
@@ -263,4 +263,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="utf8parse" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="utf8parse" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

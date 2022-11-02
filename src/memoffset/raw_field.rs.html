@@ -103,7 +103,7 @@
 // SOFTWARE.
 
 </span><span class="doccomment">/// `raw_const!`, or just ref-then-cast when that is not available.
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;unstable_raw&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;unstable_raw&quot;</span>)]
 #[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>_memoffset__raw_const {
@@ -111,7 +111,7 @@
         <span class="macro-nonterminal">$</span><span class="macro">crate::ptr::raw_const!</span>(<span class="macro-nonterminal">$path</span>)
     }};
 }
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;unstable_raw&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;unstable_raw&quot;</span>))]
 #[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>_memoffset__raw_const {
@@ -123,7 +123,7 @@
 }
 
 <span class="doccomment">/// Deref-coercion protection macro.
-</span><span class="attribute">#[cfg(allow_clippy)]
+</span><span class="attr">#[cfg(allow_clippy)]
 #[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>_memoffset__field_check {
@@ -131,11 +131,11 @@
         <span class="comment">// Make sure the field actually exists. This line ensures that a
         // compile-time error is generated if $field is accessed through a
         // Deref impl.
-        </span><span class="attribute">#[allow(clippy::unneeded_field_pattern)]
+        </span><span class="attr">#[allow(clippy::unneeded_field_pattern)]
         </span><span class="kw">let </span><span class="macro-nonterminal">$</span><span class="kw">type </span>{ <span class="macro-nonterminal">$field</span>: <span class="kw">_</span>, .. };
     };
 }
-<span class="attribute">#[cfg(not(allow_clippy))]
+<span class="attr">#[cfg(not(allow_clippy))]
 #[macro_export]
 #[doc(hidden)]
 </span><span class="macro">macro_rules! </span>_memoffset__field_check {
@@ -152,7 +152,7 @@
 ///
 /// The `base` pointer *must not* be dangling, but it *may* point to
 /// uninitialized memory.
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>raw_field {
     (<span class="macro-nonterminal">$base</span>:expr, <span class="macro-nonterminal">$parent</span>:path, <span class="macro-nonterminal">$field</span>:tt) =&gt; {{
         <span class="macro">_memoffset__field_check!</span>(<span class="macro-nonterminal">$parent</span>, <span class="macro-nonterminal">$field</span>);
@@ -160,11 +160,11 @@
         <span class="comment">// Get the field address.
         // Crucially, we know that this will not trigger a deref coercion because
         // of the field check we did above.
-        </span><span class="attribute">#[allow(unused_unsafe)] </span><span class="comment">// for when the macro is used in an unsafe block
+        </span><span class="attr">#[allow(unused_unsafe)] </span><span class="comment">// for when the macro is used in an unsafe block
         </span><span class="kw">unsafe </span>{
             <span class="macro">_memoffset__raw_const!</span>((<span class="kw-2">*</span>(<span class="macro-nonterminal">$base </span><span class="kw">as </span><span class="kw-2">*const </span><span class="macro-nonterminal">$parent</span>)).<span class="macro-nonterminal">$field</span>)
         }
     }};
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

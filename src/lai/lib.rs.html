@@ -39,7 +39,7 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
-</pre><pre class="rust"><code><span class="attribute">#![no_std]
+</pre><pre class="rust"><code><span class="attr">#![no_std]
 
 </span><span class="kw">mod </span>helper;
 <span class="kw">mod </span>host;
@@ -50,13 +50,13 @@
 <span class="kw">extern crate </span>alloc;
 
 <span class="doccomment">/// Initializes the ACPI revision.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>set_acpi_revision(revision: i32) {
     <span class="kw">unsafe </span>{ raw::lai_set_acpi_revision(revision) }
 }
 
 <span class="doccomment">/// Creates the ACPI namespace.
-</span><span class="attribute">#[inline]
+</span><span class="attr">#[inline]
 </span><span class="kw">pub fn </span>create_namespace() {
     <span class="kw">unsafe </span>{ raw::lai_create_namespace() }
 }
@@ -81,4 +81,4 @@
     <span class="kw">unsafe </span>{ <span class="macro">assert_eq!</span>(raw::lai_acpi_reset(), raw::LAI_SUCCESS) }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="lai" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

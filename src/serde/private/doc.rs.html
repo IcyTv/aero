@@ -163,7 +163,7 @@
 
 <span class="kw">use </span>ser;
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>Error;
 
@@ -176,7 +176,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>error::Error <span class="kw">for </span>Error {
     <span class="kw">fn </span>description(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
         <span class="macro">unimplemented!</span>()
@@ -189,7 +189,7 @@
     }
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__private_serialize {
     () =&gt; {
@@ -201,7 +201,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>__serialize_unimplemented {
     ($(<span class="macro-nonterminal">$func</span>:ident)<span class="kw-2">*</span>) =&gt; {
@@ -211,7 +211,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>__serialize_unimplemented_method {
     (<span class="macro-nonterminal">$func</span>:ident $(&lt;<span class="macro-nonterminal">$t</span>:ident&gt;)* ($(<span class="macro-nonterminal">$arg</span>:ty),<span class="kw-2">*</span>) -&gt; <span class="macro-nonterminal">$ret</span>:ident) =&gt; {
@@ -221,7 +221,7 @@
     };
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 #[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>__serialize_unimplemented_helper {
     (bool) =&gt; {
@@ -317,4 +317,4 @@
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

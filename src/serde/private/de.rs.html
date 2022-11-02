@@ -2987,10 +2987,10 @@
 <span class="kw">use </span>de::value::{BorrowedBytesDeserializer, BytesDeserializer};
 <span class="kw">use </span>de::{Deserialize, Deserializer, Error, IntoDeserializer, Visitor};
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">use </span>de::{DeserializeSeed, MapAccess, Unexpected};
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub use </span><span class="self">self</span>::content::{
     Content, ContentDeserializer, ContentRefDeserializer, EnumDeserializer,
     InternallyTaggedUnitVisitor, TagContentOtherField, TagContentOtherFieldVisitor,
@@ -3039,7 +3039,7 @@
     Deserialize::deserialize(deserializer)
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub fn </span>borrow_cow_str&lt;<span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, D, R&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;R, D::Error&gt;
 <span class="kw">where
     </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -3112,7 +3112,7 @@
     deserializer.deserialize_str(CowStrVisitor).map(From::from)
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub fn </span>borrow_cow_bytes&lt;<span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;a</span>, D, R&gt;(deserializer: D) -&gt; <span class="prelude-ty">Result</span>&lt;R, D::Error&gt;
 <span class="kw">where
     </span>D: Deserializer&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -3175,7 +3175,7 @@
         .map(From::from)
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">mod </span>content {
     <span class="comment">// This module is private and nothing here should be used outside of
     // generated code.
@@ -3200,7 +3200,7 @@
     /// deserializing untagged enums and internally tagged enums.
     ///
     /// Not public API. Use serde-value instead.
-    </span><span class="attribute">#[derive(Debug, Clone)]
+    </span><span class="attr">#[derive(Debug, Clone)]
     </span><span class="kw">pub enum </span>Content&lt;<span class="lifetime">&#39;de</span>&gt; {
         Bool(bool),
 
@@ -3243,7 +3243,7 @@
             }
         }
 
-        <span class="attribute">#[cold]
+        <span class="attr">#[cold]
         </span><span class="kw">fn </span>unexpected(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Unexpected {
             <span class="kw">match </span><span class="kw-2">*</span><span class="self">self </span>{
                 Content::Bool(b) =&gt; Unexpected::Bool(b),
@@ -3986,7 +3986,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="attribute">#[cold]
+        <span class="attr">#[cold]
         </span><span class="kw">fn </span>invalid_type(<span class="self">self</span>, exp: <span class="kw-2">&amp;</span>Expected) -&gt; E {
             de::Error::invalid_type(<span class="self">self</span>.content.unexpected(), exp)
         }
@@ -4584,7 +4584,7 @@
     {
         <span class="kw">type </span>Error = E;
 
-        <span class="attribute">#[inline]
+        <span class="attr">#[inline]
         </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="kw-2">mut </span><span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
         <span class="kw">where
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4693,7 +4693,7 @@
     {
         <span class="kw">type </span>Error = E;
 
-        <span class="attribute">#[inline]
+        <span class="attr">#[inline]
         </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
         <span class="kw">where
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -4718,7 +4718,7 @@
     <span class="kw">where
         </span>E: de::Error,
     {
-        <span class="attribute">#[cold]
+        <span class="attr">#[cold]
         </span><span class="kw">fn </span>invalid_type(<span class="self">self</span>, exp: <span class="kw-2">&amp;</span>Expected) -&gt; E {
             de::Error::invalid_type(<span class="self">self</span>.content.unexpected(), exp)
         }
@@ -5294,7 +5294,7 @@
     {
         <span class="kw">type </span>Error = E;
 
-        <span class="attribute">#[inline]
+        <span class="attr">#[inline]
         </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="kw-2">mut </span><span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
         <span class="kw">where
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -5405,7 +5405,7 @@
     {
         <span class="kw">type </span>Error = E;
 
-        <span class="attribute">#[inline]
+        <span class="attr">#[inline]
         </span><span class="kw">fn </span>deserialize_any&lt;V&gt;(<span class="self">self</span>, visitor: V) -&gt; <span class="prelude-ty">Result</span>&lt;V::Value, <span class="self">Self</span>::Error&gt;
         <span class="kw">where
             </span>V: de::Visitor&lt;<span class="lifetime">&#39;de</span>&gt;,
@@ -5663,13 +5663,13 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapDeserializer&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, E&gt;(
     <span class="kw">pub </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>Vec&lt;<span class="prelude-ty">Option</span>&lt;(Content&lt;<span class="lifetime">&#39;de</span>&gt;, Content&lt;<span class="lifetime">&#39;de</span>&gt;)&gt;&gt;,
     <span class="kw">pub </span>PhantomData&lt;E&gt;,
 );
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; FlatMapDeserializer&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt;
 <span class="kw">where
     </span>E: Error,
@@ -5679,7 +5679,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">macro_rules! </span>forward_to_deserialize_other {
     ($(<span class="macro-nonterminal">$func</span>:ident ( $(<span class="macro-nonterminal">$arg</span>:ty),* ))<span class="kw-2">*</span>) =&gt; {
         $(
@@ -5693,7 +5693,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; Deserializer&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>FlatMapDeserializer&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt;
 <span class="kw">where
     </span>E: Error,
@@ -5810,14 +5810,14 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatMapAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, E&gt; {
     iter: slice::Iter&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;(Content&lt;<span class="lifetime">&#39;de</span>&gt;, Content&lt;<span class="lifetime">&#39;de</span>&gt;)&gt;&gt;,
     pending_content: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Content&lt;<span class="lifetime">&#39;de</span>&gt;&gt;,
     _marker: PhantomData&lt;E&gt;,
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; FlatMapAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; {
     <span class="kw">fn </span>new(
         iter: slice::Iter&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;(Content&lt;<span class="lifetime">&#39;de</span>&gt;, Content&lt;<span class="lifetime">&#39;de</span>&gt;)&gt;&gt;,
@@ -5830,7 +5830,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; MapAccess&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>FlatMapAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt;
 <span class="kw">where
     </span>E: Error,
@@ -5862,7 +5862,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatStructAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, E&gt; {
     iter: slice::IterMut&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;(Content&lt;<span class="lifetime">&#39;de</span>&gt;, Content&lt;<span class="lifetime">&#39;de</span>&gt;)&gt;&gt;,
     pending_content: <span class="prelude-ty">Option</span>&lt;Content&lt;<span class="lifetime">&#39;de</span>&gt;&gt;,
@@ -5870,7 +5870,7 @@
     _marker: PhantomData&lt;E&gt;,
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; FlatStructAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; {
     <span class="kw">fn </span>new(
         iter: slice::IterMut&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;(Content&lt;<span class="lifetime">&#39;de</span>&gt;, Content&lt;<span class="lifetime">&#39;de</span>&gt;)&gt;&gt;,
@@ -5885,7 +5885,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; MapAccess&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>FlatStructAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt;
 <span class="kw">where
     </span>E: Error,
@@ -5925,14 +5925,14 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">pub struct </span>FlatInternallyTaggedAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>: <span class="lifetime">&#39;a</span>, E&gt; {
     iter: slice::IterMut&lt;<span class="lifetime">&#39;a</span>, <span class="prelude-ty">Option</span>&lt;(Content&lt;<span class="lifetime">&#39;de</span>&gt;, Content&lt;<span class="lifetime">&#39;de</span>&gt;)&gt;&gt;,
     pending: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Content&lt;<span class="lifetime">&#39;de</span>&gt;&gt;,
     _marker: PhantomData&lt;E&gt;,
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt; MapAccess&lt;<span class="lifetime">&#39;de</span>&gt; <span class="kw">for </span>FlatInternallyTaggedAccess&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;de</span>, E&gt;
 <span class="kw">where
     </span>E: Error,
@@ -5967,4 +5967,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

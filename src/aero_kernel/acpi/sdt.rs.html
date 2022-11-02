@@ -100,7 +100,7 @@
 
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">pub struct </span>Sdt {
     <span class="kw">pub</span>(<span class="kw">super</span>) signature: [u8; <span class="number">4</span>],
     <span class="kw">pub</span>(<span class="kw">super</span>) length: u32,
@@ -128,13 +128,13 @@
     }
 
     <span class="doccomment">/// Get SDT from its address.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>from_address(address: VirtAddr) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="self">Self </span>{
         <span class="kw-2">&amp;*</span>(address.as_mut_ptr::&lt;<span class="self">Self</span>&gt;())
     }
 
     <span class="doccomment">/// Get the address of this tables data.
-    </span><span class="attribute">#[inline]
+    </span><span class="attr">#[inline]
     </span><span class="kw">pub fn </span>data_address(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span>usize + mem::size_of::&lt;<span class="self">Self</span>&gt;()
     }
@@ -151,10 +151,10 @@
         </span>}
     }
 
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub unsafe fn </span>as_ref&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>T {
         <span class="kw-2">&amp;*</span>(<span class="self">self </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>T)
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

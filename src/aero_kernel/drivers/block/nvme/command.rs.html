@@ -379,53 +379,53 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="attribute">#[repr(u8)]
+</span><span class="attr">#[repr(u8)]
 #[derive(Default, Copy, Clone)]
 </span><span class="kw">pub enum </span>IdentifyCns {
     Namespace = <span class="number">0x00</span>,
     Controller = <span class="number">0x01</span>,
     ActivateList = <span class="number">0x2</span>,
 
-    <span class="attribute">#[default]
+    <span class="attr">#[default]
     </span>Unknown = u8::MAX,
 }
 
 <span class="macro">bitflags::bitflags! </span>{
-    <span class="attribute">#[derive(Default)]
+    <span class="attr">#[derive(Default)]
     </span><span class="kw">pub struct </span>CommandFlags: u16 {
         <span class="kw">const </span>QUEUE_PHYS_CONTIG = <span class="number">1 </span>&lt;&lt; <span class="number">0</span>;
         <span class="kw">const </span>CQ_IRQ_ENABLED = <span class="number">1 </span>&lt;&lt; <span class="number">1</span>;
     }
 }
 
-<span class="attribute">#[repr(u8)]
+<span class="attr">#[repr(u8)]
 #[derive(Default, Copy, Clone)]
 </span><span class="kw">pub enum </span>CommandOpcode {
     Read = <span class="number">0x2</span>,
 
-    <span class="attribute">#[default]
+    <span class="attr">#[default]
     </span>Unknown = u8::MAX,
 }
 
-<span class="attribute">#[repr(u8)]
+<span class="attr">#[repr(u8)]
 #[derive(Default, Copy, Clone)]
 </span><span class="kw">pub enum </span>AdminOpcode {
     CreateSq = <span class="number">0x1</span>,
     CreateCq = <span class="number">0x5</span>,
     Identify = <span class="number">0x6</span>,
 
-    <span class="attribute">#[default]
+    <span class="attr">#[default]
     </span>Unknown = u8::MAX,
 }
 
-<span class="attribute">#[derive(Debug, Default, Copy, Clone)]
+<span class="attr">#[derive(Debug, Default, Copy, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>DataPointer {
     <span class="kw">pub </span>prp1: u64,
     <span class="kw">pub </span>prp2: u64,
 }
 
-<span class="attribute">#[derive(Default, Copy, Clone)]
+<span class="attr">#[derive(Default, Copy, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>CommonCommand {
     <span class="kw">pub </span>opcode: u8,
@@ -445,7 +445,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;CommonCommand&gt;(), <span class="number">64</span>);
 
-<span class="attribute">#[derive(Default, Copy, Clone)]
+<span class="attr">#[derive(Default, Copy, Clone)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>IdentifyCommand {
     <span class="kw">pub </span>opcode: u8,
@@ -468,7 +468,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;IdentifyCommand&gt;(), <span class="number">64</span>);
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>PowerState {
     <span class="kw">pub </span>max_power: u16,
@@ -490,7 +490,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;PowerState&gt;(), <span class="number">32</span>);
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>IdentifyController {
     <span class="kw">pub </span>vid: u16,
@@ -578,7 +578,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;IdentifyController&gt;(), <span class="number">0x1000</span>);
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug)]
 </span><span class="kw">pub struct </span>LbaFormat {
     <span class="kw">pub </span>ms: u16,
@@ -588,7 +588,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;LbaFormat&gt;(), <span class="number">4</span>);
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>IdentifyNamespace {
     <span class="kw">pub </span>nsze: u64,
@@ -632,7 +632,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;IdentifyNamespace&gt;(), <span class="number">0x1000</span>);
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Debug, Default, Copy, Clone)]
 </span><span class="kw">pub struct </span>ReadWriteCommand {
     <span class="kw">pub </span>opcode: u8,
@@ -657,7 +657,7 @@
     }
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Default, Copy, Clone)]
 </span><span class="kw">pub struct </span>CreateSQCommand {
     <span class="kw">pub </span>opcode: u8,
@@ -679,7 +679,7 @@
     }
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Default, Copy, Clone)]
 </span><span class="kw">pub struct </span>CreateCQCommand {
     <span class="kw">pub </span>opcode: u8,
@@ -701,7 +701,7 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy, Debug)]
+<span class="attr">#[derive(Clone, Copy, Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>CompletionEntry {
     <span class="kw">pub </span>result: u32, <span class="comment">// Used by admin commands to return data.
@@ -712,7 +712,7 @@
     </span><span class="kw">pub </span>status: u16,     <span class="comment">// Reason why the command failed, if it did.
 </span>}
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub union </span>Command {
     common: CommonCommand,
     identify: IdentifyCommand,
@@ -723,4 +723,4 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;Command&gt;(), <span class="number">64</span>);
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -8,14 +8,14 @@
 result of <code>#[cfg]</code>. This can be an issue when exposing a public API.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">pub struct </span>Ty {
-    <span class="attribute">#[cfg(windows)]
+    <span class="attr">#[cfg(windows)]
     </span><span class="kw">pub </span>val1: u8,
-    <span class="attribute">#[cfg(not(windows))]
+    <span class="attr">#[cfg(not(windows))]
     </span><span class="kw">pub </span>val1: usize,
 
-    <span class="attribute">#[cfg(unix)]
+    <span class="attr">#[cfg(unix)]
     </span><span class="kw">pub </span>val2: u32,
-    <span class="attribute">#[cfg(not(unix))]
+    <span class="attr">#[cfg(not(unix))]
     </span><span class="kw">pub </span>val2: usize,
 }
 
@@ -38,4 +38,4 @@ result of <code>#[cfg]</code>. This can be an issue when exposing a public API.<
 <div class="example-wrap compile_fail"><div class='tooltip'>ⓘ</div><pre class="rust rust-example-rendered"><code><span class="kw">use </span>std::ops::Range;
 
 <span class="macro">assert_fields!</span>(Range&lt;u32&gt;: middle);</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

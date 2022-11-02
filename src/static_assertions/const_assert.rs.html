@@ -158,10 +158,10 @@
 /// ```
 ///
 /// [static_assert]: http://en.cppreference.com/w/cpp/language/static_assert
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>const_assert {
     (<span class="macro-nonterminal">$x</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
-        <span class="attribute">#[allow(unknown_lints, eq_op)]
+        <span class="attr">#[allow(unknown_lints, eq_op)]
         </span><span class="kw">const _</span>: [(); <span class="number">0 </span>- !{ <span class="kw">const </span>ASSERT: bool = <span class="macro-nonterminal">$x</span>; ASSERT } <span class="kw">as </span>usize] = [];
     };
 }
@@ -185,7 +185,7 @@
 /// # #[macro_use] extern crate static_assertions; fn main() {}
 /// const_assert_eq!(4 + 4, 4 * 4);
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>const_assert_eq {
     (<span class="macro-nonterminal">$x</span>:expr, <span class="macro-nonterminal">$y</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="macro">const_assert!</span>(<span class="macro-nonterminal">$x </span>== <span class="macro-nonterminal">$y</span>);
@@ -211,11 +211,11 @@
 /// # #[macro_use] extern crate static_assertions; fn main() {}
 /// const_assert_ne!(2 + 2, 2 * 2);
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>const_assert_ne {
     (<span class="macro-nonterminal">$x</span>:expr, <span class="macro-nonterminal">$y</span>:expr $(,)<span class="question-mark">?</span>) =&gt; {
         <span class="macro">const_assert!</span>(<span class="macro-nonterminal">$x </span>!= <span class="macro-nonterminal">$y</span>);
     };
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="static_assertions" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -2,11 +2,11 @@
 given an <code>x</code> with value <code>0</code>.</p>
 <p>This intrinsic does not have a stable counterpart.</p>
 <h2 id="examples"><a href="#examples">Examples</a></h2>
-<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attribute">#![feature(core_intrinsics)]
+<div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="attr">#![feature(core_intrinsics)]
 
 </span><span class="kw">use </span>std::intrinsics::ctlz_nonzero;
 
 <span class="kw">let </span>x = <span class="number">0b0001_1100_u8</span>;
 <span class="kw">let </span>num_leading = <span class="kw">unsafe </span>{ ctlz_nonzero(x) };
 <span class="macro">assert_eq!</span>(num_leading, <span class="number">3</span>);</code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

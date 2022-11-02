@@ -173,7 +173,7 @@
 <span class="kw">use </span>{P32, P64};
 <span class="kw">use </span>zero::Pod;
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>Dynamic&lt;P&gt; <span class="kw">where </span>Tag_&lt;P&gt;: fmt::Debug {
     tag: Tag_&lt;P&gt;,
@@ -182,10 +182,10 @@
 
 <span class="kw">unsafe impl</span>&lt;P&gt; Pod <span class="kw">for </span>Dynamic&lt;P&gt; <span class="kw">where </span>Tag_&lt;P&gt;: fmt::Debug {}
 
-<span class="attribute">#[derive(Copy, Clone)]
+<span class="attr">#[derive(Copy, Clone)]
 </span><span class="kw">pub struct </span>Tag_&lt;P&gt;(P);
 
-<span class="attribute">#[derive(Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Debug, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>Tag&lt;P&gt; {
     Null,
     Needed,
@@ -341,4 +341,4 @@
 <span class="kw">pub const </span>FLAG_1_STUB: u64 = <span class="number">0x04000000</span>;
 <span class="kw">pub const </span>FLAG_1_PIE: u64 = <span class="number">0x08000000</span>;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

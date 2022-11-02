@@ -69,11 +69,11 @@
 <span id="69">69</span>
 <span id="70">70</span>
 </pre><pre class="rust"><code><span class="comment">// See the cfg-if crate.
-</span><span class="attribute">#[allow(unused_macro_rules)]
+</span><span class="attr">#[allow(unused_macro_rules)]
 </span><span class="macro">macro_rules! </span>cfg_if {
     <span class="comment">// match if/else chains with a final `else`
     </span>($(
-        <span class="kw">if </span><span class="attribute">#[cfg($(<span class="macro-nonterminal">$meta</span>:meta),<span class="kw-2">*</span>)] </span>{ $(<span class="macro-nonterminal">$it</span>:item)* }
+        <span class="kw">if </span><span class="attr">#[cfg($(<span class="macro-nonterminal">$meta</span>:meta),<span class="kw-2">*</span>)] </span>{ $(<span class="macro-nonterminal">$it</span>:item)* }
     ) <span class="kw">else </span>* <span class="kw">else </span>{
         $(<span class="macro-nonterminal">$it2</span>:item)*
     }) =&gt; {
@@ -87,9 +87,9 @@
 
     <span class="comment">// match if/else chains lacking a final `else`
     </span>(
-        <span class="kw">if </span><span class="attribute">#[cfg($(<span class="macro-nonterminal">$i_met</span>:meta),<span class="kw-2">*</span>)] </span>{ $(<span class="macro-nonterminal">$i_it</span>:item)* }
+        <span class="kw">if </span><span class="attr">#[cfg($(<span class="macro-nonterminal">$i_met</span>:meta),<span class="kw-2">*</span>)] </span>{ $(<span class="macro-nonterminal">$i_it</span>:item)* }
         $(
-            <span class="kw">else if </span><span class="attribute">#[cfg($(<span class="macro-nonterminal">$e_met</span>:meta),<span class="kw-2">*</span>)] </span>{ $(<span class="macro-nonterminal">$e_it</span>:item)* }
+            <span class="kw">else if </span><span class="attr">#[cfg($(<span class="macro-nonterminal">$e_met</span>:meta),<span class="kw-2">*</span>)] </span>{ $(<span class="macro-nonterminal">$e_it</span>:item)* }
         )*
     ) =&gt; {
         <span class="macro">cfg_if! </span>{
@@ -120,23 +120,23 @@
 
     <span class="comment">// Internal macro to Apply a cfg attribute to a list of items
     </span>(@__apply <span class="macro-nonterminal">$m</span>:meta, $(<span class="macro-nonterminal">$it</span>:item)<span class="kw-2">*</span>) =&gt; {
-        $(<span class="attribute">#[<span class="macro-nonterminal">$m</span>] </span><span class="macro-nonterminal">$it</span>)*
+        $(<span class="attr">#[<span class="macro-nonterminal">$m</span>] </span><span class="macro-nonterminal">$it</span>)*
     };
 }
 
 <span class="comment">// Helper macro for specialization. This also helps avoid parse errors if the
 // default fn syntax for specialization changes in the future.
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;nightly&quot;</span>)]
 </span><span class="macro">macro_rules! </span>default_fn {
-	(<span class="attribute">#[$(<span class="macro-nonterminal">$a</span>:tt)<span class="kw-2">*</span>] </span>$(<span class="macro-nonterminal">$tt</span>:tt)<span class="kw-2">*</span>) =&gt; {
-        <span class="attribute">#[$(<span class="macro-nonterminal">$a</span>)<span class="kw-2">*</span>] </span>default $(<span class="macro-nonterminal">$tt</span>)*
+	(<span class="attr">#[$(<span class="macro-nonterminal">$a</span>:tt)<span class="kw-2">*</span>] </span>$(<span class="macro-nonterminal">$tt</span>:tt)<span class="kw-2">*</span>) =&gt; {
+        <span class="attr">#[$(<span class="macro-nonterminal">$a</span>)<span class="kw-2">*</span>] </span>default $(<span class="macro-nonterminal">$tt</span>)*
     }
 }
-<span class="attribute">#[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
+<span class="attr">#[cfg(not(feature = <span class="string">&quot;nightly&quot;</span>))]
 </span><span class="macro">macro_rules! </span>default_fn {
 	($(<span class="macro-nonterminal">$tt</span>:tt)<span class="kw-2">*</span>) =&gt; {
         $(<span class="macro-nonterminal">$tt</span>)*
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashbrown" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hashbrown" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

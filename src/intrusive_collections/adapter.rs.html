@@ -378,10 +378,10 @@
 ///
 /// This is unsafe because it assumes that the given expression is a valid
 /// pointer to the specified field of some container type.
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>container_of {
     (<span class="macro-nonterminal">$ptr</span>:expr, <span class="macro-nonterminal">$container</span>:path, <span class="macro-nonterminal">$field</span>:ident) =&gt; {
-        <span class="attribute">#[allow(clippy::cast_ptr_alignment)]
+        <span class="attr">#[allow(clippy::cast_ptr_alignment)]
         </span>{
             (<span class="macro-nonterminal">$ptr </span><span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_ as </span><span class="kw-2">*const </span>u8).sub(<span class="macro-nonterminal">$</span><span class="macro">crate::offset_of!</span>(<span class="macro-nonterminal">$container</span>, <span class="macro-nonterminal">$field</span>))
                 <span class="kw">as </span><span class="kw-2">*const </span><span class="macro-nonterminal">$container
@@ -444,14 +444,14 @@
 /// }
 /// intrusive_adapter!(MyAdapter4&lt;&#39;a, T&gt; = &amp;&#39;a Test2&lt;T&gt;: Test2&lt;T&gt; { link: LinkedListLink } where T: ?Sized + Clone + &#39;a);
 /// ```
-</span><span class="attribute">#[macro_export]
+</span><span class="attr">#[macro_export]
 </span><span class="macro">macro_rules! </span>intrusive_adapter {
     (@<span class="kw">impl
-        </span>$(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident ($(<span class="macro-nonterminal">$args</span>:tt),<span class="kw-2">*</span>)
+        </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident ($(<span class="macro-nonterminal">$args</span>:tt),<span class="kw-2">*</span>)
         = <span class="macro-nonterminal">$pointer</span>:ty: <span class="macro-nonterminal">$value</span>:path { <span class="macro-nonterminal">$field</span>:ident: <span class="macro-nonterminal">$link</span>:ty } $(<span class="macro-nonterminal">$where_</span>:tt)*
     ) =&gt; {
-        <span class="attribute">#[allow(explicit_outlives_requirements)]
-        </span>$(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>]</span>)*
+        <span class="attr">#[allow(explicit_outlives_requirements)]
+        </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)*
         <span class="macro-nonterminal">$vis </span><span class="kw">struct </span><span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {
             link_ops: &lt;<span class="macro-nonterminal">$link </span><span class="kw">as </span><span class="macro-nonterminal">$crate::DefaultLinkOps</span>&gt;::Ops,
             pointer_ops: <span class="macro-nonterminal">$crate::DefaultPointerOps</span>&lt;<span class="macro-nonterminal">$pointer</span>&gt;,
@@ -460,94 +460,94 @@
         <span class="kw">unsafe impl</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; Sync <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {}
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; Copy <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {}
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; Clone <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
                 <span class="kw-2">*</span><span class="self">self
             </span>}
         }
         <span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; Default <span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
                 <span class="self">Self</span>::NEW
             }
         }
-        <span class="attribute">#[allow(dead_code)]
+        <span class="attr">#[allow(dead_code)]
         </span><span class="kw">impl</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {
             <span class="kw">pub const </span>NEW: <span class="self">Self </span>= <span class="macro-nonterminal">$name </span>{
                 link_ops: &lt;<span class="macro-nonterminal">$link </span><span class="kw">as </span><span class="macro-nonterminal">$crate::DefaultLinkOps</span>&gt;::NEW,
                 pointer_ops: <span class="macro-nonterminal">$crate::DefaultPointerOps</span>::&lt;<span class="macro-nonterminal">$pointer</span>&gt;::new(),
             };
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">pub fn </span>new() -&gt; <span class="self">Self </span>{
                 <span class="self">Self</span>::NEW
             }
         }
-        <span class="attribute">#[allow(dead_code, unsafe_code)]
+        <span class="attr">#[allow(dead_code, unsafe_code)]
         </span><span class="kw">unsafe impl</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; <span class="macro-nonterminal">$crate::Adapter </span><span class="kw">for </span><span class="macro-nonterminal">$name</span>&lt;$(<span class="macro-nonterminal">$args</span>),<span class="kw-2">*</span>&gt; $(<span class="macro-nonterminal">$where_</span>)* {
             <span class="kw">type </span>LinkOps = &lt;<span class="macro-nonterminal">$link </span><span class="kw">as </span><span class="macro-nonterminal">$crate::DefaultLinkOps</span>&gt;::Ops;
             <span class="kw">type </span>PointerOps = <span class="macro-nonterminal">$crate::DefaultPointerOps</span>&lt;<span class="macro-nonterminal">$pointer</span>&gt;;
 
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">unsafe fn </span>get_value(<span class="kw-2">&amp;</span><span class="self">self</span>, link: &lt;<span class="self">Self</span>::LinkOps <span class="kw">as </span><span class="macro-nonterminal">$crate::LinkOps</span>&gt;::LinkPtr) -&gt; <span class="kw-2">*const </span>&lt;<span class="self">Self</span>::PointerOps <span class="kw">as </span><span class="macro-nonterminal">$crate::PointerOps</span>&gt;::Value {
                 <span class="macro-nonterminal">$</span><span class="macro">crate::container_of!</span>(<span class="macro-nonterminal">link</span>.as_ptr(), <span class="macro-nonterminal">$value</span>, <span class="macro-nonterminal">$field</span>)
             }
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">unsafe fn </span>get_link(<span class="kw-2">&amp;</span><span class="self">self</span>, value: <span class="kw-2">*const </span>&lt;<span class="self">Self</span>::PointerOps <span class="kw">as </span><span class="macro-nonterminal">$crate::PointerOps</span>&gt;::Value) -&gt; &lt;<span class="self">Self</span>::LinkOps <span class="kw">as </span><span class="macro-nonterminal">$crate::LinkOps</span>&gt;::LinkPtr {
                 <span class="comment">// We need to do this instead of just accessing the field directly
                 // to strictly follow the stack borrow rules.
                 </span><span class="kw">let </span>ptr = (value <span class="kw">as </span><span class="kw-2">*const </span>u8).add(<span class="macro-nonterminal">$</span><span class="macro">crate::offset_of!</span>(<span class="macro-nonterminal">$value</span>, <span class="macro-nonterminal">$field</span>));
                 core::ptr::NonNull::new_unchecked(ptr <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
             }
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>link_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::LinkOps {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.link_ops
             }
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>link_ops_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self</span>::LinkOps {
                 <span class="kw-2">&amp;mut </span><span class="self">self</span>.link_ops
             }
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>pointer_ops(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::PointerOps {
                 <span class="kw-2">&amp;</span><span class="self">self</span>.pointer_ops
             }
         }
     };
     (@find_generic
-        $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident ($(<span class="macro-nonterminal">$prev</span>:tt)<span class="kw-2">*</span>) &gt; $(<span class="macro-nonterminal">$rest</span>:tt)*
+        $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident ($(<span class="macro-nonterminal">$prev</span>:tt)<span class="kw-2">*</span>) &gt; $(<span class="macro-nonterminal">$rest</span>:tt)*
     ) =&gt; {
         <span class="macro">intrusive_adapter!</span>(@<span class="kw">impl
-            </span>$(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>($(<span class="macro-nonterminal">$prev</span>)<span class="kw-2">*</span>) $(<span class="macro-nonterminal">$rest</span>)*
+            </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>($(<span class="macro-nonterminal">$prev</span>)<span class="kw-2">*</span>) $(<span class="macro-nonterminal">$rest</span>)*
         );
     };
     (@find_generic
-        $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident ($(<span class="macro-nonterminal">$prev</span>:tt)<span class="kw-2">*</span>) <span class="macro-nonterminal">$cur</span>:tt $(<span class="macro-nonterminal">$rest</span>:tt)*
+        $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident ($(<span class="macro-nonterminal">$prev</span>:tt)<span class="kw-2">*</span>) <span class="macro-nonterminal">$cur</span>:tt $(<span class="macro-nonterminal">$rest</span>:tt)*
     ) =&gt; {
         <span class="macro">intrusive_adapter!</span>(@find_generic
-            $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>($(<span class="macro-nonterminal">$prev</span>)* <span class="macro-nonterminal">$cur</span>) $(<span class="macro-nonterminal">$rest</span>)*
+            $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>($(<span class="macro-nonterminal">$prev</span>)* <span class="macro-nonterminal">$cur</span>) $(<span class="macro-nonterminal">$rest</span>)*
         );
     };
     (@find_if_generic
-        $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident &lt; $(<span class="macro-nonterminal">$rest</span>:tt)*
+        $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident &lt; $(<span class="macro-nonterminal">$rest</span>:tt)*
     ) =&gt; {
         <span class="macro">intrusive_adapter!</span>(@find_generic
-            $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>() $(<span class="macro-nonterminal">$rest</span>)*
+            $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>() $(<span class="macro-nonterminal">$rest</span>)*
         );
     };
     (@find_if_generic
-        $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident $(<span class="macro-nonterminal">$rest</span>:tt)*
+        $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident $(<span class="macro-nonterminal">$rest</span>:tt)*
     ) =&gt; {
         <span class="macro">intrusive_adapter!</span>(@<span class="kw">impl
-            </span>$(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>() $(<span class="macro-nonterminal">$rest</span>)*
+            </span>$(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>() $(<span class="macro-nonterminal">$rest</span>)*
         );
     };
-    ($(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident $(<span class="macro-nonterminal">$rest</span>:tt)<span class="kw-2">*</span>) =&gt; {
+    ($(<span class="attr">#[<span class="macro-nonterminal">$attr</span>:meta]</span>)* <span class="macro-nonterminal">$vis</span>:vis <span class="macro-nonterminal">$name</span>:ident $(<span class="macro-nonterminal">$rest</span>:tt)<span class="kw-2">*</span>) =&gt; {
         <span class="macro">intrusive_adapter!</span>(@find_if_generic
-            $(<span class="attribute">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>$(<span class="macro-nonterminal">$rest</span>)*
+            $(<span class="attr">#[<span class="macro-nonterminal">$attr</span>]</span>)* <span class="macro-nonterminal">$vis $name </span>$(<span class="macro-nonterminal">$rest</span>)*
         );
     };
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span><span class="kw">crate</span>::LinkedListLink;
     <span class="kw">use </span>std::rc::Rc;
@@ -556,11 +556,11 @@
         link: LinkedListLink,
     }
 
-    <span class="attribute">#[deny(missing_docs)]
+    <span class="attr">#[deny(missing_docs)]
     </span><span class="macro">intrusive_adapter! </span>{
         <span class="doccomment">/// Test doc comment
         </span>ObjAdapter1 = Rc&lt;Obj&gt;: Obj { link: LinkedListLink }
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="intrusive_collections" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -430,7 +430,7 @@
     <span class="prelude-val">Ok</span>(Path::new(path_str))
 }
 
-<span class="attribute">#[derive(Debug, Default)]
+<span class="attr">#[derive(Debug, Default)]
 </span><span class="kw">pub struct </span>Message {
     data: Vec&lt;u8&gt;,
     <span class="comment">// TODO: Keep track of the sender of the message here?
@@ -442,7 +442,7 @@
     }
 }
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>MessageQueue {
     messages: VecDeque&lt;Message&gt;,
 }
@@ -530,10 +530,10 @@
     }
 }
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">enum </span>UnixSocketState {
     <span class="doccomment">/// The socket is not connected.
-    </span><span class="attribute">#[default]
+    </span><span class="attr">#[default]
     </span>Disconnected,
 
     <span class="doccomment">/// The socket is listening for new connections.
@@ -550,7 +550,7 @@
     }
 }
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">struct </span>UnixSocketInner {
     <span class="doccomment">/// The address that the socket has been bound to.
     </span>address: <span class="prelude-ty">Option</span>&lt;SocketAddrUnix&gt;,
@@ -753,4 +753,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

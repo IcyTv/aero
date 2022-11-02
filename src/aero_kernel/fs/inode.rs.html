@@ -553,7 +553,7 @@
 
 <span class="kw">static </span>DIR_CACHE_MARKER: AtomicUsize = AtomicUsize::new(<span class="number">0x00</span>);
 
-<span class="attribute">#[derive(Default)]
+<span class="attr">#[derive(Default)]
 </span><span class="kw">pub struct </span>PollTable {
     <span class="kw">pub </span>queues: Vec&lt;UnsafeRef&lt;BlockQueue&gt;&gt;,
 }
@@ -625,7 +625,7 @@
 /// inode which includes its type, size, the number of links referring to it,
 /// and the list of blocks holding the file&#39;s content. For example device files,
 /// files on the disk, etc...
-</span><span class="attribute">#[downcastable]
+</span><span class="attr">#[downcastable]
 </span><span class="kw">pub trait </span>INodeInterface: Send + Sync {
     <span class="doccomment">/// Resolves the symbolically linked file and returns the relative path
     /// to the file.
@@ -770,7 +770,7 @@
 
 <span class="doccomment">/// Structure representing the curcial, characteristics of an inode. The metadata
 /// of an inode can be retrieved by invoking the [INodeInterface::metadata] function.
-</span><span class="attribute">#[derive(Debug, Copy, Clone)]
+</span><span class="attr">#[derive(Debug, Copy, Clone)]
 </span><span class="kw">pub struct </span>Metadata {
     <span class="kw">pub </span>id: usize,
     <span class="kw">pub </span>file_type: FileType,
@@ -779,7 +779,7 @@
 }
 
 <span class="kw">impl </span>Metadata {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">pub fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
         <span class="self">self</span>.id
     }
@@ -837,7 +837,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
+<span class="attr">#[derive(Debug, Copy, Clone, PartialEq)]
 </span><span class="kw">pub enum </span>FileType {
     File,
     Directory,
@@ -1013,4 +1013,4 @@
     dcache.get(cache_key)
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

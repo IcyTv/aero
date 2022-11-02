@@ -209,7 +209,7 @@
 //! ## Notes:
 //! * &lt;https://en.wikipedia.org/wiki/Unix&gt;
 
-</span><span class="attribute">#![feature(
+</span><span class="attr">#![feature(
     custom_test_frameworks,
     alloc_error_handler,
     lang_items,
@@ -250,7 +250,7 @@
     }
 }
 
-<span class="attribute">#[prelude_import]
+<span class="attr">#[prelude_import]
 </span><span class="kw">pub use </span>prelude::rust_2021::<span class="kw-2">*</span>;
 
 <span class="kw">extern crate </span>alloc;
@@ -259,7 +259,7 @@
 <span class="kw">mod </span>arch;
 <span class="kw">mod </span>cmdline;
 <span class="kw">mod </span>drivers;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;ci&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;ci&quot;</span>)]
 </span><span class="kw">mod </span>emu;
 <span class="kw">mod </span>fs;
 <span class="kw">mod </span>logger;
@@ -268,7 +268,7 @@
 <span class="kw">mod </span>rendy;
 <span class="kw">mod </span>socket;
 <span class="kw">mod </span>syscall;
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests;
 <span class="kw">mod </span>unwind;
 <span class="kw">mod </span>userland;
@@ -282,7 +282,7 @@
 
 <span class="kw">use </span><span class="self">self</span>::userland::task::Task;
 
-<span class="attribute">#[global_allocator]
+<span class="attr">#[global_allocator]
 </span><span class="kw">static </span>AERO_SYSTEM_ALLOCATOR: LockedHeap = LockedHeap::new_uninit();
 
 <span class="kw">static </span><span class="kw-2">mut </span>PHYSICAL_MEMORY_OFFSET: VirtAddr = VirtAddr::zero();
@@ -302,7 +302,7 @@
     userland::scheduler::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded scheduler&quot;</span>);
 
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span><span class="kw">crate</span>::arch::apic::mark_bsp_ready(<span class="bool-val">true</span>);
 
     <span class="macro">log::info!</span>(<span class="string">&quot;initialized kernel&quot;</span>);
@@ -330,28 +330,28 @@
     modules::init();
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded kernel modules&quot;</span>);
 
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span>arch::enable_acpi();
 
-    <span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+    <span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
     </span>drivers::pci::init(<span class="kw-2">&amp;mut </span>offset_table);
     <span class="macro">log::info!</span>(<span class="string">&quot;loaded PCI driver&quot;</span>);
 
     fs::block::launch().unwrap();
 
-    <span class="attribute">#[cfg(test)]
+    <span class="attr">#[cfg(test)]
     </span>test_main();
 
     <span class="kw">if </span>logger::enabled_rendy_debug() {
-        <span class="attribute">#[cfg(not(test))]
+        <span class="attr">#[cfg(not(test))]
         </span>rendy::clear_screen(<span class="bool-val">true</span>);
         logger::set_rendy_debug(<span class="bool-val">false</span>);
     }
 
-    <span class="attribute">#[cfg(test)]
+    <span class="attr">#[cfg(test)]
     </span>userland::run_tests().unwrap();
 
-    <span class="attribute">#[cfg(not(test))]
+    <span class="attr">#[cfg(not(test))]
     </span>userland::run().unwrap();
 
     <span class="macro">unreachable!</span>()
@@ -365,4 +365,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

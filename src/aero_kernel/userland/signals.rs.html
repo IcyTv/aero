@@ -502,7 +502,7 @@
 <span class="kw">mod </span>default {
     <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
 
-    <span class="attribute">#[derive(Copy, Clone, PartialEq)]
+    <span class="attr">#[derive(Copy, Clone, PartialEq)]
     </span><span class="kw">pub enum </span>Action {
         Ignore,
         Handle(<span class="kw">fn</span>()),
@@ -574,7 +574,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, PartialEq)]
+<span class="attr">#[derive(Debug, PartialEq)]
 </span><span class="kw">pub enum </span>SignalError {
     Interrupted,
 }
@@ -604,7 +604,7 @@
     }
 }
 
-<span class="attribute">#[derive(Default, Copy, Clone, Debug)]
+<span class="attr">#[derive(Default, Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>SignalEntry {
     handler: SignalHandler,
     flags: SignalFlags,
@@ -655,7 +655,7 @@
 
 <span class="kw">const </span>SIGNAL_COUNT: usize = <span class="number">35</span>;
 
-<span class="attribute">#[derive(Copy, Clone)]
+<span class="attr">#[derive(Copy, Clone)]
 </span><span class="kw">pub struct </span>Entries {
     entries: [SignalEntry; SIGNAL_COUNT],
     pending_mask: u64,
@@ -933,4 +933,4 @@
     <span class="prelude-val">None
 </span>}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

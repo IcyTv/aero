@@ -335,7 +335,7 @@
 /// ```
 </span><span class="kw">pub unsafe trait </span>TransparentWrapper&lt;Inner: <span class="question-mark">?</span>Sized&gt; {
   <span class="doccomment">/// Convert the inner type into the wrapper type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>wrap(s: Inner) -&gt; <span class="self">Self
   </span><span class="kw">where
     </span><span class="self">Self</span>: Sized,
@@ -348,7 +348,7 @@
 
   <span class="doccomment">/// Convert a reference to the inner type into a reference to the wrapper
   /// type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>wrap_ref(s: <span class="kw-2">&amp;</span>Inner) -&gt; <span class="kw-2">&amp;</span><span class="self">Self </span>{
     <span class="kw">unsafe </span>{
       <span class="macro">assert!</span>(size_of::&lt;<span class="kw-2">*const </span>Inner&gt;() == size_of::&lt;<span class="kw-2">*const </span><span class="self">Self</span>&gt;());
@@ -366,7 +366,7 @@
 
   <span class="doccomment">/// Convert a mutable reference to the inner type into a mutable reference to
   /// the wrapper type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>wrap_mut(s: <span class="kw-2">&amp;mut </span>Inner) -&gt; <span class="kw-2">&amp;mut </span><span class="self">Self </span>{
     <span class="kw">unsafe </span>{
       <span class="macro">assert!</span>(size_of::&lt;<span class="kw-2">*mut </span>Inner&gt;() == size_of::&lt;<span class="kw-2">*mut </span><span class="self">Self</span>&gt;());
@@ -383,7 +383,7 @@
   }
 
   <span class="doccomment">/// Convert a slice to the inner type into a slice to the wrapper type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>wrap_slice(s: <span class="kw-2">&amp;</span>[Inner]) -&gt; <span class="kw-2">&amp;</span>[<span class="self">Self</span>]
   <span class="kw">where
     </span><span class="self">Self</span>: Sized,
@@ -400,7 +400,7 @@
 
   <span class="doccomment">/// Convert a mutable slice to the inner type into a mutable slice to the
   /// wrapper type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>wrap_slice_mut(s: <span class="kw-2">&amp;mut </span>[Inner]) -&gt; <span class="kw-2">&amp;mut </span>[<span class="self">Self</span>]
   <span class="kw">where
     </span><span class="self">Self</span>: Sized,
@@ -416,7 +416,7 @@
   }
 
   <span class="doccomment">/// Convert the wrapper type into the inner type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>peel(s: <span class="self">Self</span>) -&gt; Inner
   <span class="kw">where
     </span><span class="self">Self</span>: Sized,
@@ -427,7 +427,7 @@
 
   <span class="doccomment">/// Convert a reference to the wrapper type into a reference to the inner
   /// type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>peel_ref(s: <span class="kw-2">&amp;</span><span class="self">Self</span>) -&gt; <span class="kw-2">&amp;</span>Inner {
     <span class="kw">unsafe </span>{
       <span class="macro">assert!</span>(size_of::&lt;<span class="kw-2">*const </span>Inner&gt;() == size_of::&lt;<span class="kw-2">*const </span><span class="self">Self</span>&gt;());
@@ -445,7 +445,7 @@
 
   <span class="doccomment">/// Convert a mutable reference to the wrapper type into a mutable reference
   /// to the inner type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>peel_mut(s: <span class="kw-2">&amp;mut </span><span class="self">Self</span>) -&gt; <span class="kw-2">&amp;mut </span>Inner {
     <span class="kw">unsafe </span>{
       <span class="macro">assert!</span>(size_of::&lt;<span class="kw-2">*mut </span>Inner&gt;() == size_of::&lt;<span class="kw-2">*mut </span><span class="self">Self</span>&gt;());
@@ -462,7 +462,7 @@
   }
 
   <span class="doccomment">/// Convert a slice to the wrapped type into a slice to the inner type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>peel_slice(s: <span class="kw-2">&amp;</span>[<span class="self">Self</span>]) -&gt; <span class="kw-2">&amp;</span>[Inner]
   <span class="kw">where
     </span><span class="self">Self</span>: Sized,
@@ -479,7 +479,7 @@
 
   <span class="doccomment">/// Convert a mutable slice to the wrapped type into a mutable slice to the
   /// inner type.
-  </span><span class="attribute">#[inline]
+  </span><span class="attr">#[inline]
   </span><span class="kw">fn </span>peel_slice_mut(s: <span class="kw-2">&amp;mut </span>[<span class="self">Self</span>]) -&gt; <span class="kw-2">&amp;mut </span>[Inner]
   <span class="kw">where
     </span><span class="self">Self</span>: Sized,
@@ -497,4 +497,4 @@
 
 <span class="kw">unsafe impl</span>&lt;T&gt; TransparentWrapper&lt;T&gt; <span class="kw">for </span>core::num::Wrapping&lt;T&gt; {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bytemuck" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="bytemuck" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

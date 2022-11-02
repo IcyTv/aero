@@ -502,7 +502,7 @@
 
 <span class="kw">pub const </span>MAGIC: [u8; <span class="number">4</span>] = [<span class="number">0x7f</span>, <span class="string">b&#39;E&#39;</span>, <span class="string">b&#39;L&#39;</span>, <span class="string">b&#39;F&#39;</span>];
 
-<span class="attribute">#[derive(Clone, Copy, Debug)]
+<span class="attr">#[derive(Clone, Copy, Debug)]
 </span><span class="kw">pub struct </span>Header&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">pub </span>pt1: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HeaderPt1,
     <span class="kw">pub </span>pt2: HeaderPt2&lt;<span class="lifetime">&#39;a</span>&gt;,
@@ -525,7 +525,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug)]
+<span class="attr">#[derive(Copy, Clone, Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>HeaderPt1 {
     <span class="kw">pub </span>magic: [u8; <span class="number">4</span>],
@@ -558,7 +558,7 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy, Debug)]
+<span class="attr">#[derive(Clone, Copy, Debug)]
 </span><span class="kw">pub enum </span>HeaderPt2&lt;<span class="lifetime">&#39;a</span>&gt; {
     Header32(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HeaderPt2_&lt;P32&gt;),
     Header64(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>HeaderPt2_&lt;P64&gt;),
@@ -607,7 +607,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>HeaderPt2_&lt;P&gt; {
     <span class="kw">pub </span>type_: Type_,
@@ -646,7 +646,7 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy, Eq, PartialEq)]
+<span class="attr">#[derive(Clone, Copy, Eq, PartialEq)]
 </span><span class="kw">pub struct </span>Class_(u8);
 
 <span class="kw">impl </span>Class_ {
@@ -670,7 +670,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Class {
     <span class="prelude-val">None</span>,
     ThirtyTwo,
@@ -684,7 +684,7 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy)]
+<span class="attr">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>Data_(u8);
 
 <span class="kw">impl </span>Data_ {
@@ -708,7 +708,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Data {
     <span class="prelude-val">None</span>,
     LittleEndian,
@@ -722,7 +722,7 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy)]
+<span class="attr">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>Version_(u8);
 
 <span class="kw">impl </span>Version_ {
@@ -745,7 +745,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Version {
     <span class="prelude-val">None</span>,
     Current,
@@ -762,7 +762,7 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy)]
+<span class="attr">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>OsAbi_(u8);
 
 <span class="kw">impl </span>OsAbi_ {
@@ -789,7 +789,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+<span class="attr">#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>OsAbi {
     <span class="comment">// or None
     </span>SystemV,
@@ -805,7 +805,7 @@
     Other(u8), <span class="comment">// FIXME there are many, many more of these
 </span>}
 
-<span class="attribute">#[derive(Clone, Copy)]
+<span class="attr">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>Type_(<span class="kw">pub </span>u16);
 
 <span class="kw">impl </span>Type_ {
@@ -827,7 +827,7 @@
     }
 }
 
-<span class="attribute">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+<span class="attr">#[derive(Copy, Clone, Debug, PartialEq, Eq)]
 </span><span class="kw">pub enum </span>Type {
     <span class="prelude-val">None</span>,
     Relocatable,
@@ -837,7 +837,7 @@
     ProcessorSpecific(u16), <span class="comment">// TODO OsSpecific
 </span>}
 
-<span class="attribute">#[derive(Clone, Copy)]
+<span class="attr">#[derive(Clone, Copy)]
 </span><span class="kw">pub struct </span>Machine_(u16);
 
 <span class="kw">impl </span>Machine_ {
@@ -866,7 +866,7 @@
     }
 }
 
-<span class="attribute">#[allow(non_camel_case_types)]
+<span class="attr">#[allow(non_camel_case_types)]
 #[derive(Debug, Clone, Copy, Eq, PartialEq)]
 </span><span class="kw">pub enum </span>Machine {
     <span class="prelude-val">None</span>,
@@ -913,4 +913,4 @@
     </span><span class="prelude-val">Ok</span>(())
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="xmas_elf" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

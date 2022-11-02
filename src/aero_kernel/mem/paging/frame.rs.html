@@ -706,7 +706,7 @@
 }
 
 <span class="kw">unsafe impl </span>FrameAllocator&lt;Size4KiB&gt; <span class="kw">for </span>LockedFrameAllocator {
-    <span class="attribute">#[track_caller]
+    <span class="attr">#[track_caller]
     </span><span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size4KiB&gt;&gt; {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;allocation request of 4KiB by {:?}&quot;, caller);
@@ -725,7 +725,7 @@
             })
     }
 
-    <span class="attribute">#[track_caller]
+    <span class="attr">#[track_caller]
     </span><span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size4KiB&gt;) {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;deallocation request of 4KiB by {:?}&quot;, caller);
@@ -738,7 +738,7 @@
 }
 
 <span class="kw">unsafe impl </span>FrameAllocator&lt;Size2MiB&gt; <span class="kw">for </span>LockedFrameAllocator {
-    <span class="attribute">#[track_caller]
+    <span class="attr">#[track_caller]
     </span><span class="kw">fn </span>allocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;PhysFrame&lt;Size2MiB&gt;&gt; {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;allocation request of 2MiB by {:?}&quot;, caller);
@@ -757,7 +757,7 @@
             })
     }
 
-    <span class="attribute">#[track_caller]
+    <span class="attr">#[track_caller]
     </span><span class="kw">fn </span>deallocate_frame(<span class="kw-2">&amp;</span><span class="self">self</span>, frame: PhysFrame&lt;Size2MiB&gt;) {
         <span class="comment">// let caller = core::panic::Location::caller();
         // log::debug!(&quot;deallocation request of 2MiB by {:?}&quot;, caller);
@@ -814,7 +814,7 @@
     }
 }
 
-<span class="attribute">#[repr(usize)]
+<span class="attr">#[repr(usize)]
 </span><span class="kw">pub enum </span>BuddyOrdering {
     Size4KiB = <span class="number">0</span>,
     Size8KiB = <span class="number">2</span>,
@@ -843,14 +843,14 @@
     addr
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>MemoryRange {
     addr: PhysAddr,
     size: u64,
     typee: MemoryRangeType,
 }
 
-<span class="attribute">#[derive(Debug, PartialEq)]
+<span class="attr">#[derive(Debug, PartialEq)]
 </span><span class="kw">enum </span>MemoryRangeType {
     Usable,
 }
@@ -883,7 +883,7 @@
     }
 }
 
-<span class="attribute">#[derive(Debug, Clone)]
+<span class="attr">#[derive(Debug, Clone)]
 </span><span class="kw">struct </span>BootAllocRef {
     inner: <span class="kw-2">*const </span>BootAlloc,
 }
@@ -1090,7 +1090,7 @@
         change
     }
 
-    <span class="attribute">#[cfg(test)]
+    <span class="attr">#[cfg(test)]
     </span><span class="kw">fn </span>is_free(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: PhysAddr, order: usize) -&gt; bool {
         <span class="kw">let </span>idx = <span class="self">self</span>.get_bit_idx(addr, order);
 
@@ -1248,14 +1248,14 @@
     }
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span><span class="kw">super</span>::<span class="kw">super</span>::<span class="kw-2">*</span>;
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
     <span class="kw">use </span><span class="kw">crate</span>::mem::AddressSpace;
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>vm_frame_ref_count() {
         <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
         <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
@@ -1305,4 +1305,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

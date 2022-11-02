@@ -189,7 +189,7 @@
 
 <span class="kw">const </span>GPT_TABLE_SIGNATURE: u64 = <span class="number">0x5452415020494645</span>;
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 </span><span class="kw">pub struct </span>GptTableHeader {
     <span class="kw">pub </span>signature: u64,
     <span class="kw">pub </span>revision: u32,
@@ -211,7 +211,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;GptTableHeader&gt;(), <span class="number">512</span>);
 
-<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
+<span class="attr">#[derive(Debug, Copy, Clone, PartialEq)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>GptGuid {
     a: u32,
@@ -233,7 +233,7 @@
 
 <span class="macro">const_assert_eq!</span>(core::mem::size_of::&lt;GptGuid&gt;(), <span class="number">16</span>);
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>GptEntry {
     type_guid: GptGuid,
@@ -323,4 +323,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

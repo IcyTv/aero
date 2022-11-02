@@ -943,7 +943,7 @@
 </span><span class="macro">macro_rules! </span>primitive_impl {
     (<span class="macro-nonterminal">$ty</span>:ident, <span class="macro-nonterminal">$method</span>:ident $(<span class="macro-nonterminal">$cast</span>:tt)<span class="kw-2">*</span>) =&gt; {
         <span class="kw">impl </span>Serialize <span class="kw">for </span><span class="macro-nonterminal">$ty </span>{
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
             <span class="kw">where
                 </span>S: Serializer,
@@ -977,7 +977,7 @@
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>str {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -986,9 +986,9 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>String {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1008,9 +1008,9 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>CStr {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1019,9 +1019,9 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>CString {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1036,7 +1036,7 @@
 <span class="kw">where
     </span>T: Serialize,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1051,7 +1051,7 @@
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
 </span><span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>PhantomData&lt;T&gt; {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1064,7 +1064,7 @@
 
 // Does not require T: Serialize.
 </span><span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>[T; <span class="number">0</span>] {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1080,7 +1080,7 @@
             <span class="kw">where
                 </span>T: Serialize,
             {
-                <span class="attribute">#[inline]
+                <span class="attr">#[inline]
                 </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
                 <span class="kw">where
                     </span>S: Serializer,
@@ -1109,7 +1109,7 @@
 <span class="kw">where
     </span>T: Serialize,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1118,7 +1118,7 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">macro_rules! </span>seq_impl {
     (<span class="macro-nonterminal">$ty</span>:ident &lt; T $(: <span class="macro-nonterminal">$tbound1</span>:ident $(+ <span class="macro-nonterminal">$tbound2</span>:ident)<span class="kw-2">*</span>)* $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound</span>:ident)* &gt;) =&gt; {
         <span class="kw">impl</span>&lt;T $(, <span class="macro-nonterminal">$typaram</span>)<span class="kw-2">*</span>&gt; Serialize <span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;T $(, <span class="macro-nonterminal">$typaram</span>)<span class="kw-2">*</span>&gt;
@@ -1126,7 +1126,7 @@
             </span>T: Serialize $(+ <span class="macro-nonterminal">$tbound1 </span>$(+ <span class="macro-nonterminal">$tbound2</span>)<span class="kw-2">*</span>)<span class="kw-2">*</span>,
             $(<span class="macro-nonterminal">$typaram</span>: <span class="macro-nonterminal">$bound</span>,)*
         {
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
             <span class="kw">where
                 </span>S: Serializer,
@@ -1137,22 +1137,22 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">seq_impl!</span>(BinaryHeap&lt;T: Ord&gt;);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">seq_impl!</span>(BTreeSet&lt;T: Ord&gt;);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">seq_impl!</span>(HashSet&lt;T: Eq + Hash, H: BuildHasher&gt;);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">seq_impl!</span>(LinkedList&lt;T&gt;);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">seq_impl!</span>(Vec&lt;T&gt;);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">seq_impl!</span>(VecDeque&lt;T&gt;);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
@@ -1175,7 +1175,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(range_inclusive)]
+</span><span class="attr">#[cfg(range_inclusive)]
 </span><span class="kw">impl</span>&lt;Idx&gt; Serialize <span class="kw">for </span>RangeInclusive&lt;Idx&gt;
 <span class="kw">where
     </span>Idx: Serialize,
@@ -1194,7 +1194,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(ops_bound, collections_bound))]
+</span><span class="attr">#[cfg(any(ops_bound, collections_bound))]
 </span><span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>Bound&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize,
@@ -1218,7 +1218,7 @@
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>() {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1227,7 +1227,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;unstable&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;unstable&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>! {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, _serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1246,7 +1246,7 @@
             <span class="kw">where
                 </span>$(<span class="macro-nonterminal">$name</span>: Serialize,)+
             {
-                <span class="attribute">#[inline]
+                <span class="attr">#[inline]
                 </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
                 <span class="kw">where
                     </span>S: Serializer,
@@ -1283,7 +1283,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+</span><span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">macro_rules! </span>map_impl {
     (<span class="macro-nonterminal">$ty</span>:ident &lt; K $(: <span class="macro-nonterminal">$kbound1</span>:ident $(+ <span class="macro-nonterminal">$kbound2</span>:ident)<span class="kw-2">*</span>)<span class="kw-2">*</span>, V $(, <span class="macro-nonterminal">$typaram</span>:ident : <span class="macro-nonterminal">$bound</span>:ident)* &gt;) =&gt; {
         <span class="kw">impl</span>&lt;K, V $(, <span class="macro-nonterminal">$typaram</span>)<span class="kw-2">*</span>&gt; Serialize <span class="kw">for </span><span class="macro-nonterminal">$ty</span>&lt;K, V $(, <span class="macro-nonterminal">$typaram</span>)<span class="kw-2">*</span>&gt;
@@ -1292,7 +1292,7 @@
             V: Serialize,
             $(<span class="macro-nonterminal">$typaram</span>: <span class="macro-nonterminal">$bound</span>,)*
         {
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
             <span class="kw">where
                 </span>S: Serializer,
@@ -1303,22 +1303,22 @@
     }
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">map_impl!</span>(BTreeMap&lt;K: Ord, V&gt;);
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">map_impl!</span>(HashMap&lt;K: Eq + Hash, V, H: BuildHasher&gt;);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
 </span><span class="macro">macro_rules! </span>deref_impl {
     (
-        $(<span class="attribute">#[doc = <span class="macro-nonterminal">$doc</span>:tt]</span>)*
+        $(<span class="attr">#[doc = <span class="macro-nonterminal">$doc</span>:tt]</span>)*
         &lt;$(<span class="macro-nonterminal">$desc</span>:tt)+
     ) =&gt; {
-        $(<span class="attribute">#[doc = <span class="macro-nonterminal">$doc</span>]</span>)*
+        $(<span class="attr">#[doc = <span class="macro-nonterminal">$doc</span>]</span>)*
         <span class="kw">impl </span>&lt;$(<span class="macro-nonterminal">$desc</span>)+ {
-            <span class="attribute">#[inline]
+            <span class="attr">#[inline]
             </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
             <span class="kw">where
                 </span>S: Serializer,
@@ -1332,10 +1332,10 @@
 <span class="macro">deref_impl!</span>(&lt;<span class="lifetime">&#39;a</span>, T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T <span class="kw">where </span>T: Serialize);
 <span class="macro">deref_impl!</span>(&lt;<span class="lifetime">&#39;a</span>, T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span><span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>T <span class="kw">where </span>T: Serialize);
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">deref_impl!</span>(&lt;T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>Box&lt;T&gt; <span class="kw">where </span>T: Serialize);
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="macro">deref_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
@@ -1348,7 +1348,7 @@
     </span>&lt;T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>Rc&lt;T&gt; <span class="kw">where </span>T: Serialize
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="macro">deref_impl! </span>{
     <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
     ///
@@ -1361,7 +1361,7 @@
     </span>&lt;T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>Arc&lt;T&gt; <span class="kw">where </span>T: Serialize
 }
 
-<span class="attribute">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
+<span class="attr">#[cfg(any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>))]
 </span><span class="macro">deref_impl!</span>(&lt;<span class="lifetime">&#39;a</span>, T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>Cow&lt;<span class="lifetime">&#39;a</span>, T&gt; <span class="kw">where </span>T: Serialize + ToOwned);
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
@@ -1369,7 +1369,7 @@
 </span><span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
 ///
 /// [`&quot;rc&quot;`]: https://serde.rs/feature-flags.html#-features-rc
-</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="attr">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>RcWeak&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize,
@@ -1385,7 +1385,7 @@
 <span class="doccomment">/// This impl requires the [`&quot;rc&quot;`] Cargo feature of Serde.
 ///
 /// [`&quot;rc&quot;`]: https://serde.rs/feature-flags.html#-features-rc
-</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
+</span><span class="attr">#[cfg(all(feature = <span class="string">&quot;rc&quot;</span>, any(feature = <span class="string">&quot;std&quot;</span>, feature = <span class="string">&quot;alloc&quot;</span>)))]
 </span><span class="kw">impl</span>&lt;T: <span class="question-mark">?</span>Sized&gt; Serialize <span class="kw">for </span>ArcWeak&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize,
@@ -1403,7 +1403,7 @@
 </span><span class="macro">macro_rules! </span>nonzero_integers {
     ( $( <span class="macro-nonterminal">$T</span>: ident, )+ ) =&gt; {
         $(
-            <span class="attribute">#[cfg(num_nonzero)]
+            <span class="attr">#[cfg(num_nonzero)]
             </span><span class="kw">impl </span>Serialize <span class="kw">for </span>num::<span class="macro-nonterminal">$T </span>{
                 <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
                 <span class="kw">where
@@ -1424,7 +1424,7 @@
     NonZeroUsize,
 }
 
-<span class="attribute">#[cfg(num_nonzero_signed)]
+<span class="attr">#[cfg(num_nonzero_signed)]
 </span><span class="macro">nonzero_integers! </span>{
     NonZeroI8,
     NonZeroI16,
@@ -1440,7 +1440,7 @@
         NonZeroU128,
     }
 
-    <span class="attribute">#[cfg(num_nonzero_signed)]
+    <span class="attr">#[cfg(num_nonzero_signed)]
     </span><span class="macro">nonzero_integers! </span>{
         NonZeroI128,
     }
@@ -1473,7 +1473,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>Mutex&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize,
@@ -1489,7 +1489,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>RwLock&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize,
@@ -1527,7 +1527,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]
+</span><span class="attr">#[cfg(any(core_duration, feature = <span class="string">&quot;std&quot;</span>))]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>Duration {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1543,7 +1543,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>SystemTime {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1566,7 +1566,7 @@
 /// statically known to never have more than a constant `MAX_LEN` bytes.
 ///
 /// Panics if the `Display` impl tries to write more than `MAX_LEN` bytes.
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="macro">macro_rules! </span>serialize_display_bounded_length {
     (<span class="macro-nonterminal">$value</span>:expr, <span class="macro-nonterminal">$max</span>:expr, <span class="macro-nonterminal">$serializer</span>:expr) =&gt; {{
         <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">0u8</span>; <span class="macro-nonterminal">$max</span>];
@@ -1586,7 +1586,7 @@
     }};
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>net::IpAddr {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1610,7 +1610,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">const </span>DEC_DIGITS_LUT: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>[u8] = <span class="string">b&quot;\
       0001020304050607080910111213141516171819\
       2021222324252627282930313233343536373839\
@@ -1618,7 +1618,7 @@
       6061626364656667686970717273747576777879\
       8081828384858687888990919293949596979899&quot;</span>;
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[inline]
 </span><span class="kw">fn </span>format_u8(<span class="kw-2">mut </span>n: u8, out: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
     <span class="kw">if </span>n &gt;= <span class="number">100 </span>{
@@ -1639,7 +1639,7 @@
     </span>}
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[test]
 </span><span class="kw">fn </span>test_format_u8() {
     <span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0u8</span>;
@@ -1656,7 +1656,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>net::Ipv4Addr {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1679,7 +1679,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>net::Ipv6Addr {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1695,7 +1695,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>net::SocketAddr {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1719,7 +1719,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>net::SocketAddrV4 {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1735,7 +1735,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>net::SocketAddrV6 {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1756,7 +1756,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+</span><span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>Path {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1769,7 +1769,7 @@
     }
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>PathBuf {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1779,9 +1779,9 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>OsStr {
-    <span class="attribute">#[cfg(unix)]
+    <span class="attr">#[cfg(unix)]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1790,7 +1790,7 @@
         serializer.serialize_newtype_variant(<span class="string">&quot;OsString&quot;</span>, <span class="number">0</span>, <span class="string">&quot;Unix&quot;</span>, <span class="self">self</span>.as_bytes())
     }
 
-    <span class="attribute">#[cfg(windows)]
+    <span class="attr">#[cfg(windows)]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1801,7 +1801,7 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, any(unix, windows)))]
 </span><span class="kw">impl </span>Serialize <span class="kw">for </span>OsString {
     <span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
@@ -1817,7 +1817,7 @@
 <span class="kw">where
     </span>T: Serialize,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1826,12 +1826,12 @@
     }
 }
 
-<span class="attribute">#[cfg(core_reverse)]
+<span class="attr">#[cfg(core_reverse)]
 </span><span class="kw">impl</span>&lt;T&gt; Serialize <span class="kw">for </span>Reverse&lt;T&gt;
 <span class="kw">where
     </span>T: Serialize,
 {
-    <span class="attribute">#[inline]
+    <span class="attr">#[inline]
     </span><span class="kw">fn </span>serialize&lt;S&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, serializer: S) -&gt; <span class="prelude-ty">Result</span>&lt;S::Ok, S::Error&gt;
     <span class="kw">where
         </span>S: Serializer,
@@ -1842,7 +1842,7 @@
 
 <span class="comment">////////////////////////////////////////////////////////////////////////////////
 
-</span><span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+</span><span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
 </span><span class="macro">macro_rules! </span>atomic_impl {
     ($(<span class="macro-nonterminal">$ty</span>:ident)<span class="kw-2">*</span>) =&gt; {
         $(
@@ -1859,16 +1859,16 @@
     }
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic))]
 </span><span class="macro">atomic_impl! </span>{
     AtomicBool
     AtomicI8 AtomicI16 AtomicI32 AtomicIsize
     AtomicU8 AtomicU16 AtomicU32 AtomicUsize
 }
 
-<span class="attribute">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]
+<span class="attr">#[cfg(all(feature = <span class="string">&quot;std&quot;</span>, std_atomic64))]
 </span><span class="macro">atomic_impl! </span>{
     AtomicI64 AtomicU64
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="serde" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

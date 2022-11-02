@@ -148,7 +148,7 @@
 //! let checksum = crc16(checksum_range);
 //! ```
 
-</span><span class="attribute">#![no_std]
+</span><span class="attr">#![no_std]
 #![cfg_attr(
     feature = <span class="string">&quot;unstable_const&quot;</span>,
     feature(
@@ -165,22 +165,22 @@
 #[cfg(doctests)]
 #[cfg(doctest)]
 </span><span class="kw">extern crate </span>doc_comment;
-<span class="attribute">#[cfg(doctests)]
+<span class="attr">#[cfg(doctests)]
 #[cfg(doctest)]
 </span><span class="macro">doctest!</span>(<span class="string">&quot;../README.md&quot;</span>);
 
 <span class="comment">// This `use` statement enables the macros to use `$crate::mem`.
 // Doing this enables this crate to function under both std and no-std crates.
-</span><span class="attribute">#[doc(hidden)]
+</span><span class="attr">#[doc(hidden)]
 </span><span class="kw">pub use </span>core::mem;
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 </span><span class="kw">pub use </span>core::ptr;
 
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">mod </span>raw_field;
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">mod </span>offset_of;
-<span class="attribute">#[macro_use]
+<span class="attr">#[macro_use]
 </span><span class="kw">mod </span>span_of;
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

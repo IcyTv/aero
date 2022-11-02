@@ -165,7 +165,7 @@
 <span class="kw">pub static </span>IO_APICS: RwLock&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>IoApicHeader&gt;&gt; = RwLock::new(Vec::new());
 <span class="kw">pub static </span>ISOS: RwLock&lt;Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>MadtIntSrcOverride&gt;&gt; = RwLock::new(Vec::new());
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">pub struct </span>Madt {
     header: Sdt,
     local_apic_address: u32,
@@ -193,14 +193,14 @@
     }
 }
 
-<span class="attribute">#[derive(Clone, Copy)]
+<span class="attr">#[derive(Clone, Copy)]
 #[repr(C, packed)]
 </span><span class="kw">pub struct </span>EntryHeader {
     entry_type: u8,
     length: u8,
 }
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">struct </span>MadtLocalApic {
     header: EntryHeader,
     processor_id: u8,
@@ -208,7 +208,7 @@
     flags: u32,
 }
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">pub struct </span>MadtIntSrcOverride {
     <span class="kw">pub </span>header: EntryHeader,
     <span class="kw">pub </span>bus: u8,
@@ -217,7 +217,7 @@
     <span class="kw">pub </span>flags: u16,
 }
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">pub struct </span>IoApicHeader {
     <span class="kw">pub </span>header: EntryHeader,
     <span class="kw">pub </span>io_apic_id: u8,
@@ -271,4 +271,4 @@
     </span>}
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

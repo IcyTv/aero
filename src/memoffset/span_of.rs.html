@@ -283,7 +283,7 @@
 
 </span><span class="doccomment">/// Reexport for `local_inner_macros`; see
 /// &lt;https://doc.rust-lang.org/edition-guide/rust-2018/macros/macro-changes.html#macros-using-local_inner_macros&gt;.
-</span><span class="attribute">#[doc(hidden)]
+</span><span class="attr">#[doc(hidden)]
 #[macro_export]
 </span><span class="macro">macro_rules! </span>_memoffset__compile_error {
     ($(<span class="macro-nonterminal">$inner</span>:tt)<span class="kw-2">*</span>) =&gt; {
@@ -348,7 +348,7 @@
 ///     assert_eq!(0..64,  span_of!(Blarg, x ..= y));
 /// }
 /// ```
-</span><span class="attribute">#[macro_export(local_inner_macros)]
+</span><span class="attr">#[macro_export(local_inner_macros)]
 </span><span class="macro">macro_rules! </span>span_of {
     (@helper  <span class="macro-nonterminal">$root</span>:ident, [] ..=) =&gt; {
         <span class="macro">_memoffset__compile_error!</span>(<span class="string">&quot;Expected a range, found &#39;..=&#39;&quot;</span>)
@@ -416,13 +416,13 @@
     });
 }
 
-<span class="attribute">#[cfg(test)]
+<span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>tests {
     <span class="kw">use </span>core::mem;
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>span_simple() {
-        <span class="attribute">#[repr(C)]
+        <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>Foo {
             a: u32,
             b: [u8; <span class="number">2</span>],
@@ -434,10 +434,10 @@
         <span class="macro">assert_eq!</span>(<span class="macro">span_of!</span>(Foo, c), <span class="number">8</span>..<span class="number">8 </span>+ <span class="number">8</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     #[cfg_attr(miri, ignore)] </span><span class="comment">// this creates unaligned references
     </span><span class="kw">fn </span>span_simple_packed() {
-        <span class="attribute">#[repr(C, packed)]
+        <span class="attr">#[repr(C, packed)]
         </span><span class="kw">struct </span>Foo {
             a: u32,
             b: [u8; <span class="number">2</span>],
@@ -449,14 +449,14 @@
         <span class="macro">assert_eq!</span>(<span class="macro">span_of!</span>(Foo, c), <span class="number">6</span>..<span class="number">6 </span>+ <span class="number">8</span>);
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>span_forms() {
-        <span class="attribute">#[repr(C)]
+        <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>Florp {
             a: u32,
         }
 
-        <span class="attribute">#[repr(C)]
+        <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>Blarg {
             x: u64,
             y: [u8; <span class="number">56</span>],
@@ -473,14 +473,14 @@
         <span class="macro">assert_eq!</span>(<span class="number">0</span>..<span class="number">64</span>, <span class="macro">span_of!</span>(Blarg, x..=y));
     }
 
-    <span class="attribute">#[test]
+    <span class="attr">#[test]
     </span><span class="kw">fn </span>ig_test() {
-        <span class="attribute">#[repr(C)]
+        <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>Member {
             foo: u32,
         }
 
-        <span class="attribute">#[repr(C)]
+        <span class="attr">#[repr(C)]
         </span><span class="kw">struct </span>Test {
             x: u64,
             y: [u8; <span class="number">56</span>],
@@ -525,4 +525,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="memoffset" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

@@ -60,29 +60,29 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub mod </span>block;
-<span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+<span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub mod </span>drm;
 <span class="comment">// FIXME: aarch64 port
-</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub mod </span>keyboard;
 <span class="comment">// FIXME: aarch64 port
-</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub mod </span>lai;
 <span class="comment">// FIXME: aarch64 port
-</span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
+</span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)]
 </span><span class="kw">pub mod </span>pci;
 <span class="kw">pub mod </span>tty;
 
 <span class="macro">cfg_if::cfg_if! </span>{
-    <span class="kw">if </span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)] </span>{
+    <span class="kw">if </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;x86_64&quot;</span>)] </span>{
         <span class="kw">pub mod </span>uart_16550;
         <span class="kw">pub use </span><span class="self">self</span>::uart_16550 <span class="kw">as </span>uart;
-    } <span class="kw">else if </span><span class="attribute">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)] </span>{
+    } <span class="kw">else if </span><span class="attr">#[cfg(target_arch = <span class="string">&quot;aarch64&quot;</span>)] </span>{
         <span class="kw">pub mod </span>uart_pl011;
         <span class="kw">pub use </span><span class="self">self</span>::uart_pl011 <span class="kw">as </span>uart;
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

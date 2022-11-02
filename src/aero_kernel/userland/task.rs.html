@@ -653,7 +653,7 @@
 <span class="kw">use </span><span class="kw">super</span>::signals::{SignalResult, TriggerResult};
 <span class="kw">use </span><span class="kw">super</span>::vm::Vm;
 
-<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+<span class="attr">#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 #[repr(transparent)]
 </span><span class="kw">pub struct </span>TaskId(usize);
 
@@ -674,7 +674,7 @@
     </span>}
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq)]
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq)]
 </span><span class="kw">pub enum </span>TaskState {
     Runnable,
     Zombie,
@@ -1223,4 +1223,4 @@
 <span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub </span>SchedTaskAdapter = Arc&lt;Task&gt; : Task { link: LinkedListLink });
 <span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub </span>TaskAdapter = Arc&lt;Task&gt; : Task { clink: LinkedListLink });
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

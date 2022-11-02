@@ -237,7 +237,7 @@
 </span><span class="kw">pub const </span>SIG_DFL: i64 = <span class="number">0</span>; <span class="comment">// default
 </span><span class="kw">pub const </span>SIG_IGN: i64 = <span class="number">1</span>; <span class="comment">// ignore
 
-</span><span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
+</span><span class="attr">#[derive(Debug, Copy, Clone, PartialEq)]
 </span><span class="kw">pub enum </span>SignalHandler {
     Ignore,
     Default,
@@ -281,7 +281,7 @@
     }
 }
 
-<span class="attribute">#[repr(C)]
+<span class="attr">#[repr(C)]
 #[derive(Copy, Clone, Debug)]
 </span><span class="kw">pub struct </span>SigAction {
     <span class="kw">pub </span>sa_handler: u64,
@@ -303,7 +303,7 @@
 
 <span class="macro">bitflags::bitflags! </span>{
     <span class="comment">// mlibc/abis/linux/signal.h
-    </span><span class="attribute">#[derive(Default)]
+    </span><span class="attr">#[derive(Default)]
     </span><span class="kw">pub struct </span>SignalFlags: u32 {
         <span class="kw">const </span>SA_NOCLDSTOP = <span class="number">1</span>;
         <span class="kw">const </span>SA_NOCLDWAIT = <span class="number">2</span>;
@@ -316,7 +316,7 @@
     }
 }
 
-<span class="attribute">#[repr(u64)]
+<span class="attr">#[repr(u64)]
 #[derive(Debug)]
 </span><span class="kw">pub enum </span>SigProcMask {
     Block = SIG_BLOCK,
@@ -341,4 +341,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_syscall" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

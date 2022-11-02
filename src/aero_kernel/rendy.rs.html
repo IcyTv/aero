@@ -1035,21 +1035,21 @@
 
 <span class="kw">pub const </span>DEFAULT_THEME_BACKGROUND: u32 = <span class="number">0x50000000</span>;
 
-<span class="attribute">#[derive(Debug, Copy, Clone, PartialEq)]
+<span class="attr">#[derive(Debug, Copy, Clone, PartialEq)]
 </span><span class="kw">struct </span>Character {
     char: char,
     fg: u32,
     bg: u32,
 }
 
-<span class="attribute">#[derive(Debug, PartialEq, Clone)]
+<span class="attr">#[derive(Debug, PartialEq, Clone)]
 </span><span class="kw">struct </span>QueueCharacter {
     char: Character,
     x: usize,
     y: usize,
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+<span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>ColorCode(u32, u32);
 
 <span class="kw">impl </span>ColorCode {
@@ -1067,7 +1067,7 @@
 }
 
 <span class="doccomment">/// Color format of pixels in the framebuffer.
-</span><span class="attribute">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+</span><span class="attr">#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(C)]
 #[allow(warnings)] </span><span class="comment">// FIXME: Construct the other variants of this enum.
 </span><span class="kw">pub enum </span>PixelFormat {
@@ -1079,7 +1079,7 @@
     </span>U8,
 }
 
-<span class="attribute">#[derive(Debug, Clone, Copy)]
+<span class="attr">#[derive(Debug, Clone, Copy)]
 #[repr(C)]
 </span><span class="kw">pub struct </span>RendyInfo {
     <span class="doccomment">/// The total size in bytes.
@@ -1109,7 +1109,7 @@
     <span class="kw">pub </span>blue_mask_size: u8,
 }
 
-<span class="attribute">#[repr(C, packed)]
+<span class="attr">#[repr(C, packed)]
 </span><span class="kw">struct </span>BmpHeader {
     bf_signature: [u8; <span class="number">2</span>],
     bf_size: u32,
@@ -1132,7 +1132,7 @@
     blue_mask: u32,
 }
 
-<span class="attribute">#[derive(Debug)]
+<span class="attr">#[derive(Debug)]
 </span><span class="kw">struct </span>Image {
     image: Box&lt;[u8]&gt;,
 
@@ -1757,7 +1757,7 @@
     DEBUG_RENDY.get().is_some()
 }
 
-<span class="attribute">#[doc(hidden)]
+<span class="attr">#[doc(hidden)]
 </span><span class="kw">pub fn </span>_print(args: fmt::Arguments) {
     DEBUG_RENDY.get().map(|l| l.lock_irq().write_fmt(args));
 }
@@ -1935,4 +1935,4 @@
     DEBUG_RENDY.call_once(|| Mutex::new(rendy));
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

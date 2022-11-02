@@ -232,7 +232,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::d2s::{<span class="self">self</span>, <span class="kw-2">*</span>};
 <span class="kw">use </span><span class="kw">crate</span>::f2s::<span class="kw-2">*</span>;
 <span class="kw">use </span>core::ptr;
-<span class="attribute">#[cfg(feature = <span class="string">&quot;no-panic&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;no-panic&quot;</span>)]
 </span><span class="kw">use </span>no_panic::no_panic;
 
 <span class="doccomment">/// Print f64 to the given buffer and return number of bytes written.
@@ -272,7 +272,7 @@
 ///     assert_eq!(print, &quot;1.234&quot;);
 /// }
 /// ```
-</span><span class="attribute">#[must_use]
+</span><span class="attr">#[must_use]
 #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, no_panic)]
 </span><span class="kw">pub unsafe fn </span>format64(f: f64, result: <span class="kw-2">*mut </span>u8) -&gt; usize {
     <span class="kw">let </span>bits = f.to_bits();
@@ -379,7 +379,7 @@
 ///     assert_eq!(print, &quot;1.234&quot;);
 /// }
 /// ```
-</span><span class="attribute">#[must_use]
+</span><span class="attr">#[must_use]
 #[cfg_attr(feature = <span class="string">&quot;no-panic&quot;</span>, no_panic)]
 </span><span class="kw">pub unsafe fn </span>format32(f: f32, result: <span class="kw-2">*mut </span>u8) -&gt; usize {
     <span class="kw">let </span>bits = f.to_bits();
@@ -449,4 +449,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="ryu" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>

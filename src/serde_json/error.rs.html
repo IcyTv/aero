@@ -452,7 +452,7 @@
 <span class="kw">use </span>core::result;
 <span class="kw">use </span>core::str::FromStr;
 <span class="kw">use </span>serde::{de, ser};
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 </span><span class="kw">use </span>std::error;
 
 <span class="doccomment">/// This type represents all possible errors that can occur when serializing or
@@ -552,7 +552,7 @@
 }
 
 <span class="doccomment">/// Categorizes the cause of a `serde_json::Error`.
-</span><span class="attribute">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
+</span><span class="attr">#[derive(Copy, Clone, PartialEq, Eq, Debug)]
 </span><span class="kw">pub enum </span>Category {
     <span class="doccomment">/// The error was caused by a failure to read or write bytes on an IO
     /// stream.
@@ -574,7 +574,7 @@
     </span>Eof,
 }
 
-<span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
 #[allow(clippy::fallible_impl_from)]
 </span><span class="kw">impl </span>From&lt;Error&gt; <span class="kw">for </span>io::Error {
     <span class="doccomment">/// Convert a `serde_json::Error` into an `io::Error`.
@@ -692,7 +692,7 @@
 }
 
 <span class="kw">impl </span>Error {
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>syntax(code: ErrorCode, line: usize, column: usize) -&gt; <span class="self">Self </span>{
         Error {
             err: Box::new(ErrorImpl { code, line, column }),
@@ -702,7 +702,7 @@
     <span class="comment">// Not public API. Should be pub(crate).
     //
     // Update `eager_json` crate when this function changes.
-    </span><span class="attribute">#[doc(hidden)]
+    </span><span class="attr">#[doc(hidden)]
     #[cold]
     </span><span class="kw">pub fn </span>io(error: io::Error) -&gt; <span class="self">Self </span>{
         Error {
@@ -714,7 +714,7 @@
         }
     }
 
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     </span><span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>fix_position&lt;F&gt;(<span class="self">self</span>, f: F) -&gt; <span class="self">Self
     </span><span class="kw">where
         </span>F: FnOnce(ErrorCode) -&gt; Error,
@@ -761,7 +761,7 @@
 }
 
 <span class="kw">impl </span>serde::de::StdError <span class="kw">for </span>Error {
-    <span class="attribute">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
+    <span class="attr">#[cfg(feature = <span class="string">&quot;std&quot;</span>)]
     </span><span class="kw">fn </span>source(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>(<span class="kw">dyn </span>error::Error + <span class="lifetime">&#39;static</span>)&gt; {
         <span class="kw">match </span><span class="self">self</span>.err.code {
             ErrorCode::Io(<span class="kw-2">ref </span>err) =&gt; <span class="prelude-val">Some</span>(err),
@@ -805,12 +805,12 @@
 }
 
 <span class="kw">impl </span>de::Error <span class="kw">for </span>Error {
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     </span><span class="kw">fn </span>custom&lt;T: Display&gt;(msg: T) -&gt; Error {
         make_error(msg.to_string())
     }
 
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     </span><span class="kw">fn </span>invalid_type(unexp: de::Unexpected, exp: <span class="kw-2">&amp;</span><span class="kw">dyn </span>de::Expected) -&gt; <span class="self">Self </span>{
         <span class="kw">if let </span>de::Unexpected::Unit = unexp {
             Error::custom(<span class="macro">format_args!</span>(<span class="string">&quot;invalid type: null, expected {}&quot;</span>, exp))
@@ -821,7 +821,7 @@
 }
 
 <span class="kw">impl </span>ser::Error <span class="kw">for </span>Error {
-    <span class="attribute">#[cold]
+    <span class="attr">#[cold]
     </span><span class="kw">fn </span>custom&lt;T: Display&gt;(msg: T) -&gt; Error {
         make_error(msg.to_string())
     }
@@ -889,4 +889,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (95a3a7277 2022-10-31)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="serde_json" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>
