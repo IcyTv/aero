@@ -634,6 +634,13 @@
 <span id="634">634</span>
 <span id="635">635</span>
 <span id="636">636</span>
+<span id="637">637</span>
+<span id="638">638</span>
+<span id="639">639</span>
+<span id="640">640</span>
+<span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -1164,6 +1171,13 @@
 
         <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::NotSupported);
     }
+
+    <span class="kw">fn </span>as_unix_socket(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw">super</span>::Result&lt;Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;&gt; {
+        <span class="self">self</span>.proxy
+            .as_ref()
+            .ok_or(FileSystemError::NotSocket)
+            .cloned()
+    }
 }
 
 <span class="kw">pub struct </span>DirEntryIter {
@@ -1271,4 +1285,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="aero_kernel" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (215e3cd21 2022-11-03)" ></div></body></html>
