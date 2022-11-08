@@ -144,7 +144,6 @@
 <span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
 
 <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
-<span class="kw">use </span><span class="kw">crate</span>::utils;
 
 <span class="doccomment">/// Creates a [`SocketAddr`] from the provided userland socket structure address. This
 /// is done by looking at the family field present in every socket address structure.
@@ -173,20 +172,20 @@
 
 <span class="doccomment">/// Accept a connection on a socket.
 </span><span class="attr">#[syscall]
-</span><span class="kw">pub fn </span>accept(
-    fd: usize,
-    address: usize,
-    _length: <span class="comment">/*&amp;mut u32*/ </span>usize,
-) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
-    <span class="comment">// TODO: In the syscall macro, handle Option&lt;NonNull&lt;T&gt;&gt; param.
-    </span><span class="kw">let </span>address = <span class="kw">if </span>address != <span class="number">0 </span>{
-        <span class="prelude-val">Some</span>(utils::validate_mut_ptr(address <span class="kw">as </span><span class="kw-2">*mut </span>SocketAddr).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>)
+</span><span class="kw">pub fn </span>accept(fd: usize, address: usize, length: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>file_table = scheduler::get_scheduler().current_task().file_table.clone();
+    <span class="kw">let </span>socket = file_table.get_handle(fd).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>address = <span class="kw">if </span>address != <span class="number">0 </span>&amp;&amp; length != <span class="number">0 </span>{
+        <span class="prelude-val">Some</span>((
+            VirtAddr::new(address <span class="kw">as </span>u64),
+            VirtAddr::new(length <span class="kw">as </span>u64)
+                .read_mut::&lt;u32&gt;()
+                .ok_or(SyscallError::EACCES)<span class="question-mark">?</span>,
+        ))
     } <span class="kw">else </span>{
         <span class="prelude-val">None
     </span>};
-
-    <span class="kw">let </span>file_table = scheduler::get_scheduler().current_task().file_table.clone();
-    <span class="kw">let </span>socket = file_table.get_handle(fd).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
     <span class="kw">let </span>connection_sock = socket.inode().accept(address)<span class="question-mark">?</span>;
     <span class="kw">let </span>handle = file_table.open_file(
@@ -211,7 +210,8 @@
         .get_handle(sockfd)
         .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="prelude-val">Ok</span>(socket.inode().recv(header)<span class="question-mark">?</span>)
+    <span class="kw">let </span>non_block = socket.flags.read().contains(OpenFlags::O_NONBLOCK);
+    <span class="prelude-val">Ok</span>(socket.inode().recv(header, non_block)<span class="question-mark">?</span>)
 }
 
 <span class="doccomment">/// Marks the socket as a passive socket (i.e. as a socket that will be used to accept incoming

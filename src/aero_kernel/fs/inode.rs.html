@@ -505,6 +505,7 @@
 <span id="505">505</span>
 <span id="506">506</span>
 <span id="507">507</span>
+<span id="508">508</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -537,7 +538,7 @@
 <span class="kw">use </span>intrusive_collections::UnsafeRef;
 <span class="kw">use </span>spin::Once;
 
-<span class="kw">use </span><span class="kw">crate</span>::mem::paging::PhysFrame;
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::{PhysFrame, VirtAddr};
 <span class="kw">use </span><span class="kw">crate</span>::socket::unix::UnixSocket;
 <span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
 <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
@@ -549,6 +550,7 @@
 <span class="kw">use </span><span class="kw">super</span>::cache::CachedINode;
 <span class="kw">use </span><span class="kw">super</span>::cache::{DirCacheItem, INodeCacheItem};
 <span class="kw">use </span><span class="kw">super</span>::devfs::DevINode;
+<span class="kw">use </span><span class="kw">super</span>::file_table::FileHandle;
 <span class="kw">use super</span>::{FileSystem, FileSystemError, <span class="prelude-ty">Result</span>};
 
 <span class="kw">static </span>DIR_CACHE_MARKER: AtomicUsize = AtomicUsize::new(<span class="number">0x00</span>);
@@ -699,7 +701,7 @@
         <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
-    <span class="kw">fn </span>open(<span class="kw-2">&amp;</span><span class="self">self</span>, _flags: OpenFlags) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">fn </span>open(<span class="kw-2">&amp;</span><span class="self">self</span>, _flags: OpenFlags, _handle: Arc&lt;FileHandle&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -746,11 +748,11 @@
         <span class="prelude-val">Err</span>(SyscallError::ENOTSOCK)
     }
 
-    <span class="kw">fn </span>accept(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>SocketAddr&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;UnixSocket&gt;&gt; {
+    <span class="kw">fn </span>accept(<span class="kw-2">&amp;</span><span class="self">self</span>, _address: <span class="prelude-ty">Option</span>&lt;(VirtAddr, <span class="kw-2">&amp;mut </span>u32)&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;UnixSocket&gt;&gt; {
         <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 
-    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>, _message_header: <span class="kw-2">&amp;mut </span>MessageHeader) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
+    <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>, _message_header: <span class="kw-2">&amp;mut </span>MessageHeader, _non_block: bool) -&gt; <span class="prelude-ty">Result</span>&lt;usize&gt; {
         <span class="prelude-val">Err</span>(FileSystemError::NotSocket)
     }
 

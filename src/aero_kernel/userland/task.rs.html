@@ -606,10 +606,6 @@
 <span id="606">606</span>
 <span id="607">607</span>
 <span id="608">608</span>
-<span id="609">609</span>
-<span id="610">610</span>
-<span id="611">611</span>
-<span id="612">612</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -765,12 +761,8 @@
 
         <span class="kw">let </span>(tid, st) = captured;
 
-        <span class="comment">// WIFEXITED: The child process has been terminated normally by
-        // either calling sys_exit() or returning from the main function.
-        </span><span class="kw-2">*</span>status = <span class="number">0x200</span>;
-        <span class="comment">// The lower 8-bits are used to store the exit status.
-        </span><span class="kw-2">*</span>status |= st <span class="kw">as </span>u32 &amp; <span class="number">0xff</span>;
-
+        <span class="macro">log::debug!</span>(<span class="string">&quot;waitpid: status = {st}&quot;</span>);
+        <span class="kw-2">*</span>status = st <span class="kw">as </span>u32;
         <span class="prelude-val">Ok</span>(tid.as_usize())
     }
 }

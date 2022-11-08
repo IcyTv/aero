@@ -235,6 +235,9 @@
 <span id="235">235</span>
 <span id="236">236</span>
 <span id="237">237</span>
+<span id="238">238</span>
+<span id="239">239</span>
+<span id="240">240</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -271,8 +274,11 @@
     <span class="kw">fn </span>alloc(<span class="kw-2">&amp;</span><span class="self">self</span>, layout: Layout) -&gt; <span class="kw-2">*mut </span>u8 {
         <span class="kw">let </span>size = align_up(layout.size() <span class="kw">as _</span>, layout.align() <span class="kw">as _</span>);
 
-        <span class="kw">if </span>size &lt;= <span class="number">4096 </span>{
+        <span class="kw">if </span>size &lt;= Size4KiB::SIZE {
             <span class="kw">let </span>frame: PhysFrame&lt;Size4KiB&gt; = FRAME_ALLOCATOR.allocate_frame().unwrap();
+            frame.start_address().as_hhdm_virt().as_mut_ptr()
+        } <span class="kw">else if </span>size &lt;= Size2MiB::SIZE {
+            <span class="kw">let </span>frame: PhysFrame&lt;Size2MiB&gt; = FRAME_ALLOCATOR.allocate_frame().unwrap();
             frame.start_address().as_hhdm_virt().as_mut_ptr()
         } <span class="kw">else </span>{
             <span class="kw">let </span>size = align_up(size, Size4KiB::SIZE) / Size4KiB::SIZE;

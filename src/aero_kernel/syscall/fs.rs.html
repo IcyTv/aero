@@ -639,6 +639,13 @@
 <span id="639">639</span>
 <span id="640">640</span>
 <span id="641">641</span>
+<span id="642">642</span>
+<span id="643">643</span>
+<span id="644">644</span>
+<span id="645">645</span>
+<span id="646">646</span>
+<span id="647">647</span>
+<span id="648">648</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -662,6 +669,7 @@
 <span class="kw">use </span>aero_syscall::{prelude::<span class="kw-2">*</span>, TimeSpec};
 <span class="kw">use </span>aero_syscall::{OpenFlags, Stat, SyscallError};
 
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheImpl;
 <span class="kw">use </span><span class="kw">crate</span>::fs::epoll::EPoll;
 <span class="kw">use </span><span class="kw">crate</span>::fs::eventfd::EventFd;
 <span class="kw">use </span><span class="kw">crate</span>::fs::file_table::DuplicateHint;
@@ -702,6 +710,7 @@
 
     <span class="kw">if </span>handle
         .flags
+        .read()
         .intersects(OpenFlags::O_RDONLY | OpenFlags::O_RDWR)
     {
         <span class="prelude-val">Ok</span>(handle.read(buffer)<span class="question-mark">?</span>)
@@ -928,27 +937,26 @@
 }
 
 <span class="attr">#[syscall]
-</span><span class="kw">pub fn </span>unlink(fd: usize, path: <span class="kw-2">&amp;</span>Path, flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
-    <span class="comment">// TODO: Make use of the open flags.
-    </span><span class="kw">let </span>_flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
-    <span class="kw">let </span>name = path.container();
+</span><span class="kw">pub fn </span>unlink(_fd: usize, _path: <span class="kw-2">&amp;</span>Path, _flags: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="comment">// let _flags = OpenFlags::from_bits(flags).ok_or(SyscallError::EINVAL)?;
+    // let name = path.container();
 
-    <span class="kw">if </span>fd <span class="kw">as </span>isize == aero_syscall::AT_FDCWD {
-        <span class="kw">let </span>file = fs::lookup_path(path)<span class="question-mark">?</span>;
+    // if fd as isize == aero_syscall::AT_FDCWD {
+    //     let file = fs::lookup_path(path)?;
 
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(dir) = file.parent() {
-            <span class="kw">let </span>metadata = file.inode().metadata()<span class="question-mark">?</span>;
+    //     if let Some(dir) = file.parent() {
+    //         let metadata = file.inode().metadata()?;
 
-            <span class="kw">if </span>metadata.is_file() {
-                dir.inode().unlink(name.as_str())<span class="question-mark">?</span>;
-                file.drop_from_cache();
-            }
-        }
-    } <span class="kw">else </span>{
-        <span class="macro">unimplemented!</span>()
-    }
+    //         if metadata.is_file() {
+    //             dir.inode().unlink(name.as_str())?;
+    //             file.drop_from_cache();
+    //         }
+    //     }
+    // } else {
+    //     unimplemented!()
+    // }
 
-    <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
+    </span><span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
 }
 
 <span class="attr">#[syscall]
@@ -983,7 +991,7 @@
         </span>aero_syscall::prelude::F_DUPFD =&gt; scheduler::get_scheduler()
             .current_task()
             .file_table
-            .duplicate(fd, DuplicateHint::GreatorOrEqual(arg), handle.flags),
+            .duplicate(fd, DuplicateHint::GreatorOrEqual(arg), <span class="kw-2">*</span>handle.flags.read()),
 
         aero_syscall::prelude::F_DUPFD_CLOEXEC =&gt; scheduler::get_scheduler()
             .current_task()
@@ -991,7 +999,7 @@
             .duplicate(
                 fd,
                 DuplicateHint::GreatorOrEqual(arg),
-                handle.flags | OpenFlags::O_CLOEXEC,
+                <span class="kw-2">*</span>handle.flags.read() | OpenFlags::O_CLOEXEC,
             ),
 
         <span class="comment">// Get the value of file descriptor flags.
@@ -1005,19 +1013,20 @@
             <span class="kw">let </span>flags = FdFlags::from_bits(arg).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
             handle.fd_flags.lock().insert(flags);
 
-            <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
+            <span class="prelude-val">Ok</span>(<span class="number">0</span>)
         }
 
         <span class="comment">// Get the value of file status flags:
         </span>aero_syscall::prelude::F_GETFL =&gt; {
-            <span class="kw">let </span>flags = handle.flags.bits();
+            <span class="kw">let </span>flags = handle.flags.read().bits();
             <span class="prelude-val">Ok</span>(flags)
         }
 
         aero_syscall::prelude::F_SETFL =&gt; {
-            <span class="macro">log::debug!</span>(<span class="string">&quot;F_SETFL: is a stub!&quot;</span>);
+            <span class="kw">let </span>flags = OpenFlags::from_bits_truncate(arg);
+            handle.flags.write().insert(flags);
 
-            <span class="prelude-val">Ok</span>(<span class="number">0x00</span>)
+            <span class="prelude-val">Ok</span>(<span class="number">0</span>)
         }
 
         <span class="kw">_ </span>=&gt; <span class="macro">unimplemented!</span>(<span class="string">&quot;fcntl: unknown command {command}&quot;</span>),
@@ -1207,6 +1216,14 @@
 
         <span class="kw">let </span>ready: PollEventFlags = handle.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
 
+        <span class="macro">log::trace!</span>(
+            <span class="string">&quot;poll: (fd={} `{:?}`, events={:?} cur={:?})&quot;</span>,
+            fd.fd,
+            handle.inode.absolute_path_str(),
+            fd.events,
+            ready
+        );
+
         <span class="kw">if </span>!(ready &amp; fd.events).is_empty() {
             <span class="comment">// The registered event is ready; increment the number of ready events
             // and update revents mask for this event.
@@ -1237,9 +1254,6 @@
     <span class="kw">crate</span>::unwind::unwind_stack_trace();
 
     <span class="lifetime">&#39;search</span>: <span class="kw">loop </span>{
-        <span class="comment">// Wait till one of the file descriptor to be ready.
-        </span>scheduler::get_scheduler().inner.await_io()<span class="question-mark">?</span>;
-
         <span class="kw">for </span>(handle, index) <span class="kw">in </span>refds.iter() {
             <span class="kw">let </span>pollfd = <span class="kw-2">&amp;mut </span>fds[<span class="kw-2">*</span>index];
             <span class="kw">let </span>ready: PollEventFlags = handle.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();

@@ -95,6 +95,7 @@
 <span id="95">95</span>
 <span id="96">96</span>
 <span id="97">97</span>
+<span id="98">98</span>
 </pre><pre class="rust"><code><span class="kw">use </span>core::sync::atomic::{AtomicUsize, Ordering};
 
 <span class="kw">use </span>aero_syscall::OpenFlags;
@@ -103,6 +104,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::utils::buffer::Buffer;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
+<span class="kw">use </span><span class="kw">super</span>::file_table::FileHandle;
 <span class="kw">use </span><span class="kw">super</span>::inode::{INodeInterface, PollFlags, PollTable};
 
 <span class="kw">pub struct </span>Pipe {
@@ -134,7 +136,7 @@
 }
 
 <span class="kw">impl </span>INodeInterface <span class="kw">for </span>Pipe {
-    <span class="kw">fn </span>open(<span class="kw-2">&amp;</span><span class="self">self</span>, flags: OpenFlags) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+    <span class="kw">fn </span>open(<span class="kw-2">&amp;</span><span class="self">self</span>, flags: OpenFlags, _handle: Arc&lt;FileHandle&gt;) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
         <span class="comment">// Write end of the pipe:
         </span><span class="kw">if </span>flags.contains(OpenFlags::O_WRONLY) {
             <span class="self">self</span>.num_writers.fetch_add(<span class="number">1</span>, Ordering::SeqCst);
