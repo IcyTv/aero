@@ -411,6 +411,13 @@
 <span id="411">411</span>
 <span id="412">412</span>
 <span id="413">413</span>
+<span id="414">414</span>
+<span id="415">415</span>
+<span id="416">416</span>
+<span id="417">417</span>
+<span id="418">418</span>
+<span id="419">419</span>
+<span id="420">420</span>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -492,12 +499,19 @@
     }
 
     <span class="kw">pub fn </span>read(<span class="kw-2">&amp;mut </span><span class="self">self</span>, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; usize {
-        <span class="kw">if let </span><span class="prelude-val">Some</span>(message) = <span class="self">self</span>.messages.pop_front() {
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(message) = <span class="self">self</span>.messages.front_mut() {
             <span class="kw">let </span>message_len = message.data.len();
-            <span class="macro">assert!</span>(buffer.len() &gt;= message_len);
+            <span class="kw">let </span>size = core::cmp::min(buffer.len(), message_len);
 
-            buffer[..message_len].copy_from_slice(message.data.as_slice());
-            message_len
+            buffer[..size].copy_from_slice(<span class="kw-2">&amp;</span>message.data[..size]);
+
+            <span class="kw">if </span>size &lt; message_len {
+                message.data.drain(..size);
+                <span class="kw">return </span>size;
+            }
+
+            <span class="self">self</span>.messages.pop_front();
+            size
         } <span class="kw">else </span>{
             <span class="macro">unreachable!</span>(<span class="string">&quot;MessageQueue::read() called when queue is empty&quot;</span>);
         }
