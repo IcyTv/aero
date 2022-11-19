@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"mod":[["drm",""],["ioctl",""]]};
+window.SIDEBAR_ITEMS = {"mod":[["drm",""],["ioctl",""],["pty",""]]};
