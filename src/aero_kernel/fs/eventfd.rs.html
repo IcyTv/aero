@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/eventfd.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>eventfd.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1d6438e53893d4f5.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-b8db113b98e15459.css"><link rel="stylesheet" disabled href="../../../static.files/dark-4b64df8497ac42b0.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-4939169e939b96f8.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-8f89a77f33748381.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/eventfd.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>eventfd.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-75894291877b32c0.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-3bcdcab5f4113412.css"><link rel="stylesheet" disabled href="../../../static.files/dark-091ecdca18d5df85.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-45445754dcd01ab2.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-d2f7777684990013.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -70,6 +70,23 @@
 <a href="#70" id="70">70</a>
 <a href="#71" id="71">71</a>
 <a href="#72" id="72">72</a>
+<a href="#73" id="73">73</a>
+<a href="#74" id="74">74</a>
+<a href="#75" id="75">75</a>
+<a href="#76" id="76">76</a>
+<a href="#77" id="77">77</a>
+<a href="#78" id="78">78</a>
+<a href="#79" id="79">79</a>
+<a href="#80" id="80">80</a>
+<a href="#81" id="81">81</a>
+<a href="#82" id="82">82</a>
+<a href="#83" id="83">83</a>
+<a href="#84" id="84">84</a>
+<a href="#85" id="85">85</a>
+<a href="#86" id="86">86</a>
+<a href="#87" id="87">87</a>
+<a href="#88" id="88">88</a>
+<a href="#89" id="89">89</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -96,7 +113,7 @@
 
 <span class="kw">pub struct </span>EventFd {
     wq: BlockQueue,
-    count: Mutex&lt;usize&gt;,
+    count: Mutex&lt;u64&gt;,
 }
 
 <span class="kw">impl </span>EventFd {
@@ -109,16 +126,33 @@
 }
 
 <span class="kw">impl </span>INodeInterface <span class="kw">for </span>EventFd {
-    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
-        <span class="self">self</span>.wq.notify_complete();
+    <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span>size = core::mem::size_of::&lt;u64&gt;();
+        <span class="macro">assert!</span>(buffer.len() == size);
 
-        <span class="macro">unimplemented!</span>()
+        <span class="comment">// SAFETY: We have above verified that it is safe to dereference
+        //         the value.
+        </span><span class="kw">let </span>value = <span class="kw">unsafe </span>{ <span class="kw-2">&amp;mut *</span>(buffer.as_mut_ptr() <span class="kw">as </span><span class="kw-2">*mut </span>u64) };
+        <span class="kw">let </span><span class="kw-2">mut </span>count = <span class="self">self</span>.wq.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.count, |e| <span class="kw-2">**</span>e != <span class="number">0</span>)<span class="question-mark">?</span>;
+
+        <span class="kw-2">*</span>value = <span class="kw-2">*</span>count;
+        <span class="kw-2">*</span>count = <span class="number">0</span>; <span class="comment">// reset the counter
+
+        </span><span class="self">self</span>.wq.notify_complete();
+        <span class="prelude-val">Ok</span>(size)
     }
 
-    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, _buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
-        <span class="self">self</span>.wq.notify_complete();
+    <span class="kw">fn </span>write_at(<span class="kw-2">&amp;</span><span class="self">self</span>, _offset: usize, buffer: <span class="kw-2">&amp;</span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
+        <span class="kw">let </span>size = core::mem::size_of::&lt;u64&gt;();
+        <span class="macro">assert!</span>(buffer.len() == size);
 
-        <span class="macro">unimplemented!</span>()
+        <span class="comment">// SAFETY: We have above verified that it is safe to dereference
+        //         the value.
+        </span><span class="kw">let </span>value = <span class="kw">unsafe </span>{ <span class="kw-2">*</span>(buffer.as_ptr() <span class="kw">as </span><span class="kw-2">*const </span>u64) };
+
+        <span class="kw-2">*</span><span class="self">self</span>.count.lock_irq() += value;
+        <span class="self">self</span>.wq.notify_complete();
+        <span class="prelude-val">Ok</span>(size)
     }
 
     <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>PollTable&gt;) -&gt; <span class="kw">super</span>::Result&lt;PollFlags&gt; {
@@ -131,11 +165,11 @@
             events.insert(PollFlags::IN);
         }
 
-        <span class="kw">if </span><span class="kw-2">*</span>count == usize::MAX {
+        <span class="kw">if </span><span class="kw-2">*</span>count == u64::MAX {
             events.insert(PollFlags::ERR);
         }
 
-        <span class="kw">if </span><span class="kw-2">*</span>count &lt; (usize::MAX - <span class="number">1</span>) {
+        <span class="kw">if </span><span class="kw-2">*</span>count &lt; (u64::MAX - <span class="number">1</span>) {
             events.insert(PollFlags::OUT); <span class="comment">// possible to write a value of at least &quot;1&quot; without blocking.
         </span>}
 
@@ -143,4 +177,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (c5d82ed7a 2022-11-19)" data-search-js="search-df80cc3cb87b6482.js" data-settings-js="settings-7e1cf5cc683233f7.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (2585bcea0 2022-11-28)" data-search-js="search-df80cc3cb87b6482.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
