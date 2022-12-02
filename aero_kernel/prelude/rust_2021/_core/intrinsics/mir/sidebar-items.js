@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["Goto",""],["Move",""],["Retag",""],["RetagRaw",""],["Return",""]],"macro":[["mir","Convenience macro for generating custom MIR."]],"struct":[["BasicBlock","Type representing basic blocks."]]};
+window.SIDEBAR_ITEMS = {"fn":[["Goto",""],["Move",""],["Retag",""],["RetagRaw",""],["Return",""],["Static",""],["StaticMut",""]],"macro":[["mir","Convenience macro for generating custom MIR."]],"struct":[["BasicBlock","Type representing basic blocks."]]};

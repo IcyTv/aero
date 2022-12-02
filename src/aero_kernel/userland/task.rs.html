@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/userland/task.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>task.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-59deea3733ac6c09.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-3bcdcab5f4113412.css"><link rel="stylesheet" disabled href="../../../static.files/dark-091ecdca18d5df85.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-45445754dcd01ab2.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-287cecec4dbb45b0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/userland/task.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>task.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e3630034d0b07e68.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-3bcdcab5f4113412.css"><link rel="stylesheet" disabled href="../../../static.files/dark-091ecdca18d5df85.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-45445754dcd01ab2.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-287cecec4dbb45b0.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -608,6 +608,30 @@
 <a href="#608" id="608">608</a>
 <a href="#609" id="609">609</a>
 <a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
+<a href="#631" id="631">631</a>
+<a href="#632" id="632">632</a>
+<a href="#633" id="633">633</a>
+<a href="#634" id="634">634</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -627,7 +651,8 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="kw">use </span>alloc::sync::{Arc, Weak};
+</span><span class="kw">use </span>aero_syscall::WaitPidFlags;
+<span class="kw">use </span>alloc::sync::{Arc, Weak};
 
 <span class="kw">use </span>spin::RwLock;
 
@@ -739,8 +764,13 @@
         <span class="self">self</span>.block.notify_complete();
     }
 
-    <span class="kw">fn </span>waitpid(<span class="kw-2">&amp;</span><span class="self">self</span>, pids: <span class="kw-2">&amp;</span>[usize], status: <span class="kw-2">&amp;mut </span>u32) -&gt; SignalResult&lt;usize&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>captured = (TaskId(<span class="number">0</span>), <span class="number">0</span>);
+    <span class="kw">fn </span>waitpid(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pids: <span class="kw-2">&amp;</span>[usize],
+        status: <span class="kw-2">&amp;mut </span>u32,
+        flags: WaitPidFlags,
+    ) -&gt; SignalResult&lt;usize&gt; {
+        <span class="kw">let </span><span class="kw-2">mut </span>captured = <span class="prelude-val">None</span>;
 
         <span class="self">self</span>.block.block_on(<span class="kw-2">&amp;</span><span class="self">self</span>.list, |l| {
             <span class="kw">let </span><span class="kw-2">mut </span>cursor = l.front_mut();
@@ -748,7 +778,7 @@
             <span class="kw">while let </span><span class="prelude-val">Some</span>(t) = cursor.get() {
                 <span class="kw">for </span>pid <span class="kw">in </span>pids {
                     <span class="kw">if </span>t.pid().as_usize() == <span class="kw-2">*</span>pid {
-                        captured = (t.pid(), t.exit_status());
+                        captured = <span class="prelude-val">Some</span>((t.pid(), t.exit_status()));
                         cursor.remove();
 
                         <span class="kw">return </span><span class="bool-val">true</span>;
@@ -758,14 +788,23 @@
                 cursor.move_next();
             }
 
+            <span class="kw">if </span>flags.contains(WaitPidFlags::WNOHANG) {
+                <span class="kw">return </span><span class="bool-val">true</span>;
+            }
+
             <span class="bool-val">false
         </span>})<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>(tid, st) = captured;
-
-        <span class="macro">log::debug!</span>(<span class="string">&quot;waitpid: status = {st}&quot;</span>);
-        <span class="kw-2">*</span>status = st <span class="kw">as </span>u32;
-        <span class="prelude-val">Ok</span>(tid.as_usize())
+        <span class="kw">if let </span><span class="prelude-val">Some</span>((tid, st)) = captured {
+            <span class="macro">log::debug!</span>(<span class="string">&quot;waitpid: status = {st}&quot;</span>);
+            <span class="kw-2">*</span>status = st <span class="kw">as </span>u32;
+            <span class="prelude-val">Ok</span>(tid.as_usize())
+        } <span class="kw">else </span>{
+            <span class="comment">// If `WNOHANG` was specified in flags and there were no children in a waitable
+            // state, then waitid() returns 0 immediately.
+            </span><span class="kw-2">*</span>status = <span class="number">0</span>;
+            <span class="prelude-val">Ok</span>(<span class="number">0</span>)
+        }
     }
 }
 
@@ -1027,7 +1066,12 @@
         <span class="self">self</span>.sleep_duration.load(Ordering::SeqCst)
     }
 
-    <span class="kw">pub fn </span>waitpid(<span class="kw-2">&amp;</span><span class="self">self</span>, pid: isize, status: <span class="kw-2">&amp;mut </span>u32) -&gt; SignalResult&lt;usize&gt; {
+    <span class="kw">pub fn </span>waitpid(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        pid: isize,
+        status: <span class="kw-2">&amp;mut </span>u32,
+        flags: WaitPidFlags,
+    ) -&gt; SignalResult&lt;usize&gt; {
         <span class="kw">if </span>pid == -<span class="number">1 </span>{
             <span class="comment">// wait for any child process if no specific process is requested.
             //
@@ -1043,9 +1087,9 @@
                 .collect::&lt;alloc::vec::Vec&lt;<span class="kw">_</span>&gt;&gt;();
 
             pids.extend(<span class="self">self</span>.children.lock_irq().iter().map(|e| e.pid().as_usize()));
-            <span class="self">self</span>.zombies.waitpid(<span class="kw-2">&amp;</span>pids, status)
+            <span class="self">self</span>.zombies.waitpid(<span class="kw-2">&amp;</span>pids, status, flags)
         } <span class="kw">else </span>{
-            <span class="self">self</span>.zombies.waitpid(<span class="kw-2">&amp;</span>[pid <span class="kw">as _</span>], status)
+            <span class="self">self</span>.zombies.waitpid(<span class="kw-2">&amp;</span>[pid <span class="kw">as _</span>], status, flags)
         }
     }
 
@@ -1095,17 +1139,17 @@
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>update_state(<span class="kw-2">&amp;</span><span class="self">self</span>, state: TaskState) {
-        <span class="comment">// if state != TaskState::Runnable {
-        //     log::warn!(
-        //         &quot;Task::update_state() updated the task state to {state:?}! (pid={:?}, tid={:?})&quot;,
-        //         self.pid,
-        //         self.tid
-        //     );
+        <span class="kw">if </span>state != TaskState::Runnable {
+            <span class="macro">log::warn!</span>(
+                <span class="string">&quot;Task::update_state() updated the task state to {state:?}! (pid={:?}, tid={:?})&quot;</span>,
+                <span class="self">self</span>.pid,
+                <span class="self">self</span>.tid
+            );
 
-        //     crate::unwind::unwind_stack_trace();
-        // }
+            <span class="kw">crate</span>::unwind::unwind_stack_trace();
+        }
 
-        </span><span class="self">self</span>.state.store(state <span class="kw">as _</span>, Ordering::SeqCst);
+        <span class="self">self</span>.state.store(state <span class="kw">as _</span>, Ordering::SeqCst);
     }
 
     <span class="kw">pub fn </span>state(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskState {
@@ -1115,6 +1159,10 @@
     <span class="doccomment">/// Returns the PID ID that was allocated for this task.
     </span><span class="kw">pub fn </span>pid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskId {
         <span class="self">self</span>.pid
+    }
+
+    <span class="kw">pub fn </span>parent_pid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskId {
+        <span class="self">self</span>.get_parent().unwrap().pid()
     }
 
     <span class="kw">pub fn </span>tid(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; TaskId {
@@ -1219,4 +1267,4 @@
 <span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub </span>SchedTaskAdapter = Arc&lt;Task&gt; : Task { link: LinkedListLink });
 <span class="macro">intrusive_collections::intrusive_adapter!</span>(<span class="kw">pub </span>TaskAdapter = Arc&lt;Task&gt; : Task { clink: LinkedListLink });
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (c97b539e4 2022-11-30)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (c090c6880 2022-12-01)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
