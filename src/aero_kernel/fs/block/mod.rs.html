@@ -357,10 +357,6 @@
 <a href="#357" id="357">357</a>
 <a href="#358" id="358">358</a>
 <a href="#359" id="359">359</a>
-<a href="#360" id="360">360</a>
-<a href="#361" id="361">361</a>
-<a href="#362" id="362">362</a>
-<a href="#363" id="363">363</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -623,8 +619,6 @@
 }
 
 <span class="kw">struct </span>PartitionBlockDevice {
-    sref: Weak&lt;<span class="self">Self</span>&gt;,
-
     offset: usize, <span class="comment">// offset in sectors
     </span>size: usize,   <span class="comment">// capacity in sectors
     </span>device: Arc&lt;<span class="kw">dyn </span>BlockDeviceInterface&gt;,
@@ -632,9 +626,7 @@
 
 <span class="kw">impl </span>PartitionBlockDevice {
     <span class="kw">fn </span>new(offset: usize, size: usize, device: Arc&lt;<span class="kw">dyn </span>BlockDeviceInterface&gt;) -&gt; Arc&lt;<span class="self">Self</span>&gt; {
-        Arc::new_cyclic(|sref| <span class="self">Self </span>{
-            sref: sref.clone(),
-
+        Arc::new(<span class="self">Self </span>{
             offset,
             size,
             device,
