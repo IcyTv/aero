@@ -21,7 +21,7 @@ var sourcesIndex = JSON.parse('{\
 "raw_cpuid":["",[],["extended.rs","lib.rs"]],\
 "rustc_demangle":["",[],["legacy.rs","lib.rs","v0.rs"]],\
 "ryu":["",[["buffer",[],["mod.rs"]],["pretty",[],["exponent.rs","mantissa.rs","mod.rs"]]],["common.rs","d2s.rs","d2s_full_table.rs","d2s_intrinsics.rs","digit_table.rs","f2s.rs","f2s_intrinsics.rs","lib.rs"]],\
-"serde":["",[["de",[],["ignored_any.rs","impls.rs","mod.rs","seed.rs","utf8.rs","value.rs"]],["private",[],["de.rs","doc.rs","mod.rs","ser.rs","size_hint.rs"]],["ser",[],["fmt.rs","impls.rs","impossible.rs","mod.rs"]]],["integer128.rs","lib.rs","macros.rs","std_error.rs"]],\
+"serde":["",[["de",[],["format.rs","ignored_any.rs","impls.rs","mod.rs","seed.rs","utf8.rs","value.rs"]],["private",[],["de.rs","doc.rs","mod.rs","ser.rs","size_hint.rs"]],["ser",[],["fmt.rs","impls.rs","impossible.rs","mod.rs"]]],["integer128.rs","lib.rs","macros.rs","std_error.rs"]],\
 "serde_json":["",[["features_check",[],["mod.rs"]],["io",[],["core.rs","mod.rs"]],["value",[],["de.rs","from.rs","index.rs","mod.rs","partial_eq.rs","ser.rs"]]],["de.rs","error.rs","lib.rs","macros.rs","map.rs","number.rs","read.rs","ser.rs"]],\
 "spin":["",[["mutex",[],["spin.rs"]]],["lib.rs","mutex.rs","once.rs","relax.rs","rwlock.rs"]],\
 "static_assertions":["",[],["assert_cfg.rs","assert_eq_align.rs","assert_eq_size.rs","assert_fields.rs","assert_impl.rs","assert_obj_safe.rs","assert_trait.rs","assert_type.rs","const_assert.rs","lib.rs"]],\

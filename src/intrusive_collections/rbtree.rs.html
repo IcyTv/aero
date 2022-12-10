@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/intrusive-collections-0.9.2/src/rbtree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rbtree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-389f8b4a37bc03c9.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-046227e470cd3629.css"><link rel="stylesheet" disabled href="../../static.files/dark-800f2ee593c8e6f7.css"><link rel="stylesheet" disabled href="../../static.files/ayu-9edae3c387f5a5b3.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-287cecec4dbb45b0.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../intrusive_collections/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `/home/runner/.cargo/registry/src/github.com-1ecc6299db9ec823/intrusive-collections-0.9.4/src/rbtree.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>rbtree.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-6827029ac823cab7.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../static.files/ayu-8af5e100b21cd173.css"><script id="default-settings" ></script><script src="../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-c55e1eb52e1886b4.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../intrusive_collections/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -2845,6 +2845,315 @@
 <a href="#2845" id="2845">2845</a>
 <a href="#2846" id="2846">2846</a>
 <a href="#2847" id="2847">2847</a>
+<a href="#2848" id="2848">2848</a>
+<a href="#2849" id="2849">2849</a>
+<a href="#2850" id="2850">2850</a>
+<a href="#2851" id="2851">2851</a>
+<a href="#2852" id="2852">2852</a>
+<a href="#2853" id="2853">2853</a>
+<a href="#2854" id="2854">2854</a>
+<a href="#2855" id="2855">2855</a>
+<a href="#2856" id="2856">2856</a>
+<a href="#2857" id="2857">2857</a>
+<a href="#2858" id="2858">2858</a>
+<a href="#2859" id="2859">2859</a>
+<a href="#2860" id="2860">2860</a>
+<a href="#2861" id="2861">2861</a>
+<a href="#2862" id="2862">2862</a>
+<a href="#2863" id="2863">2863</a>
+<a href="#2864" id="2864">2864</a>
+<a href="#2865" id="2865">2865</a>
+<a href="#2866" id="2866">2866</a>
+<a href="#2867" id="2867">2867</a>
+<a href="#2868" id="2868">2868</a>
+<a href="#2869" id="2869">2869</a>
+<a href="#2870" id="2870">2870</a>
+<a href="#2871" id="2871">2871</a>
+<a href="#2872" id="2872">2872</a>
+<a href="#2873" id="2873">2873</a>
+<a href="#2874" id="2874">2874</a>
+<a href="#2875" id="2875">2875</a>
+<a href="#2876" id="2876">2876</a>
+<a href="#2877" id="2877">2877</a>
+<a href="#2878" id="2878">2878</a>
+<a href="#2879" id="2879">2879</a>
+<a href="#2880" id="2880">2880</a>
+<a href="#2881" id="2881">2881</a>
+<a href="#2882" id="2882">2882</a>
+<a href="#2883" id="2883">2883</a>
+<a href="#2884" id="2884">2884</a>
+<a href="#2885" id="2885">2885</a>
+<a href="#2886" id="2886">2886</a>
+<a href="#2887" id="2887">2887</a>
+<a href="#2888" id="2888">2888</a>
+<a href="#2889" id="2889">2889</a>
+<a href="#2890" id="2890">2890</a>
+<a href="#2891" id="2891">2891</a>
+<a href="#2892" id="2892">2892</a>
+<a href="#2893" id="2893">2893</a>
+<a href="#2894" id="2894">2894</a>
+<a href="#2895" id="2895">2895</a>
+<a href="#2896" id="2896">2896</a>
+<a href="#2897" id="2897">2897</a>
+<a href="#2898" id="2898">2898</a>
+<a href="#2899" id="2899">2899</a>
+<a href="#2900" id="2900">2900</a>
+<a href="#2901" id="2901">2901</a>
+<a href="#2902" id="2902">2902</a>
+<a href="#2903" id="2903">2903</a>
+<a href="#2904" id="2904">2904</a>
+<a href="#2905" id="2905">2905</a>
+<a href="#2906" id="2906">2906</a>
+<a href="#2907" id="2907">2907</a>
+<a href="#2908" id="2908">2908</a>
+<a href="#2909" id="2909">2909</a>
+<a href="#2910" id="2910">2910</a>
+<a href="#2911" id="2911">2911</a>
+<a href="#2912" id="2912">2912</a>
+<a href="#2913" id="2913">2913</a>
+<a href="#2914" id="2914">2914</a>
+<a href="#2915" id="2915">2915</a>
+<a href="#2916" id="2916">2916</a>
+<a href="#2917" id="2917">2917</a>
+<a href="#2918" id="2918">2918</a>
+<a href="#2919" id="2919">2919</a>
+<a href="#2920" id="2920">2920</a>
+<a href="#2921" id="2921">2921</a>
+<a href="#2922" id="2922">2922</a>
+<a href="#2923" id="2923">2923</a>
+<a href="#2924" id="2924">2924</a>
+<a href="#2925" id="2925">2925</a>
+<a href="#2926" id="2926">2926</a>
+<a href="#2927" id="2927">2927</a>
+<a href="#2928" id="2928">2928</a>
+<a href="#2929" id="2929">2929</a>
+<a href="#2930" id="2930">2930</a>
+<a href="#2931" id="2931">2931</a>
+<a href="#2932" id="2932">2932</a>
+<a href="#2933" id="2933">2933</a>
+<a href="#2934" id="2934">2934</a>
+<a href="#2935" id="2935">2935</a>
+<a href="#2936" id="2936">2936</a>
+<a href="#2937" id="2937">2937</a>
+<a href="#2938" id="2938">2938</a>
+<a href="#2939" id="2939">2939</a>
+<a href="#2940" id="2940">2940</a>
+<a href="#2941" id="2941">2941</a>
+<a href="#2942" id="2942">2942</a>
+<a href="#2943" id="2943">2943</a>
+<a href="#2944" id="2944">2944</a>
+<a href="#2945" id="2945">2945</a>
+<a href="#2946" id="2946">2946</a>
+<a href="#2947" id="2947">2947</a>
+<a href="#2948" id="2948">2948</a>
+<a href="#2949" id="2949">2949</a>
+<a href="#2950" id="2950">2950</a>
+<a href="#2951" id="2951">2951</a>
+<a href="#2952" id="2952">2952</a>
+<a href="#2953" id="2953">2953</a>
+<a href="#2954" id="2954">2954</a>
+<a href="#2955" id="2955">2955</a>
+<a href="#2956" id="2956">2956</a>
+<a href="#2957" id="2957">2957</a>
+<a href="#2958" id="2958">2958</a>
+<a href="#2959" id="2959">2959</a>
+<a href="#2960" id="2960">2960</a>
+<a href="#2961" id="2961">2961</a>
+<a href="#2962" id="2962">2962</a>
+<a href="#2963" id="2963">2963</a>
+<a href="#2964" id="2964">2964</a>
+<a href="#2965" id="2965">2965</a>
+<a href="#2966" id="2966">2966</a>
+<a href="#2967" id="2967">2967</a>
+<a href="#2968" id="2968">2968</a>
+<a href="#2969" id="2969">2969</a>
+<a href="#2970" id="2970">2970</a>
+<a href="#2971" id="2971">2971</a>
+<a href="#2972" id="2972">2972</a>
+<a href="#2973" id="2973">2973</a>
+<a href="#2974" id="2974">2974</a>
+<a href="#2975" id="2975">2975</a>
+<a href="#2976" id="2976">2976</a>
+<a href="#2977" id="2977">2977</a>
+<a href="#2978" id="2978">2978</a>
+<a href="#2979" id="2979">2979</a>
+<a href="#2980" id="2980">2980</a>
+<a href="#2981" id="2981">2981</a>
+<a href="#2982" id="2982">2982</a>
+<a href="#2983" id="2983">2983</a>
+<a href="#2984" id="2984">2984</a>
+<a href="#2985" id="2985">2985</a>
+<a href="#2986" id="2986">2986</a>
+<a href="#2987" id="2987">2987</a>
+<a href="#2988" id="2988">2988</a>
+<a href="#2989" id="2989">2989</a>
+<a href="#2990" id="2990">2990</a>
+<a href="#2991" id="2991">2991</a>
+<a href="#2992" id="2992">2992</a>
+<a href="#2993" id="2993">2993</a>
+<a href="#2994" id="2994">2994</a>
+<a href="#2995" id="2995">2995</a>
+<a href="#2996" id="2996">2996</a>
+<a href="#2997" id="2997">2997</a>
+<a href="#2998" id="2998">2998</a>
+<a href="#2999" id="2999">2999</a>
+<a href="#3000" id="3000">3000</a>
+<a href="#3001" id="3001">3001</a>
+<a href="#3002" id="3002">3002</a>
+<a href="#3003" id="3003">3003</a>
+<a href="#3004" id="3004">3004</a>
+<a href="#3005" id="3005">3005</a>
+<a href="#3006" id="3006">3006</a>
+<a href="#3007" id="3007">3007</a>
+<a href="#3008" id="3008">3008</a>
+<a href="#3009" id="3009">3009</a>
+<a href="#3010" id="3010">3010</a>
+<a href="#3011" id="3011">3011</a>
+<a href="#3012" id="3012">3012</a>
+<a href="#3013" id="3013">3013</a>
+<a href="#3014" id="3014">3014</a>
+<a href="#3015" id="3015">3015</a>
+<a href="#3016" id="3016">3016</a>
+<a href="#3017" id="3017">3017</a>
+<a href="#3018" id="3018">3018</a>
+<a href="#3019" id="3019">3019</a>
+<a href="#3020" id="3020">3020</a>
+<a href="#3021" id="3021">3021</a>
+<a href="#3022" id="3022">3022</a>
+<a href="#3023" id="3023">3023</a>
+<a href="#3024" id="3024">3024</a>
+<a href="#3025" id="3025">3025</a>
+<a href="#3026" id="3026">3026</a>
+<a href="#3027" id="3027">3027</a>
+<a href="#3028" id="3028">3028</a>
+<a href="#3029" id="3029">3029</a>
+<a href="#3030" id="3030">3030</a>
+<a href="#3031" id="3031">3031</a>
+<a href="#3032" id="3032">3032</a>
+<a href="#3033" id="3033">3033</a>
+<a href="#3034" id="3034">3034</a>
+<a href="#3035" id="3035">3035</a>
+<a href="#3036" id="3036">3036</a>
+<a href="#3037" id="3037">3037</a>
+<a href="#3038" id="3038">3038</a>
+<a href="#3039" id="3039">3039</a>
+<a href="#3040" id="3040">3040</a>
+<a href="#3041" id="3041">3041</a>
+<a href="#3042" id="3042">3042</a>
+<a href="#3043" id="3043">3043</a>
+<a href="#3044" id="3044">3044</a>
+<a href="#3045" id="3045">3045</a>
+<a href="#3046" id="3046">3046</a>
+<a href="#3047" id="3047">3047</a>
+<a href="#3048" id="3048">3048</a>
+<a href="#3049" id="3049">3049</a>
+<a href="#3050" id="3050">3050</a>
+<a href="#3051" id="3051">3051</a>
+<a href="#3052" id="3052">3052</a>
+<a href="#3053" id="3053">3053</a>
+<a href="#3054" id="3054">3054</a>
+<a href="#3055" id="3055">3055</a>
+<a href="#3056" id="3056">3056</a>
+<a href="#3057" id="3057">3057</a>
+<a href="#3058" id="3058">3058</a>
+<a href="#3059" id="3059">3059</a>
+<a href="#3060" id="3060">3060</a>
+<a href="#3061" id="3061">3061</a>
+<a href="#3062" id="3062">3062</a>
+<a href="#3063" id="3063">3063</a>
+<a href="#3064" id="3064">3064</a>
+<a href="#3065" id="3065">3065</a>
+<a href="#3066" id="3066">3066</a>
+<a href="#3067" id="3067">3067</a>
+<a href="#3068" id="3068">3068</a>
+<a href="#3069" id="3069">3069</a>
+<a href="#3070" id="3070">3070</a>
+<a href="#3071" id="3071">3071</a>
+<a href="#3072" id="3072">3072</a>
+<a href="#3073" id="3073">3073</a>
+<a href="#3074" id="3074">3074</a>
+<a href="#3075" id="3075">3075</a>
+<a href="#3076" id="3076">3076</a>
+<a href="#3077" id="3077">3077</a>
+<a href="#3078" id="3078">3078</a>
+<a href="#3079" id="3079">3079</a>
+<a href="#3080" id="3080">3080</a>
+<a href="#3081" id="3081">3081</a>
+<a href="#3082" id="3082">3082</a>
+<a href="#3083" id="3083">3083</a>
+<a href="#3084" id="3084">3084</a>
+<a href="#3085" id="3085">3085</a>
+<a href="#3086" id="3086">3086</a>
+<a href="#3087" id="3087">3087</a>
+<a href="#3088" id="3088">3088</a>
+<a href="#3089" id="3089">3089</a>
+<a href="#3090" id="3090">3090</a>
+<a href="#3091" id="3091">3091</a>
+<a href="#3092" id="3092">3092</a>
+<a href="#3093" id="3093">3093</a>
+<a href="#3094" id="3094">3094</a>
+<a href="#3095" id="3095">3095</a>
+<a href="#3096" id="3096">3096</a>
+<a href="#3097" id="3097">3097</a>
+<a href="#3098" id="3098">3098</a>
+<a href="#3099" id="3099">3099</a>
+<a href="#3100" id="3100">3100</a>
+<a href="#3101" id="3101">3101</a>
+<a href="#3102" id="3102">3102</a>
+<a href="#3103" id="3103">3103</a>
+<a href="#3104" id="3104">3104</a>
+<a href="#3105" id="3105">3105</a>
+<a href="#3106" id="3106">3106</a>
+<a href="#3107" id="3107">3107</a>
+<a href="#3108" id="3108">3108</a>
+<a href="#3109" id="3109">3109</a>
+<a href="#3110" id="3110">3110</a>
+<a href="#3111" id="3111">3111</a>
+<a href="#3112" id="3112">3112</a>
+<a href="#3113" id="3113">3113</a>
+<a href="#3114" id="3114">3114</a>
+<a href="#3115" id="3115">3115</a>
+<a href="#3116" id="3116">3116</a>
+<a href="#3117" id="3117">3117</a>
+<a href="#3118" id="3118">3118</a>
+<a href="#3119" id="3119">3119</a>
+<a href="#3120" id="3120">3120</a>
+<a href="#3121" id="3121">3121</a>
+<a href="#3122" id="3122">3122</a>
+<a href="#3123" id="3123">3123</a>
+<a href="#3124" id="3124">3124</a>
+<a href="#3125" id="3125">3125</a>
+<a href="#3126" id="3126">3126</a>
+<a href="#3127" id="3127">3127</a>
+<a href="#3128" id="3128">3128</a>
+<a href="#3129" id="3129">3129</a>
+<a href="#3130" id="3130">3130</a>
+<a href="#3131" id="3131">3131</a>
+<a href="#3132" id="3132">3132</a>
+<a href="#3133" id="3133">3133</a>
+<a href="#3134" id="3134">3134</a>
+<a href="#3135" id="3135">3135</a>
+<a href="#3136" id="3136">3136</a>
+<a href="#3137" id="3137">3137</a>
+<a href="#3138" id="3138">3138</a>
+<a href="#3139" id="3139">3139</a>
+<a href="#3140" id="3140">3140</a>
+<a href="#3141" id="3141">3141</a>
+<a href="#3142" id="3142">3142</a>
+<a href="#3143" id="3143">3143</a>
+<a href="#3144" id="3144">3144</a>
+<a href="#3145" id="3145">3145</a>
+<a href="#3146" id="3146">3146</a>
+<a href="#3147" id="3147">3147</a>
+<a href="#3148" id="3148">3148</a>
+<a href="#3149" id="3149">3149</a>
+<a href="#3150" id="3150">3150</a>
+<a href="#3151" id="3151">3151</a>
+<a href="#3152" id="3152">3152</a>
+<a href="#3153" id="3153">3153</a>
+<a href="#3154" id="3154">3154</a>
+<a href="#3155" id="3155">3155</a>
+<a href="#3156" id="3156">3156</a>
 </pre><pre class="rust"><code><span class="comment">// Copyright 2016 Amanieu d&#39;Antras
 // Copyright 2020 Amari Robinson
 //
@@ -2861,6 +3170,7 @@
 <span class="kw">use </span>core::fmt;
 <span class="kw">use </span>core::mem;
 <span class="kw">use </span>core::ptr::NonNull;
+<span class="kw">use </span>core::sync::atomic::{<span class="self">self</span>, AtomicUsize};
 
 <span class="kw">use </span><span class="kw">crate</span>::Bound::{<span class="self">self</span>, Excluded, Included, Unbounded};
 
@@ -3205,6 +3515,293 @@
     }
 }
 
+<span class="comment">// =============================================================================
+// AtomicLink
+// =============================================================================
+
+</span><span class="doccomment">/// Intrusive link that allows an object to be inserted into a
+/// `RBTree`. This link allows the structure to be shared between threads.
+
+</span><span class="attr">#[repr(align(<span class="number">2</span>))]
+</span><span class="kw">pub struct </span>AtomicLink {
+    left: Cell&lt;<span class="prelude-ty">Option</span>&lt;NonNull&lt;AtomicLink&gt;&gt;&gt;,
+    right: Cell&lt;<span class="prelude-ty">Option</span>&lt;NonNull&lt;AtomicLink&gt;&gt;&gt;,
+    parent_color: AtomicUsize,
+}
+
+<span class="kw">impl </span>AtomicLink {
+    <span class="attr">#[inline]
+    </span><span class="doccomment">/// Creates a new `AtomicLink`.
+    </span><span class="kw">pub const fn </span>new() -&gt; AtomicLink {
+        AtomicLink {
+            left: Cell::new(<span class="prelude-val">None</span>),
+            right: Cell::new(<span class="prelude-val">None</span>),
+            parent_color: AtomicUsize::new(UNLINKED_MARKER),
+        }
+    }
+
+    <span class="doccomment">/// Checks whether the `AtomicLink` is linked into a `RBTree`.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>is_linked(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool {
+        <span class="self">self</span>.parent_color.load(atomic::Ordering::Relaxed) != UNLINKED_MARKER
+    }
+
+    <span class="doccomment">/// Forcibly unlinks an object from a `RBTree`.
+    ///
+    /// # Safety
+    ///
+    /// It is undefined behavior to call this function while still linked into a
+    /// `RBTree`. The only situation where this function is useful is
+    /// after calling `fast_clear` on a `RBTree`, since this clears
+    /// the collection without marking the nodes as unlinked.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub unsafe fn </span>force_unlink(<span class="kw-2">&amp;</span><span class="self">self</span>) {
+        <span class="self">self</span>.parent_color
+            .store(UNLINKED_MARKER, atomic::Ordering::Release);
+    }
+
+    <span class="doccomment">/// Access `parent_color` in an exclusive context.
+    ///
+    /// # Safety
+    ///
+    /// This can only be called after `acquire_link` has been succesfully called.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>parent_color_exclusive(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Cell&lt;usize&gt; {
+        <span class="comment">// This is safe because currently AtomicUsize has the same representation Cell&lt;usize&gt;.
+        </span>core::mem::transmute(<span class="kw-2">&amp;</span><span class="self">self</span>.parent_color)
+    }
+}
+
+<span class="kw">impl </span>DefaultLinkOps <span class="kw">for </span>AtomicLink {
+    <span class="kw">type </span>Ops = AtomicLinkOps;
+
+    <span class="kw">const </span>NEW: <span class="self">Self</span>::Ops = AtomicLinkOps;
+}
+
+<span class="comment">// An object containing a link can be sent to another thread since `acquire_link` is atomic.
+</span><span class="kw">unsafe impl </span>Send <span class="kw">for </span>AtomicLink {}
+
+<span class="comment">// An object containing a link can be shared between threads since `acquire_link` is atomic.
+</span><span class="kw">unsafe impl </span>Sync <span class="kw">for </span>AtomicLink {}
+
+<span class="kw">impl </span>Clone <span class="kw">for </span>AtomicLink {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; AtomicLink {
+        AtomicLink::new()
+    }
+}
+
+<span class="kw">impl </span>Default <span class="kw">for </span>AtomicLink {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>default() -&gt; AtomicLink {
+        AtomicLink::new()
+    }
+}
+
+<span class="comment">// Provide an implementation of Debug so that structs containing a link can
+// still derive Debug.
+</span><span class="kw">impl </span>fmt::Debug <span class="kw">for </span>AtomicLink {
+    <span class="attr">#[inline]
+    </span><span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; fmt::Result {
+        <span class="comment">// There isn&#39;t anything sensible to print here except whether the link
+        // is currently in a list.
+        </span><span class="kw">if </span><span class="self">self</span>.is_linked() {
+            <span class="macro">write!</span>(f, <span class="string">&quot;linked&quot;</span>)
+        } <span class="kw">else </span>{
+            <span class="macro">write!</span>(f, <span class="string">&quot;unlinked&quot;</span>)
+        }
+    }
+}
+
+<span class="comment">// =============================================================================
+// AtomicLinkOps
+// =============================================================================
+
+</span><span class="doccomment">/// Default `LinkOps` implementation for `RBTree`.
+</span><span class="attr">#[derive(Clone, Copy, Default)]
+</span><span class="kw">pub struct </span>AtomicLinkOps;
+
+<span class="kw">impl </span>AtomicLinkOps {
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_parent_color(
+        <span class="self">self</span>,
+        ptr: &lt;<span class="self">Self </span><span class="kw">as </span>link_ops::LinkOps&gt;::LinkPtr,
+        parent: <span class="prelude-ty">Option</span>&lt;&lt;<span class="self">Self </span><span class="kw">as </span>link_ops::LinkOps&gt;::LinkPtr&gt;,
+        color: Color,
+    ) {
+        <span class="macro">assert!</span>(mem::align_of::&lt;Link&gt;() &gt;= <span class="number">2</span>);
+        <span class="kw">let </span>bit = <span class="kw">match </span>color {
+            Color::Red =&gt; <span class="number">0</span>,
+            Color::Black =&gt; <span class="number">1</span>,
+        };
+        <span class="kw">let </span>parent_usize = parent.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+        ptr.as_ref()
+            .parent_color_exclusive()
+            .set((parent_usize &amp; !<span class="number">1</span>) | bit);
+    }
+}
+
+<span class="kw">const </span>LINKED_DEFAULT_VALUE: usize = <span class="number">1</span>;
+
+<span class="kw">unsafe impl </span>link_ops::LinkOps <span class="kw">for </span>AtomicLinkOps {
+    <span class="kw">type </span>LinkPtr = NonNull&lt;AtomicLink&gt;;
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>acquire_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; bool {
+        ptr.as_ref()
+            .parent_color
+            .compare_exchange(
+                UNLINKED_MARKER,
+                LINKED_DEFAULT_VALUE,
+                atomic::Ordering::Acquire,
+                atomic::Ordering::Relaxed,
+            )
+            .is_ok()
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>release_link(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) {
+        ptr.as_ref()
+            .parent_color
+            .store(UNLINKED_MARKER, atomic::Ordering::Release)
+    }
+}
+
+<span class="kw">unsafe impl </span>RBTreeOps <span class="kw">for </span>AtomicLinkOps {
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>left(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        ptr.as_ref().left.get()
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>right(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        ptr.as_ref().right.get()
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>parent(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        <span class="kw">let </span>parent_usize = ptr.as_ref().parent_color_exclusive().get() &amp; !<span class="number">1</span>;
+        NonNull::new(parent_usize <span class="kw">as </span><span class="kw-2">*mut </span>AtomicLink)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>color(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; Color {
+        <span class="kw">if </span>ptr.as_ref().parent_color_exclusive().get() &amp; <span class="number">1 </span>== <span class="number">1 </span>{
+            Color::Black
+        } <span class="kw">else </span>{
+            Color::Red
+        }
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_left(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, left: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
+        ptr.as_ref().left.set(left);
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_right(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, right: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
+        ptr.as_ref().right.set(right);
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_parent(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, parent: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
+        <span class="self">self</span>.set_parent_color(ptr, parent, <span class="self">self</span>.color(ptr));
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_color(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, color: Color) {
+        <span class="self">self</span>.set_parent_color(ptr, <span class="self">self</span>.parent(ptr), color);
+    }
+}
+
+<span class="kw">unsafe impl </span>SinglyLinkedListOps <span class="kw">for </span>AtomicLinkOps {
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        <span class="self">self</span>.right(ptr)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
+        <span class="self">self</span>.set_right(ptr, next);
+    }
+}
+
+<span class="kw">unsafe impl </span>LinkedListOps <span class="kw">for </span>AtomicLinkOps {
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>next(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        <span class="self">self</span>.right(ptr)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>prev(<span class="kw-2">&amp;</span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        <span class="self">self</span>.left(ptr)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_next(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
+        <span class="self">self</span>.set_right(ptr, next);
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set_prev(<span class="kw-2">&amp;mut </span><span class="self">self</span>, ptr: <span class="self">Self</span>::LinkPtr, prev: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;) {
+        <span class="self">self</span>.set_left(ptr, prev);
+    }
+}
+
+<span class="kw">unsafe impl </span>XorLinkedListOps <span class="kw">for </span>AtomicLinkOps {
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>next(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        ptr: <span class="self">Self</span>::LinkPtr,
+        prev: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        <span class="kw">let </span>packed = <span class="self">self</span>.right(ptr).map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+        <span class="kw">let </span>raw = packed ^ prev.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+        NonNull::new(raw <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>prev(
+        <span class="kw-2">&amp;</span><span class="self">self</span>,
+        ptr: <span class="self">Self</span>::LinkPtr,
+        next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;,
+    ) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt; {
+        <span class="kw">let </span>packed = <span class="self">self</span>.right(ptr).map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+        <span class="kw">let </span>raw = packed ^ next.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+        NonNull::new(raw <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>)
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>set(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ptr: <span class="self">Self</span>::LinkPtr,
+        prev: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;,
+        next: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;,
+    ) {
+        <span class="kw">let </span>new_packed = prev.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>)
+            ^ next.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+
+        <span class="kw">let </span>new_next = NonNull::new(new_packed <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
+        <span class="self">self</span>.set_right(ptr, new_next);
+    }
+
+    <span class="attr">#[inline]
+    </span><span class="kw">unsafe fn </span>replace_next_or_prev(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        ptr: <span class="self">Self</span>::LinkPtr,
+        old: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;,
+        new: <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::LinkPtr&gt;,
+    ) {
+        <span class="kw">let </span>packed = <span class="self">self</span>.right(ptr).map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+        <span class="kw">let </span>new_packed = packed
+            ^ old.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>)
+            ^ new.map(|x| x.as_ptr() <span class="kw">as </span>usize).unwrap_or(<span class="number">0</span>);
+
+        <span class="kw">let </span>new_next = NonNull::new(new_packed <span class="kw">as </span><span class="kw-2">*mut </span><span class="kw">_</span>);
+        <span class="self">self</span>.set_right(ptr, new_next);
+    }
+}
+
 <span class="attr">#[inline]
 </span><span class="kw">unsafe fn </span>is_left_child&lt;T: RBTreeOps&gt;(link_ops: <span class="kw-2">&amp;</span>T, ptr: T::LinkPtr, parent: T::LinkPtr) -&gt; bool {
     link_ops.left(parent) == <span class="prelude-val">Some</span>(ptr)
@@ -3415,7 +4012,6 @@
             x = link_ops.parent(x).unwrap_unchecked();
             link_ops.set_color(x, Color::Red);
             rotate_right(link_ops, x, root);
-            <span class="kw">break</span>;
         } <span class="kw">else </span>{
             <span class="kw">let </span>y = link_ops.left(grandparent);
             <span class="kw">if let </span><span class="prelude-val">Some</span>(y) = y {
@@ -3441,8 +4037,8 @@
             x = link_ops.parent(x).unwrap_unchecked();
             link_ops.set_color(x, Color::Red);
             rotate_left(link_ops, x, root);
-            <span class="kw">break</span>;
         }
+        <span class="kw">break</span>;
     }
 }
 
@@ -3973,6 +4569,16 @@
             }
         }
     }
+
+    <span class="doccomment">/// Consumes `CursorMut` and returns a reference to the object that
+    /// the cursor is currently pointing to. Unlike [get](Self::get),
+    /// the returned reference&#39;s lifetime is tied to `RBTree`&#39;s lifetime.
+    ///
+    /// This returns None if the cursor is currently pointing to the null object.
+    </span><span class="attr">#[inline]
+    </span><span class="kw">pub fn </span>into_ref(<span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>&lt;A::PointerOps <span class="kw">as </span>PointerOps&gt;::Value&gt; {
+        <span class="prelude-val">Some</span>(<span class="kw">unsafe </span>{ <span class="kw-2">&amp;*</span><span class="self">self</span>.tree.adapter.get_value(<span class="self">self</span>.current<span class="question-mark">?</span>) })
+    }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, A: <span class="kw">for</span>&lt;<span class="lifetime">&#39;b</span>&gt; KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
@@ -4280,9 +4886,10 @@
     /// If multiple elements with an identical key are found then an arbitrary
     /// one is returned.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>find&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
+    </span><span class="kw">pub fn </span>find&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
-        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>,
     {
         Cursor {
             current: <span class="self">self</span>.find_internal(key),
@@ -4296,9 +4903,10 @@
     /// If multiple elements with an identical key are found then an arbitrary
     /// one is returned.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>find_mut&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
+    </span><span class="kw">pub fn </span>find_mut&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, key: <span class="kw-2">&amp;</span>Q) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
-        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>,
     {
         CursorMut {
             current: <span class="self">self</span>.find_internal(key),
@@ -4340,9 +4948,10 @@
     /// the given bound. If no such element is found then a null cursor is
     /// returned.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>lower_bound&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
+    </span><span class="kw">pub fn </span>lower_bound&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
-        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>,
     {
         Cursor {
             current: <span class="self">self</span>.lower_bound_internal(bound),
@@ -4354,9 +4963,13 @@
     /// above the given bound. If no such element is found then a null
     /// cursor is returned.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>lower_bound_mut&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
+    </span><span class="kw">pub fn </span>lower_bound_mut&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
+        bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
+    ) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
-        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>,
     {
         CursorMut {
             current: <span class="self">self</span>.lower_bound_internal(bound),
@@ -4398,9 +5011,10 @@
     /// the given bound. If no such element is found then a null cursor is
     /// returned.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>upper_bound&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
+    </span><span class="kw">pub fn </span>upper_bound&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; Cursor&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
-        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>,
     {
         Cursor {
             current: <span class="self">self</span>.upper_bound_internal(bound),
@@ -4412,9 +5026,13 @@
     /// below the given bound. If no such element is found then a null
     /// cursor is returned.
     </span><span class="attr">#[inline]
-    </span><span class="kw">pub fn </span>upper_bound_mut&lt;<span class="lifetime">&#39;a</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>, bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
+    </span><span class="kw">pub fn </span>upper_bound_mut&lt;<span class="lifetime">&#39;a</span>, <span class="lifetime">&#39;b</span>, Q: <span class="question-mark">?</span>Sized + Ord&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span><span class="self">self</span>,
+        bound: Bound&lt;<span class="kw-2">&amp;</span>Q&gt;,
+    ) -&gt; CursorMut&lt;<span class="lifetime">&#39;a</span>, A&gt;
     <span class="kw">where
-        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;a</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        </span>&lt;A <span class="kw">as </span>KeyAdapter&lt;<span class="lifetime">&#39;b</span>&gt;&gt;::Key: Borrow&lt;Q&gt;,
+        <span class="lifetime">&#39;a</span>: <span class="lifetime">&#39;b</span>,
     {
         CursorMut {
             current: <span class="self">self</span>.upper_bound_internal(bound),
@@ -5030,19 +5648,19 @@
         <span class="kw">let </span>b2 = make_obj(<span class="number">2</span>);
         <span class="kw">let </span>c2 = make_obj(<span class="number">3</span>);
         <span class="macro">assert_eq!</span>(
-            cur.replace_with(a2.clone()).unwrap().as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
+            cur.replace_with(a2).unwrap().as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
             a.as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_
         </span>);
         <span class="macro">assert!</span>(!a.link.is_linked());
         cur.move_next();
         <span class="macro">assert_eq!</span>(
-            cur.replace_with(b2.clone()).unwrap().as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
+            cur.replace_with(b2).unwrap().as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
             b.as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_
         </span>);
         <span class="macro">assert!</span>(!b.link.is_linked());
         cur.move_next();
         <span class="macro">assert_eq!</span>(
-            cur.replace_with(c2.clone()).unwrap().as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
+            cur.replace_with(c2).unwrap().as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_</span>,
             c.as_ref() <span class="kw">as </span><span class="kw-2">*const </span><span class="kw">_
         </span>);
         <span class="macro">assert!</span>(!c.link.is_linked());
@@ -5101,7 +5719,7 @@
             <span class="kw">for </span>i <span class="kw">in </span>indices {
                 t.insert(v[i].clone());
                 expected.push(v[i].value);
-                expected[..].sort();
+                expected[..].sort_unstable();
                 <span class="macro">assert_eq!</span>(t.iter().map(|x| x.value).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), expected);
             }
 
@@ -5139,7 +5757,7 @@
                     c.insert_before(v[i].clone());
                 }
                 expected.push(v[i].value);
-                expected[..].sort();
+                expected[..].sort_unstable();
                 <span class="macro">assert_eq!</span>(t.iter().map(|x| x.value).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), expected);
             }
 
@@ -5167,7 +5785,7 @@
                     c.insert_after(v[i].clone());
                 }
                 expected.push(v[i].value);
-                expected[..].sort();
+                expected[..].sort_unstable();
                 <span class="macro">assert_eq!</span>(t.iter().map(|x| x.value).collect::&lt;Vec&lt;<span class="kw">_</span>&gt;&gt;(), expected);
             }
         }
@@ -5584,9 +6202,9 @@
         <span class="kw">let </span>d = make_obj(<span class="number">4</span>);
         <span class="kw">let </span>e = make_obj(<span class="number">5</span>);
         <span class="kw">let </span>f = make_obj(<span class="number">6</span>);
-        t.entry(<span class="kw-2">&amp;</span><span class="number">3</span>).or_insert(c.clone());
+        t.entry(<span class="kw-2">&amp;</span><span class="number">3</span>).or_insert(c);
         t.entry(<span class="kw-2">&amp;</span><span class="number">2</span>).or_insert(b.clone());
-        t.entry(<span class="kw-2">&amp;</span><span class="number">1</span>).or_insert(a.clone());
+        t.entry(<span class="kw-2">&amp;</span><span class="number">1</span>).or_insert(a);
 
         <span class="kw">match </span>t.entry(<span class="kw-2">&amp;</span><span class="number">2</span>) {
             Entry::Vacant(<span class="kw">_</span>) =&gt; <span class="macro">unreachable!</span>(),
@@ -5693,4 +6311,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="intrusive_collections" data-themes="" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (b28d30e1e 2022-12-06)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="intrusive_collections" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (dfe3fe710 2022-12-09)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
