@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/epoll.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>epoll.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-918aaffdca2f1bdb.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-ebce58d0a40c3431.css"><link rel="stylesheet" disabled href="../../../static.files/dark-f23faae4a2daf9a6.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-94f39d4346842c1e.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-5cf2e01a42cc9858.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-a211dbb005fb8161.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/fs/epoll.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>epoll.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-1cc40db21e31a224.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-8fe2cf7ee64a76fb.css"><link rel="stylesheet" disabled href="../../../static.files/dark-7aacebe982779e9a.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-29dcc614f7a7b461.css"><script id="default-settings" ></script><script src="../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-a211dbb005fb8161.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -186,6 +186,40 @@
 <a href="#186" id="186">186</a>
 <a href="#187" id="187">187</a>
 <a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a>
+<a href="#202" id="202">202</a>
+<a href="#203" id="203">203</a>
+<a href="#204" id="204">204</a>
+<a href="#205" id="205">205</a>
+<a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -211,6 +245,7 @@
 <span class="kw">use </span>alloc::sync::Arc;
 <span class="kw">use </span>hashbrown::HashMap;
 
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheImpl;
 <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
 
@@ -222,6 +257,14 @@
 }
 
 <span class="kw">impl </span>EPoll {
+    <span class="comment">// FIXME: The bitflags does not support bitwise or operations in const.
+    </span><span class="kw">const </span>PRIVATE_BITS: EPollEventFlags = EPollEventFlags::from_bits_truncate(
+        EPollEventFlags::WAKEUP.bits()
+            | EPollEventFlags::ONESHOT.bits()
+            | EPollEventFlags::ET.bits()
+            | EPollEventFlags::EXCLUSIVE.bits(),
+    );
+
     <span class="kw">pub fn </span>new() -&gt; Arc&lt;<span class="self">Self</span>&gt; {
         Arc::new(<span class="self">Self </span>{
             events: Mutex::new(HashMap::new()),
@@ -317,6 +360,7 @@
             }
 
             ret_events[n].events = EPollEventFlags::empty();
+            ret_events[n].data = <span class="kw">unsafe </span>{ core::mem::zeroed() };
 
             <span class="kw">let </span>fd = file_table
                 .get_handle(<span class="kw-2">*</span>fd)
@@ -325,15 +369,29 @@
             </span><span class="kw">let </span>flags = epoll_event.events;
             <span class="kw">let </span>ready: EPollEventFlags = fd.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
 
+            <span class="comment">// If the event mask does not contain any poll(2) events, the event
+            // descriptor is disabled. This is the effe
+            </span><span class="kw">if </span>flags == <span class="self">Self</span>::PRIVATE_BITS {
+                <span class="kw">continue</span>;
+            }
+
             <span class="kw">if </span>!(ready &amp; flags).is_empty() {
                 ret_events[n].events = ready &amp; flags;
+                ret_events[n].data = epoll_event.data;
+
+                <span class="kw">if </span>flags.contains(EPollEventFlags::ONESHOT) {
+                    <span class="comment">// The `EPOLLONESHOT` bit that disables the descriptor when an event is
+                    // received, until the next `EPOLL_CTL_MOD` will be issued.
+                    </span>epoll_event.events = <span class="self">Self</span>::PRIVATE_BITS;
+                }
+
                 n += <span class="number">1</span>;
                 <span class="kw">continue</span>;
             }
 
-            <span class="comment">// // Not ready; add the event to the poll table.
+            <span class="comment">// Not ready; add the event to the poll table.
             </span>fd.inode().poll(<span class="prelude-val">Some</span>(<span class="kw-2">&amp;mut </span>poll_table))<span class="question-mark">?</span>;
-            fds.push(fd);
+            fds.push((fd, epoll_event, flags));
         }
 
         <span class="comment">// If all events are ready, we can return now.
@@ -349,17 +407,27 @@
         }
 
         <span class="lifetime">&#39;search</span>: <span class="kw">loop </span>{
-            <span class="kw">for </span>(i, fd) <span class="kw">in </span>fds.iter().enumerate() {
-                <span class="kw">let </span>ready: EPollEventFlags = fd.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
-                <span class="kw">let </span>flags = table
-                    .get(<span class="kw-2">&amp;</span>fd.fd)
-                    .ok_or(FileSystemError::NotSupported)<span class="question-mark">?
-                    </span>.events;
+            <span class="kw">for </span>(fd, event, flags) <span class="kw">in </span>fds.iter_mut() {
+                <span class="comment">// If the event mask does not contain any poll(2) events, the event
+                // descriptor is disabled. This is the effe
+                </span><span class="kw">if </span><span class="kw-2">*</span>flags == <span class="self">Self</span>::PRIVATE_BITS {
+                    <span class="kw">continue</span>;
+                }
 
-                <span class="kw">if </span>!(ready &amp; flags).is_empty() {
+                <span class="kw">let </span>ready: EPollEventFlags = fd.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
+
+                <span class="kw">if </span>!(ready &amp; <span class="kw-2">*</span>flags).is_empty() {
                     <span class="comment">// The event is ready; break out of the search loop and set ready
                     // events to 1.
-                    </span>ret_events[i].events = ready &amp; flags;
+                    </span>ret_events[n].events = ready &amp; <span class="kw-2">*</span>flags;
+                    ret_events[n].data = event.data;
+
+                    <span class="kw">if </span>flags.contains(EPollEventFlags::ONESHOT) {
+                        <span class="comment">// The `EPOLLONESHOT` bit that disables the descriptor when an event is
+                        // received, until the next `EPOLL_CTL_MOD` will be issued.
+                        </span>event.events = <span class="self">Self</span>::PRIVATE_BITS;
+                    }
+
                     n = <span class="number">1</span>;
                     <span class="kw">break </span><span class="lifetime">&#39;search</span>;
                 }
@@ -375,4 +443,4 @@
 
 <span class="kw">impl </span>INodeInterface <span class="kw">for </span>EPoll {}
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (b70baa4f9 2022-12-14)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-af96d9e2fc13e081.css" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (0468a00ae 2022-12-17)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-58836c674e2f7bd2.css" ></div></body></html>
