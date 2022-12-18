@@ -641,6 +641,10 @@
 <a href="#641" id="641">641</a>
 <a href="#642" id="642">642</a>
 <a href="#643" id="643">643</a>
+<a href="#644" id="644">644</a>
+<a href="#645" id="645">645</a>
+<a href="#646" id="646">646</a>
+<a href="#647" id="647">647</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -1056,10 +1060,14 @@
 }
 
 <span class="attr">#[syscall]
-</span><span class="kw">pub fn </span>read_link(path: <span class="kw-2">&amp;</span>Path, _buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
-    <span class="macro">log::warn!</span>(<span class="string">&quot;read_link: is a stub! (path={path:?})&quot;</span>);
+</span><span class="kw">pub fn </span>read_link(path: <span class="kw-2">&amp;</span>Path, buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="comment">// XXX: lookup_path with automatically resolve the link.
+    </span><span class="kw">let </span>file = fs::lookup_path(path)<span class="question-mark">?</span>;
+    <span class="kw">let </span>resolved_path = file.absolute_path_str();
+    <span class="kw">let </span>size = core::cmp::min(resolved_path.len(), buffer.len());
 
-    <span class="prelude-val">Err</span>(SyscallError::EINVAL)
+    buffer[..size].copy_from_slice(<span class="kw-2">&amp;</span>resolved_path.as_bytes()[..size]);
+    <span class="prelude-val">Ok</span>(size)
 }
 
 <span class="doccomment">/// Returns a file descriptor referring to the new epoll instance.
