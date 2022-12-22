@@ -653,6 +653,8 @@
 <a href="#653" id="653">653</a>
 <a href="#654" id="654">654</a>
 <a href="#655" id="655">655</a>
+<a href="#656" id="656">656</a>
+<a href="#657" id="657">657</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2022 The Aero Project Developers.
  *
@@ -1263,6 +1265,8 @@
     }
 
     <span class="lifetime">&#39;search</span>: <span class="kw">loop </span>{
+        scheduler::get_scheduler().inner.await_io()<span class="question-mark">?</span>;
+
         <span class="kw">for </span>(handle, index) <span class="kw">in </span>refds.iter() {
             <span class="kw">let </span>pollfd = <span class="kw-2">&amp;mut </span>fds[<span class="kw-2">*</span>index];
             <span class="kw">let </span>ready: PollEventFlags = handle.inode().poll(<span class="prelude-val">None</span>)<span class="question-mark">?</span>.into();
