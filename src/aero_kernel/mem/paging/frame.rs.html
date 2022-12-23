@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/paging/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-2bbd125050a72198.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-8fe2cf7ee64a76fb.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-7aacebe982779e9a.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-29dcc614f7a7b461.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-a211dbb005fb8161.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/mem/paging/frame.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>frame.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-1f7d512b176f0f72.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-124a1ca42af929b6.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ed67f58bef457aa5.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-a19f8302ea709214.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-f1e56666dd272622.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-7291d283d92e041c.css"><script id="default-settings" ></script><script src="../../../../static.files/storage-d43fa987303ecbbb.js"></script><script defer src="../../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-4a084badb5778746.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../aero_kernel/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -785,7 +785,7 @@
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">if </span><span class="self">self</span>.cursor_base &gt;= <span class="self">self</span>.cursor_end {
             <span class="kw">if let </span><span class="prelude-val">Some</span>(entry) = <span class="kw">loop </span>{
-                <span class="comment">// We need to find out the next useable memory range from
+                <span class="comment">// We need to find out the next usable memory range from
                 // the memory map and set the cursor to the start of it.
                 </span><span class="kw">let </span>next = <span class="self">self</span>.iter.next()<span class="question-mark">?</span>;
 
@@ -1000,7 +1000,7 @@
         };
 
         <span class="comment">// Lets goo! Now lets initialize the bootstrap allocator so we can initialize
-        // our efficient buddy allocator. We need a seperate allocator since some computers
+        // our efficient buddy allocator. We need a separate allocator since some computers
         // such as Macs have a shitload of memory map entries so, we cannt assume the amount
         // of maximum mmap entries and allocate space for it on the stack instead. God damn it.
         </span><span class="kw">let </span><span class="kw-2">mut </span>i = <span class="number">0</span>;
@@ -1100,17 +1100,17 @@
 
     <span class="doccomment">/// Inserts the provided memory range.
     </span><span class="kw">fn </span>insert_range(<span class="kw-2">&amp;mut </span><span class="self">self</span>, base: PhysAddr, end: PhysAddr) {
-        <span class="kw">let </span><span class="kw-2">mut </span>remaning = end - base;
+        <span class="kw">let </span><span class="kw-2">mut </span>remaining = end - base;
         <span class="kw">let </span><span class="kw-2">mut </span>current = base;
 
-        <span class="kw">while </span>remaning &gt; <span class="number">0 </span>{
-            <span class="kw">let </span>order = <span class="self">self</span>.find_order(current, remaning);
+        <span class="kw">while </span>remaining &gt; <span class="number">0 </span>{
+            <span class="kw">let </span>order = <span class="self">self</span>.find_order(current, remaining);
             <span class="kw">let </span>size = BUDDY_SIZE[order];
 
             <span class="self">self</span>.set_bit(current, order);
 
             current += size;
-            remaning -= size;
+            remaining -= size;
         }
     }
 
@@ -1179,15 +1179,15 @@
 
             <span class="kw">if </span><span class="self">self</span>.free[i] &gt; <span class="number">0 </span>{
                 <span class="kw">let </span>result = <span class="self">self</span>.find_free(i)<span class="question-mark">?</span>;
-                <span class="kw">let </span><span class="kw-2">mut </span>remaning = bsize - size;
+                <span class="kw">let </span><span class="kw-2">mut </span>remaining = bsize - size;
 
-                <span class="kw">if </span>remaning &gt; <span class="number">0 </span>{
+                <span class="kw">if </span>remaining &gt; <span class="number">0 </span>{
                     <span class="kw">for </span>j <span class="kw">in </span>(<span class="number">0</span>..=i).rev() {
                         <span class="kw">let </span>sizee = BUDDY_SIZE[j];
 
-                        <span class="kw">while </span>remaning &gt;= sizee {
-                            <span class="self">self</span>.set_bit(result + (remaning - sizee) + size, j);
-                            remaning -= sizee;
+                        <span class="kw">while </span>remaining &gt;= sizee {
+                            <span class="self">self</span>.set_bit(result + (remaining - sizee) + size, j);
+                            remaining -= sizee;
                         }
                     }
                 }
@@ -1305,4 +1305,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (b569c9dc5 2022-12-21)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-58836c674e2f7bd2.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.68.0-nightly (8a97b4812 2022-12-22)" data-search-js="search-444266647c4dba98.js" data-settings-js="settings-bebeae96e00e4617.js" data-settings-css="settings-58836c674e2f7bd2.css" ></div></body></html>
