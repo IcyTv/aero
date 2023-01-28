@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["EMPTY_CHANNELS",""],["EMPTY_DRIVE",""]],"fn":[["get_device",""],["init",""]],"mod":[["channel",""],["registers",""]],"static":[["DRIVER",""],["__MODULE_INIT",""]],"struct":[["Ide",""],["IdeDevice",""],["IdeDrive",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["get_device",""],["init",""]],"mod":[["channel",""],["registers",""]],"static":[["DRIVER",""],["__MODULE_INIT",""]],"struct":[["Ide",""],["IdeDevice",""],["IdeDrive",""]]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"constant":[["ASSERT",""],["GPT_TABLE_SIGNATURE",""]],"struct":[["Gpt",""],["GptEntry",""],["GptGuid",""],["GptTableHeader",""]]};
+window.SIDEBAR_ITEMS = {"constant":[["GPT_TABLE_SIGNATURE",""]],"struct":[["Gpt",""],["GptEntry",""],["GptGuid",""],["GptTableHeader",""]]};
