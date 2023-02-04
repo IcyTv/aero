@@ -670,7 +670,7 @@
     }
 
     <span class="kw">fn </span>stat(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;aero_syscall::Stat&gt; {
-        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
+        <span class="prelude-val">Ok</span>(aero_syscall::Stat::default())
     }
 
     <span class="doccomment">/// Creates a new dev inode with the provided `name` and the device `marker` in
