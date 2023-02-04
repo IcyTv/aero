@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["alloc_error_handler",""],["init_heap","Initialize the heap at the [HEAP_START]."]],"struct":[["Allocator",""],["LockedHeap",""]]};
+window.SIDEBAR_ITEMS = {"fn":[["__rg_oom",""],["alloc_error_handler",""],["init_heap","Initialize the heap at the [HEAP_START]."]],"struct":[["Allocator",""],["LockedHeap",""]]};
