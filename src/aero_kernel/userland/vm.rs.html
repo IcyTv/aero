@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/userland/vm.rs`."><title>vm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-505eba68f310f6bf.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-f501212b8b071243.css"><link rel="stylesheet" disabled href="../../../static.files/dark-e92fc12c34ff89d3.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-c8c85693c8a4f9db.css"><script id="default-settings" ></script><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-364b95f387bc3166.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/userland/vm.rs`."><title>vm.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-0ef3deca4ed45ad8.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-f501212b8b071243.css"><link rel="stylesheet" disabled href="../../../static.files/dark-e92fc12c34ff89d3.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-a0090c8b1ced384f.css"><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-364b95f387bc3166.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-5ec35bf9ca753509.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -1102,61 +1102,6 @@
 <a href="#1102" id="1102">1102</a>
 <a href="#1103" id="1103">1103</a>
 <a href="#1104" id="1104">1104</a>
-<a href="#1105" id="1105">1105</a>
-<a href="#1106" id="1106">1106</a>
-<a href="#1107" id="1107">1107</a>
-<a href="#1108" id="1108">1108</a>
-<a href="#1109" id="1109">1109</a>
-<a href="#1110" id="1110">1110</a>
-<a href="#1111" id="1111">1111</a>
-<a href="#1112" id="1112">1112</a>
-<a href="#1113" id="1113">1113</a>
-<a href="#1114" id="1114">1114</a>
-<a href="#1115" id="1115">1115</a>
-<a href="#1116" id="1116">1116</a>
-<a href="#1117" id="1117">1117</a>
-<a href="#1118" id="1118">1118</a>
-<a href="#1119" id="1119">1119</a>
-<a href="#1120" id="1120">1120</a>
-<a href="#1121" id="1121">1121</a>
-<a href="#1122" id="1122">1122</a>
-<a href="#1123" id="1123">1123</a>
-<a href="#1124" id="1124">1124</a>
-<a href="#1125" id="1125">1125</a>
-<a href="#1126" id="1126">1126</a>
-<a href="#1127" id="1127">1127</a>
-<a href="#1128" id="1128">1128</a>
-<a href="#1129" id="1129">1129</a>
-<a href="#1130" id="1130">1130</a>
-<a href="#1131" id="1131">1131</a>
-<a href="#1132" id="1132">1132</a>
-<a href="#1133" id="1133">1133</a>
-<a href="#1134" id="1134">1134</a>
-<a href="#1135" id="1135">1135</a>
-<a href="#1136" id="1136">1136</a>
-<a href="#1137" id="1137">1137</a>
-<a href="#1138" id="1138">1138</a>
-<a href="#1139" id="1139">1139</a>
-<a href="#1140" id="1140">1140</a>
-<a href="#1141" id="1141">1141</a>
-<a href="#1142" id="1142">1142</a>
-<a href="#1143" id="1143">1143</a>
-<a href="#1144" id="1144">1144</a>
-<a href="#1145" id="1145">1145</a>
-<a href="#1146" id="1146">1146</a>
-<a href="#1147" id="1147">1147</a>
-<a href="#1148" id="1148">1148</a>
-<a href="#1149" id="1149">1149</a>
-<a href="#1150" id="1150">1150</a>
-<a href="#1151" id="1151">1151</a>
-<a href="#1152" id="1152">1152</a>
-<a href="#1153" id="1153">1153</a>
-<a href="#1154" id="1154">1154</a>
-<a href="#1155" id="1155">1155</a>
-<a href="#1156" id="1156">1156</a>
-<a href="#1157" id="1157">1157</a>
-<a href="#1158" id="1158">1158</a>
-<a href="#1159" id="1159">1159</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -1199,7 +1144,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::mem::AddressSpace;
 
 <span class="kw">use </span><span class="kw">crate</span>::syscall::ExecArgs;
-<span class="kw">use </span><span class="kw">crate</span>::utils::sync::Mutex;
+<span class="kw">use </span><span class="kw">crate</span>::utils::sync::BMutex;
 
 <span class="kw">const </span>ELF_HEADER_MAGIC: [u8; <span class="number">4</span>] = [<span class="number">0x7f</span>, <span class="string">b&#39;E&#39;</span>, <span class="string">b&#39;L&#39;</span>, <span class="string">b&#39;F&#39;</span>];
 
@@ -1522,12 +1467,6 @@
         <span class="kw">let </span>addr_aligned = address.align_down(Size4KiB::SIZE);
 
         <span class="kw">if </span>!reason.contains(PageFaultErrorCode::PROTECTION_VIOLATION) {
-            <span class="macro">log::trace!</span>(
-                <span class="string">&quot;    - private R: {:#x}..{:#x}&quot;</span>,
-                addr_aligned,
-                addr_aligned + Size4KiB::SIZE
-            );
-
             <span class="kw">let </span>frame: PhysFrame =
                 PhysFrame::containing_address(pmm_alloc(BuddyOrdering::Size4KiB));
 
@@ -1548,12 +1487,6 @@
 
             <span class="bool-val">true
         </span>} <span class="kw">else if </span>reason.contains(PageFaultErrorCode::CAUSED_BY_WRITE) {
-            <span class="macro">log::trace!</span>(
-                <span class="string">&quot;    - private COW: {:#x}..{:#x}&quot;</span>,
-                addr_aligned,
-                addr_aligned + Size4KiB::SIZE
-            );
-
             <span class="self">self</span>.handle_cow(offset_table, addr_aligned, <span class="bool-val">false</span>)
         } <span class="kw">else </span>{
             <span class="macro">log::error!</span>(<span class="string">&quot;    - present page read failed&quot;</span>);
@@ -1584,14 +1517,7 @@
 
             <span class="kw">if </span>!reason.contains(PageFaultErrorCode::PROTECTION_VIOLATION) {
                 <span class="comment">// We are writing to private file mapping so copy the content of the page.
-                </span><span class="macro">log::trace!</span>(
-                    <span class="string">&quot;    - private file R: {:?}..{:?} (offset={:#x})&quot;</span>,
-                    address,
-                    address + size,
-                    offset
-                );
-
-                <span class="kw">let </span>frame = mmap_file
+                </span><span class="kw">let </span>frame = mmap_file
                     .file
                     .inode()
                     .mmap(offset <span class="kw">as _</span>, size <span class="kw">as _</span>, <span class="self">self</span>.flags)
@@ -1684,13 +1610,10 @@
             <span class="kw">if let </span><span class="prelude-val">Some</span>(vm_frame) = phys_addr.as_vm_frame() {
                 <span class="kw">if </span>vm_frame.ref_count() &gt; <span class="number">1 </span>|| copy {
                     <span class="comment">// This page is used by more then one process, so make it a private copy.
-                    </span><span class="macro">log::trace!</span>(<span class="string">&quot;    - making {:?} into a private copy&quot;</span>, page);
-                    <span class="self">Self</span>::map_copied(offset_table, page, <span class="self">self</span>.protection).unwrap();
+                    </span><span class="self">Self</span>::map_copied(offset_table, page, <span class="self">self</span>.protection).unwrap();
                 } <span class="kw">else </span>{
                     <span class="comment">// This page is used by only one process, so make it writable.
-                    </span><span class="macro">log::trace!</span>(<span class="string">&quot;    - making {:?} writable&quot;</span>, page);
-
-                    <span class="kw">unsafe </span>{
+                    </span><span class="kw">unsafe </span>{
                         offset_table.update_flags(
                             page,
                             PageTableFlags::PRESENT
@@ -1794,30 +1717,6 @@
         }
     }
 
-    <span class="kw">fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="kw">for </span>mmap <span class="kw">in </span><span class="kw-2">&amp;</span><span class="self">self</span>.mappings {
-            <span class="kw">if let </span><span class="prelude-val">Some</span>(file) = mmap.file.as_ref() {
-                <span class="macro">log::debug!</span>(
-                    <span class="string">&quot;{:?}..{:?} =&gt; {:?}, {:?} (offset={:#x}, size={:#x})&quot;</span>,
-                    mmap.start_addr,
-                    mmap.end_addr,
-                    mmap.protection,
-                    mmap.flags,
-                    file.offset,
-                    file.size,
-                );
-            } <span class="kw">else </span>{
-                <span class="macro">log::debug!</span>(
-                    <span class="string">&quot;{:?}..{:?} =&gt; {:?}, {:?}&quot;</span>,
-                    mmap.start_addr,
-                    mmap.end_addr,
-                    mmap.protection,
-                    mmap.flags,
-                );
-            }
-        }
-    }
-
     <span class="kw">fn </span>handle_page_fault(
         <span class="kw-2">&amp;mut </span><span class="self">self</span>,
         reason: PageFaultErrorCode,
@@ -1828,8 +1727,6 @@
             .iter_mut()
             .find(|e| accessed_address &gt;= e.start_addr &amp;&amp; accessed_address &lt; e.end_addr)
         {
-            <span class="macro">log::trace!</span>(<span class="string">&quot;mapping {:?} on demand&quot;</span>, accessed_address);
-
             <span class="kw">if </span>map.protection.is_empty() {
                 <span class="kw">return </span><span class="bool-val">false</span>;
             }
@@ -1867,7 +1764,6 @@
             result
         } <span class="kw">else </span>{
             <span class="macro">log::trace!</span>(<span class="string">&quot;mapping not found for address: {:#x}&quot;</span>, accessed_address);
-            <span class="self">self</span>.log();
 
             <span class="comment">// else the mapping does not exist, so return false.
             </span><span class="bool-val">false
@@ -1907,7 +1803,7 @@
             <span class="kw">return </span><span class="prelude-val">Some</span>((address, <span class="self">self</span>.mappings.cursor_front_mut()));
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.mappings.cursor_front_mut();
+        <span class="kw">let </span><span class="kw-2">mut </span>cursor = <span class="self">self</span>.mappings.cursor_back_mut();
 
         <span class="comment">// Search the mappings starting at the current cursor position for a big
         // enough hole for where the address is above the provided `address`. A hole is
@@ -2207,8 +2103,6 @@
         <span class="kw">let </span><span class="kw-2">mut </span>address_space = AddressSpace::this();
         <span class="kw">let </span><span class="kw-2">mut </span>offset_table = address_space.offset_page_table();
 
-        <span class="macro">log::debug!</span>(<span class="string">&quot;unmapping {:?}..{:?}&quot;</span>, start, end);
-
         <span class="kw">while let </span><span class="prelude-val">Some</span>(map) = cursor.current() {
             <span class="kw">if </span>map.end_addr &lt;= start {
                 cursor.move_next();
@@ -2243,7 +2137,7 @@
     }
 
     <span class="kw">fn </span>fork_from(<span class="kw-2">&amp;mut </span><span class="self">self</span>, parent: <span class="kw-2">&amp;</span>Vm) {
-        <span class="kw">let </span>data = parent.inner.lock_irq();
+        <span class="kw">let </span>data = parent.inner.lock();
 
         <span class="comment">// Copy over all of the mappings from the parent into the child.
         </span><span class="self">self</span>.mappings = data.mappings.clone();
@@ -2251,14 +2145,14 @@
 }
 
 <span class="kw">pub struct </span>Vm {
-    inner: Mutex&lt;VmProtected&gt;,
+    inner: BMutex&lt;VmProtected&gt;,
 }
 
 <span class="kw">impl </span>Vm {
     <span class="doccomment">/// Creates a new instance of VM.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>new() -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
-            inner: Mutex::new(VmProtected::new()),
+            inner: BMutex::new(VmProtected::new()),
         }
     }
 
@@ -2272,16 +2166,16 @@
         file: <span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;,
     ) -&gt; <span class="prelude-ty">Option</span>&lt;VirtAddr&gt; {
         <span class="self">self</span>.inner
-            .lock_irq()
+            .lock()
             .mmap(address, size, protection, flags, offset, file)
     }
 
     <span class="kw">pub fn </span>munmap(<span class="kw-2">&amp;</span><span class="self">self</span>, address: VirtAddr, size: usize) -&gt; bool {
-        <span class="self">self</span>.inner.lock_irq().munmap(address, size)
+        <span class="self">self</span>.inner.lock().munmap(address, size)
     }
 
     <span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>fork_from(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: <span class="kw-2">&amp;</span>Vm) {
-        <span class="self">self</span>.inner.lock_irq().fork_from(parent)
+        <span class="self">self</span>.inner.lock().fork_from(parent)
     }
 
     <span class="doccomment">/// Mapping the provided `bin` file into the VM.
@@ -2291,12 +2185,12 @@
         argv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
         envv: <span class="prelude-ty">Option</span>&lt;ExecArgs&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;LoadedBinary, ElfLoadError&gt; {
-        <span class="self">self</span>.inner.lock_irq().load_bin(bin, argv, envv)
+        <span class="self">self</span>.inner.lock().load_bin(bin, argv, envv)
     }
 
     <span class="doccomment">/// Clears and unmaps all of the mappings in the VM.
     </span><span class="kw">pub</span>(<span class="kw">super</span>) <span class="kw">fn </span>clear(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.inner.lock_irq().clear()
+        <span class="self">self</span>.inner.lock().clear()
     }
 
     <span class="doccomment">/// This function is responsible for handling page faults occurred in
@@ -2308,13 +2202,9 @@
         accessed_address: VirtAddr,
     ) -&gt; bool {
         <span class="self">self</span>.inner
-            .lock_irq()
+            .lock()
             .handle_page_fault(reason, accessed_address)
-    }
-
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.inner.lock_irq().log()
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (658fad6c5 2023-02-03)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (bd39bbb4b 2023-02-07)" data-search-js="search-28136cea55c34037.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
