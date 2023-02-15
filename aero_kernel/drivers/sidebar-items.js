@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"mod":[["block",""],["drm",""],["keyboard",""],["lai",""],["mouse",""],["pci",""],["pty",""],["tty",""],["uart_16550",""]]};

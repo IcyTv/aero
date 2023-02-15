@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["create_namespace","Creates the ACPI namespace."],["enable_acpi","Enables ACPI SCI."],["enter_sleep","Enters a sleeping state."],["init",""],["reset",""],["set_acpi_revision","Initializes the ACPI revision."]],"trait":[["Host",""]]};
+window.SIDEBAR_ITEMS = {"fn":["create_namespace","enable_acpi","enter_sleep","init","reset","set_acpi_revision"],"trait":["Host"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["init","Initialize the serial ports if available."]],"macro":[["serial_print",""],["serial_println",""]],"static":[["COM_1",""]],"struct":[["InterruptEnable",""],["LineStatus",""],["SerialPort","An interface to a serial port that allows sending out individual bytes."]],"trait":[["__BitFlags",""]]};

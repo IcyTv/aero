@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":[["ASSERT",""]],"enum":[["FileType",""],["Revision",""]],"struct":[["DirEntry",""],["GroupDescriptor",""],["INode",""],["SuperBlock",""]],"trait":[["Revsion",""]]};

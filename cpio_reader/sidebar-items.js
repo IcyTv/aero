@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":[["iter_files","Returns an iterator that iterates over each content of the given cpio file."]],"struct":[["Entry","An entry of a cpio file."],["Mode","File information."]]};
+window.SIDEBAR_ITEMS = {"fn":["iter_files"],"struct":["Entry","Mode"]};

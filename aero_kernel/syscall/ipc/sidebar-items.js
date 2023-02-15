@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":[["become_root",""],["discover_root",""],["even_inner",""],["handle_receive",""],["recv",""],["send",""],["syscall_inner",""]],"static":[["IPC_ROOT_NODE",""]],"struct":[["Message",""],["MessageQueue",""]]};
