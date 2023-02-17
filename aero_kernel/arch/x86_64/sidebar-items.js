@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["arch_aero_main","enable_acpi","init_cpu","x86_64_aero_ap_main"],"mod":["apic","controlregs","gdt","interrupts","io","signals","syscall","task","time","tls"],"static":["BOOT_TIME","FRAMEBUFFER","HHDM","KERNEL_FILE","MEMMAP","MODULES","RSDP","SMP","STACK"]};

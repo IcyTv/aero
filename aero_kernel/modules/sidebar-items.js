@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["ModuleType"],"fn":["init"],"static":["__kernel_modules_end","__kernel_modules_start"],"struct":["Module"]};
