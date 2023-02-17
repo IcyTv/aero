@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["add_device","default_device","has_default_device","init","packet_processor_thread"],"mod":["arp","dhcp","ethernet","ip","udp"],"static":["DEFAULT_DEVICE","DEVICES"],"struct":["Packet","RecvPacket"],"trait":["ConstPacketKind","NetworkDevice","PacketBaseTrait","PacketDownHierarchy","PacketHeader","PacketKind","PacketTrait","PacketUpHierarchy"]};

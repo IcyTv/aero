@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["__stability","__static_ref_initialize","pty_init"],"static":["LAZY","PTS_FS","PTY_ID","__MODULE_INIT"],"struct":["Master","PTMX","Ptmx","PtsFs","PtsINode","Slave","SlaveInner"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["__rg_oom","alloc_error_handler","init_heap"],"struct":["Allocator","LockedHeap"]};

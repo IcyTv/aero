@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["ADDR_SIZE"],"enum":["Type"],"struct":["Header","Ipv4","Ipv4Addr"]};

@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["align_down","align_up","is_aligned"],"struct":["PhysAddr","PhysAddrNotValid","VirtAddr","VirtAddrNotValid"]};

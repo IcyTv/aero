@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["__stability","__static_ref_initialize","install_block_device","launch"],"mod":["gpt"],"static":["BLOCK_DEVS","LAZY"],"struct":["BlockDevice","CachedPage","PAGE_CACHE","PartitionBlockDevice"],"trait":["BlockDeviceInterface","CachedAccess"],"type":["PageCacheItem","PageCacheKey"]};

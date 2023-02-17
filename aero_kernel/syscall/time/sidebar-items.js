@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"constant":["CLOCK_TYPE_MONOTONIC","CLOCK_TYPE_REALTIME"],"fn":["check_timers","even_inner","getitimer","gettime","setitimer","sleep","syscall_inner"],"static":["TIMERS"]};

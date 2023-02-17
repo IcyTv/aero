@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"struct":["BigEndian","LittleEndian"],"trait":["SpecificEndian"],"type":["f32be","f32le","f64be","f64le","i128be","i128le","i16be","i16le","i32be","i32le","i64be","i64le","isizebe","isizele","u128be","u128le","u16be","u16le","u32be","u32le","u64be","u64le","usizebe","usizele"]};

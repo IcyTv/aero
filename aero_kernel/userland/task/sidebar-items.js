@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"enum":["TaskState"],"static":["NEXT_PID"],"struct":["Cwd","SchedTaskAdapter","Task","TaskAdapter","TaskId","Zombies"]};
