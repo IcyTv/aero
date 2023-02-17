@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"fn":["get","init"],"static":["CACHE"],"struct":["Cache","Entry"]};

@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"constant":["DHCP_XID"],"enum":["DhcpOption","DhcpType","HType","MessageType"],"fn":["init"],"struct":["Dhcp","Header","OptionsWriter"]};

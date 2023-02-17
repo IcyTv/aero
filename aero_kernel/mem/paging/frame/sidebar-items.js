@@ -1,0 +1,1 @@
+window.SIDEBAR_ITEMS = {"enum":["BuddyOrdering","MemoryRangeType"],"fn":["get_vm_frames","init_vm_frames","pmm_alloc"],"static":["BUDDY_SIZE","VM_FRAMES"],"struct":["BootAlloc","BootAllocRef","GlobalFrameAllocator","LockedFrameAllocator","MemoryRange","RangeMemoryIter","VmFrame"]};
