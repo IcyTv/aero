@@ -343,6 +343,17 @@
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
 <a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -562,6 +573,17 @@
 }
 
 <span class="attr">#[syscall]
+</span><span class="kw">pub fn </span>mprotect(ptr: usize, size: usize, prot: usize) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>ptr = VirtAddr::new(ptr <span class="kw">as _</span>);
+    <span class="kw">let </span>prot = MMapProt::from_bits(prot).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+
+    <span class="kw">let </span>task = scheduler::get_scheduler().current_task();
+    task.vm().mprotect(ptr, size, prot);
+
+    <span class="prelude-val">Ok</span>(<span class="number">0</span>)
+}
+
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>backtrace() -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
     <span class="kw">crate</span>::unwind::unwind_stack_trace();
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
@@ -689,4 +711,4 @@
     <span class="macro">unreachable!</span>(<span class="string">&quot;aml: failed to shutdown (enter state S5)&quot;</span>)
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (9a7cc6c32 2023-02-16)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (9aa5c24b7 2023-02-17)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
