@@ -1558,7 +1558,7 @@
     end_addr: VirtAddr,
 
     file: <span class="prelude-ty">Option</span>&lt;MMapFile&gt;,
-    refresh_flags: bool,
+    a: bool,
 }
 
 <span class="kw">impl </span>Mapping {
@@ -1595,7 +1595,7 @@
         </span>} <span class="kw">else if </span>reason.contains(PageFaultErrorCode::CAUSED_BY_WRITE) {
             <span class="self">self</span>.handle_cow(offset_table, addr_aligned, <span class="bool-val">false</span>)
         } <span class="kw">else </span>{
-            <span class="kw">if </span>!<span class="self">self</span>.refresh_flags {
+            <span class="kw">if </span>!<span class="self">self</span>.a {
                 <span class="kw">return </span><span class="bool-val">false</span>;
             }
 
@@ -1613,7 +1613,7 @@
                     .flush();
             }
 
-            <span class="self">self</span>.refresh_flags = <span class="bool-val">false</span>;
+            <span class="self">self</span>.a = <span class="bool-val">false</span>;
             <span class="bool-val">true
         </span>}
     }
@@ -1796,7 +1796,7 @@
                 start_addr: end,
                 end_addr: end + (<span class="self">self</span>.end_addr - end),
                 file: new_file,
-                refresh_flags: <span class="bool-val">true</span>,
+                a: <span class="bool-val">true</span>,
             };
 
             <span class="self">self</span>.end_addr = end;
@@ -2076,7 +2076,7 @@
                 end_addr: addr + size_aligned,
 
                 file: file.map(|f| MMapFile::new(f, offset, size)),
-                refresh_flags: <span class="bool-val">true</span>,
+                a: <span class="bool-val">true</span>,
             });
 
             <span class="prelude-val">Some</span>(addr)
