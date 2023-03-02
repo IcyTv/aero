@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["Header","Udp"]};
+window.SIDEBAR_ITEMS = {"constant":["EPHEMERAL_END","EPHEMERAL_START"],"fn":["alloc_ephemeral_port","bind","connect"],"static":["HANDLERS"],"struct":["Header","Udp"],"trait":["UdpHandler"]};

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["InetSocket"]};
+window.SIDEBAR_ITEMS = {"enum":["SocketState"],"struct":["InetSocket","InetSocketInner"]};

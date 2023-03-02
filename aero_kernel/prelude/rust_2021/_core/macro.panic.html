@@ -5,7 +5,7 @@
 to the caller of the program.</p>
 <p>This macro is the perfect way to assert conditions in example code and in
 tests. <code>panic!</code> is closely tied with the <code>unwrap</code> method of both
-<a href="option/enum.Option.html#method.unwrap" title="associated function aero_kernel::prelude::rust_2021::_core::option::Option::unwrap"><code>Option</code></a> and <a href="result/enum.Result.html#method.unwrap" title="associated function aero_kernel::prelude::rust_2021::_core::result::Result::unwrap"><code>Result</code></a> enums. Both implementations call
+<a href="option/enum.Option.html#method.unwrap" title="method aero_kernel::prelude::rust_2021::_core::option::Option::unwrap"><code>Option</code></a> and <a href="result/enum.Result.html#method.unwrap" title="method aero_kernel::prelude::rust_2021::_core::result::Result::unwrap"><code>Result</code></a> enums. Both implementations call
 <code>panic!</code> when they are set to <a href="option/enum.Option.html#variant.None" title="variant aero_kernel::prelude::rust_2021::_core::option::Option::None"><code>None</code></a> or <a href="result/enum.Result.html#variant.Err" title="variant aero_kernel::prelude::rust_2021::_core::result::Result::Err"><code>Err</code></a> variants.</p>
 <p>When using <code>panic!()</code> you can specify a string payload, that is built using
 the <a href="../std/macro.format.html"><code>format!</code></a> syntax. That payload is used when injecting the panic into
@@ -48,4 +48,4 @@ program with code <code>101</code>.</p>
 <span class="macro">panic!</span>(<span class="string">&quot;this is a terrible mistake!&quot;</span>);
 <span class="macro">panic!</span>(<span class="string">&quot;this is a {} {message}&quot;</span>, <span class="string">&quot;fancy&quot;</span>, message = <span class="string">&quot;message&quot;</span>);
 std::panic::panic_any(<span class="number">4</span>); <span class="comment">// panic with the value of 4 to be collected elsewhere</span></code></pre></div>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (7aa413d59 2023-02-19)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

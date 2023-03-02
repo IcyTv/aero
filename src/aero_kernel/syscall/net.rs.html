@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/syscall/net.rs`."><title>net.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e5308b57e507db71.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-d59023bfa12059d2.css"><link rel="stylesheet" disabled href="../../../static.files/dark-1ca41bb1e10af075.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-18b4181a2f3fb862.css"><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-ea63cb6500f71309.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `aero_kernel/src/syscall/net.rs`."><title>net.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e5308b57e507db71.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-d59023bfa12059d2.css"><link rel="stylesheet" disabled href="../../../static.files/dark-1ca41bb1e10af075.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-18b4181a2f3fb862.css"><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../aero_kernel/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -169,13 +169,44 @@
 <a href="#169" id="169">169</a>
 <a href="#170" id="170">170</a>
 <a href="#171" id="171">171</a>
-</pre><pre class="rust"><code><span class="kw">use </span>aero_syscall::socket::MessageHeader;
+<a href="#172" id="172">172</a>
+<a href="#173" id="173">173</a>
+<a href="#174" id="174">174</a>
+<a href="#175" id="175">175</a>
+<a href="#176" id="176">176</a>
+<a href="#177" id="177">177</a>
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+</pre><pre class="rust"><code><span class="kw">use </span>num_traits::cast::FromPrimitive;
+
+<span class="kw">use </span>aero_syscall::socket::MessageHeader;
 <span class="kw">use </span>aero_syscall::<span class="kw-2">*</span>;
+<span class="kw">use </span>alloc::sync::Arc;
 
 <span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheItem;
 <span class="kw">use </span><span class="kw">crate</span>::fs::inode::DirEntry;
+<span class="kw">use </span><span class="kw">crate</span>::fs::inode::INodeInterface;
 <span class="kw">use </span><span class="kw">crate</span>::mem::paging::VirtAddr;
 
+<span class="kw">use </span><span class="kw">crate</span>::socket::inet::InetSocket;
 <span class="kw">use </span><span class="kw">crate</span>::socket::unix::<span class="kw-2">*</span>;
 <span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
 
@@ -233,6 +264,23 @@
 }
 
 <span class="attr">#[syscall]
+</span><span class="kw">pub fn </span>sock_send(
+    fd: usize,
+    header: <span class="kw-2">&amp;mut </span>MessageHeader,
+    flags: usize,
+) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="macro">assert!</span>(flags == <span class="number">0</span>, <span class="string">&quot;sock_send: flags are not currently supported&quot;</span>);
+
+    <span class="kw">let </span>current_task = scheduler::get_scheduler().current_task();
+    <span class="kw">let </span>socket = current_task
+        .file_table
+        .get_handle(fd)
+        .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+
+    <span class="prelude-val">Ok</span>(socket.inode().send(header)<span class="question-mark">?</span>)
+}
+
+<span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>sock_recv(
     sockfd: usize,
     header: <span class="kw-2">&amp;mut </span>MessageHeader,
@@ -246,8 +294,7 @@
         .get_handle(sockfd)
         .ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
 
-    <span class="kw">let </span>non_block = socket.flags.read().contains(OpenFlags::O_NONBLOCK);
-    <span class="prelude-val">Ok</span>(socket.inode().recv(header, non_block)<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(socket.inode().recv(header)<span class="question-mark">?</span>)
 }
 
 <span class="doccomment">/// Marks the socket as a passive socket (i.e. as a socket that will be used to accept incoming
@@ -269,11 +316,16 @@
     socket_type: usize,
     protocol: usize,
 ) -&gt; <span class="prelude-ty">Result</span>&lt;DirCacheItem, SyscallError&gt; {
+    <span class="kw">let </span>typ = SocketType::from_usize(socket_type).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+    <span class="kw">let </span>protocol = IpProtocol::from_usize(protocol).ok_or(SyscallError::EINVAL)<span class="question-mark">?</span>;
+
     <span class="kw">let </span>socket = <span class="kw">match </span>domain <span class="kw">as </span>u32 {
-        AF_UNIX =&gt; UnixSocket::new(),
+        AF_UNIX =&gt; UnixSocket::new() <span class="kw">as </span>Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;,
+        AF_INET =&gt; InetSocket::new(typ, protocol)<span class="question-mark">? </span><span class="kw">as </span>Arc&lt;<span class="kw">dyn </span>INodeInterface&gt;,
+
         <span class="kw">_ </span>=&gt; {
             <span class="macro">log::warn!</span>(
-                <span class="string">&quot;unsupported socket type: domain={domain}, socket_type={socket_type}, protocol={protocol}&quot;
+                <span class="string">&quot;unsupported socket type: domain={domain}, socket_type={socket_type}, protocol={protocol:?}&quot;
             </span>);
 
             <span class="kw">return </span><span class="prelude-val">Err</span>(SyscallError::EINVAL);
@@ -341,4 +393,4 @@
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (7aa413d59 2023-02-19)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

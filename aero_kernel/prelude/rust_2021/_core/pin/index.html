@@ -116,33 +116,33 @@ the list. Elements can only be added when they are pinned, because moving the el
 around would invalidate the pointers. Moreover, the <a href="../ops/trait.Drop.html" title="trait aero_kernel::prelude::rust_2021::_core::ops::Drop"><code>Drop</code></a> implementation of a linked
 list element will patch the pointers of its predecessor and successor to remove itself
 from the list.</p>
-<p>Crucially, we have to be able to rely on <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> being called. If an element
-could be deallocated or otherwise invalidated without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a>, the pointers into it
+<p>Crucially, we have to be able to rely on <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> being called. If an element
+could be deallocated or otherwise invalidated without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a>, the pointers into it
 from its neighboring elements would become invalid, which would break the data structure.</p>
-<p>Therefore, pinning also comes with a <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a>-related guarantee.</p>
+<p>Therefore, pinning also comes with a <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a>-related guarantee.</p>
 <h2 id="drop-guarantee"><a href="#drop-guarantee"><code>Drop</code> guarantee</a></h2>
 <p>The purpose of pinning is to be able to rely on the placement of some data in memory.
 To make this work, not just moving the data is restricted; deallocating, repurposing, or
 otherwise invalidating the memory used to store the data is restricted, too.
 Concretely, for pinned data you have to maintain the invariant
 that <em>its memory will not get invalidated or repurposed from the moment it gets pinned until
-when <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> is called</em>.  Only once <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> returns or panics, the memory may be reused.</p>
+when <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> is called</em>.  Only once <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> returns or panics, the memory may be reused.</p>
 <p>Memory can be “invalidated” by deallocation, but also by
 replacing a <code><a href="../option/enum.Option.html#variant.Some" title="variant aero_kernel::prelude::rust_2021::_core::option::Option::Some">Some</a>(v)</code> by <a href="../option/enum.Option.html#variant.None" title="variant aero_kernel::prelude::rust_2021::_core::option::Option::None"><code>None</code></a>, or calling <a href="../../std/vec/struct.Vec.html#method.set_len" title="Vec::set_len"><code>Vec::set_len</code></a> to “kill” some
 elements off of a vector. It can be repurposed by using <a href="../ptr/fn.write.html" title="ptr::write"><code>ptr::write</code></a> to overwrite it without
-calling the destructor first. None of this is allowed for pinned data without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a>.</p>
+calling the destructor first. None of this is allowed for pinned data without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a>.</p>
 <p>This is exactly the kind of guarantee that the intrusive linked list from the previous
 section needs to function correctly.</p>
 <p>Notice that this guarantee does <em>not</em> mean that memory does not leak! It is still
-completely okay to not ever call <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> on a pinned element (e.g., you can still
+completely okay to not ever call <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> on a pinned element (e.g., you can still
 call <a href="../mem/fn.forget.html" title="mem::forget"><code>mem::forget</code></a> on a <code><a href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a>&lt;<a href="../../std/boxed/struct.Box.html" title="Box">Box</a>&lt;T&gt;&gt;</code>). In the example of the doubly-linked
 list, that element would just stay in the list. However you must not free or reuse the storage
-<em>without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a></em>.</p>
+<em>without calling <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a></em>.</p>
 <h2 id="drop-implementation"><a href="#drop-implementation"><code>Drop</code> implementation</a></h2>
 <p>If your type uses pinning (such as the two examples above), you have to be careful
-when implementing <a href="../ops/trait.Drop.html" title="trait aero_kernel::prelude::rust_2021::_core::ops::Drop"><code>Drop</code></a>. The <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> function takes <code><a href="reference" title="mutable reference">&amp;mut</a> self</code>, but this
+when implementing <a href="../ops/trait.Drop.html" title="trait aero_kernel::prelude::rust_2021::_core::ops::Drop"><code>Drop</code></a>. The <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> function takes <code><a href="reference" title="mutable reference">&amp;mut</a> self</code>, but this
 is called <em>even if your type was previously pinned</em>! It is as if the
-compiler automatically called <a href="struct.Pin.html#method.get_unchecked_mut" title="associated function aero_kernel::prelude::rust_2021::_core::pin::Pin::get_unchecked_mut"><code>Pin::get_unchecked_mut</code></a>.</p>
+compiler automatically called <a href="struct.Pin.html#method.get_unchecked_mut" title="method aero_kernel::prelude::rust_2021::_core::pin::Pin::get_unchecked_mut"><code>Pin::get_unchecked_mut</code></a>.</p>
 <p>This can never cause a problem in safe code because implementing a type that
 relies on pinning requires unsafe code, but be aware that deciding to make
 use of pinning in your type (for example by implementing some operation on
@@ -161,7 +161,7 @@ you must treat <a href="../ops/trait.Drop.html" title="trait aero_kernel::prelud
         </span>}
     }
 }</code></pre></div>
-<p>The function <code>inner_drop</code> has the type that <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> <em>should</em> have, so this makes sure that
+<p>The function <code>inner_drop</code> has the type that <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> <em>should</em> have, so this makes sure that
 you do not accidentally use <code>self</code>/<code>this</code> in a way that is in conflict with pinning.</p>
 <p>Moreover, if your type is <code>#[repr(packed)]</code>, the compiler will automatically
 move fields around to be able to drop them. It might even do
@@ -230,12 +230,12 @@ the principle that you only have to worry about any of this if you use <a href="
 </li>
 <li>
 <p>The destructor of the struct must not move structural fields out of its argument. This
-is the exact point that was raised in the <a href="#drop-implementation">previous section</a>: <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> takes
+is the exact point that was raised in the <a href="#drop-implementation">previous section</a>: <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> takes
 <code><a href="reference" title="mutable reference">&amp;mut</a> self</code>, but the struct (and hence its fields) might have been pinned
 before. You have to guarantee that you do not move a field inside your <a href="../ops/trait.Drop.html" title="trait aero_kernel::prelude::rust_2021::_core::ops::Drop"><code>Drop</code></a>
 implementation. In particular, as explained previously, this means that your struct
 must <em>not</em> be <code>#[repr(packed)]</code>.
-See that section for how to write <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> in a way that the compiler can help you
+See that section for how to write <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> in a way that the compiler can help you
 not accidentally break pinning.</p>
 </li>
 <li>
@@ -243,7 +243,7 @@ not accidentally break pinning.</p>
 once your struct is pinned, the memory that contains the
 content is not overwritten or deallocated without calling the content’s destructors.
 This can be tricky, as witnessed by <code><a href="../../std/collections/struct.VecDeque.html" title="collections::VecDeque">VecDeque</a>&lt;T&gt;</code>: the destructor of
-<code><a href="../../std/collections/struct.VecDeque.html" title="collections::VecDeque">VecDeque</a>&lt;T&gt;</code> can fail to call <a href="../ops/trait.Drop.html#tymethod.drop" title="associated function aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> on all elements if one of the
+<code><a href="../../std/collections/struct.VecDeque.html" title="collections::VecDeque">VecDeque</a>&lt;T&gt;</code> can fail to call <a href="../ops/trait.Drop.html#tymethod.drop" title="method aero_kernel::prelude::rust_2021::_core::ops::Drop::drop"><code>drop</code></a> on all elements if one of the
 destructors panics. This violates the <a href="../ops/trait.Drop.html" title="trait aero_kernel::prelude::rust_2021::_core::ops::Drop"><code>Drop</code></a> guarantee, because it can lead to
 elements being deallocated without their destructor being called.
 (<code><a href="../../std/collections/struct.VecDeque.html" title="collections::VecDeque">VecDeque</a>&lt;T&gt;</code> has no pinning projections, so this
@@ -252,7 +252,7 @@ does not cause unsoundness.)</p>
 <li>
 <p>You must not offer any other operations that could lead to data being moved out of
 the structural fields when your type is pinned. For example, if the struct contains an
-<code><a href="../option/enum.Option.html" title="enum aero_kernel::prelude::rust_2021::_core::option::Option">Option</a>&lt;T&gt;</code> and there is a <a href="../option/enum.Option.html#method.take" title="associated function aero_kernel::prelude::rust_2021::_core::option::Option::take"><code>take</code></a>-like operation with type
+<code><a href="../option/enum.Option.html" title="enum aero_kernel::prelude::rust_2021::_core::option::Option">Option</a>&lt;T&gt;</code> and there is a <a href="../option/enum.Option.html#method.take" title="method aero_kernel::prelude::rust_2021::_core::option::Option::take"><code>take</code></a>-like operation with type
 <code>fn(<a href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a>&lt;<a href="reference" title="mutable reference">&amp;mut</a> Struct&lt;T&gt;&gt;) -&gt; <a href="../option/enum.Option.html" title="enum aero_kernel::prelude::rust_2021::_core::option::Option">Option</a>&lt;T&gt;</code>,
 that operation can be used to move a <code>T</code> out of a pinned <code>Struct&lt;T&gt;</code> – which means
 pinning cannot be structural for the field holding this data.</p>
@@ -299,4 +299,4 @@ But if your combinator contains any other data that does not need to be pinned,
 you can make those fields not structural and hence freely access them with a
 mutable reference even when you just have <code><a href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a>&lt;<a href="reference" title="mutable reference">&amp;mut</a> Self&gt;</code> (such as in your own
 <a href="../future/trait.Future.html#tymethod.poll" title="future::Future::poll"><code>poll</code></a> implementation).</p>
-</div></details><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.pin.html" title="macro aero_kernel::prelude::rust_2021::_core::pin::pin">pin</a></div><div class="desc docblock-short">Constructs a <code><a href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a>&lt;[&amp;mut] T&gt;</code>, by pinning<sup class="footnote-reference"><a href="#1">1</a></sup> a <code>value: T</code> <em>locally</em><sup class="footnote-reference"><a href="#2">2</a></sup>.</div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a></div><div class="desc docblock-short">A pinned pointer.</div></li></ul></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (7aa413d59 2023-02-19)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</div></details><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2><ul class="item-table"><li><div class="item-name"><a class="macro" href="macro.pin.html" title="macro aero_kernel::prelude::rust_2021::_core::pin::pin">pin</a></div><div class="desc docblock-short">Constructs a <code><a href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a>&lt;[&amp;mut] T&gt;</code>, by pinning<sup class="footnote-reference"><a href="#1">1</a></sup> a <code>value: T</code> <em>locally</em><sup class="footnote-reference"><a href="#2">2</a></sup>.</div></li></ul><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2><ul class="item-table"><li><div class="item-name"><a class="struct" href="struct.Pin.html" title="struct aero_kernel::prelude::rust_2021::_core::pin::Pin">Pin</a></div><div class="desc docblock-short">A pinned pointer.</div></li></ul></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

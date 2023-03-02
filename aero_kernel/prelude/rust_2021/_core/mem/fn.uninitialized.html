@@ -5,7 +5,7 @@ It also might be slower than using <code>MaybeUninit&lt;T&gt;</code> due to miti
 limit the potential harm caused by incorrect use of this function in legacy code.</p>
 <p>The reason for deprecation is that the function basically cannot be used
 correctly: it has the same effect as <a href="union.MaybeUninit.html#method.uninit" title="associated function aero_kernel::prelude::rust_2021::_core::mem::MaybeUninit::uninit"><code>MaybeUninit::uninit().assume_init()</code></a>.
-As the <a href="union.MaybeUninit.html#method.assume_init" title="associated function aero_kernel::prelude::rust_2021::_core::mem::MaybeUninit::assume_init"><code>assume_init</code> documentation</a> explains,
+As the <a href="union.MaybeUninit.html#method.assume_init" title="method aero_kernel::prelude::rust_2021::_core::mem::MaybeUninit::assume_init"><code>assume_init</code> documentation</a> explains,
 <a href="union.MaybeUninit.html#initialization-invariant" title="union aero_kernel::prelude::rust_2021::_core::mem::MaybeUninit">the Rust compiler assumes</a> that values are properly initialized.</p>
 <p>Truly uninitialized memory like what gets returned here
 is special in that the compiler knows that it does not have a fixed value.
@@ -13,4 +13,4 @@ This makes it undefined behavior to have uninitialized data in a variable even
 if that variable has an integer type.</p>
 <p>Therefore, it is immediate undefined behavior to call this function on nearly all types,
 including integer types and arrays of integer types, and even if the result is unused.</p>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (7aa413d59 2023-02-19)" data-search-js="search-14421e1532aead08.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

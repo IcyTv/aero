@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"fn":["accept","bind","connect","create_socket","even_inner","listen","sock_recv","socket","socket_addr_from_addr","socket_pair","syscall_inner"]};
+window.SIDEBAR_ITEMS = {"fn":["accept","bind","connect","create_socket","even_inner","listen","sock_recv","sock_send","socket","socket_addr_from_addr","socket_pair","syscall_inner"]};
