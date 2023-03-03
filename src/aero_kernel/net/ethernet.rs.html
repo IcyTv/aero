@@ -95,6 +95,7 @@
 <a href="#95" id="95">95</a>
 <a href="#96" id="96">96</a>
 <a href="#97" id="97">97</a>
+<a href="#98" id="98">98</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -123,10 +124,11 @@
 
 <span class="attr">#[derive(Debug, Hash, PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Default)]
 #[repr(C)]
-</span><span class="kw">pub struct </span>MacAddr(<span class="kw">pub </span>[u8; <span class="number">6</span>]);
+</span><span class="kw">pub struct </span>MacAddr(<span class="kw">pub </span>[u8; <span class="self">Self</span>::ADDR_SIZE]);
 
 <span class="kw">impl </span>MacAddr {
-    <span class="kw">pub const </span>BROADCAST: <span class="self">Self </span>= <span class="self">Self</span>([<span class="number">0xff</span>; <span class="number">6</span>]);
+    <span class="kw">pub const </span>ADDR_SIZE: usize = <span class="number">6</span>;
+    <span class="kw">pub const </span>BROADCAST: <span class="self">Self </span>= <span class="self">Self</span>([<span class="number">0xff</span>; <span class="self">Self</span>::ADDR_SIZE]);
 }
 
 <span class="attr">#[repr(u16)]
@@ -193,4 +195,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (13471d3b2 2023-03-02)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

@@ -237,6 +237,22 @@
 <a href="#237" id="237">237</a>
 <a href="#238" id="238">238</a>
 <a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
+<a href="#241" id="241">241</a>
+<a href="#242" id="242">242</a>
+<a href="#243" id="243">243</a>
+<a href="#244" id="244">244</a>
+<a href="#245" id="245">245</a>
+<a href="#246" id="246">246</a>
+<a href="#247" id="247">247</a>
+<a href="#248" id="248">248</a>
+<a href="#249" id="249">249</a>
+<a href="#250" id="250">250</a>
+<a href="#251" id="251">251</a>
+<a href="#252" id="252">252</a>
+<a href="#253" id="253">253</a>
+<a href="#254" id="254">254</a>
+<a href="#255" id="255">255</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -256,7 +272,8 @@
  * along with Aero. If not, see &lt;https://www.gnu.org/licenses/&gt;.
  */
 
-</span><span class="kw">use </span>aero_syscall::socket::MessageHeader;
+</span><span class="kw">use </span>aero_syscall::prelude::SIOCGIFHWADDR;
+<span class="kw">use </span>aero_syscall::socket::MessageHeader;
 <span class="kw">use </span>aero_syscall::{IpProtocol, OpenFlags, SocketAddrInet, SocketType, SyscallError};
 <span class="kw">use </span>alloc::sync::{Arc, Weak};
 <span class="kw">use </span>alloc::vec::Vec;
@@ -268,7 +285,7 @@
 <span class="kw">use </span><span class="kw">crate</span>::fs::{<span class="self">self</span>, FileSystemError};
 <span class="kw">use </span><span class="kw">crate</span>::net::ip::Ipv4Addr;
 <span class="kw">use </span><span class="kw">crate</span>::net::udp::{<span class="self">self</span>, Udp, UdpHandler};
-<span class="kw">use </span><span class="kw">crate</span>::net::{Packet, PacketHeader, PacketTrait};
+<span class="kw">use </span><span class="kw">crate</span>::net::{<span class="self">self</span>, MacAddr, Packet, PacketHeader, PacketTrait};
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
 <span class="attr">#[derive(Default)]
@@ -461,6 +478,21 @@
             .sum::&lt;usize&gt;())
     }
 
+    <span class="kw">fn </span>ioctl(<span class="kw-2">&amp;</span><span class="self">self</span>, command: usize, arg: usize) -&gt; fs::Result&lt;usize&gt; {
+        <span class="kw">match </span>command {
+            SIOCGIFHWADDR =&gt; {
+                <span class="kw">let </span>hwaddr =
+                    <span class="kw">unsafe </span>{ core::slice::from_raw_parts_mut(arg <span class="kw">as </span><span class="kw-2">*mut </span>u8, MacAddr::ADDR_SIZE) };
+
+                <span class="kw">let </span>mac_addr = net::default_device().mac();
+                hwaddr.copy_from_slice(<span class="kw-2">&amp;</span>mac_addr.<span class="number">0</span>.as_slice());
+                <span class="prelude-val">Ok</span>(<span class="number">0</span>)
+            }
+
+            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(<span class="string">&quot;inet::ioctl(): unknown command {command}&quot;</span>),
+        }
+    }
+
     <span class="kw">fn </span>poll(<span class="kw-2">&amp;</span><span class="self">self</span>, table: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;mut </span>fs::inode::PollTable&gt;) -&gt; fs::Result&lt;PollFlags&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>(table) = table {
             table.insert(<span class="kw-2">&amp;</span><span class="self">self</span>.wq);
@@ -477,4 +509,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (13471d3b2 2023-03-02)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

@@ -3,6 +3,9 @@
 comparing <code>i96</code>s instead of forcing <code>alloca</code>s for <code>[6 x i16]</code>.</p>
 <p>Above some backend-decided threshold this will emit calls to <code>memcmp</code>,
 like slice equality does, instead of causing massive code size.</p>
+<p>Since this works by comparing the underlying bytes, the actual <code>T</code> is
+not particularly important.  It will be used for its size and alignment,
+but any validity restrictions will be ignored, not enforced.</p>
 <h2 id="safety"><a href="#safety">Safety</a></h2>
 <p>It’s UB to call this if any of the <em>bytes</em> in <code>*a</code> or <code>*b</code> are uninitialized or carry a
 pointer value.
@@ -10,4 +13,4 @@ Note that this is a stricter criterion than just the <em>values</em> being
 fully-initialized: if <code>T</code> has padding, it’s UB to call this intrinsic.</p>
 <p>(The implementation is allowed to branch on the results of comparisons,
 which is UB if any of their inputs are <code>undef</code>.)</p>
-</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (f77bfb733 2023-03-01)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</div></details></section></div></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (13471d3b2 2023-03-02)" data-search-js="search-2cde8914278f97ed.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
