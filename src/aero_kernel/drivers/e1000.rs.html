@@ -688,8 +688,8 @@
 <span class="kw">use </span><span class="kw">crate</span>::userland::scheduler;
 <span class="kw">use </span><span class="kw">crate</span>::utils::sync::{BlockQueue, Mutex};
 
-<span class="kw">use </span><span class="kw">crate</span>::net::{<span class="self">self</span>, ethernet};
-<span class="kw">use </span><span class="kw">crate</span>::net::{MacAddr, NetworkDevice, PacketBaseTrait};
+<span class="kw">use </span><span class="kw">crate</span>::net::{<span class="self">self</span>, ethernet, NetworkDevice};
+<span class="kw">use </span><span class="kw">crate</span>::net::{MacAddr, NetworkDriver, PacketBaseTrait};
 
 <span class="kw">const </span>TX_DESC_NUM: u32 = <span class="number">32</span>;
 <span class="kw">const </span>TX_DESC_SIZE: u32 = TX_DESC_NUM * core::mem::size_of::&lt;TxDescriptor&gt;() <span class="kw">as </span>u32;
@@ -1257,7 +1257,7 @@
     }
 }
 
-<span class="kw">impl </span>NetworkDevice <span class="kw">for </span>Device {
+<span class="kw">impl </span>NetworkDriver <span class="kw">for </span>Device {
     <span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, packet: net::Packet&lt;net::Eth&gt;) {
         <span class="self">self</span>.e1000.lock_irq().send(packet)
     }
@@ -1305,7 +1305,7 @@
         <span class="kw">let </span>device = Arc::new(Device::new(e1000));
 
         DEVICE.call_once(|| device.clone());
-        net::add_device(device);
+        net::add_device(NetworkDevice::new(device));
     }
 }
 

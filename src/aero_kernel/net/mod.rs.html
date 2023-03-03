@@ -204,6 +204,40 @@
 <a href="#204" id="204">204</a>
 <a href="#205" id="205">205</a>
 <a href="#206" id="206">206</a>
+<a href="#207" id="207">207</a>
+<a href="#208" id="208">208</a>
+<a href="#209" id="209">209</a>
+<a href="#210" id="210">210</a>
+<a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
+<a href="#233" id="233">233</a>
+<a href="#234" id="234">234</a>
+<a href="#235" id="235">235</a>
+<a href="#236" id="236">236</a>
+<a href="#237" id="237">237</a>
+<a href="#238" id="238">238</a>
+<a href="#239" id="239">239</a>
+<a href="#240" id="240">240</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -241,12 +275,45 @@
     userland::{scheduler, task::Task},
 };
 
+<span class="kw">use </span><span class="self">self</span>::ip::Ipv4Addr;
+
 <span class="attr">#[downcastable]
-</span><span class="kw">pub trait </span>NetworkDevice: Send + Sync {
+</span><span class="kw">pub trait </span>NetworkDriver: Send + Sync {
     <span class="kw">fn </span>send(<span class="kw-2">&amp;</span><span class="self">self</span>, packet: Packet&lt;Eth&gt;);
     <span class="kw">fn </span>recv(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; RecvPacket;
     <span class="kw">fn </span>recv_end(<span class="kw-2">&amp;</span><span class="self">self</span>, packet_id: usize);
     <span class="kw">fn </span>mac(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; MacAddr;
+}
+
+<span class="attr">#[derive(Default)]
+</span><span class="kw">struct </span>Metadata {
+    ip: Ipv4Addr,
+}
+
+<span class="kw">pub struct </span>NetworkDevice {
+    driver: Arc&lt;<span class="kw">dyn </span>NetworkDriver&gt;,
+    metadata: RwLock&lt;Metadata&gt;,
+}
+
+<span class="kw">impl </span>NetworkDevice {
+    <span class="kw">pub fn </span>new(driver: Arc&lt;<span class="kw">dyn </span>NetworkDriver&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            driver,
+            metadata: RwLock::new(Metadata::default()),
+        }
+    }
+
+    <span class="kw">pub fn </span>set_ip(<span class="kw-2">&amp;</span><span class="self">self</span>, ip: Ipv4Addr) {
+        <span class="self">self</span>.metadata.write().ip = ip;
+    }
+}
+
+<span class="kw">impl </span>core::ops::Deref <span class="kw">for </span>NetworkDevice {
+    <span class="kw">type </span>Target = Arc&lt;<span class="kw">dyn </span>NetworkDriver&gt;;
+
+    <span class="kw">fn </span>deref(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="self">Self</span>::Target {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.driver
+    }
 }
 
 <span class="attr">#[derive(Debug)]
@@ -365,8 +432,8 @@
     }
 }
 
-<span class="kw">static </span>DEVICES: RwLock&lt;Vec&lt;Arc&lt;<span class="kw">dyn </span>NetworkDevice&gt;&gt;&gt; = RwLock::new(Vec::new());
-<span class="kw">static </span>DEFAULT_DEVICE: RwLock&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>NetworkDevice&gt;&gt;&gt; = RwLock::new(<span class="prelude-val">None</span>);
+<span class="kw">static </span>DEVICES: RwLock&lt;Vec&lt;Arc&lt;NetworkDevice&gt;&gt;&gt; = RwLock::new(Vec::new());
+<span class="kw">static </span>DEFAULT_DEVICE: RwLock&lt;<span class="prelude-ty">Option</span>&lt;Arc&lt;NetworkDevice&gt;&gt;&gt; = RwLock::new(<span class="prelude-val">None</span>);
 
 <span class="kw">fn </span>packet_processor_thread() {
     <span class="kw">let </span>device = default_device();
@@ -377,7 +444,8 @@
     }
 }
 
-<span class="kw">pub fn </span>add_device(device: Arc&lt;<span class="kw">dyn </span>NetworkDevice&gt;) {
+<span class="kw">pub fn </span>add_device(device: NetworkDevice) {
+    <span class="kw">let </span>device = Arc::new(device);
     DEVICES.write().push(device.clone());
 
     <span class="kw">let </span><span class="kw-2">mut </span>default_device = DEFAULT_DEVICE.write();
@@ -392,7 +460,7 @@
     DEFAULT_DEVICE.read().as_ref().is_some()
 }
 
-<span class="kw">pub fn </span>default_device() -&gt; Arc&lt;<span class="kw">dyn </span>NetworkDevice&gt; {
+<span class="kw">pub fn </span>default_device() -&gt; Arc&lt;NetworkDevice&gt; {
     DEFAULT_DEVICE
         .read()
         .as_ref()
