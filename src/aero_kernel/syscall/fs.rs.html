@@ -673,6 +673,18 @@
 <a href="#673" id="673">673</a>
 <a href="#674" id="674">674</a>
 <a href="#675" id="675">675</a>
+<a href="#676" id="676">676</a>
+<a href="#677" id="677">677</a>
+<a href="#678" id="678">678</a>
+<a href="#679" id="679">679</a>
+<a href="#680" id="680">680</a>
+<a href="#681" id="681">681</a>
+<a href="#682" id="682">682</a>
+<a href="#683" id="683">683</a>
+<a href="#684" id="684">684</a>
+<a href="#685" id="685">685</a>
+<a href="#686" id="686">686</a>
+<a href="#687" id="687">687</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -696,7 +708,7 @@
 <span class="kw">use </span>aero_syscall::{prelude::<span class="kw-2">*</span>, TimeSpec};
 <span class="kw">use </span>aero_syscall::{OpenFlags, Stat, SyscallError};
 
-<span class="kw">use </span><span class="kw">crate</span>::fs::cache::DirCacheImpl;
+<span class="kw">use </span><span class="kw">crate</span>::fs::cache::{<span class="self">self</span>, DirCacheImpl};
 <span class="kw">use </span><span class="kw">crate</span>::fs::epoll::EPoll;
 <span class="kw">use </span><span class="kw">crate</span>::fs::eventfd::EventFd;
 <span class="kw">use </span><span class="kw">crate</span>::fs::file_table::DuplicateHint;
@@ -1259,9 +1271,9 @@
     </span><span class="kw">for </span>(i, fd) <span class="kw">in </span>fds.iter_mut().enumerate() {
         fd.revents = PollEventFlags::empty();
 
-        <span class="comment">// TODO: If an invalid file descriptor is provided then return EBADFD. Not implemented currently,
-        // since the init process (libc?) tries to POLL on the stdout, stdin and stdout file descriptors
-        // which are currently not present.
+        <span class="comment">// TODO: If an invalid file descriptor is provided then return EBADFD. Not implemented
+        // currently, since the init process (libc?) tries to POLL on the stdout, stdin and
+        // stdout file descriptors which are currently not present.
         //
         // One possible solution is to open the file descriptors when the init process
         // is a kernel process?
@@ -1346,7 +1358,19 @@
 
 <span class="attr">#[syscall]
 </span><span class="kw">pub fn </span>rename(src: <span class="kw-2">&amp;</span>Path, dest: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;usize, SyscallError&gt; {
+    <span class="kw">let </span>src = fs::lookup_path(src)<span class="question-mark">?</span>;
+    <span class="kw">let </span>(dest, name) = {
+        <span class="kw">let </span>(dir, name) = dest.parent_and_basename();
+        (fs::lookup_path(dir)<span class="question-mark">?</span>, name)
+    };
+
+    dest.inode().rename(src.clone(), name)<span class="question-mark">?</span>;
+
+    cache::dcache().rehash(src.clone(), || {
+        src.set_name(name);
+        src.set_parent(dest);
+    });
     <span class="prelude-val">Ok</span>(<span class="number">0</span>)
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f15f0ea73 2023-03-04)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f63ccaf25 2023-03-06)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

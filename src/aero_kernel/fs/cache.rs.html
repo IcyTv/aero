@@ -405,6 +405,20 @@
 <a href="#405" id="405">405</a>
 <a href="#406" id="406">406</a>
 <a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
+<a href="#411" id="411">411</a>
+<a href="#412" id="412">412</a>
+<a href="#413" id="413">413</a>
+<a href="#414" id="414">414</a>
+<a href="#415" id="415">415</a>
+<a href="#416" id="416">416</a>
+<a href="#417" id="417">417</a>
+<a href="#418" id="418">418</a>
+<a href="#419" id="419">419</a>
+<a href="#420" id="420">420</a>
+<a href="#421" id="421">421</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -656,6 +670,20 @@
         </span>}
     }
 
+    <span class="kw">pub fn </span>rehash&lt;F&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, item: CacheArc&lt;CacheItem&lt;K, V&gt;&gt;, update: F)
+    <span class="kw">where
+        </span>F: FnOnce(),
+    {
+        <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="self">self</span>.index.lock();
+        <span class="kw">let </span>key = item.cache_key();
+
+        index.used.remove(<span class="kw-2">&amp;</span>key).expect(<span class="string">&quot;cache: item is not used&quot;</span>);
+        update();
+
+        <span class="kw">let </span>new_key = item.cache_key();
+        index.used.insert(new_key, Arc::downgrade(<span class="kw-2">&amp;</span>item));
+    }
+
     <span class="kw">pub fn </span>log(<span class="kw-2">&amp;</span><span class="self">self</span>) {
         <span class="kw">let </span>index = <span class="self">self</span>.index.lock();
 
@@ -813,4 +841,4 @@
     DIR_CACHE.call_once(|| DirCache::new());
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f15f0ea73 2023-03-04)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f63ccaf25 2023-03-06)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

@@ -692,6 +692,36 @@
 <a href="#692" id="692">692</a>
 <a href="#693" id="693">693</a>
 <a href="#694" id="694">694</a>
+<a href="#695" id="695">695</a>
+<a href="#696" id="696">696</a>
+<a href="#697" id="697">697</a>
+<a href="#698" id="698">698</a>
+<a href="#699" id="699">699</a>
+<a href="#700" id="700">700</a>
+<a href="#701" id="701">701</a>
+<a href="#702" id="702">702</a>
+<a href="#703" id="703">703</a>
+<a href="#704" id="704">704</a>
+<a href="#705" id="705">705</a>
+<a href="#706" id="706">706</a>
+<a href="#707" id="707">707</a>
+<a href="#708" id="708">708</a>
+<a href="#709" id="709">709</a>
+<a href="#710" id="710">710</a>
+<a href="#711" id="711">711</a>
+<a href="#712" id="712">712</a>
+<a href="#713" id="713">713</a>
+<a href="#714" id="714">714</a>
+<a href="#715" id="715">715</a>
+<a href="#716" id="716">716</a>
+<a href="#717" id="717">717</a>
+<a href="#718" id="718">718</a>
+<a href="#719" id="719">719</a>
+<a href="#720" id="720">720</a>
+<a href="#721" id="721">721</a>
+<a href="#722" id="722">722</a>
+<a href="#723" id="723">723</a>
+<a href="#724" id="724">724</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -723,10 +753,10 @@
 <span class="kw">use </span>alloc::sync::{Arc, Weak};
 <span class="kw">use </span>spin::RwLock;
 
-<span class="kw">use </span><span class="kw">crate</span>::fs::block::BlockDeviceInterface;
+<span class="kw">use </span><span class="kw">crate</span>::fs::block::{BlockDeviceInterface, DirtyRef};
 <span class="kw">use </span><span class="kw">crate</span>::fs::cache::CachedINode;
 <span class="kw">use </span><span class="kw">crate</span>::fs::ext2::disk::{FileType, Revision, SuperBlock};
-<span class="kw">use </span><span class="kw">crate</span>::mem::paging::{FrameAllocator, PhysFrame, VirtAddr, FRAME_ALLOCATOR};
+<span class="kw">use </span><span class="kw">crate</span>::mem::paging::<span class="kw-2">*</span>;
 
 <span class="kw">use </span><span class="kw">crate</span>::socket::unix::UnixSocket;
 <span class="kw">use </span><span class="kw">crate</span>::socket::SocketAddr;
@@ -734,7 +764,7 @@
 
 <span class="kw">use </span><span class="self">self</span>::group_desc::GroupDescriptors;
 
-<span class="kw">use </span><span class="kw">super</span>::block::{BlockDevice, CachedAccess};
+<span class="kw">use </span><span class="kw">super</span>::block::{<span class="self">self</span>, BlockDevice, CachedAccess};
 
 <span class="kw">use </span><span class="kw">super</span>::cache::{DirCacheItem, INodeCacheItem};
 <span class="kw">use super</span>::{cache, FileSystemError};
@@ -784,6 +814,24 @@
                 }))),
             )
         }
+    }
+
+    <span class="doccomment">/// Reads the data at `offset` as `T`.
+    ///
+    /// ## Safety
+    /// * The data being read should be of a valid value for `T`.
+    </span><span class="kw">pub unsafe fn </span>read_mut&lt;T: Sized&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize) -&gt; block::DirtyRef&lt;T&gt; {
+        <span class="macro">assert!</span>(core::mem::size_of::&lt;T&gt;() &lt;= Size4KiB::SIZE <span class="kw">as </span>usize);
+
+        <span class="kw">let </span>filesystem = <span class="self">self</span>.fs.upgrade().unwrap();
+        <span class="kw">let </span>block_size = filesystem.superblock.block_size();
+
+        <span class="kw">let </span>block = offset / block_size;
+        <span class="kw">let </span>loc = offset % block_size;
+
+        <span class="kw">let </span>block_index = <span class="self">self</span>.get_block(block).unwrap() <span class="kw">as </span>usize;
+
+        block::DirtyRef::new(filesystem.block.sref(), (block_index * block_size) + loc)
     }
 
     <span class="kw">pub fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, buffer: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
@@ -964,6 +1012,20 @@
         }
     }
 
+    <span class="kw">pub fn </span>make_disk_dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, inode: Arc&lt;INode&gt;, file_type: u8, name: <span class="kw-2">&amp;</span>str) {
+        <span class="comment">// TODO: scan for unused directory entries and check if this can be
+        //       inserted into the existing block.
+        </span><span class="kw">let </span>block = <span class="self">self</span>.append_block().unwrap();
+        <span class="kw">let </span>fs = <span class="self">self</span>.fs.upgrade().expect(<span class="string">&quot;ext2: filesystem was dropped&quot;</span>);
+        <span class="kw">let </span>block_size = fs.superblock.block_size();
+
+        <span class="kw">let </span><span class="kw-2">mut </span>entry = DirtyRef::&lt;disk::DirEntry&gt;::new(fs.block.sref(), block * block_size);
+        entry.entry_size = block_size <span class="kw">as _</span>;
+        entry.inode = inode.id <span class="kw">as _</span>;
+        entry.file_type = file_type;
+        entry.set_name(name);
+    }
+
     <span class="kw">pub fn </span>make_inode(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         name: <span class="kw-2">&amp;</span>str,
@@ -1000,27 +1062,12 @@
             inode.hl_count += <span class="number">1</span>;
         }
 
-        <span class="comment">// TODO: scan for unused directory entries and check if this can be
-        //       inserted into the existing block.
-        </span><span class="kw">let </span>block = <span class="self">self</span>.append_block().unwrap();
-        <span class="kw">let </span>block_size = fs.superblock.block_size();
-
-        <span class="kw">let </span><span class="kw-2">mut </span>entry = Box::&lt;disk::DirEntry&gt;::new_uninit();
-        fs.block.read(block * block_size, entry.as_bytes_mut());
-
-        <span class="comment">// SAFETY: We have initialized the entry above.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>entry = <span class="kw">unsafe </span>{ entry.assume_init() };
-
-        entry.entry_size = block_size <span class="kw">as _</span>;
-        entry.inode = ext2_inode.id <span class="kw">as _</span>;
-        entry.file_type = <span class="number">2</span>; <span class="comment">// FIXME: This is fucked.
-        </span>entry.set_name(name);
-
-        fs.block.write(block * block_size, entry.as_bytes());
+        <span class="comment">// FIXME: Fix the filetype!
+        </span><span class="self">self</span>.make_disk_dirent(ext2_inode, <span class="number">2</span>, name);
         <span class="prelude-val">Ok</span>(inode)
     }
 
-    <span class="kw">pub fn </span>make_dir_entry(
+    <span class="kw">pub fn </span>make_dirent(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         parent: DirCacheItem,
         name: <span class="kw-2">&amp;</span>str,
@@ -1085,7 +1132,7 @@
 
     <span class="kw">fn </span>dirent(<span class="kw-2">&amp;</span><span class="self">self</span>, parent: DirCacheItem, index: usize) -&gt; <span class="kw">super</span>::Result&lt;<span class="prelude-ty">Option</span>&lt;DirCacheItem&gt;&gt; {
         <span class="kw">if let </span><span class="prelude-val">Some</span>((name, entry)) = DirEntryIter::new(<span class="self">self</span>.sref()).nth(index) {
-            <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_dir_entry(parent, <span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>entry))
+            <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_dirent(parent, <span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>entry))
         } <span class="kw">else </span>{
             <span class="prelude-val">Ok</span>(<span class="prelude-val">None</span>)
         }
@@ -1096,7 +1143,7 @@
             .find(|(ename, <span class="kw">_</span>)| ename == name)
             .ok_or(FileSystemError::EntryNotFound)<span class="question-mark">?</span>;
 
-        <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_dir_entry(parent, <span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>entry).unwrap())
+        <span class="prelude-val">Ok</span>(<span class="self">self</span>.make_dirent(parent, <span class="kw-2">&amp;</span>name, <span class="kw-2">&amp;</span>entry).unwrap())
     }
 
     <span class="kw">fn </span>read_at(<span class="kw-2">&amp;</span><span class="self">self</span>, offset: usize, usr_buffer: <span class="kw-2">&amp;mut </span>[u8]) -&gt; <span class="kw">super</span>::Result&lt;usize&gt; {
@@ -1129,6 +1176,25 @@
         }
 
         <span class="self">self</span>.write(offset, usr_buffer)
+    }
+
+    <span class="kw">fn </span>rename(<span class="kw-2">&amp;</span><span class="self">self</span>, old: DirCacheItem, dest: <span class="kw-2">&amp;</span>str) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
+        <span class="macro">assert!</span>(<span class="self">self</span>.metadata()<span class="question-mark">?</span>.is_directory());
+
+        <span class="kw">if </span>DirEntryIter::new(<span class="self">self</span>.sref())
+            .find(|(name, <span class="kw">_</span>)| name == dest)
+            .is_some()
+        {
+            <span class="kw">return </span><span class="prelude-val">Err</span>(FileSystemError::EntryExists);
+        }
+
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(_parent) = old.parent() {
+            <span class="comment">// FIXME: Remove the directory entry from the parent
+            </span><span class="self">self</span>.make_disk_dirent(old.inode().downcast_arc().unwrap(), <span class="number">2</span>, dest);
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
+        }
+
+        <span class="prelude-val">Err</span>(FileSystemError::NotSupported)
     }
 
     <span class="kw">fn </span>link(<span class="kw-2">&amp;</span><span class="self">self</span>, name: <span class="kw-2">&amp;</span>str, src: DirCacheItem) -&gt; <span class="kw">super</span>::Result&lt;()&gt; {
@@ -1287,7 +1353,7 @@
 }
 
 <span class="kw">impl </span>Iterator <span class="kw">for </span>DirEntryIter {
-    <span class="kw">type </span>Item = (String, Box&lt;disk::DirEntry&gt;);
+    <span class="kw">type </span>Item = (String, block::DirtyRef&lt;disk::DirEntry&gt;);
 
     <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
         <span class="kw">let </span>file_size = <span class="self">self</span>.inode.inode.read().size();
@@ -1296,13 +1362,7 @@
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>entry = Box::&lt;disk::DirEntry&gt;::new_uninit();
-
-        <span class="self">self</span>.inode.read(<span class="self">self</span>.offset, entry.as_bytes_mut()).ok()<span class="question-mark">?</span>;
-
-        <span class="comment">// SAFETY: We have initialized the entry above.
-        </span><span class="kw">let </span>entry = <span class="kw">unsafe </span>{ entry.assume_init() };
-
+        <span class="kw">let </span>entry = <span class="kw">unsafe </span>{ <span class="self">self</span>.inode.read_mut::&lt;disk::DirEntry&gt;(<span class="self">self</span>.offset) };
         <span class="kw">if </span>entry.inode == <span class="number">0 </span>{
             <span class="kw">return </span><span class="prelude-val">None</span>;
         }
@@ -1387,4 +1447,4 @@
     }
 }
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f15f0ea73 2023-03-04)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f63ccaf25 2023-03-06)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

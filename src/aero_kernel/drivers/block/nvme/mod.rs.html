@@ -534,6 +534,16 @@
 <a href="#534" id="534">534</a>
 <a href="#535" id="535">535</a>
 <a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
 </pre><pre class="rust"><code><span class="comment">/*
  * Copyright (C) 2021-2023 The Aero Project Developers.
  *
@@ -766,13 +776,13 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; Namespace&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="kw">fn </span>read(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, start: PhysAddr, size_bytes: usize) {
+    <span class="kw">fn </span>rw_command(<span class="kw-2">&amp;</span><span class="self">self</span>, opcode: CommandOpcode, sector: usize, start: PhysAddr, size_bytes: usize) {
         <span class="macro">assert!</span>(size_bytes != <span class="number">0</span>);
 
         <span class="kw">let </span>blocks = size_bytes.ceil_div(<span class="self">self</span>.block_size);
         <span class="kw">let </span><span class="kw-2">mut </span>read_cmd = ReadWriteCommand::default();
 
-        read_cmd.opcode = CommandOpcode::Read <span class="kw">as </span>u8;
+        read_cmd.opcode = opcode <span class="kw">as </span>u8;
         read_cmd.nsid = <span class="self">self</span>.nsid;
         read_cmd.start_lba = sector <span class="kw">as </span>u64;
         read_cmd.length = (blocks - <span class="number">1</span>) <span class="kw">as </span>u16;
@@ -999,13 +1009,23 @@
 
 <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>&gt; BlockDeviceInterface <span class="kw">for </span>Controller&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="kw">fn </span>read_dma(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, start: PhysAddr, size: usize) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
-        <span class="self">self</span>.namespaces.lock()[<span class="number">0</span>].read(sector, start, size);
+        <span class="self">self</span>.namespaces.lock()[<span class="number">0</span>].rw_command(CommandOpcode::Read, sector, start, size);
+        <span class="prelude-val">Some</span>(size)
+    }
+
+    <span class="kw">fn </span>write_dma(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, start: PhysAddr, size: usize) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
+        <span class="self">self</span>.namespaces.lock()[<span class="number">0</span>].rw_command(CommandOpcode::Write, sector, start, size);
         <span class="prelude-val">Some</span>(size)
     }
 
     <span class="kw">fn </span>read_block(<span class="kw-2">&amp;</span><span class="self">self</span>, sector: usize, dest: <span class="kw-2">&amp;mut </span>[MaybeUninit&lt;u8&gt;]) -&gt; <span class="prelude-ty">Option</span>&lt;usize&gt; {
         <span class="kw">let </span>buffer = Dma::&lt;u8&gt;::new_uninit_slice(dest.len());
-        <span class="self">self</span>.namespaces.lock()[<span class="number">0</span>].read(sector, buffer.addr(), dest.len());
+        <span class="self">self</span>.namespaces.lock()[<span class="number">0</span>].rw_command(
+            CommandOpcode::Read,
+            sector,
+            buffer.addr(),
+            dest.len(),
+        );
 
         <span class="comment">// SAFETY: The buffer is initialized above.
         </span>dest.copy_from_slice(<span class="kw-2">&amp;</span>buffer);
@@ -1071,4 +1091,4 @@
 
 <span class="macro">crate::module_init!</span>(nvme_init, ModuleType::Block);
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f15f0ea73 2023-03-04)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../../" data-static-root-path="../../../../../static.files/" data-current-crate="aero_kernel" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (f63ccaf25 2023-03-06)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
