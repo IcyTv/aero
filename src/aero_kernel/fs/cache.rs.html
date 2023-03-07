@@ -715,7 +715,7 @@
         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="self">self</span>.index.lock();
         <span class="kw">let </span>key = item.cache_key();
 
-        <span class="macro">assert!</span>(index.used.remove(<span class="kw-2">&amp;</span>key).is_some());
+        index.used.remove(<span class="kw-2">&amp;</span>key);
         index.unused.put(key, item.<span class="number">0</span>.clone());
     }
 }
