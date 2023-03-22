@@ -807,7 +807,7 @@ pub fn sys_sleep(timespec: &TimeSpec) -> Result<usize, SyscallError> {
     isize_as_syscall_result(value as _)
 }
 
-pub fn sys_pipe(fds: &mut [usize; 2], flags: OpenFlags) -> Result<usize, SyscallError> {
+pub fn sys_pipe(fds: &mut [i32; 2], flags: OpenFlags) -> Result<usize, SyscallError> {
     let value = syscall2(prelude::SYS_PIPE, fds.as_ptr() as usize, flags.bits());
     isize_as_syscall_result(value as _)
 }
